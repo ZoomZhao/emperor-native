@@ -1,0 +1,344 @@
+import Foundation
+
+public enum FengShuiElement: Int, Sendable, Hashable, Codable {
+    case earth = 1
+    case metal = 2
+    case water = 3
+    case wood = 4
+    case fire = 5
+}
+
+public enum FengShuiPlacementQuality: String, Sendable, Hashable, Codable {
+    case neutral
+    case harmonious
+    case inauspicious
+}
+
+public struct FengShuiBuildingEvaluation: Identifiable, Sendable, Hashable, Codable {
+    public let buildingKey: OperationalBuildingKey
+    public let buildingID: Int
+    public let element: FengShuiElement?
+    public let quality: FengShuiPlacementQuality
+
+    public var id: String { "\(buildingKey.category.rawValue)-\(buildingKey.instanceID)" }
+}
+
+public struct FengShuiCitySummary: Sendable, Hashable, Codable {
+    public let evaluations: [FengShuiBuildingEvaluation]
+    public let harmoniousCount: Int
+    public let inauspiciousCount: Int
+    public let neutralCount: Int
+
+    public var harmonyPercent: Int {
+        let considered = harmoniousCount + inauspiciousCount
+        return considered == 0 ? 100 : harmoniousCount * 100 / considered
+    }
+}
+
+public enum AestheticConstructionKind: String, Sendable, Hashable, Codable {
+    case scenery
+    case laborersCamp
+    case carpentersGuild
+    case masonsGuild
+    case ceramistsGuild
+    case monument
+}
+
+public struct AestheticConstruction: Identifiable, Sendable, Hashable, Codable {
+    public let id: Int
+    public let buildingID: Int
+    public let kind: AestheticConstructionKind
+    public let location: GridPoint
+}
+
+public struct OriginalMonumentConfiguration: Sendable, Hashable, Codable {
+    public let buildingID: Int
+    public let requiredWork: Int
+    public let requiredCommodityUnits: [Int: Int]
+    public let requiredSupportKinds: Set<AestheticConstructionKind>
+
+    public static func configuration(buildingID: Int) -> Self? {
+        let labor: Set<AestheticConstructionKind> = [.laborersCamp]
+        let carpenter: Set<AestheticConstructionKind> = [.carpentersGuild]
+        let mason: Set<AestheticConstructionKind> = [.masonsGuild]
+        let ceramist: Set<AestheticConstructionKind> = [.ceramistsGuild]
+        switch buildingID {
+        case 76: // Tumulus: dirt, wood, burial provisions.
+            return Self(
+                buildingID: buildingID,
+                requiredWork: 1_500,
+                requiredCommodityUnits: [10: 400, 23: 200, 24: 200, 25: 200],
+                requiredSupportKinds: labor.union(carpenter)
+            )
+        case 77:
+            return Self(
+                buildingID: buildingID,
+                requiredWork: 2_400,
+                requiredCommodityUnits: [10: 800, 17: 200, 21: 200, 23: 300, 24: 300, 25: 300],
+                requiredSupportKinds: labor.union(carpenter)
+            )
+        case 78: // Great Temple.
+            return Self(
+                buildingID: buildingID,
+                requiredWork: 1_200,
+                requiredCommodityUnits: [10: 400, 18: 400],
+                requiredSupportKinds: labor.union(carpenter).union(ceramist)
+            )
+        case 79:
+            return Self(
+                buildingID: buildingID,
+                requiredWork: 2_000,
+                requiredCommodityUnits: [10: 800, 18: 800],
+                requiredSupportKinds: labor.union(carpenter).union(ceramist)
+            )
+        case 80:
+            return Self(
+                buildingID: buildingID,
+                requiredWork: 2_600,
+                requiredCommodityUnits: [10: 800, 18: 800, 20: 600],
+                requiredSupportKinds: labor.union(carpenter).union(ceramist).union(mason)
+            )
+        case 81:
+            return Self(
+                buildingID: buildingID,
+                requiredWork: 3_600,
+                requiredCommodityUnits: [10: 1_200, 18: 1_200, 20: 1_000],
+                requiredSupportKinds: labor.union(carpenter).union(ceramist).union(mason)
+            )
+        case 82:
+            return Self(
+                buildingID: buildingID,
+                requiredWork: 2_800,
+                requiredCommodityUnits: [10: 800, 18: 800, 20: 800],
+                requiredSupportKinds: labor.union(carpenter).union(ceramist).union(mason)
+            )
+        case 83:
+            return Self(
+                buildingID: buildingID,
+                requiredWork: 2_400,
+                requiredCommodityUnits: [10: 600, 20: 800],
+                requiredSupportKinds: labor.union(carpenter).union(mason)
+            )
+        case 84:
+            return Self(
+                buildingID: buildingID,
+                requiredWork: 4_000,
+                requiredCommodityUnits: [10: 1_000, 18: 1_200],
+                requiredSupportKinds: labor.union(carpenter).union(ceramist)
+            )
+        case 92: // Clock tower needs wood and bronze; no labor camp.
+            return Self(
+                buildingID: buildingID,
+                requiredWork: 1_600,
+                requiredCommodityUnits: [10: 500, 11: 500],
+                requiredSupportKinds: carpenter
+            )
+        case 93: // Grand pagoda needs wood and stone; no labor camp.
+            return Self(
+                buildingID: buildingID,
+                requiredWork: 2_200,
+                requiredCommodityUnits: [10: 700, 20: 700],
+                requiredSupportKinds: carpenter.union(mason)
+            )
+        default:
+            return nil
+        }
+    }
+}
+
+public struct MonumentProject: Identifiable, Sendable, Hashable, Codable {
+    public let id: Int
+    public let buildingID: Int
+    public let requiredWork: Int
+    public let requiredCommodityUnits: [Int: Int]
+    public let requiredSupportKinds: Set<AestheticConstructionKind>
+    public private(set) var deliveredCommodityUnits: [Int: Int]
+    public private(set) var completedWork: Int
+    public private(set) var isComplete: Bool
+
+    public var completionPercent: Int {
+        let materialRequired = requiredCommodityUnits.values.reduce(0, +)
+        let materialDelivered = deliveredCommodityUnits.values.reduce(0, +)
+        let totalRequired = max(1, requiredWork + materialRequired)
+        return min(100, (completedWork + materialDelivered) * 100 / totalRequired)
+    }
+
+    mutating func recordDelivery(commodityID: Int, amount: Int) {
+        deliveredCommodityUnits[commodityID, default: 0] += max(0, amount)
+    }
+
+    mutating func performWork(_ amount: Int) {
+        completedWork = min(requiredWork, completedWork + max(0, amount))
+        isComplete = completedWork >= requiredWork && requiredCommodityUnits.allSatisfy {
+            deliveredCommodityUnits[$0.key, default: 0] >= $0.value
+        }
+    }
+}
+
+public struct MonumentMonthlySettlement: Sendable, Hashable, Codable {
+    public let deliveredCommodityUnitsByProjectID: [Int: [Int: Int]]
+    public let workByProjectID: [Int: Int]
+    public let completedProjectIDs: [Int]
+
+    public static let empty = Self(
+        deliveredCommodityUnitsByProjectID: [:],
+        workByProjectID: [:],
+        completedProjectIDs: []
+    )
+}
+
+public struct DeterministicAestheticState: Sendable, Hashable, Codable {
+    public private(set) var constructions: [AestheticConstruction]
+    public private(set) var monuments: [MonumentProject]
+    public private(set) var lastMonumentSettlement: MonumentMonthlySettlement?
+    private var nextConstructionID: Int
+
+    public init() {
+        constructions = []
+        monuments = []
+        lastMonumentSettlement = nil
+        nextConstructionID = 1
+    }
+
+    public var completedMonumentBuildingIDs: Set<Int> {
+        Set(monuments.filter(\.isComplete).map(\.buildingID))
+    }
+
+    @discardableResult
+    mutating func addConstruction(
+        buildingID: Int,
+        kind: AestheticConstructionKind,
+        location: GridPoint
+    ) -> Int {
+        let id = nextConstructionID
+        nextConstructionID += 1
+        constructions.append(AestheticConstruction(
+            id: id,
+            buildingID: buildingID,
+            kind: kind,
+            location: location
+        ))
+        if let configuration = OriginalMonumentConfiguration.configuration(buildingID: buildingID) {
+            monuments.append(MonumentProject(
+                id: id,
+                buildingID: buildingID,
+                requiredWork: configuration.requiredWork,
+                requiredCommodityUnits: configuration.requiredCommodityUnits,
+                requiredSupportKinds: configuration.requiredSupportKinds,
+                deliveredCommodityUnits: [:],
+                completedWork: 0,
+                isComplete: false
+            ))
+        }
+        return id
+    }
+
+    @discardableResult
+    mutating func removeConstruction(id: Int) -> Bool {
+        guard let index = constructions.firstIndex(where: { $0.id == id }) else { return false }
+        constructions.remove(at: index)
+        monuments.removeAll { $0.id == id }
+        return true
+    }
+
+    mutating func advanceMonuments(
+        logistics: inout DeterministicLogisticsState,
+        production: inout DeterministicProductionState
+    ) -> MonumentMonthlySettlement {
+        let supportCounts = Dictionary(grouping: constructions, by: \.kind).mapValues(\.count)
+        var deliveries: [Int: [Int: Int]] = [:]
+        var work: [Int: Int] = [:]
+        var completed: [Int] = []
+        for index in monuments.indices where !monuments[index].isComplete {
+            for (commodityID, required) in monuments[index].requiredCommodityUnits.sorted(by: { $0.key < $1.key }) {
+                let remaining = max(
+                    0,
+                    required - monuments[index].deliveredCommodityUnits[commodityID, default: 0]
+                )
+                let load = min(DeterministicLogisticsState.originalDeliveryLoad, remaining)
+                if load > 0, logistics.takeCampaignRequestGoods(
+                    commodityID: commodityID,
+                    amount: load,
+                    production: &production
+                ) {
+                    monuments[index].recordDelivery(commodityID: commodityID, amount: load)
+                    deliveries[monuments[index].id, default: [:]][commodityID, default: 0] += load
+                }
+            }
+            let hasMaterials = monuments[index].requiredCommodityUnits.allSatisfy {
+                monuments[index].deliveredCommodityUnits[$0.key, default: 0] >= $0.value
+            }
+            let crewCount = monuments[index].requiredSupportKinds
+                .map { supportCounts[$0, default: 0] }
+                .min() ?? 0
+            if hasMaterials, crewCount > 0 {
+                let performed = min(
+                    monuments[index].requiredWork - monuments[index].completedWork,
+                    crewCount * 100
+                )
+                monuments[index].performWork(performed)
+                work[monuments[index].id] = performed
+                if monuments[index].isComplete { completed.append(monuments[index].id) }
+            }
+        }
+        let settlement = MonumentMonthlySettlement(
+            deliveredCommodityUnitsByProjectID: deliveries,
+            workByProjectID: work,
+            completedProjectIDs: completed
+        )
+        lastMonumentSettlement = settlement
+        return settlement
+    }
+}
+
+public extension DeterministicCityState {
+    func fengShuiSummary(models: BuildingModelTable) -> FengShuiCitySummary {
+        let evaluations = placedBuildings.map { placement in
+            let model = models[buildingID: placement.buildingID]
+            let element = model.flatMap { FengShuiElement(rawValue: $0.fengShuiValue) }
+            let quality: FengShuiPlacementQuality
+            if let element {
+                quality = isHarmonious(
+                    element: element,
+                    footprint: placement.occupiedPoints
+                ) ? .harmonious : .inauspicious
+            } else {
+                quality = .neutral
+            }
+            return FengShuiBuildingEvaluation(
+                buildingKey: OperationalBuildingKey(
+                    category: placement.category,
+                    instanceID: placement.instanceID
+                ),
+                buildingID: placement.buildingID,
+                element: element,
+                quality: quality
+            )
+        }
+        return FengShuiCitySummary(
+            evaluations: evaluations,
+            harmoniousCount: evaluations.count { $0.quality == .harmonious },
+            inauspiciousCount: evaluations.count { $0.quality == .inauspicious },
+            neutralCount: evaluations.count { $0.quality == .neutral }
+        )
+    }
+
+    private func isHarmonious(element: FengShuiElement, footprint: [GridPoint]) -> Bool {
+        guard let terrain else { return true }
+        let sampled = Set(footprint + footprint.flatMap(RoadServiceCoverage.orthogonalNeighbors(of:)))
+            .compactMap(terrain.terrain(at:))
+        guard !sampled.isEmpty else { return false }
+        switch element {
+        case .earth:
+            return sampled.contains { !$0.contains(.water) && !$0.contains(.deepWater) }
+        case .metal:
+            return sampled.contains { $0.contains(.rock) || $0.contains(.elevation) }
+        case .water:
+            return sampled.contains { $0.contains(.water) || $0.contains(.deepWater) || $0.contains(.groundwater) }
+        case .wood:
+            return sampled.contains { $0.contains(.tree) || $0.contains(.scrub) || $0.contains(.garden) }
+        case .fire:
+            return sampled.contains { !$0.contains(.water) && !$0.contains(.groundwater) && !$0.contains(.deepWater) }
+        }
+    }
+}

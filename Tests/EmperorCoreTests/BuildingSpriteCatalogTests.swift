@@ -1,0 +1,72 @@
+import XCTest
+@testable import EmperorCore
+
+final class BuildingSpriteCatalogTests: XCTestCase {
+    func testEveryAgriculturalCropHasItsOwnPlotFootprintAndSprite() {
+        let imageIDs = Set(AgriculturalCrop.allCases.map {
+            OriginalBuildingSpriteCatalog.agriculturalPlotImageID(for: $0)
+        })
+        XCTAssertEqual(imageIDs.count, AgriculturalCrop.allCases.count)
+        for crop in AgriculturalCrop.allCases {
+            XCTAssertEqual(
+                OriginalBuildingFootprintCatalog.footprint(
+                    forBuildingID: crop.plotBuildingID
+                ),
+                BuildingFootprint(width: 1, height: 1)
+            )
+            XCTAssertEqual(
+                OriginalBuildingSpriteCatalog.buildingSprite(
+                    forBuildingID: crop.plotBuildingID
+                ),
+                OriginalBuildingSpriteCatalog.agriculturalPlotSprite(for: crop)
+            )
+        }
+    }
+
+    func testXiaTutorialOneHasOriginalBuildingComponents() {
+        let requiredBuildingIDs = [33, 53, 59, 72, 124, 126, 214]
+        for buildingID in requiredBuildingIDs {
+            let components = OriginalBuildingSpriteCatalog.buildingComponents(forBuildingID: buildingID)
+            XCTAssertFalse(components.isEmpty, "missing original components for building #\(buildingID)")
+        }
+        for levelID in 0...14 {
+            XCTAssertNotNil(OriginalBuildingSpriteCatalog.housingSprite(forHouseLevelID: levelID))
+        }
+        XCTAssertEqual(OriginalBuildingSpriteCatalog.buildingSprite(forBuildingID: 33)?.imageID, 825)
+        XCTAssertEqual(OriginalBuildingSpriteCatalog.buildingSprite(forBuildingID: 124)?.imageID, 1_704)
+        XCTAssertEqual(OriginalBuildingSpriteCatalog.buildingSprite(forBuildingID: 126)?.imageID, 2_046)
+    }
+
+    func testLocalXiaTutorialOneBuildingSpritesDecode() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let source = try GameDataSource.openDefault()
+        let archive = try SG3Archive(
+            contentsOf: source.dataDirectory.appendingPathComponent("China_General.sg3")
+        )
+        let pixels = try Data(
+            contentsOf: source.dataDirectory.appendingPathComponent("China_General.555"),
+            options: [.mappedIfSafe]
+        )
+        var references = Set<BuildingSpriteReference>()
+        for buildingID in [33, 53, 59, 72, 124, 126, 214] {
+            references.formUnion(
+                OriginalBuildingSpriteCatalog.buildingComponents(forBuildingID: buildingID).map(\.sprite)
+            )
+        }
+        for levelID in 0...14 {
+            references.insert(try XCTUnwrap(
+                OriginalBuildingSpriteCatalog.housingSprite(forHouseLevelID: levelID)
+            ))
+        }
+        for reference in references {
+            let decoded = try SpriteDecoder.decode(
+                image: archive.images[reference.imageID],
+                pixelData: pixels
+            )
+            XCTAssertGreaterThan(decoded.width, 0, "#\(reference.imageID)")
+            XCTAssertGreaterThan(decoded.height, 0, "#\(reference.imageID)")
+        }
+    }
+}

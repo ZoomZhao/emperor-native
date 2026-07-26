@@ -1,0 +1,13 @@
+.DS_Store
+.alma-snapshots/
+.build/
+.swiftpm/
+dist/
+tmp/
+
+# Original proprietary game data and generated sprite exports stay local.
+GameData/
+GameData/DATA_IMAGES/
+
+# Accidental local scratch pointer.
+Untitled-1

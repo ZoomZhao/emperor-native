@@ -1,0 +1,2233 @@
+import EmperorCore
+import AppKit
+import AVFoundation
+import Combine
+import SwiftUI
+import UniformTypeIdentifiers
+
+struct ContentView: View {
+    @ObservedObject var library: LibraryModel
+    @Environment(\.scenePhase) private var scenePhase
+
+    var body: some View {
+        Group {
+            switch library.state {
+            case .loading:
+                VStack(spacing: 12) {
+                    ProgressView()
+                        .controlSize(.large)
+                        .tint(EmperorTheme.primary)
+                    Text("正在建立原版数据索引…")
+                        .font(EmperorTheme.headlineSmall)
+                        .foregroundStyle(EmperorTheme.onSurface)
+                    Text("正在定位地图、战役与运行时素材")
+                        .font(EmperorTheme.bodySmall)
+                        .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(EmperorTheme.backgroundApp)
+            case .failed:
+                VStack(spacing: 12) {
+                    Image(systemName: "externaldrive.badge.exclamationmark")
+                        .font(.system(size: 42))
+                        .foregroundStyle(EmperorTheme.warning)
+                    Text("无法读取游戏数据")
+                        .font(EmperorTheme.headlineLarge)
+                        .foregroundStyle(EmperorTheme.onSurface)
+                    Text("请确认应用包或仓库中的 GameData 目录完整，然后重新打开。")
+                        .font(EmperorTheme.bodyMedium)
+                        .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(32)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(EmperorTheme.backgroundApp)
+            case let .loaded(source, catalog, probes, models, economy, campaigns):
+                Group {
+                    if library.section == .city {
+                        ClassicCityGameView(library: library, models: economy)
+                    } else if library.section == .campaigns {
+                        ClassicCampaignLobbyView(
+                            library: library,
+                            campaigns: campaigns,
+                            economy: economy
+                        )
+                    } else if library.section == .saves {
+                        ClassicSaveHistoryView(library: library)
+                    } else if library.section == .maps {
+                        ClassicLibraryView(
+                            library: library,
+                            source: source,
+                            catalog: catalog,
+                            models: models,
+                            economy: economy
+                        )
+                    } else {
+                        NavigationSplitView {
+                    VStack(spacing: 0) {
+                        Picker("资料类型", selection: $library.section) {
+                            ForEach(LibrarySection.allCases) { section in
+                                Text(section.rawValue)
+                                    .tag(section)
+                                    .accessibilityIdentifier("library-section-\(section.accessibilitySlug)")
+                            }
+                        }
+                        .accessibilityIdentifier("library-section-picker")
+                        .pickerStyle(.segmented)
+                        .labelsHidden()
+                        .padding(12)
+                        Divider()
+
+                        if library.section == .city {
+                            ScrollView {
+                                VStack(alignment: .leading, spacing: 12) {
+                                    SidebarGroup("原生城市内核") {
+                                    if let city = library.cityState {
+                                        LabeledContent("住宅", value: "\(city.houses.count)")
+                                        LabeledContent("人口", value: "\(city.population)")
+                                        LabeledContent("道路格", value: "\(city.roadNetwork.points.count)")
+                                        LabeledContent("国库", value: "\(city.economy.treasury)")
+                                    }
+                                    }
+                                    SidebarGroup("当前范围") {
+                                        Label("住宅建造", systemImage: "house")
+                                        Label("人口入住", systemImage: "person.2")
+                                        Label("逐月税收", systemImage: "calendar")
+                                        Label("工业生产", systemImage: "shippingbox")
+                                        Label("节气农业", systemImage: "leaf")
+                                        Label("陆海贸易", systemImage: "arrow.left.arrow.right")
+                                        Label("年度目标", systemImage: "chart.bar.xaxis")
+                                        Label("市场配送", systemImage: "basket")
+                                        Label("磨坊与食物质量", systemImage: "takeoutbag.and.cup.and.straw")
+                                    }
+                                    Text("这是用原版参数和素材驱动的可重放实验场；迁入、行人和运输按日推进，税务与生产在月末统一结算。")
+                                        .font(EmperorTheme.bodySmall)
+                                        .foregroundStyle(.secondary)
+                                        .padding(.horizontal, 4)
+                                }
+                                .padding(12)
+                            }
+                        } else if library.section == .maps {
+                            ScrollView {
+                                LazyVStack(spacing: 4) {
+                                    ForEach(probes) { map in
+                                        Button {
+                                            library.select(map)
+                                        } label: {
+                                            VStack(alignment: .leading, spacing: 3) {
+                                                Text(ClassicTextLocalization.mapName(map.url))
+                                                Text("\(map.width ?? 0) × \(map.height ?? 0) · \(map.chunkCount) 块")
+                                                    .font(EmperorTheme.bodySmall)
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 8)
+                                            .background(
+                                                library.selectedMap?.url == map.url
+                                                    ? EmperorTheme.primary.opacity(0.16) : Color.clear,
+                                                in: RoundedRectangle(cornerRadius: 8)
+                                            )
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 8)
+                                                    .strokeBorder(
+                                                        library.selectedMap?.url == map.url
+                                                            ? EmperorTheme.border
+                                                            : Color.clear,
+                                                        lineWidth: 1
+                                                    )
+                                            )
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                }
+                                .padding(8)
+                            }
+                        } else if library.section == .campaigns {
+                            ScrollView {
+                                LazyVStack(spacing: 4) {
+                                    ForEach(campaigns) { campaign in
+                                        Button {
+                                            library.select(campaign)
+                                        } label: {
+                                            VStack(alignment: .leading, spacing: 3) {
+                                                Text(
+                                                    ClassicTextLocalization.campaignTitle(
+                                                        campaign.title
+                                                    )
+                                                )
+                                                Text("\(campaign.missions.count) 个任务")
+                                                    .font(EmperorTheme.bodySmall)
+                                                    .foregroundStyle(.secondary)
+                                            }
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .padding(.horizontal, 10)
+                                            .padding(.vertical, 8)
+                                            .background(
+                                                library.selectedCampaign?.url == campaign.url
+                                                    ? EmperorTheme.primary.opacity(0.16) : Color.clear,
+                                                in: RoundedRectangle(cornerRadius: 8)
+                                            )
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 8)
+                                                    .strokeBorder(
+                                                        library.selectedCampaign?.url == campaign.url
+                                                            ? EmperorTheme.border
+                                                            : Color.clear,
+                                                        lineWidth: 1
+                                                    )
+                                            )
+                                        }
+                                        .buttonStyle(.plain)
+                                        .accessibilityIdentifier(campaign.accessibilityIdentifier)
+                                    }
+                                }
+                                .padding(8)
+                            }
+                        }
+                    }
+                    .navigationTitle(library.section.rawValue)
+                    .navigationSplitViewColumnWidth(min: 190, ideal: 220, max: 280)
+                } content: {
+                    Group {
+                        if library.section == .city {
+                            CitySimulationView(library: library, models: economy)
+                                .navigationTitle("原生城市内核实验场")
+                        } else if library.section == .maps {
+                            MapDiagnosticView(probe: library.selectedMap, rendered: library.renderedMap)
+                                .navigationTitle(
+                                    library.selectedMap.map {
+                                        ClassicTextLocalization.mapName($0.url)
+                                    } ?? "地图"
+                                )
+                        } else if library.section == .campaigns {
+                            CampaignDiagnosticView(
+                                campaign: library.selectedCampaign,
+                                embeddedMaps: library.embeddedCampaignMaps,
+                                isResolvingMaps: library.isResolvingCampaignMaps,
+                                missionMaps: library.campaignMissionMaps,
+                                missionSettings: library.campaignMissionSettings,
+                                isResolvingSettings: library.isResolvingCampaignSettings,
+                                goalArchive: library.campaignGoalArchive,
+                                isResolvingGoals: library.isResolvingCampaignGoals,
+                                eventArchive: library.campaignEventArchive,
+                                isResolvingEvents: library.isResolvingCampaignEvents,
+                                empireMap: library.campaignEmpireMap,
+                                isResolvingEmpire: library.isResolvingCampaignEmpire,
+                                cityNames: library.cityNames,
+                                economy: economy,
+                                city: library.cityState,
+                                campaignRuntime: library.campaignRuntimeState,
+                                activeMissionID: library.selectedMissionID,
+                                onStartMission: library.startMission
+                            )
+                                .navigationTitle(
+                                    library.selectedCampaign.map {
+                                        ClassicTextLocalization.campaignTitle($0.title)
+                                    } ?? "战役"
+                                )
+                        }
+                    }
+                    .navigationSplitViewColumnWidth(min: 420, ideal: 560)
+                } detail: {
+                    InspectorView(
+                        source: source,
+                        catalog: catalog,
+                        models: models,
+                        economy: economy,
+                        map: library.section == .maps ? library.selectedMap : nil,
+                        campaign: library.section == .campaigns ? library.selectedCampaign : nil,
+                        embeddedCampaignMapCount: library.section == .campaigns ? library.embeddedCampaignMaps.count : nil,
+                        campaignMissionMaps: library.section == .campaigns ? library.campaignMissionMaps : nil,
+                        campaignGoals: library.section == .campaigns ? library.campaignGoalArchive : nil,
+                        campaignEvents: library.section == .campaigns ? library.campaignEventArchive : nil,
+                        campaignEmpireMap: library.section == .campaigns ? library.campaignEmpireMap : nil,
+                        city: library.section == .city ? library.cityState : nil,
+                        latestSettlement: library.section == .city ? library.latestSettlement : nil
+                    )
+                        .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 360)
+                        }
+                    }
+                }
+                .id(library.section)
+            }
+        }
+        .task { library.load() }
+        .font(EmperorTheme.bodyMedium)
+        .tint(EmperorTheme.primary)
+        .preferredColorScheme(.dark)
+        .background(EmperorTheme.backgroundApp)
+        .accessibilityIdentifier("emperor-native-root")
+        .onChange(of: scenePhase) { phase in
+            if phase == .inactive || phase == .background {
+                library.autosaveIfNeeded(force: true)
+            }
+        }
+    }
+}
+
+extension LibrarySection {
+    var accessibilitySlug: String {
+        switch self {
+        case .city: "city"
+        case .maps: "maps"
+        case .campaigns: "campaigns"
+        case .saves: "saves"
+        }
+    }
+}
+
+extension CampaignArchive {
+    var accessibilityIdentifier: String {
+        if url.lastPathComponent == "1 Xia Dynasty - Tutorials.pak" {
+            return "campaign-xia-tutorials"
+        }
+        let slug = url.deletingPathExtension().lastPathComponent.lowercased()
+            .replacingOccurrences(of: " ", with: "-")
+        return "campaign-\(slug)"
+    }
+}
+
+/// Map-first city shell modelled after the original game's main screen:
+/// a compact imperial status bar, the city map, a fixed ministry/building panel,
+/// and panel-docked commands/minimap that never reduce the map's height.
+private typealias ClassicPalette = EmperorTheme
+
+private struct ClassicBronzeTexture: View {
+    var body: some View {
+        Canvas { context, size in
+            context.fill(
+                Path(CGRect(origin: .zero, size: size)),
+                with: .linearGradient(
+                    Gradient(colors: [ClassicPalette.panelBrown, ClassicPalette.deepBrown]),
+                    startPoint: .zero,
+                    endPoint: CGPoint(x: size.width, y: size.height)
+                )
+            )
+            for x in stride(from: CGFloat(0), through: size.width, by: 22) {
+                var line = Path()
+                line.move(to: CGPoint(x: x, y: 0))
+                line.addLine(to: CGPoint(x: x, y: size.height))
+                context.stroke(line, with: .color(ClassicPalette.border.opacity(0.15)), lineWidth: 0.5)
+            }
+            for y in stride(from: CGFloat(0), through: size.height, by: 22) {
+                var line = Path()
+                line.move(to: CGPoint(x: 0, y: y))
+                line.addLine(to: CGPoint(x: size.width, y: y))
+                context.stroke(line, with: .color(Color.black.opacity(0.16)), lineWidth: 0.5)
+            }
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+private struct ClassicCityGameView: View {
+    @ObservedObject var library: LibraryModel
+    let models: OriginalEconomyModels
+    @State private var cameraOffsetX = 0
+    @State private var cameraOffsetY = 0
+    @State private var selectedCategory: ConstructionToolCategory = .residential
+
+    var body: some View {
+        ZStack {
+            EmperorTheme.backgroundApp
+                .ignoresSafeArea()
+
+            if let city = library.cityState {
+                VStack(spacing: 0) {
+                    ClassicImperialHUD(
+                        library: library,
+                        city: city,
+                        models: models,
+                        selectedCategory: selectedCategory
+                    )
+                    .layoutPriority(2)
+                    Divider().overlay(EmperorTheme.border)
+
+                    HStack(spacing: 0) {
+                        CityCanvas(
+                            city: city,
+                            buildingSprites: library.buildingSprites,
+                            interfaceSprites: library.interfaceSprites,
+                            figureSprites: library.figureSprites,
+                            originalMap: library.renderedMap,
+                            constructionTool: library.constructionTool,
+                            agriculturalCrop: library.selectedAgriculturalCrop,
+                            constructionOrientation: library.constructionOrientation,
+                            models: models,
+                            activeResourceOverlays: library.activeResourceOverlays,
+                            selectedMilitaryUnitIDs: library.selectedMilitaryUnitIDs,
+                            gameSpeed: library.gameSpeed,
+                            lastTickPresentationDate: library.lastCityTickPresentationDate,
+                            onPlaceConstruction: library.placeConstruction,
+                            onPlaceConstructionArea: library.placeConstructions,
+                            onCancelInteraction: library.cancelCurrentInteraction,
+                            onBuildingSettingChange: library.applyBuildingSetting,
+                            cameraOffsetX: $cameraOffsetX,
+                            cameraOffsetY: $cameraOffsetY,
+                            showsNavigationOverlay: false
+                        )
+                        .id(library.selectedMap?.url)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Color.black)
+                        .overlay(alignment: .topLeading) {
+                            ClassicMapHint(
+                                library: library,
+                                tool: library.constructionTool,
+                                instruction: library.saveStatus
+                                    ?? constructionInstruction(
+                                        library.constructionTool,
+                                        orientation: library.constructionOrientation
+                                    )
+                            )
+                            .padding(8)
+                            .allowsHitTesting(false)
+                        }
+
+                        Divider().overlay(EmperorTheme.border)
+
+                        ClassicControlPanel(
+                            library: library,
+                            city: city,
+                            models: models,
+                            selectedCategory: $selectedCategory,
+                            cameraOffsetX: $cameraOffsetX,
+                            cameraOffsetY: $cameraOffsetY
+                        )
+                        .frame(width: EmperorTheme.panelWidth)
+                    }
+                }
+
+                if let runtime = library.campaignRuntimeState,
+                   runtime.outcome != .running {
+                    MissionOutcomeOverlay(
+                        outcome: runtime.outcome,
+                        missionTitle: activeMission?.title ?? "当前任务",
+                        onNextMission: library.startNextMission,
+                        onReplay: library.replayMission,
+                        onLoadRecent: library.loadMostRecentSave,
+                        onReturn: library.returnToCampaignList
+                    )
+                }
+            } else {
+                ProgressView("正在初始化城市状态…")
+                    .tint(EmperorTheme.primary)
+                    .foregroundStyle(EmperorTheme.onSurface)
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .onChange(of: library.selectedMissionID) { _ in
+            cameraOffsetX = 0
+            cameraOffsetY = 0
+        }
+    }
+
+    private var activeMission: CampaignMission? {
+        guard let missionID = library.selectedMissionID else { return nil }
+        return library.selectedCampaign?.missions.first { $0.id == missionID }
+    }
+}
+
+private struct ClassicImperialHUD: View {
+    @ObservedObject var library: LibraryModel
+    let city: DeterministicCityState
+    let models: OriginalEconomyModels
+    let selectedCategory: ConstructionToolCategory
+
+    var body: some View {
+        HStack(spacing: 9) {
+            Menu {
+                Button("保存城市", action: library.saveCity)
+                    .keyboardShortcut("s", modifiers: .command)
+                Button("载入城市", action: library.loadCity)
+                    .keyboardShortcut("o", modifiers: .command)
+                Divider()
+                Button("返回战役", action: library.returnToCampaignList)
+            } label: {
+                Text("文件")
+                    .font(EmperorTheme.labelMedium)
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+            .foregroundStyle(ClassicPalette.gold)
+            .accessibilityIdentifier("classic-city-game")
+
+            Menu {
+                Button(
+                    library.musicIsPlaying ? "暂停原版音乐" : "播放原版音乐",
+                    action: library.toggleOriginalMusic
+                )
+                Button("旋转当前建筑", action: library.rotateConstructionTool)
+                    .keyboardShortcut("r", modifiers: [])
+                    .disabled(!library.constructionTool.supportsRotation)
+            } label: {
+                Text("选项")
+                    .font(EmperorTheme.labelMedium)
+            }
+            .menuStyle(.borderlessButton)
+            .fixedSize()
+            .foregroundStyle(ClassicPalette.gold)
+
+            Button("帮助") {
+                library.saveStatus = library.constructionTool == .inspect
+                    ? "右键建筑查看详情 · 右键取消建造 · P／空格暂停 · 点击右栏标题查看城市状况"
+                    : constructionInstruction(
+                        library.constructionTool,
+                        orientation: library.constructionOrientation
+                    )
+            }
+            .buttonStyle(.plain)
+            .font(EmperorTheme.labelMedium)
+            .foregroundStyle(ClassicPalette.gold)
+
+            Rectangle()
+                .fill(ClassicPalette.border.opacity(0.72))
+                .frame(width: 1, height: 26)
+
+            HStack(spacing: 8) {
+                Text(missionStage)
+                    .font(EmperorTheme.labelSmall)
+                    .foregroundStyle(ClassicPalette.gold)
+                    .lineLimit(1)
+                Text(localizedMissionTitle)
+                    .font(EmperorTheme.headlineSmall)
+                    .foregroundStyle(EmperorTheme.onSurface)
+                    .lineLimit(1)
+
+                Label(localizedCityName, systemImage: "mappin.and.ellipse")
+                    .font(EmperorTheme.labelSmall)
+                    .foregroundStyle(ClassicPalette.gold)
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 4)
+                    .background(ClassicPalette.deepBrown.opacity(0.82))
+                    .overlay(
+                        Rectangle()
+                            .strokeBorder(ClassicPalette.border, lineWidth: 1)
+                    )
+                    .fixedSize()
+            }
+            .frame(maxWidth: 390, alignment: .leading)
+            .layoutPriority(1)
+            .help(missionAccessibilityLabel)
+
+            Spacer(minLength: 4)
+
+            ClassicHUDMetric(
+                symbol: "banknote.fill",
+                title: "国库",
+                value: city.economy.treasury.formatted()
+            )
+            ClassicHUDMetric(
+                symbol: selectedCategory.symbol,
+                title: selectedCategory.rawValue,
+                value: selectedCategoryMetric
+            )
+            .accessibilityIdentifier("hud-category-metric")
+            .accessibilityValue("\(selectedCategory.rawValue)：\(selectedCategoryMetric)")
+            ClassicHUDMetric(
+                symbol: "calendar",
+                title: "日期",
+                value: imperialDate
+            )
+
+            Label("土德", systemImage: "circle.hexagongrid.fill")
+                .font(EmperorTheme.bold(size: 10))
+                .foregroundStyle(ClassicPalette.gold)
+                .padding(.horizontal, 8)
+                .frame(height: 34)
+                .background(ClassicPalette.deepBrown.opacity(0.82))
+                .overlay(Rectangle().strokeBorder(ClassicPalette.border, lineWidth: 1))
+                .help("夏朝崇尚土德")
+        }
+        .padding(.horizontal, 12)
+        .frame(height: EmperorTheme.hudHeight)
+        .fixedSize(horizontal: false, vertical: true)
+        .background(
+            LinearGradient(
+                colors: [
+                    ClassicPalette.warmBrown,
+                    ClassicPalette.deepBrown,
+                ],
+                startPoint: .leading,
+                endPoint: .trailing
+            )
+        )
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(ClassicPalette.gold.opacity(0.48))
+                .frame(height: 1)
+        }
+    }
+
+    private var activeMission: CampaignMission? {
+        guard let campaign = library.selectedCampaign,
+              let missionID = library.selectedMissionID,
+              let mission = campaign.missions.first(where: { $0.id == missionID }) else {
+            return nil
+        }
+        return mission
+    }
+
+    private var missionStage: String {
+        guard let campaign = library.selectedCampaign,
+              let mission = activeMission else {
+            return "自由建造"
+        }
+        return "\(ClassicTextLocalization.campaignTitle(campaign.title)) · 第\(mission.sequenceNumber)关"
+    }
+
+    private var localizedMissionTitle: String {
+        activeMission.map {
+            ClassicTextLocalization.missionTitle($0.title)
+        } ?? "无任务目标"
+    }
+
+    private var localizedCityName: String {
+        ClassicTextLocalization.cityName(
+            library.activeMissionWorld?.playerCityName ?? "原生城市"
+        )
+    }
+
+    private var missionAccessibilityLabel: String {
+        "\(missionStage) · \(localizedMissionTitle) · 当前城市 \(localizedCityName)"
+    }
+
+    private var imperialDate: String {
+        city.calendar.year < 0
+            ? "\(abs(city.calendar.year)) 公元前 · \(city.calendar.month)月"
+            : "\(city.calendar.year)年 · \(city.calendar.month)月"
+    }
+
+    private var selectedCategoryMetric: String {
+        switch selectedCategory {
+        case .residential:
+            "\(city.population) / \(city.housingCapacity(using: models.buildings))"
+        case .production:
+            "\(city.production.buildings.count) 座"
+        case .civic:
+            "\(placedBuildingCount(in: Set([72, 124, 125, 127, 207, 208, 209, 216, 218]))) 座"
+        case .religious:
+            "\(placedBuildingCount(in: Set([214, 215, 217, 219]))) 座"
+        case .military:
+            "\(city.military.units.filter { $0.hitPoints > 0 }.count) 队"
+        case .aesthetics:
+            "\(placedBuildingCount(in: Set(115...122))) 处"
+        case .monuments:
+            "\(placedBuildingCount(in: Set([52, 76, 77, 78, 79, 93, 233, 235, 236]))) 项"
+        case .infrastructure:
+            "\(city.roadNetwork.points.count) 格"
+        }
+    }
+
+    private func placedBuildingCount(in buildingIDs: Set<Int>) -> Int {
+        city.placedBuildings.count { buildingIDs.contains($0.buildingID) }
+    }
+}
+
+private struct ClassicHUDMetric: View {
+    let symbol: String
+    let title: String
+    let value: String
+
+    var body: some View {
+        HStack(spacing: 7) {
+            Image(systemName: symbol)
+                .foregroundStyle(ClassicPalette.gold)
+            Text(title)
+                .font(EmperorTheme.labelSmall)
+                .foregroundStyle(EmperorTheme.onSurfaceMuted)
+            Text(value)
+                .font(EmperorTheme.metric)
+                .foregroundStyle(EmperorTheme.onSurface)
+        }
+        .padding(.horizontal, 8)
+        .frame(height: 34)
+        .background(ClassicPalette.deepBrown.opacity(0.54))
+        .overlay(
+            Rectangle()
+                .strokeBorder(ClassicPalette.border.opacity(0.72), lineWidth: 1)
+        )
+        .fixedSize()
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct ClassicMapHint: View {
+    @ObservedObject var library: LibraryModel
+    let tool: NativeConstructionTool
+    let instruction: String
+
+    var body: some View {
+        HStack(spacing: 9) {
+            Group {
+                if let sprite = originalConstructionSprite {
+                    Image(decorative: sprite.image, scale: 1)
+                        .resizable()
+                        .interpolation(.none)
+                        .scaledToFit()
+                } else {
+                    Image(systemName: tool.symbol)
+                        .foregroundStyle(EmperorTheme.primary)
+                }
+            }
+            .frame(width: 26, height: 24)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(tool.title)
+                    .font(EmperorTheme.headlineSmall)
+                    .foregroundStyle(EmperorTheme.onSurface)
+                Text(instruction)
+                    .font(EmperorTheme.bodySmall)
+                    .foregroundStyle(EmperorTheme.onSurfaceMuted)
+            }
+        }
+        .padding(.horizontal, 9)
+        .padding(.vertical, 6)
+        .background(ClassicPalette.deepBrown.opacity(0.78))
+        .overlay(
+            Rectangle()
+                .strokeBorder(ClassicPalette.border, lineWidth: 1)
+        )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(instruction)
+        .accessibilityIdentifier("player-command-status")
+        .accessibilityValue(instruction)
+    }
+
+    private var originalConstructionSprite: RenderedTerrainSprite? {
+        let reference: BuildingSpriteReference?
+        if tool == .house {
+            reference = OriginalBuildingSpriteCatalog.housingSprite(
+                forHouseLevelID: 0,
+                orientation: library.constructionOrientation
+            )
+        } else if let buildingID = tool.buildingID {
+            reference = OriginalBuildingSpriteCatalog.buildingComponents(
+                forBuildingID: buildingID,
+                orientation: library.constructionOrientation
+            ).first?.sprite
+        } else {
+            reference = nil
+        }
+        guard let reference,
+              reference.archiveBaseName
+                == OriginalBuildingSpriteCatalog.generalArchiveBaseName else {
+            return nil
+        }
+        return library.buildingSprites[reference.imageID]
+    }
+}
+
+private struct ClassicControlPanel: View {
+    @ObservedObject var library: LibraryModel
+    let city: DeterministicCityState
+    let models: OriginalEconomyModels
+    @Binding var selectedCategory: ConstructionToolCategory
+    @Binding var cameraOffsetX: Int
+    @Binding var cameraOffsetY: Int
+    @State private var showsCitySummary = false
+
+    private let categoryOrder: [ConstructionToolCategory] = [
+        .residential, .production, .civic, .religious,
+        .military, .aesthetics, .monuments, .infrastructure,
+    ]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Button {
+                showsCitySummary.toggle()
+            } label: {
+                HStack {
+                    categoryIcon(selectedCategory, selected: true, width: 25, height: 22)
+                    Text(panelTitle)
+                        .font(EmperorTheme.headlineSmall)
+                    Image(systemName: "chart.bar.xaxis")
+                        .font(EmperorTheme.labelSmall)
+                    Spacer()
+                    Text(
+                        selectedCategory == .residential
+                            ? "\(city.population)"
+                            : selectedToolTitle
+                    )
+                        .font(EmperorTheme.metric)
+                        .lineLimit(1)
+                }
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(ClassicPalette.gold)
+            .padding(.horizontal, 10)
+            .frame(height: EmperorTheme.panelHeaderHeight)
+            .background(ClassicPalette.panelHeader)
+            .help("打开城市状况总览")
+            .accessibilityIdentifier("city-summary-open")
+            .sheet(isPresented: $showsCitySummary) {
+                ClassicCitySummaryView(city: city, models: models)
+            }
+
+            Divider().overlay(ClassicPalette.border)
+
+            HStack(alignment: .top, spacing: 0) {
+                categoryRail
+                Divider().overlay(ClassicPalette.border)
+                VStack(spacing: 0) {
+                    ScrollView(.vertical, showsIndicators: true) {
+                        ClassicMissionGuide(library: library, city: city, models: models)
+                            .padding(8)
+                    }
+                    .frame(height: 118)
+
+                    Divider().overlay(ClassicPalette.border)
+                    constructionCatalog
+                }
+            }
+            .frame(maxHeight: .infinity)
+
+            Divider().overlay(ClassicPalette.border)
+            constructionUtilityStrip
+
+            Divider().overlay(ClassicPalette.border)
+            resourceOverlays
+
+            Divider().overlay(ClassicPalette.border)
+            ClassicPanelCommandDock(library: library, models: models)
+
+            Divider().overlay(ClassicPalette.border)
+            classicMinimap
+        }
+        .background(ClassicBronzeTexture())
+    }
+
+    private var categoryRail: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: 2) {
+                ForEach(categoryOrder) { category in
+                    Button {
+                        selectedCategory = category
+                    } label: {
+                        categoryIcon(
+                            category,
+                            selected: selectedCategory == category,
+                            width: 46,
+                            height: 37
+                        )
+                        .frame(width: 48, height: 39)
+                        .background(ClassicPalette.tileBrown)
+                        .overlay(
+                            Rectangle().strokeBorder(
+                                selectedCategory == category
+                                    ? ClassicPalette.gold
+                                    : ClassicPalette.border,
+                                lineWidth: selectedCategory == category ? 1.4 : 0.7
+                            )
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier(
+                        "construction-category-\(categoryAccessibilitySlug(category))"
+                    )
+                    .help(category.rawValue)
+                }
+            }
+            .padding(4)
+        }
+        .frame(width: 54)
+        .frame(maxHeight: .infinity, alignment: .top)
+    }
+
+    private var constructionCatalog: some View {
+        // Keep always-visible utility tools out of the category grid so the
+        // infrastructure page is not mistaken for a Great-Wall / monument menu.
+        let utilityTools: Set<NativeConstructionTool> = [
+            .inspect, .road, .clearLand, .demolish,
+        ]
+        let agriculturalProducerTools: Set<NativeConstructionTool> = [
+            .farmland, .teaHouse, .lacquerGuild, .silkWeaver,
+        ]
+        let categoryTools = NativeConstructionTool.allCases.filter {
+            $0.category == selectedCategory
+                && !utilityTools.contains($0)
+                && !agriculturalProducerTools.contains($0)
+        }
+        let availableTools = categoryTools.filter(isAvailable)
+        let unavailableTools = categoryTools.filter { !isAvailable($0) }
+        let cropOrder: [AgriculturalCrop] = [
+            .wheat, .soybeans, .rice, .millet, .cabbage,
+            .hemp, .tea, .mulberry, .lacquer,
+        ]
+        let availableCrops = cropOrder.filter(isCropAvailable)
+        let unavailableCrops = cropOrder.filter { !isCropAvailable($0) }
+        return VStack(alignment: .leading, spacing: 7) {
+            HStack(spacing: 5) {
+                categoryIcon(selectedCategory, selected: true, width: 20, height: 17)
+                Text(selectedCategory.rawValue)
+                    .font(EmperorTheme.bold(size: 12))
+            }
+            .foregroundStyle(ClassicPalette.gold)
+            .padding(.horizontal, 9)
+            .padding(.top, 8)
+
+            ScrollView(.vertical, showsIndicators: true) {
+                VStack(alignment: .leading, spacing: 7) {
+                    if selectedCategory == .production {
+                        if !availableCrops.isEmpty {
+                            cropCatalog(availableCrops, title: "作物田")
+                        }
+                        constructionToolGrid(availableTools)
+                        if !unavailableCrops.isEmpty || !unavailableTools.isEmpty {
+                            Text("本关未开放")
+                                .font(EmperorTheme.bold(size: 10))
+                                .foregroundStyle(Color.white.opacity(0.48))
+                                .padding(.top, 3)
+                        }
+                        if !unavailableCrops.isEmpty {
+                            cropCatalog(unavailableCrops, title: nil)
+                        }
+                        constructionToolGrid(unavailableTools)
+                    } else {
+                        constructionToolGrid(availableTools + unavailableTools)
+                    }
+                }
+                .padding(.horizontal, 8)
+                .padding(.bottom, 8)
+            }
+        }
+    }
+
+    private func cropCatalog(
+        _ crops: [AgriculturalCrop],
+        title: String?
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            if let title {
+                Text(title)
+                    .font(EmperorTheme.bold(size: 10))
+                    .foregroundStyle(Color.white.opacity(0.66))
+            }
+            LazyVGrid(
+                columns: [
+                    GridItem(.flexible(), spacing: 5),
+                    GridItem(.flexible(), spacing: 5),
+                ],
+                spacing: 5
+            ) {
+                ForEach(crops, id: \.self) { crop in
+                    cropButton(crop)
+                }
+            }
+        }
+    }
+
+    private func constructionToolGrid(
+        _ tools: [NativeConstructionTool]
+    ) -> some View {
+        LazyVGrid(
+            columns: [
+                GridItem(.flexible(), spacing: 5),
+                GridItem(.flexible(), spacing: 5),
+            ],
+            spacing: 5
+        ) {
+            ForEach(tools) { tool in
+                constructionButton(tool)
+            }
+        }
+    }
+
+    private func cropButton(_ crop: AgriculturalCrop) -> some View {
+        let selected = library.constructionTool == .farmland
+            && library.selectedAgriculturalCrop == crop
+        return Button {
+            library.selectAgriculturalCrop(crop)
+        } label: {
+            VStack(spacing: 3) {
+                if let sprite = agriculturalSprite(for: crop) {
+                    Image(decorative: sprite.image, scale: 1)
+                        .resizable()
+                        .interpolation(.none)
+                        .scaledToFit()
+                        .frame(maxWidth: 48, maxHeight: 27)
+                        .accessibilityHidden(true)
+                } else {
+                    Image(systemName: crop.category == .orchard ? "tree.fill" : "leaf.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                        .frame(height: 27)
+                        .accessibilityHidden(true)
+                }
+                Text(crop.fieldTitle)
+                    .font(EmperorTheme.labelSmall)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, minHeight: 48)
+            .foregroundStyle(selected ? ClassicPalette.ink : Color.white.opacity(0.9))
+            .background(selected ? ClassicPalette.gold : ClassicPalette.tileBrown)
+            .overlay(Rectangle().strokeBorder(ClassicPalette.border, lineWidth: 0.8))
+        }
+        .buttonStyle(.plain)
+        .disabled(!isCropAvailable(crop))
+        .accessibilityIdentifier("construction-crop-\(crop.rawValue)")
+        .help(
+            isCropAvailable(crop)
+                ? "\(crop.fieldTitle)：点击清地种植 1 格，须邻接道路"
+                : "\(crop.fieldTitle)：本关暂未开放"
+        )
+    }
+
+    /// Always-visible road / clear / demolish strip modeled on the original
+    /// city panel tool row above the minimap.
+    private var constructionUtilityStrip: some View {
+        let tools: [NativeConstructionTool] = [
+            .inspect, .road, .clearLand, .demolish,
+        ]
+        return HStack(spacing: 5) {
+            ForEach(tools) { tool in
+                Button {
+                    if tool == .road || tool == .clearLand || tool == .demolish {
+                        selectedCategory = .infrastructure
+                    }
+                    library.selectConstructionTool(tool)
+                } label: {
+                    VStack(spacing: 2) {
+                        constructionToolIcon(tool)
+                        Text(tool.title)
+                            .font(EmperorTheme.caption)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .foregroundStyle(
+                        library.constructionTool == tool
+                            ? ClassicPalette.ink
+                            : Color.white.opacity(0.92)
+                    )
+                    .background(
+                        library.constructionTool == tool
+                            ? ClassicPalette.gold
+                            : ClassicPalette.tileBrown
+                    )
+                    .overlay(
+                        Rectangle().strokeBorder(
+                            library.constructionTool == tool
+                                ? ClassicPalette.gold
+                                : ClassicPalette.border,
+                            lineWidth: library.constructionTool == tool ? 1.2 : 0.7
+                        )
+                    )
+                }
+                .buttonStyle(.plain)
+                .disabled(!isAvailable(tool))
+                .accessibilityIdentifier("utility-tool-\(tool.rawValue)")
+                .help(
+                    isAvailable(tool)
+                        ? constructionInstruction(
+                            tool,
+                            orientation: library.constructionOrientation
+                        )
+                        : "\(tool.title)：本关暂未开放"
+                )
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(ClassicPalette.panelBrown)
+    }
+
+    private func constructionButton(_ tool: NativeConstructionTool) -> some View {
+        Button {
+            library.selectConstructionTool(tool)
+        } label: {
+            VStack(spacing: 3) {
+                constructionToolIcon(tool)
+                Text(tool.title)
+                    .font(EmperorTheme.labelSmall)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, minHeight: 48)
+            .foregroundStyle(library.constructionTool == tool ? ClassicPalette.ink : Color.white.opacity(0.9))
+            .background(
+                library.constructionTool == tool
+                    ? ClassicPalette.gold
+                    : ClassicPalette.tileBrown
+            )
+            .overlay(
+                Rectangle()
+                    .strokeBorder(ClassicPalette.border, lineWidth: 0.8)
+            )
+        }
+        .buttonStyle(.plain)
+        .disabled(!isAvailable(tool))
+        .accessibilityIdentifier("construction-tool-\(tool.rawValue)")
+        .help(
+            isAvailable(tool)
+                ? constructionInstruction(
+                    tool,
+                    orientation: library.constructionOrientation
+                )
+                : "\(tool.title)：本关暂未开放"
+        )
+    }
+
+    @ViewBuilder
+    private func constructionToolIcon(_ tool: NativeConstructionTool) -> some View {
+        if let sprite = utilityToolSprite(for: tool) {
+            Image(decorative: sprite.image, scale: 1)
+                .resizable()
+                .interpolation(.none)
+                .scaledToFit()
+                .frame(maxWidth: 48, maxHeight: 27)
+                .accessibilityHidden(true)
+        } else if let sprite = originalConstructionSprite(for: tool) {
+            Image(decorative: sprite.image, scale: 1)
+                .resizable()
+                .interpolation(.none)
+                .scaledToFit()
+                .frame(maxWidth: 48, maxHeight: 27)
+                .accessibilityHidden(true)
+        } else {
+            Image(systemName: tool.symbol)
+                .font(.system(size: 15, weight: .semibold))
+                .frame(height: 27)
+                .accessibilityHidden(true)
+        }
+    }
+
+    private func utilityToolSprite(
+        for tool: NativeConstructionTool
+    ) -> RenderedTerrainSprite? {
+        switch tool {
+        case .clearLand:
+            if let imageID = OriginalInterfaceUtilitySpriteCatalog.imageID(for: .clearLand) {
+                return library.interfaceSprites[imageID]
+            }
+            return nil
+        case .demolish:
+            if let imageID = OriginalInterfaceUtilitySpriteCatalog.imageID(for: .demolish) {
+                return library.interfaceSprites[imageID]
+            }
+            return nil
+        case .road:
+            return library.renderedMap?.roadToolIconSprite()
+        default:
+            return nil
+        }
+    }
+
+    private func originalConstructionSprite(
+        for tool: NativeConstructionTool
+    ) -> RenderedTerrainSprite? {
+        let reference: BuildingSpriteReference?
+        if tool == .house {
+            reference = OriginalBuildingSpriteCatalog.housingSprite(
+                forHouseLevelID: 0,
+                orientation: library.constructionOrientation
+            )
+        } else if tool == .farmland {
+            reference = OriginalBuildingSpriteCatalog.agriculturalPlotSprite(
+                for: library.selectedAgriculturalCrop
+            )
+        } else if let buildingID = tool.buildingID {
+            reference = OriginalBuildingSpriteCatalog.buildingComponents(
+                forBuildingID: buildingID,
+                orientation: library.constructionOrientation
+            ).first?.sprite
+        } else {
+            reference = nil
+        }
+        guard let reference,
+              reference.archiveBaseName == OriginalBuildingSpriteCatalog.generalArchiveBaseName else {
+            return nil
+        }
+        return library.buildingSprites[reference.imageID]
+    }
+
+    private func agriculturalSprite(
+        for crop: AgriculturalCrop
+    ) -> RenderedTerrainSprite? {
+        library.buildingSprites[
+            OriginalBuildingSpriteCatalog.agriculturalPlotImageID(for: crop)
+        ]
+    }
+
+    @ViewBuilder
+    private func categoryIcon(
+        _ category: ConstructionToolCategory,
+        selected: Bool,
+        width: CGFloat,
+        height: CGFloat
+    ) -> some View {
+        if category == .infrastructure,
+           let sprite = library.renderedMap?.roadToolIconSprite() {
+            Image(decorative: sprite.image, scale: 1)
+                .resizable()
+                .interpolation(.none)
+                .scaledToFit()
+                .frame(width: width, height: height)
+                .accessibilityHidden(true)
+        } else if let icon = category.originalInterfaceIcon,
+           let imageID = OriginalInterfaceSpriteCatalog.imageID(
+            for: icon,
+            state: selected ? .selected : .normal
+           ),
+           let sprite = library.interfaceSprites[imageID] {
+            Image(decorative: sprite.image, scale: 1)
+                .resizable()
+                .interpolation(.none)
+                .scaledToFit()
+                .frame(width: width, height: height)
+                .accessibilityHidden(true)
+        } else {
+            Image(systemName: category.symbol)
+                .font(.system(size: min(width, height) * 0.55, weight: .semibold))
+                .frame(width: width, height: height)
+                .foregroundStyle(
+                    selected ? ClassicPalette.gold : Color.white.opacity(0.82)
+                )
+                .accessibilityHidden(true)
+        }
+    }
+
+    private var resourceOverlays: some View {
+        HStack(spacing: 5) {
+            Text("图层")
+                .font(EmperorTheme.bold(size: 10))
+                .foregroundStyle(.white.opacity(0.55))
+            ForEach(ResourceOverlayKind.terrainCases) { kind in
+                let isActive = library.activeResourceOverlays.contains(kind)
+                Button {
+                    library.toggleResourceOverlay(kind)
+                } label: {
+                    Image(systemName: kind.symbol)
+                        .font(EmperorTheme.bodySmall)
+                        .frame(width: 24, height: 24)
+                        .foregroundStyle(isActive ? Color.black : kind.color)
+                        .background(isActive ? kind.color : ClassicPalette.tileBrown)
+                        .overlay(Rectangle().strokeBorder(ClassicPalette.border, lineWidth: 0.7))
+                }
+                .buttonStyle(.plain)
+                .help("高亮\(kind.rawValue)资源")
+            }
+            Menu {
+                ForEach(ResourceOverlayKind.serviceCases) { kind in
+                    Button {
+                        library.toggleResourceOverlay(kind)
+                    } label: {
+                        Label(
+                            kind.rawValue,
+                            systemImage: library.activeResourceOverlays.contains(kind)
+                                ? "checkmark.circle.fill"
+                                : kind.symbol
+                        )
+                    }
+                }
+            } label: {
+                let hasActiveServiceLayer = ResourceOverlayKind.serviceCases.contains {
+                    library.activeResourceOverlays.contains($0)
+                }
+                Image(systemName: "person.line.dotted.person.fill")
+                    .font(EmperorTheme.bodySmall)
+                    .frame(width: 24, height: 24)
+                    .foregroundStyle(
+                        hasActiveServiceLayer ? ClassicPalette.ink : ClassicPalette.gold
+                    )
+                    .background(
+                        hasActiveServiceLayer ? ClassicPalette.gold : ClassicPalette.tileBrown
+                    )
+                    .overlay(Rectangle().strokeBorder(ClassicPalette.border, lineWidth: 0.7))
+            }
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .frame(width: 24)
+            .help("查看住宅的供水、巡察、医疗、娱乐、宗教或税务覆盖")
+            Spacer()
+            Button {
+                library.rotateConstructionTool()
+            } label: {
+                HStack(spacing: 2) {
+                    Image(systemName: "rotate.right")
+                    Image(systemName: library.constructionOrientation.directionSymbol)
+                        .font(EmperorTheme.labelSmall)
+                }
+                .frame(width: 36, height: 24)
+            }
+            .buttonStyle(.borderless)
+            .foregroundStyle(ClassicPalette.gold)
+            .keyboardShortcut("r", modifiers: [])
+            .disabled(!library.constructionTool.supportsRotation)
+            .accessibilityLabel(
+                "旋转\(library.constructionTool.title)，当前\(library.constructionOrientation.localizedTitle)"
+            )
+            .accessibilityIdentifier("construction-rotate")
+            .help(
+                library.constructionTool.supportsRotation
+                    ? "旋转\(library.constructionTool.title)（R），当前\(library.constructionOrientation.localizedTitle)"
+                    : "\(library.constructionTool.title)为对称占地，无需旋转"
+            )
+        }
+        .padding(.horizontal, 10)
+        .frame(height: EmperorTheme.panelHeaderHeight)
+    }
+
+    private var classicMinimap: some View {
+        let columns = min(city.roadNetwork.width, 32)
+        let rows = min(city.roadNetwork.height, 32)
+        let base = classicBaseFocus(city)
+        let focus = GridPoint(x: base.x + cameraOffsetX, y: base.y + cameraOffsetY)
+        let startX = min(
+            max(0, focus.x - columns / 2),
+            max(0, city.roadNetwork.width - columns)
+        )
+        let startY = min(
+            max(0, focus.y - rows / 2),
+            max(0, city.roadNetwork.height - rows)
+        )
+        return HStack(spacing: 8) {
+            VStack(spacing: 3) {
+                panelPanButton(
+                    "arrow.up",
+                    originalIcon: .panUp,
+                    x: 0,
+                    y: -8,
+                    label: "视野向北",
+                    identifier: "city-pan-north"
+                )
+                HStack(spacing: 3) {
+                    panelPanButton(
+                        "arrow.left",
+                        originalIcon: .panLeft,
+                        x: -8,
+                        y: 0,
+                        label: "视野向西",
+                        identifier: "city-pan-west"
+                    )
+                    panelPanButton(
+                        "circle.fill",
+                        originalIcon: nil,
+                        x: 0,
+                        y: 0,
+                        label: "保持当前视野",
+                        identifier: "city-pan-reset"
+                    )
+                    panelPanButton(
+                        "arrow.right",
+                        originalIcon: .panRight,
+                        x: 8,
+                        y: 0,
+                        label: "视野向东",
+                        identifier: "city-pan-east"
+                    )
+                }
+                panelPanButton(
+                    "arrow.down",
+                    originalIcon: .panDown,
+                    x: 0,
+                    y: 8,
+                    label: "视野向南",
+                    identifier: "city-pan-south"
+                )
+            }
+            MinimapView(
+                city: city,
+                mapWidth: city.roadNetwork.width,
+                mapHeight: city.roadNetwork.height,
+                viewportStartX: startX,
+                viewportStartY: startY,
+                viewportColumns: columns,
+                viewportRows: rows,
+                minimapSize: EmperorTheme.minimapSize
+            ) { target in
+                cameraOffsetX = target.x - base.x
+                cameraOffsetY = target.y - base.y
+            }
+        }
+        .padding(.horizontal, 8)
+        .frame(height: 126)
+        .background(ClassicPalette.deepBrown.opacity(0.84))
+    }
+
+    private func panelPanButton(
+        _ symbol: String,
+        originalIcon: OriginalInterfaceIcon?,
+        x: Int,
+        y: Int,
+        label: String,
+        identifier: String
+    ) -> some View {
+        Button {
+            if x == 0, y == 0 {
+                cameraOffsetX = 0
+                cameraOffsetY = 0
+            } else {
+                cameraOffsetX += x
+                cameraOffsetY += y
+            }
+        } label: {
+            Group {
+                if let originalIcon,
+                   let imageID = OriginalInterfaceSpriteCatalog.imageID(
+                    for: originalIcon
+                   ),
+                   let sprite = library.interfaceSprites[imageID] {
+                    Image(decorative: sprite.image, scale: 1)
+                        .resizable()
+                        .interpolation(.none)
+                        .scaledToFit()
+                } else {
+                    Image(systemName: symbol)
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(
+                            symbol == "circle.fill"
+                                ? ClassicPalette.red
+                                : ClassicPalette.gold
+                        )
+                }
+            }
+            .frame(width: 20, height: 20)
+            .background(ClassicPalette.tileBrown)
+            .overlay(Rectangle().strokeBorder(ClassicPalette.border, lineWidth: 0.7))
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(identifier)
+        .help(label)
+    }
+
+    private func isAvailable(_ tool: NativeConstructionTool) -> Bool {
+        if tool == .rally {
+            guard city.missionSettings != nil else { return true }
+            return !city.military.forts.isEmpty || !city.military.defensiveStructures.isEmpty
+        }
+        return tool.buildingID.map(city.isBuildingAvailableInCampaign) ?? true
+    }
+
+    private func isCropAvailable(_ crop: AgriculturalCrop) -> Bool {
+        city.isAgriculturalCropAvailable(crop)
+    }
+
+    private var selectedToolTitle: String {
+        library.constructionTool == .farmland
+            ? library.selectedAgriculturalCrop.fieldTitle
+            : library.constructionTool.title
+    }
+
+    private var panelTitle: String {
+        switch selectedCategory {
+        case .residential: "人口"
+        case .production: "农业与工业"
+        case .military: "军事"
+        case .civic: "城市管理"
+        case .religious: "宗教"
+        case .aesthetics: "美化"
+        case .monuments: "纪念建筑"
+        case .infrastructure: "基础设施"
+        }
+    }
+}
+
+private struct ClassicCitySummaryView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    private struct SummaryRow: Identifiable {
+        let id: String
+        let symbol: String
+        let title: String
+        let value: String
+        let detail: String
+        let isHealthy: Bool
+    }
+
+    let city: DeterministicCityState
+    let models: OriginalEconomyModels
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 8) {
+                Image(systemName: "chart.bar.xaxis")
+                    .foregroundStyle(ClassicPalette.gold)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("城市状况总览")
+                        .font(EmperorTheme.headlineSmall)
+                        .foregroundStyle(ClassicPalette.gold)
+                    Text("点击右侧栏标题可随时查看")
+                        .font(EmperorTheme.labelSmall)
+                        .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                }
+                Spacer()
+                Text("\(city.population) 人")
+                    .font(EmperorTheme.metric)
+                    .foregroundStyle(EmperorTheme.onSurface)
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                .help("关闭城市状况总览")
+            }
+            .padding(12)
+            .background(ClassicPalette.panelHeader)
+
+            ScrollView {
+                LazyVStack(spacing: 0) {
+                    ForEach(summaryRows) { row in
+                        HStack(alignment: .top, spacing: 9) {
+                            Image(systemName: row.symbol)
+                                .frame(width: 18)
+                                .foregroundStyle(
+                                    row.isHealthy
+                                        ? EmperorTheme.success
+                                        : EmperorTheme.warning
+                                )
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack {
+                                    Text(row.title)
+                                        .font(EmperorTheme.labelMedium)
+                                    Spacer()
+                                    Text(row.value)
+                                        .font(EmperorTheme.metric)
+                                }
+                                Text(row.detail)
+                                    .font(EmperorTheme.bodySmall)
+                                    .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .foregroundStyle(EmperorTheme.onSurface)
+
+                        if row.id != summaryRows.last?.id {
+                            Divider()
+                                .overlay(EmperorTheme.border.opacity(0.55))
+                        }
+                    }
+                }
+            }
+            .frame(maxHeight: 470)
+        }
+        .frame(width: 390)
+        .background(EmperorTheme.surface)
+        .overlay(
+            Rectangle()
+                .strokeBorder(ClassicPalette.border, lineWidth: 1)
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("city-summary")
+    }
+
+    private var summaryRows: [SummaryRow] {
+        let occupiedHouses = city.houses.filter { $0.residents > 0 }
+        let occupiedCount = occupiedHouses.count
+        let workforce = city.workforceSnapshot(models: models.buildings)
+        let unemploymentPercent = workforce.availableWorkers > 0
+            ? workforce.unemployedWorkers * 100 / workforce.availableWorkers
+            : 0
+        let assessment = city.migration.lastAssessment
+        let migrationHealthy = assessment?.blockReason == nil
+        let foodProduction = city.productionAccounting
+            .currentProductionUnitsByCommodityID
+            .filter { OriginalFoodCatalog.isMillCommodity($0.key) }
+            .values
+            .reduce(0, +) / 100
+        let storedFood = city.logistics.mills.reduce(0) {
+            $0 + $1.inventoryByCommodityID
+                .filter { OriginalFoodCatalog.isMillCommodity($0.key) }
+                .values
+                .reduce(0, +)
+        } / 100
+        let medicalCoverage = coverageCount(in: occupiedHouses) {
+            $0.serviceCoverage.contains(.water)
+                || $0.serviceCoverage.contains(.herbalist)
+                || $0.serviceCoverage.contains(.acupuncture)
+        }
+        let entertainmentCoverage = coverageCount(in: occupiedHouses) {
+            $0.serviceCoverage.contains(.music)
+                || $0.serviceCoverage.contains(.acrobat)
+                || $0.serviceCoverage.contains(.drama)
+        }
+        let religionCoverage = coverageCount(in: occupiedHouses) {
+            $0.serviceCoverage.contains(.ancestor)
+                || $0.serviceCoverage.contains(.confucian)
+                || $0.serviceCoverage.contains(.daoistOrBuddhist)
+        }
+        let constableCoverage = coverageCount(in: occupiedHouses) {
+            $0.serviceCoverage.contains(.constable)
+        }
+        let worstCrimeRisk = city.publicHealthSafety.records.map(\.crimeRisk).max() ?? 0
+        let currentProfit = city.productionAccounting.currentIncome
+            - city.productionAccounting.currentExpenses
+        let livingUnits = city.military.units.filter { $0.hitPoints > 0 }.count
+        let invasionPending = city.campaignEvents.invasions.contains {
+            $0.status == .awaitingDefense
+        }
+
+        return [
+            SummaryRow(
+                id: "popularity",
+                symbol: "person.3.fill",
+                title: "民心",
+                value: migrationHealthy && unemploymentPercent <= 10 ? "稳定" : "承压",
+                detail: unemploymentPercent > 10
+                    ? "失业率偏高会阻碍移民进入城市。"
+                    : "就业和国库目前没有阻断城市发展。",
+                isHealthy: migrationHealthy && unemploymentPercent <= 10
+            ),
+            SummaryRow(
+                id: "migration",
+                symbol: "figure.walk.arrival",
+                title: "移民",
+                value: "本月 +\(city.migration.currentMonthImmigrants)",
+                detail: migrationDetail(assessment),
+                isHealthy: migrationHealthy
+            ),
+            SummaryRow(
+                id: "food-production",
+                symbol: "leaf.fill",
+                title: "产粮",
+                value: "\(foodProduction) 担／月",
+                detail: foodProduction > 0 ? "本月已有粮食产出。" : "本月尚无粮食进入生产统计。",
+                isHealthy: foodProduction > 0 || city.population == 0
+            ),
+            SummaryRow(
+                id: "food-storage",
+                symbol: "shippingbox.fill",
+                title: "储粮",
+                value: "\(storedFood) 担",
+                detail: storedFood > 0 ? "磨坊中已有可供市场调取的粮食。" : "磨坊没有可用粮食库存。",
+                isHealthy: storedFood > 0 || city.population == 0
+            ),
+            SummaryRow(
+                id: "employment",
+                symbol: "hammer.fill",
+                title: "就业",
+                value: "失业 \(unemploymentPercent)%",
+                detail: workforce.workerShortage > 0
+                    ? "仍缺少 \(workforce.workerShortage) 名劳工，部分设施可能停摆。"
+                    : "现有设施的劳工需求已满足。",
+                isHealthy: unemploymentPercent <= 10 && workforce.workerShortage == 0
+            ),
+            SummaryRow(
+                id: "health",
+                symbol: "cross.case.fill",
+                title: "公共卫生",
+                value: coverageText(medicalCoverage, total: occupiedCount),
+                detail: (city.publicHealthSafety.lastSettlement?.diseaseDeaths ?? 0) > 0
+                    ? "上月疾病造成 \(city.publicHealthSafety.lastSettlement?.diseaseDeaths ?? 0) 人死亡。"
+                    : "供水或医疗服务覆盖 \(medicalCoverage) 户。",
+                isHealthy: occupiedCount == 0 || medicalCoverage == occupiedCount
+            ),
+            SummaryRow(
+                id: "unrest",
+                symbol: "exclamationmark.shield.fill",
+                title: "治安",
+                value: "最高风险 \(worstCrimeRisk)",
+                detail: "捕快覆盖 \(constableCoverage)/\(occupiedCount) 户；风险达到 100 会触发盗窃。",
+                isHealthy: worstCrimeRisk < 70
+            ),
+            SummaryRow(
+                id: "finance",
+                symbol: "banknote.fill",
+                title: "财政",
+                value: "\(city.economy.treasury) 钱",
+                detail: "本月净收支 \(currentProfit >= 0 ? "+" : "")\(currentProfit)。",
+                isHealthy: city.economy.treasury >= 0 && currentProfit >= 0
+            ),
+            SummaryRow(
+                id: "entertainment",
+                symbol: "music.note",
+                title: "娱乐",
+                value: coverageText(entertainmentCoverage, total: occupiedCount),
+                detail: "音乐、杂技或戏剧服务覆盖 \(entertainmentCoverage) 户。",
+                isHealthy: occupiedCount == 0 || entertainmentCoverage == occupiedCount
+            ),
+            SummaryRow(
+                id: "religion",
+                symbol: "sparkles",
+                title: "宗教",
+                value: coverageText(religionCoverage, total: occupiedCount),
+                detail: "祖先、儒家、道教或佛教服务覆盖 \(religionCoverage) 户。",
+                isHealthy: occupiedCount == 0 || religionCoverage == occupiedCount
+            ),
+            SummaryRow(
+                id: "defense",
+                symbol: "shield.fill",
+                title: "国防",
+                value: "\(livingUnits) 支部队",
+                detail: invasionPending
+                    ? "敌军来袭，现有 \(city.military.forts.count) 座要塞可组织防御。"
+                    : "当前没有等待处理的入侵警报。",
+                isHealthy: !invasionPending || livingUnits > 0
+            ),
+        ]
+    }
+
+    private func coverageCount(
+        in houses: [ResidentialUnit],
+        matching predicate: (ResidentialUnit) -> Bool
+    ) -> Int {
+        houses.filter(predicate).count
+    }
+
+    private func coverageText(_ covered: Int, total: Int) -> String {
+        guard total > 0 else { return "暂无住户" }
+        return "\(covered)/\(total) 户"
+    }
+
+    private func migrationDetail(_ assessment: MigrationAssessment?) -> String {
+        guard let assessment else { return "等待下一个模拟日评估迁入条件。" }
+        switch assessment.blockReason {
+        case .none:
+            return "尚有 \(assessment.availableCapacity) 人容量，预计每日迁入 \(assessment.plannedImmigrants) 人。"
+        case .noEligibleHousing:
+            return "没有临路且仍有空位的住宅。"
+        case .negativeTreasury:
+            return "国库为负，暂时没有移民迁入。"
+        case let .highUnemployment(percent):
+            return "失业率 \(percent)% 过高，暂时没有移民迁入。"
+        }
+    }
+}
+
+private struct ClassicMissionGuide: View {
+    @ObservedObject var library: LibraryModel
+    let city: DeterministicCityState
+    let models: OriginalEconomyModels
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            HStack {
+                HStack(spacing: 5) {
+                    if let imageID = OriginalInterfaceSpriteCatalog.imageID(
+                        for: .objectives
+                    ),
+                       let sprite = library.interfaceSprites[imageID] {
+                        Image(decorative: sprite.image, scale: 1)
+                            .resizable()
+                            .interpolation(.none)
+                            .scaledToFit()
+                            .frame(width: 22, height: 18)
+                    } else {
+                        Image(systemName: "scroll.fill")
+                    }
+                    Text("任务目标")
+                }
+                .font(EmperorTheme.bold(size: 12))
+                .foregroundStyle(ClassicPalette.gold)
+                Spacer()
+                Text("\(imperialYear) · \(city.calendar.month) 月")
+                    .font(EmperorTheme.metric)
+                    .foregroundStyle(EmperorTheme.onSurfaceMuted)
+            }
+
+            if let goalSet, !goalSet.goals.isEmpty {
+                let snapshot = city.campaignGoalProgressSnapshot()
+                ForEach(goalSet.goals.prefix(2)) { goal in
+                    CampaignGoalRow(
+                        goal: goal,
+                        economy: models,
+                        progress: CampaignGoalEvaluator.evaluate(goal, against: snapshot)
+                    )
+                    .foregroundStyle(EmperorTheme.onSurface)
+                }
+            } else {
+                Text("建设一座稳定繁荣的城市")
+                    .font(EmperorTheme.bodySmall)
+                    .foregroundStyle(EmperorTheme.onSurfaceMuted)
+            }
+
+            Divider().overlay(EmperorTheme.border.opacity(0.55))
+
+            HStack(alignment: .top, spacing: 7) {
+                Image(systemName: nextStep.complete ? "checkmark.circle.fill" : "arrow.right.circle.fill")
+                    .foregroundStyle(nextStep.complete ? EmperorTheme.success : ClassicPalette.gold)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(nextStep.title)
+                        .font(EmperorTheme.labelMedium)
+                        .foregroundStyle(EmperorTheme.onSurface)
+                    Text(nextStep.detail)
+                        .font(EmperorTheme.bodySmall)
+                        .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+        .accessibilityIdentifier("campaign-goal-status")
+        .accessibilityValue(accessibilityStatus)
+    }
+
+    private var goalSet: CampaignMissionGoalSet? {
+        guard let missionID = library.selectedMissionID else { return nil }
+        return library.campaignGoalArchive?.missions.first { $0.id == missionID }
+    }
+
+    private var imperialYear: String {
+        city.calendar.year < 0
+            ? "\(abs(city.calendar.year)) 公元前"
+            : "\(city.calendar.year) 年"
+    }
+
+    private var nextStep: (title: String, detail: String, complete: Bool) {
+        let placements = city.placedBuildings
+        if city.houses.isEmpty {
+            return ("先铺路，再建住宅", "选“基础设施 → 道路”，在空地延伸道路；再选“住宅”沿路放置。", false)
+        }
+        if !placements.contains(where: { $0.buildingID == 72 }) {
+            return ("为住宅供水", "选“住宅 → 水井”，放在道路旁并覆盖住房。", false)
+        }
+        let foodIDs: Set<Int> = [33, 53, 59]
+        if !foodIDs.isSubset(of: Set(placements.map(\.buildingID))) {
+            return ("建立食物供应链", "沿路建设猎场、磨坊和市场；猎场须靠近猎物资源。", false)
+        }
+        if city.population < 150 {
+            return ("让时间运行", "在右栏选择 3×，等待移民入住；保持道路、供水和食物畅通。", false)
+        }
+        return ("城市已经可以运转", "继续满足上方原版任务目标，或保存当前进度。", true)
+    }
+
+    private var accessibilityStatus: String {
+        let outcome: String
+        switch library.campaignRuntimeState?.outcome {
+        case .victory?: outcome = "victory"
+        case .defeat?: outcome = "defeat"
+        default: outcome = "running"
+        }
+        return "outcome=\(outcome);year=\(city.calendar.year);month=\(city.calendar.month);day=\(city.simulationClock.day);population=\(city.population);treasury=\(city.economy.treasury);debtMonths=\(library.campaignRuntimeState?.consecutiveDebtMonths ?? 0)"
+    }
+}
+
+private struct ClassicPanelCommandDock: View {
+    @ObservedObject var library: LibraryModel
+    let models: OriginalEconomyModels
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Picker("税率", selection: Binding(
+                get: { library.cityState?.taxBandID ?? 2 },
+                set: { library.setTaxBand($0) }
+            )) {
+                ForEach(models.taxSentiment.bands) { band in
+                    Text("税 \(band.taxRatePercent)%").tag(band.id)
+                }
+            }
+            .labelsHidden()
+            .frame(width: 62)
+            .controlSize(.small)
+
+            commandButton(
+                library.musicIsPlaying ? "speaker.wave.2.fill" : "speaker.slash.fill",
+                help: library.musicIsPlaying ? "暂停原版音乐" : "播放原版音乐",
+                action: library.toggleOriginalMusic
+            )
+            commandButton("folder", help: "载入", action: library.loadCity)
+                .keyboardShortcut("o", modifiers: .command)
+            commandButton("square.and.arrow.down", help: "保存", action: library.saveCity)
+                .keyboardShortcut("s", modifiers: .command)
+
+            Spacer(minLength: 1)
+
+            ForEach(Array(0...3), id: \.self) { speed in
+                Button {
+                    library.setGameSpeed(speed)
+                } label: {
+                    Text(speed == 0 ? "Ⅱ" : "\(speed)×")
+                        .font(EmperorTheme.bold(size: 9))
+                        .frame(width: 24, height: 22)
+                        .foregroundStyle(
+                            library.gameSpeed == speed ? ClassicPalette.ink : Color.white
+                        )
+                        .background(
+                            library.gameSpeed == speed
+                                ? ClassicPalette.gold
+                                : ClassicPalette.tileBrown
+                        )
+                        .overlay(Rectangle().strokeBorder(ClassicPalette.border, lineWidth: 0.7))
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("game-speed-\(speed)")
+            }
+        }
+        .padding(.horizontal, 8)
+        .frame(height: 36)
+        .foregroundStyle(ClassicPalette.gold)
+        .background(ClassicPalette.panelBrown)
+    }
+
+    private func commandButton(
+        _ symbol: String,
+        help: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 11, weight: .semibold))
+                .frame(width: 22, height: 22)
+                .background(ClassicPalette.tileBrown)
+                .overlay(Rectangle().strokeBorder(ClassicPalette.border, lineWidth: 0.7))
+        }
+        .buttonStyle(.plain)
+        .help(help)
+    }
+}
+
+private func constructionInstruction(
+    _ tool: NativeConstructionTool,
+    orientation: IsometricBuildingOrientation
+) -> String {
+    switch tool {
+    case .inspect:
+        return "浏览模式：悬停住宅查看升级条件，点击查看详情"
+    case .demolish:
+        return "拆除工具：点击或拖动区域拆除建筑、住宅或道路；右键取消"
+    case .clearLand:
+        return "清理树木：点击或拖动区域清除树木与灌木；右键取消"
+    case .road:
+        return "道路：点击或拖动铺路，每格造价 2；右键取消"
+    case .roadblock:
+        return "路障：放在既有道路上；阻止漫游人员，放行采购、运输和移民；右键取消"
+    case .rally:
+        return "部队集结：先选编队，再点地图下令；右键取消"
+    case .house:
+        return "住宅：2×2 占地，当前\(orientation.localizedTitle)；点击或拖动连续建造；R 旋转；右键取消"
+    case .farmland:
+        return "作物田：先在农业分类选择具体作物，再点击或拖动清地种植；右键取消"
+    default:
+        guard let buildingID = tool.buildingID,
+              let footprint = OriginalBuildingFootprintCatalog.footprint(
+                forBuildingID: buildingID,
+                orientation: orientation
+              ) else {
+            return "请选择一项建造工具"
+        }
+        return "\(tool.title)：占地 \(footprint.width)×\(footprint.height)，须邻接道路"
+            + (tool.supportsRotation
+                ? "；当前\(orientation.localizedTitle)，R 旋转"
+                : "")
+            + "；右键取消"
+    }
+}
+
+private func categoryAccessibilitySlug(_ category: ConstructionToolCategory) -> String {
+    switch category {
+    case .residential: "residential"
+    case .production: "production"
+    case .military: "military"
+    case .civic: "civic"
+    case .religious: "religious"
+    case .aesthetics: "aesthetics"
+    case .monuments: "monuments"
+    case .infrastructure: "infrastructure"
+    }
+}
+
+private func classicBaseFocus(_ city: DeterministicCityState) -> GridPoint {
+    let center = GridPoint(
+        x: city.roadNetwork.width / 2,
+        y: city.roadNetwork.height / 2
+    )
+    return city.roadNetwork.points.min { lhs, rhs in
+            let lhsDX = lhs.x - center.x
+            let lhsDY = lhs.y - center.y
+            let rhsDX = rhs.x - center.x
+            let rhsDY = rhs.y - center.y
+            let lhsDistance = lhsDX * lhsDX + lhsDY * lhsDY
+            let rhsDistance = rhsDX * rhsDX + rhsDY * rhsDY
+            if lhsDistance != rhsDistance { return lhsDistance < rhsDistance }
+            if lhs.y != rhs.y { return lhs.y < rhs.y }
+            return lhs.x < rhs.x
+        }
+        ?? city.houses.compactMap(\.location).first
+        ?? city.trade.buildings.first?.roadAccessPoint
+        ?? center
+}
+
+private struct CitySimulationView: View {
+    @ObservedObject var library: LibraryModel
+    let models: OriginalEconomyModels
+    @State private var cameraOffsetX = 0
+    @State private var cameraOffsetY = 0
+
+    var body: some View {
+        ZStack {
+            LinearGradient(
+                colors: [Color(red: 0.08, green: 0.12, blue: 0.10), Color(red: 0.18, green: 0.16, blue: 0.10)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            if let city = library.cityState {
+                ScrollView {
+                    VStack(spacing: 18) {
+                        if let campaign = library.selectedCampaign,
+                           let missionID = library.selectedMissionID,
+                           let mission = campaign.missions.first(where: { $0.id == missionID }) {
+                            HStack(spacing: 10) {
+                                Image(systemName: "flag.pattern.checkered")
+                                    .foregroundStyle(.orange)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(
+                                        "\(ClassicTextLocalization.campaignTitle(campaign.title))"
+                                            + " · 第 \(mission.sequenceNumber) 关"
+                                    )
+                                        .font(EmperorTheme.bodySmall)
+                                        .foregroundStyle(.secondary)
+                                    Text(
+                                        ClassicTextLocalization.missionTitle(mission.title)
+                                            + " · "
+                                            + ClassicTextLocalization.cityName(
+                                                library.activeMissionWorld?.playerCityName
+                                                    ?? "原版任务城市"
+                                            )
+                                    )
+                                        .font(EmperorTheme.headlineMedium)
+                                }
+                                Spacer()
+                                if let world = library.activeMissionWorld {
+                                    Label("\(world.tradePartners.count) 条贸易路线", systemImage: "arrow.left.arrow.right")
+                                        .font(EmperorTheme.bodySmall)
+                                        .foregroundStyle(.teal)
+                                }
+                                if let settings = city.missionSettings {
+                                    Label(
+                                        "建筑许可 \(settings.allowedBuildingMenuIDs.count)/56",
+                                        systemImage: "checklist"
+                                    )
+                                    .font(EmperorTheme.bodySmall)
+                                    .foregroundStyle(.orange)
+                                }
+                            }
+                            .padding(14)
+                            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 14))
+                        }
+                        HStack(spacing: 12) {
+                            CityMetricCard(title: "人口", value: "\(city.population) / \(city.housingCapacity(using: models.buildings))", symbol: "person.2.fill")
+                            CityMetricCard(title: "住宅", value: "\(city.houses.count)", symbol: "house.fill")
+                            CityMetricCard(title: "国库", value: "\(city.economy.treasury)", symbol: "building.columns.fill")
+                            CityMetricCard(
+                                title: "日期",
+                                value: "\(city.calendar.year) · \(city.calendar.month) · \(city.simulationClock.day)",
+                                symbol: "calendar"
+                            )
+                        }
+
+                        MigrationStatusStrip(migration: city.migration)
+
+                        ConstructionToolbar(library: library, city: city)
+
+                        CityCanvas(
+                            city: city,
+                            buildingSprites: library.buildingSprites,
+                            interfaceSprites: library.interfaceSprites,
+                            figureSprites: library.figureSprites,
+                            originalMap: library.renderedMap,
+                            constructionTool: library.constructionTool,
+                            agriculturalCrop: library.selectedAgriculturalCrop,
+                            constructionOrientation: library.constructionOrientation,
+                            models: models,
+                            activeResourceOverlays: library.activeResourceOverlays,
+                            selectedMilitaryUnitIDs: library.selectedMilitaryUnitIDs,
+                            gameSpeed: library.gameSpeed,
+                            lastTickPresentationDate: library.lastCityTickPresentationDate,
+                            onPlaceConstruction: library.placeConstruction,
+                            onPlaceConstructionArea: library.placeConstructions,
+                            onCancelInteraction: library.cancelCurrentInteraction,
+                            onBuildingSettingChange: library.applyBuildingSetting,
+                            cameraOffsetX: $cameraOffsetX,
+                            cameraOffsetY: $cameraOffsetY,
+                            showsNavigationOverlay: true
+                        )
+                            .id(library.selectedMap?.url)
+                            .frame(minHeight: 330, idealHeight: 380)
+                            .background(.black.opacity(0.16), in: RoundedRectangle(cornerRadius: 16))
+                            .overlay(alignment: .topLeading) {
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(library.activeMissionWorld == nil ? "原版建筑精灵" : "原版任务地形与建筑")
+                                        .font(EmperorTheme.headlineMedium)
+                                    Text(
+                                        library.activeMissionWorld == nil
+                                            ? "模型状态由 Swift 原生确定性内核驱动"
+                                            : "\(city.roadNetwork.width) × \(city.roadNetwork.height) 可玩区域 · 原版道路已进入模拟"
+                                    )
+                                        .font(EmperorTheme.bodySmall)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .padding(16)
+                            }
+
+                        ProductionStatusStrip(
+                            production: city.production,
+                            logistics: city.logistics,
+                            trade: city.trade,
+                            models: models
+                        )
+                        AgricultureStatusStrip(
+                            calendar: city.calendar,
+                            production: city.production,
+                            logistics: city.logistics,
+                            models: models
+                        )
+                        TradeStatusStrip(
+                            trade: city.trade,
+                            accounting: city.productionAccounting,
+                            models: models
+                        )
+                        MarketStatusStrip(
+                            markets: city.markets,
+                            houses: city.houses,
+                            models: models
+                        )
+                        HousingEvolutionStatusStrip(
+                            houses: city.houses,
+                            serviceBuildings: city.residentialServiceBuildings,
+                            settlement: city.lastHousingSettlement,
+                            models: models
+                        )
+                        WalkerStatusStrip(walkers: city.walkers, houses: city.houses)
+                        if !city.military.units.isEmpty
+                            || !city.military.enemyForces.isEmpty
+                            || !city.military.defensiveStructures.isEmpty {
+                            MilitaryStatusStrip(
+                                military: city.military,
+                                selectedUnitIDs: library.selectedMilitaryUnitIDs,
+                                onSelectAll: library.selectAllMilitaryUnits,
+                                onClearSelection: library.clearMilitaryUnitSelection
+                            )
+                        }
+                        if let runtime = library.campaignRuntimeState {
+                            CampaignRuntimeStatusStrip(
+                                runtime: runtime,
+                                latestAdvance: library.latestCampaignAdvance,
+                                city: city,
+                                models: models,
+                                onFulfillRequest: library.fulfillFirstCampaignRequest,
+                                onStartNextMission: library.startNextMission
+                            )
+                            if let empire = runtime.empireState {
+                                CampaignEmpireStatusStrip(
+                                    empire: empire,
+                                    onSendEmissary: library.sendCampaignEmissary,
+                                    onSendSpy: library.sendCampaignSpy,
+                                    onRequestAlliance: library.requestCampaignAlliance,
+                                    onConquer: library.conquerCampaignCity,
+                                    onRequestAnimal: library.requestCampaignMenagerieAnimal,
+                                    onPrepayHomage: library.prepayCampaignHomage
+                                )
+                            }
+                        }
+
+                        GameControlsView(library: library, city: city, models: models)
+
+                        CitySettlementStrip(settlement: library.latestSettlement)
+                    }
+                    .padding(24)
+                }
+                if let runtime = library.campaignRuntimeState,
+                   runtime.outcome != .running {
+                    MissionOutcomeOverlay(
+                        outcome: runtime.outcome,
+                        missionTitle: library.selectedCampaign?.missions.first {
+                            $0.id == library.selectedMissionID
+                        }.map {
+                            ClassicTextLocalization.missionTitle($0.title)
+                        } ?? "当前任务",
+                        onNextMission: library.startNextMission,
+                        onReplay: library.replayMission,
+                        onLoadRecent: library.loadMostRecentSave,
+                        onReturn: library.returnToCampaignList
+                    )
+                }
+            } else {
+                ProgressView("正在初始化城市状态…")
+            }
+        }
+    }
+}
+
+private struct MissionOutcomeOverlay: View {
+    let outcome: CampaignMissionOutcome
+    let missionTitle: String
+    let onNextMission: () -> Void
+    let onReplay: () -> Void
+    let onLoadRecent: () -> Void
+    let onReturn: () -> Void
+
+    var body: some View {
+        ZStack {
+            EmperorTheme.overlayScrim.ignoresSafeArea()
+            VStack(spacing: 16) {
+                switch outcome {
+                case .running:
+                    EmptyView()
+                case let .victory(record):
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 48))
+                        .foregroundStyle(EmperorTheme.success)
+                    Text("任务胜利")
+                        .font(EmperorTheme.display)
+                        .foregroundStyle(EmperorTheme.success)
+                        .accessibilityIdentifier("mission-outcome-victory")
+                    Text(missionTitle)
+                        .font(EmperorTheme.headlineMedium)
+                        .foregroundStyle(EmperorTheme.onSurface)
+                    Text("达成于 \(record.settlementYear) 年 \(record.month) 月")
+                        .font(EmperorTheme.bodyMedium)
+                        .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                    Divider().overlay(EmperorTheme.border)
+                    HStack(spacing: 8) {
+                        Button("进入下一任务", action: onNextMission)
+                            .buttonStyle(EmperorClassicButtonStyle(.primary))
+                            .accessibilityIdentifier("mission-outcome-next")
+                        Button("重玩本任务", action: onReplay)
+                            .buttonStyle(EmperorClassicButtonStyle())
+                            .accessibilityIdentifier("mission-outcome-replay")
+                        Button("返回战役列表", action: onReturn)
+                            .buttonStyle(EmperorClassicButtonStyle())
+                            .accessibilityIdentifier("mission-outcome-return")
+                    }
+                case let .defeat(record):
+                    Image(systemName: "exclamationmark.octagon.fill")
+                        .font(.system(size: 48))
+                        .foregroundStyle(EmperorTheme.error)
+                    Text("任务失败")
+                        .font(EmperorTheme.display)
+                        .foregroundStyle(EmperorTheme.error)
+                        .accessibilityIdentifier("mission-outcome-defeat")
+                    Text(missionTitle)
+                        .font(EmperorTheme.headlineMedium)
+                        .foregroundStyle(EmperorTheme.onSurface)
+                    Text(defeatDescription(record))
+                        .font(EmperorTheme.bodyMedium)
+                        .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                    Divider().overlay(EmperorTheme.border)
+                    HStack(spacing: 8) {
+                        Button("从最近存档读取", action: onLoadRecent)
+                            .buttonStyle(EmperorClassicButtonStyle(.primary))
+                            .accessibilityIdentifier("mission-outcome-load-recent")
+                        Button("重玩本任务", action: onReplay)
+                            .buttonStyle(EmperorClassicButtonStyle())
+                            .accessibilityIdentifier("mission-outcome-replay")
+                        Button("返回战役列表", action: onReturn)
+                            .buttonStyle(EmperorClassicButtonStyle())
+                            .accessibilityIdentifier("mission-outcome-return")
+                    }
+                }
+            }
+            .padding(24)
+            .frame(minWidth: 480, maxWidth: 620)
+            .background(EmperorTheme.surfaceRaised)
+            .overlay {
+                RoundedRectangle(cornerRadius: 4)
+                    .strokeBorder(EmperorTheme.secondary, lineWidth: 1)
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 2)
+                    .inset(by: 4)
+                    .strokeBorder(EmperorTheme.primary.opacity(0.28), lineWidth: 1)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 4))
+            .shadow(color: .black.opacity(0.55), radius: 24, y: 10)
+        }
+    }
+
+    private func defeatDescription(_ record: CampaignDefeatRecord) -> String {
+        switch record.reason {
+        case let .continuousDebt(months):
+            "国库连续 \(months) 个月为负（当前 \(record.treasury)）· \(record.settlementYear) 年 \(record.month) 月"
+        }
+    }
+}
