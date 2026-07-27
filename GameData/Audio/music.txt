@@ -1,0 +1,23 @@
+; MUSIC.TXT
+
+GENERAL_MUSIC
+   BG01-Lonely_Er_Hu.MP3
+   BG02-Temple_of_Zhong.mp3
+   BG03-Happy_Qu_Di.mp3
+   BG04-Di_Zi_Feeling.mp3
+   BG05-Dance_of_the_Great_Wall.mp3
+   BG06-Bo_Luo_Vo_La.mp3
+   BG07-Journey_of_the_Gu_Qin.mp3
+   BG08-Buddha's_Dream.mp3
+   BG09-Guan_Zi_Festival.mp3
+   BG10-Pi_Pa_Village.mp3
+   BG11-Sunset_Ceremony.mp3 
+   BG12-Himalayan_Echos.mp3
+  
+COMBAT_MUSIC
+   BAT1-Battle_of_the_Tang_Gu.MP3
+   BAT2-Xiao_Luo_Conflict.mp3
+   BAT3-War_of_the_Elephants.mp3
+   BAT4-Attack_of_the_Feng_Luo.mp3
+
+

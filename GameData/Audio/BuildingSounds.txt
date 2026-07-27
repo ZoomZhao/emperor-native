@@ -1,0 +1,291 @@
+;  Building Right-Click Sound Files
+;
+;  Purpose: This file associates right-click sound files with the proper building
+;
+;  Comment lines are any line with a semi-colon ';' in the very first position
+;
+;  All entries in file must be in the following format:
+;   <number>,<building description>:<filename in Audio\Ambient\Layer2 folder>,<volume>
+;
+;  where <volume> is 0 to 100: 100 is play at normal volume; all others reduced that percentage
+;                 This parameter is optional (100 is the default if it is not included)
+;  
+;   Examples:
+;     7,Spacious House:common_housing.wav,50
+;     223,Catapult Fort:catapult_fort.wav
+;
+;  Buildings without right-click sounds can remain in the file ... just don't fill in the filename
+;
+;   Example:
+;     2,Vacant House:
+;
+; 
+0,BUILD_NOTHING:
+1,BUILD_UNDO:
+2,Vacant House:
+3,Shelter House:common_housing2.wav
+4,Hut House:common_housing2.wav
+5,Plain House:common_housing3.wav
+6,Attractive House:common_housing.wav
+7,Spacious House:common_housing6.wav
+8,Elegant House:common_housing1.wav
+9,Ornate House:common_housing1.wav
+10,Luxurious House:common_housing5.wav
+11,Unocc Elite:
+12,Abandoned Elite:cat_ruins_greatwall.wav,50
+13,Modest Elite:elite_housing.wav
+14,Lavish Elite:elite_housing.wav
+15,Humble Elite:elite_housing6a.wav
+16,Impressive Elite:elite_housing5b.wav
+17,Heavenly Elite:elite_housing2.wav
+18,(submenu):
+19,(submenu):
+20,(submenu):
+21,(submenu):
+22,Roads:
+23,Clearing Terrain:
+24,(submenu):
+25,(submenu):
+26,Tea Bush:cat_veg_trees2.wav
+27,Lacquer Tree:cat_veg_trees.wav
+28,Mulberry Tree:cat_veg_trees3.wav
+29,Orchard Shed:
+30,(submenu):
+31,Fishing Quay:fishing_quay.wav
+32,** unused **:
+33,Hunter's Tent:hunters_tent2.wav
+34,(submenu):
+35,Clay Pit:Clay_pit2.wav
+36,Stoneworks:masons_guild.wav
+37,Salt Mine:saltmine1.wav
+38,Logging Shed:logging_shed.wav
+39,Bronze Smelter:bronze_smelter.wav
+40,Iron Smelter:cat_ironsmelter.wav
+41,Steel Furnace:cat_ironsmelter.wav
+42,Bronzeware Maker:bronze_maker.wav
+43,Kiln:Kiln2.wav
+44,Lacquerware Maker:laquerware_maker2.wav
+45,Paper Maker:paper_maker.wav
+46,Jade Carver's Studio:jade_carver.wav
+47,Weaver:weaver2.wav
+48,Shu Mint:shu_mint.wav
+49,Money Printer:money_printer.wav
+50,(submenu):
+51,Sculpture Studio:
+52,Carpenters' Guild:carpenters_guild2.wav
+53,Mill:mill.wav
+54,Warehouse:warehouse1.wav
+55,** unused **:
+56,Trading Quay:trading_quay.wav
+57,Dock House:
+58,Trading Station:warehouse3.wav
+59,Common Market Square:ceramics_shop.wav
+60,Grand Market Square:bronzeware_shop.wav
+61,Market Road:
+62,Empty Shop:
+63,(submenu):
+64,Bronzeware Shop:
+65,Ceramics Shop:
+66,Food Shop:
+67,Hemp Shop:
+68,Lacquerware Shop:
+69,Silk Shop:
+70,Tea Shop:
+71,Entertainment Area:
+72,Well:well2.wav
+73,** unused **:
+74,** unused **:
+75,Theatre Pavilion:theater_pavilion.wav
+76,BUILD_TUMULUS:ancestral_shrine2.wav
+77,BUILD_GRAND_TUMULUS:ancestral_shrine2.wav
+78,BUILD_GREAT_TEMPLE:monument_temple.wav
+79,BUILD_SPLENDID_TEMPLE:monument_temple.wav
+80,BUILD_TEMPLE_COMPLEX:monument_complex.wav
+81,BUILD_GRAND_TEMPLE_COMPLEX:monument_complex.wav
+82,BUILD_LARGE_PALACE:monument_palace.wav
+83,BUILD_GRAND_CANAL_SECTION:monument_canal.wav
+84,BUILD_UNDERGROUND_VAULT:monument_uv.wav
+85,BUILD_UNUSED4:
+86,BUILD_UNUSED5:
+87,(submenu):
+88,(submenu):
+89,Residential Wall 4:
+90,Residential Wall 3:
+91,Residential Wall 2:
+92,BUILD_CLOCK_TOWER:monument_clck_twr3.wav
+93,BUILD_GRAND_PAGODA:monument_grnd_pagoda.wav
+94,** unused **:
+95,** unused **:
+96,** unused **:
+97,** unused **:
+98,** unused **:
+99,** unused **:
+100,** unused **:
+101,** unused **:
+102,** unused **:
+103,** unused **:
+104,Residential Gate 4:
+105,Residential Gate 3:
+106,Residential Gate 2:
+107,(submenu):
+108,** unused **:
+109,** unused **:
+110,Palace:palace.wav
+111,Grand Way:
+112,** unused **:
+113,Imperial Way:
+114,** unused **:
+115,Gardens:
+116,Decorative Sculpture:sculpture.wav
+117,Ornate Sculpture:sculpture.wav
+118,Flowering Tree:flowering_tree.wav
+119,Wayside Pavilion:bamboo_chimes2a.wav
+120,Pond:frog1.wav
+121,T'ai Chi Park:tai_chi_park2.wav
+122,Private Garden:crickets.wav
+123,Bridge:
+124,Inspector's Tower:inspectors_tower.wav
+125,Tax Office:tax_office.wav
+126,Road Block:
+127,Watchtower:watchtower.wav
+128,** unused **:
+129,City Wall:
+130,City Gate:city_gate.wav
+131,Tower:tower.wav
+132,(submenu):
+133,(submenu):
+134,(submenu):
+135,(submenu):
+136,(submenu):
+137,(submenu):
+138,Stone Quarry (terrain):
+139,Lightning:
+140,** unused **:
+141,** unused **:
+142,** unused **:
+143,** unused **:
+144,** unused **:
+145,** unused **:
+146,** unused **:
+147,** unused **:
+148,** unused **:
+149,(submenu):
+150,Half Slope:
+151,** unused **:
+152,Flood:
+153, ** SPECIAL ** :
+154, ** SPECIAL ** :
+155, ** SPECIAL ** :
+156, ** SPECIAL ** :
+157,** unused **:
+158,** unused **:
+159,** unused **:
+160,** SPECIAL **:
+161,Ruin:
+162,BUILD_MAP_DIRT:
+163,BUILD_MAP_TREES:
+164,BUILD_MAP_BAMBOO_TREES:
+165,BUILD_MAP_WATER:
+166,BUILD_MAP_EARTHQUAKE:
+167,BUILD_MAP_SCRUB:
+168,BUILD_MAP_ROCKS:
+169,BUILD_MAP_MEADOW:
+170,BUILD_MAP_RAISE_ELEVATION:
+171,BUILD_MAP_LOWER_ELEVATION:
+172,BUILD_MAP_ROAD:
+173,BUILD_MAP_INVASION_POINT:
+174,BUILD_MAP_ENTRY_POINT:
+175,BUILD_MAP_EXIT_POINT:
+176,BUILD_MAP_RAMP_ELEVATION:
+177,BUILD_MAP_RIVER_IN:
+178,BUILD_MAP_RIVER_OUT:
+179,BUILD_MAP_FISHING_POINT:
+180,BUILD_MAP_KILLER_POINT:
+181,BUILD_MAP_BEACH:
+182,BUILD_MAP_URCHIN_POINT:
+183,BUILD_MAP_PREY_POINT:
+184,BUILD_MAP_ELEVATION:
+185,BUILD_MAP_ORDINARY_ROCK:
+186,BUILD_MAP_COPPER_ROCK:
+187,BUILD_MAP_SILVER_ROCK:
+188,BUILD_MAP_CLIFF_ROCK:
+189,BUILD_MAP_MARSHLAND:
+190,BUILD_MAP_MONSTER_POINT:
+191,BUILD_MAP_DISEMBARK_POINT:
+192,Hemp Farm:hemp_farm.wav
+193,Farmhouse:farmhouse_A.wav
+194,Hemp Field:farmland_grass.wav
+195,Wheat Field:cat_farmland.wav
+196,Millet Field:cat_farmland3.wav
+197,Rice Paddy:cat_farmland2.wav
+198,Cabbage Field:cat_farmland4.wav
+199,Soybean Field:cat_farmland5.wav
+200,(submenu):
+201,(submenu):
+202,Irrigation Ditch:
+203,Irrigation Pump:Irrigation_pump.wav
+204,(submenu):
+205,(submenu):
+206,(submenu):
+207,Herbalist's Stall:herbalist_stall.wav
+208,Acupuncturist's Clinic:acupuncturist_clinic2.wav
+209,Administrative City:admin_city.wav
+210,Ferry:waves1.wav
+211,Music  School:music_school.wav
+212,Acrobat School:acrobat_school1.wav
+213,Drama School:drama_school.wav
+214,Ancestral Shrine:ancestral_shrine.wav
+215,Daoist Shrine:daoist_temple.wav
+216,Daoist Temple:daoist_temple2.wav
+217,Buddhist Shrine:buddhist_pagoda.wav
+218,Buddhist Pagoda:buddhist_pagoda2.wav
+219,Confucian Academny:confucian_academy.wav
+220,Crossbow Fort:crossbow_fort2.wav
+221,Infantry Fort:infantry_fort.wav
+222,(submenu):
+223,Catapult Fort:catapult_fort.wav
+224,Cavalry Fort:cavalry_fort.wav
+225,Chariot Fort:chariot_fort.wav
+226,Weaponsmith:weaponsmith.wav
+227,** unused **:
+228,** unused **:
+229,(submenu):
+230,(submenu):
+231,Residential Wall 1:
+232,Residential Gate 1:
+233,Laborers' Camp:labor_camp.wav
+234,(submenu):
+235,Masons' Guild:masons_guild2.wav
+236,Ceramists' Guild:Ceramists_guild.wav
+237,Tea Curing Shed:tea_curing_shed.wav
+238,Lacquer Refinery:laquer_refinery.wav
+239,Silkworm Shed:silkworm_shed.wav,50
+240,(submenu):
+241,(submenu):
+242,(submenu):
+243,Decorative Sculpture 2:sculpture.wav
+244,Decorative Sculpture 3:sculpture.wav
+245,Decorative Sculpture 4:sculpture.wav
+246,Ornate Sculpture 2:sculpture.wav
+247,Ornate Sculpture 3:sculpture.wav
+248,Ornate Sculpture 4:sculpture.wav
+249,Flowering Tree 2:flowering_tree.wav
+250,Flowering Tree 3:flowering_tree.wav
+251,Wayside Pavilion 2:ceramic_chimes2a.wav
+252,Pond 2:Frog3.wav
+253,BUILD_GREAT_WALL_01:tower.wav
+254,BUILD_GREAT_WALL_02:tower.wav
+255,BUILD_GREAT_WALL_03:tower.wav
+256,BUILD_GREAT_WALL_04:tower.wav
+257,BUILD_GREAT_WALL_05:tower.wav
+258,BUILD_GREAT_WALL_06:tower.wav
+259,BUILD_GREAT_WALL_07:tower.wav
+260,BUILD_GREAT_WALL_08:tower.wav
+261,BUILD_GREAT_WALL_09:tower.wav
+262,BUILD_GREAT_WALL_10:tower.wav
+263,BUILD_GREAT_WALL_11:tower.wav
+264,BUILD_GREAT_WALL_12:tower.wav
+265,BUILD_GREAT_WALL_13:tower.wav
+266,BUILD_GREAT_WALL_14:tower.wav
+267,BUILD_GREAT_WALL_15:tower.wav
+268,BUILD_GREAT_WALL_16:tower.wav

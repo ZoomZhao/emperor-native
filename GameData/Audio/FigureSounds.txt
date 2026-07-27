@@ -1,0 +1,284 @@
+LIST OF SOUND FILES,Sound ID Number,,Min Volume,,Max Volume,,,,,,
+antelope_die,0,,50,,100,,,,,,
+antelope_hit,1,,50,,100,,,,,,
+battering_attack,2,,50,,100,,,,,,
+battering_attack2,3,,50,,100,,,,,,
+boat_hit,4,,50,,100,,,,,,
+boat_sink,5,,50,,100,,,,,,
+bow_firing,6,,50,,100,,,,,,
+bow_firing2,7,,50,,100,,,,,,
+bow_firing3,8,,50,,100,,,,,,
+bow_firing4,9,,50,,100,,,,,,
+bow_firing5,10,,50,,100,,,,,,
+bow_firing6,11,,50,,100,,,,,,
+carpenter_hammer,12,,50,,100,,,,,,
+carpenter_hammer2,13,,50,,100,,,,,,
+catapult_die,14,,50,,100,,,,,,
+catapult_hit,15,,50,,100
+catapult_impact,16,,50,,100
+catapult_range_attack1,17,,50,,100
+catapult_range_attack2,18,,50,,100
+catapult_range_attack3,19,,50,,100
+cavalry_die,20,,50,,100
+couple_die2,21,,50,,100
+couple_die3,22,,50,,100
+crossbow_firing,23,,50,,100
+crossbow_firing2,24,,50,,100
+crossbow_firing3,25,,50,,100
+die1,26,,50,,100
+die2,27,,50,,100
+die3,28,,50,,100
+die4,29,,50,,100
+die5,30,,50,,100
+g_salamander_attack,31,,50,,100
+g_salamander_attack2,32,,50,,100
+g_salamander_die,33,,50,,100
+g_salamander_hit,34,,50,,100
+gator_attack,35,,50,,100
+gator_attack2,36,,50,,100
+gator_die,37,,50,,100
+gator_hit,38,,50,,100
+gobi_bear_attack,39,,50,,100
+gobi_bear_attack2,40,,50,,100
+gobi_bear_die,41,,50,,100
+gobi_bear_hit,42,,50,,100
+guard_attack,43,,50,,100
+H_ancestor_apr,44,,50,,100
+H_ancestor_bless,45,,50,,100
+H_ancestor_disapr2,46,,50,,100
+H_buddhist_apr,47,,50,,100
+H_buddhist_bless,48,,50,,100
+H_buddhist_disapr2,49,,50,,100
+H_confucian_apr,50,,50,,100
+H_confucian_bless,51,,50,,100
+H_confucian_disapr,52,,50,,100
+H_daoist_apr,53,,50,,100
+H_daoist_bless,54,,50,,100
+H_daoist_disapr2,55,,50,,100
+Halberd_attack,56,,50,,100
+halberd_attack2,57,,50,,100
+halberd_attack3,58,,50,,100
+halberd_attack4,59,,50,,100
+hero_beckon,60,,50,,100
+hero_call_troops2,61,,50,,100
+hero_die3,62,,50,,100
+hero_die4,63,,50,,100
+hero_die5,64,,50,,100
+hero_hit_flesh,65,,50,,100
+hero_hit_flesh2,66,,50,,100
+hero_hit_metal,67,,50,,100
+hero_hit_metal2,68,,50,,100
+hero_hit_padded,69,,50,,100
+hero_hit_padded2,70,,50,,100
+heroess_die,71,,50,,100
+heroess_die2,72,,50,,100
+hit_armor_halbert,73,,50,,100
+hit_armor_halbert2,74,,50,,100
+hit_armor_staff,75,,50,,100
+hit_armor_staff2,76,,50,,100
+hit_armor_sword,77,,50,,100
+hit_armor_sword2,78,,50,,100
+hit_flesh_halbert,79,,50,,100
+hit_flesh_halbert2,80,,50,,100
+hit_flesh_sw3,81,,50,,100
+hit_flesh_sw4,82,,50,,100
+hit_metal_arrow,83,,50,,100
+hit_metal_arrow2,84,,50,,100
+hit_padded_arrow,85,,50,,100
+hit_padded_arrow2,86,,50,,100
+hit_padded_halbert,87,,50,,100
+hit_padded_halbert2,88,,50,,100
+hit_padded_staff2,89,,50,,100
+hit_padded_staff3,90,,50,,100
+hit_padded_sword,91,,50,,100
+hit_padded_sword2,92,,50,,100
+inf_hit,93,,50,,100
+insp_extng_fire,94,,50,,100
+kungfu,95,,50,,100
+kungfu2,96,,50,,100
+laborer_dump2,97,,50,,100
+laborer_work,98,,50,,100
+man_die1,99,,50,,100
+man_die10,100,,50,,100
+man_die2,101,,50,,100
+man_die3,102,,50,,100
+man_die4,103,,50,,100
+man_die6,104,,50,,100
+man_die7,105,,50,,100
+man_die8,106,,50,,100
+man_die9,107,,50,,100
+panda_attack,108,,50,,100
+panda_attack2,109,,50,,100
+panda_die,110,,50,,100
+panda_hit,111,,50,,100
+Pheasant_die,112,,50,,100
+Pheasant_hit,113,,50,,100
+staff_attack,114,,50,,100
+sword_attack,115,,50,,100
+sword_attack2,116,,50,,100
+sword_attack3,117,,50,,100
+sword_attack4,118,,50,,100
+tiger_attack,119,,50,,100
+tiger_attack2,120,,50,,100
+tiger_die,121,,50,,100
+tiger_hit,122,,50,,100
+vulture_attack,123,,50,,100
+vulture_attack2,124,,50,,100
+vulture_die,125,,50,,100
+vulture_hit,126,,50,,100
+walker_ax,127,,50,,100,,,,,,,,,,,,,,,,,,,
+walker_ax2,128,,50,,100,,,,,,,,,,,,,,,,,,,
+walker_chisel,129,,50,,100,,,,,,,,,,,,,,,,,,,
+walker_chisel2,130,,50,,100,,,,,,,,,,,,,,,,,,,
+walker_pick3,131,,50,,100,,,,,,,,,,,,,,,,,,,
+walker_pick4,132,,50,,100,,,,,,,,,,,,,,,,,,,
+walker_tamping,133,,50,,100,,,,,,,,,,,,,,,,,,,
+wildpig_die,134,,50,,100,,,,,,,,,,,,,,,,,,,
+wildpig_hit,135,,50,,100,,,,,,,,,,,,,,,,,,,
+*** INSERT ROWS FOR NEW SOUND EFFECTS BEFORE THIS LINE ***,,,,,,,,,,,,,,,,,,,,,,,,
+
+ALL FIGURES,Attack1,ID,Attack2,ID,AltAttack1,ID,AltAttack2,ID,CallTroops,ID,Hit ,ID,Die ,ID,Materialize ,ID,Dematerialize,ID,Bless,ID,Action1  ,ID,Action2,ID
+illegal figure type,,,,,,,,,,,,,,,,,,,,,,,,
+random ambient figures,,,,,,,,,,,,,,,,,,,,,,,,
+fire,,,,,,,,,,,,,,,,,,,,,,,,
+zguy,,,,,,,,,,,,,,,,,,,,,,,,
+map flag,,,,,,,,,,,,,,,,,,,,,,,,
+Water Bubbles,,,,,,,,,,,,,,,,,,,,,,,,
+Shipwreck,,,,,,,,,,,,,,,,,,,,,,,,
+Critter Turned to Stone,,,,,,,,,,,,,,,,,,,,,,,,
+Critter Entranced,,,,,,,,,,,,,,,,,,,,,,,,
+standard bearer,,,,,,,,,,,,,,,,,,,,,,,,
+laborer,,,,,,,,,,,hit_flesh_halbert2,80,man_die1,99,,,,,laborer_dump2,97,laborer_work,98,walker_tamping,133
+immigrant,,,,,,,,,,,inf_hit,93,couple_die3,22,,,,,,,,,,
+emmigrant,,,,,,,,,,,hit_flesh_sw4,82,man_die2,101,,,,,,,,,,
+homeless,,,,,,,,,,,hit_flesh_halbert,79,man_die3,102,,,,,,,,,,
+beggar,,,,,,,,,,,hit_flesh_sw3,81,man_die4,103,,,,,,,,,,
+muggar,sword_attack2,116,sword_attack4,118,,,,,,,hit_flesh_halbert2,80,die2,27,,,,,,,,,,
+thief,sword_attack3,117,sword_attack,115,,,,,,,hit_flesh_halbert,79,man_die6,104,,,,,,,,,,
+bandit,sword_attack,115,sword_attack2,116,,,,,,,hit_padded_sword2,92,man_die7,105,,,,,,,,,,
+Disease Carrier,,,,,,,,,,,hit_flesh_sw4,82,man_die8,106,,,,,,,,,,
+wheelbarrow pusher,,,,,,,,,,,hit_flesh_halbert,79,man_die9,107,,,,,,,,,,
+Donkey Cart/ Water buffalo cart,,,,,,,,,,,,,,,,,,,,,,,,
+warehouse guy,,,,,,,,,,,hit_flesh_sw3,81,man_die10,100,,,,,,,,,,
+deliveryman,,,,,,,,,,,hit_flesh_halbert2,80,man_die1,99,,,,,,,,,,
+peddler,,,,,,,,,,,hit_flesh_sw4,82,man_die2,101,,,,,,,,,,
+Marketplace buyer (all types),,,,,,,,,,,inf_hit,93,die1,26,,,,,,,,,,
+Buyer's Servant,,,,,,,,,,,inf_hit,93,die5,30,,,,,,,,,,
+farmer/ tender,,,,,,,,,,,inf_hit,93,die3,28,,,,,,,,,,
+Tax Official,,,,,,,,,,,hit_flesh_sw4,82,man_die3,102,,,,,,,,,,
+water carrier,,,,,,,,,,,hit_flesh_halbert,79,man_die4,103,,,,,,,,,,
+Watchtower Guard,guard_attack,43,sword_attack4,118,,,,,,,hit_padded_sword,91,die2,27,,,,,,,,,,
+herbalist ,,,,,,,,,,,hit_flesh_halbert2,80,man_die6,104,,,,,,,,,,
+acupuncturist,,,,,,,,,,,hit_flesh_sw3,81,man_die7,105,,,,,,,,,,
+acrobat,,,,,,,,,,,inf_hit,93,couple_die3,22,,,,,,,,,,
+actor  ,,,,,,,,,,,hit_flesh_halbert,79,man_die8,106,,,,,,,,,,
+Musician  ,,,,,,,,,,,inf_hit,93,couple_die2,21,,,,,,,,,,
+diviner/scholar/priest/monk ,,,,,,,,,,,inf_hit,93,die4,29,,,,,,,,,,
+announcer ,,,,,,,,,,,hit_flesh_halbert2,80,man_die9,107,,,,,,,,,,
+Festival Performer ,,,,,,,,,,,hit_flesh_sw3,81,man_die10,100,,,,,,,,,,
+Elite Couple ,,,,,,,,,,,inf_hit,93,couple_die2,21,,,,,,,,,,
+inspector ,,,,,,,,,,,hit_flesh_sw4,82,man_die1,99,,,,,,,insp_extng_fire,94,,
+Hunter ,sword_attack3,117,guard_attack,43,bow_firing3,8,bow_firing4,9,,,hit_padded_staff2,89,man_die2,101,,,,,,,,,,
+Logger ,,,,,,,,,,,hit_flesh_halbert,79,man_die3,102,,,,,,,walker_ax,127,walker_ax2,128
+Miner/Quarryman,,,,,,,,,,,hit_flesh_sw4,82,man_die4,103,,,,,,,walker_pick3,131,walker_pick4,132
+Spy ,,,,,,,,,,,hit_flesh_sw3,81,die2,27,,,,,,,,,,
+Emissary  ,,,,,,,,,,,hit_flesh_halbert2,80,man_die6,104,,,,,,,,,,
+Traders,,,,,,,,,,,hit_flesh_sw4,82,man_die7,105,,,,,,,,,,
+Trading Junk ,,,,,,,,,,,boat_hit,4,boat_sink,5,,,,,,,,,,
+Trader Crew  ,,,,,,,,,,,,,,,,,,,,,,,,
+Ferry Sampan ,,,,,,,,,,,boat_hit,4,boat_sink,5,,,,,,,,,,
+fishing raft ,,,,,,,,,,,boat_hit,4,boat_sink,5,,,,,,,,,,
+Horse,,,,,,,,,,,,,,,,,,,,,,,,
+Hunter's Arrow,,,,,,,,,,,,,,,,,,,,,,,,
+Enemy's Arrow or Flaming Arrow  ,,,,,,,,,,,,,,,,,,,,,,,,
+Enemy's Fireball or Rock ,,,,,,,,,,,,,,,,,,,,,,,,
+Player's Arrow or Flaming Arrow,,,,,,,,,,,,,,,,,,,,,,,,
+Player's Fireball or Rock,,,,,,,,,,,,,,,,,,,,,,,,
+Sentry (patrols wall),,,,,bow_firing5,10,bow_firing6,11,,,hit_metal_arrow,83,man_die8,106,,,,,,,,,,
+Sentry (stands in tower),,,,,bow_firing,6,bow_firing2,7,,,hit_metal_arrow2,84,man_die9,107,,,,,,,,,,
+Enemy Infantry  ,,,,,,,,,,,,,,,,,,,,,,,,
+Enemy Archer/Crossbow ,,,,,,,,,,,,,,,,,,,,,,,,
+Enemy Cavalry,,,,,,,,,,,,,,,,,,,,,,,,
+Enemy Chariot,,,,,,,,,,,,,,,,,,,,,,,,
+Enemy Catapult,,,,,,,,,,,,,,,,,,,,,,,,
+rabble ,,,,,,,,,,,,,,,,,,,,,,,,
+Friendly infantry,Halberd_attack,56,halberd_attack2,57,,,,,,,hit_armor_halbert,73,man_die10,100,,,,,,,,,,
+Friendly Crossbowman,sword_attack4,118,sword_attack2,116,crossbow_firing,23,crossbow_firing2,24,,,hit_armor_sword,77,man_die1,99,,,,,,,,,,
+Friendly Cavalry,sword_attack,115,sword_attack3,117,bow_firing5,10,bow_firing6,11,,,hit_armor_sword2,78,cavalry_die,20,,,,,,,,,,
+Friendly Chariot,sword_attack2,116,sword_attack4,118,bow_firing,6,bow_firing2,7,,,hit_armor_staff,75,cavalry_die,20,,,,,,,,,,
+Friendly Catapult,,,,,catapult_range_attack1,17,catapult_range_attack3,19,,,catapult_hit,15,catapult_die,14,,,,,,,,,,
+Gobi Bear,gobi_bear_attack,39,gobi_bear_attack2,40,,,,,,,gobi_bear_hit,42,gobi_bear_die,41,,,,,,,,,,
+Bearded Vulture,vulture_attack,123,vulture_attack2,124,,,,,,,vulture_hit,126,vulture_die,125,,,,,,,,,,
+Panda Bear,panda_attack,108,panda_attack2,109,,,,,,,panda_hit,111,panda_die,110,,,,,,,,,,
+Giant Salamander,g_salamander_attack,31,g_salamander_attack2,32,,,,,,,g_salamander_hit,34,g_salamander_die,33,,,,,,,,,,
+Tiger,tiger_attack,119,tiger_attack2,120,,,,,,,tiger_hit,122,tiger_die,121,,,,,,,,,,
+Chinese Alligator,gator_attack,35,gator_attack2,36,,,,,,,gator_hit,38,gator_die,37,,,,,,,,,,
+Wild Pig,,,,,,,,,,,wildpig_hit,135,wildpig_die,134,,,,,,,,,,
+Pheasant,,,,,,,,,,,Pheasant_hit,113,Pheasant_die,112,,,,,,,,,,
+Saiga Antelope,,,,,,,,,,,antelope_hit,1,antelope_die,0,,,,,,,,,,
+Enemy's Heroes  ,,,,,,,,,,,,,,,,,,,,,,,,
+Player's Heroes ,,,,,,,,,,,,,,,,,,,,,,,,
+Carpenter,,,,,,,,,,,hit_flesh_halbert,79,man_die2,101,,,,,,,carpenter_hammer,12,carpenter_hammer2,13
+Ceramist,,,,,,,,,,,hit_flesh_halbert2,80,man_die3,102,,,,,,,,,,
+Stone Mason,,,,,,,,,,,hit_flesh_sw3,81,man_die4,103,,,,,,,walker_chisel,129,walker_chisel2,130
+,,,,,,,,,,,,,,,,,,,,,,,,
+ALL ENEMIES,Attack1,ID,Attack2,ID,AltAttack1,ID,AltAttack2,ID,CallTroops,ID,Hit ,ID,Die ,ID,Materialize ,ID,Dematerialize,ID,Bless,ID,Action1  ,ID,Action2,ID,,,,,,,,,,,,
+Chinese Infantry,halberd_attack3,58,halberd_attack4,59,battering_attack,2,battering_attack2,3,,,hit_padded_halbert,87,die2,27,,,,,,,,,,,,,,,,,,,,,,
+Chinese Crossbow,sword_attack,115,sword_attack3,117,crossbow_firing3,25,crossbow_firing,23,,,hit_padded_halbert2,88,man_die6,104,,,,,,,,,,,,,,,,,,,,,,
+Chinese Chariot,sword_attack3,117,sword_attack2,116,bow_firing4,9,bow_firing3,8,,,hit_armor_staff2,76,cavalry_die,20,,,,,,,,,,,,,,,,,,,,,,
+Chinese Cavalry,sword_attack4,118,sword_attack,115,bow_firing,6,bow_firing2,7,,,hit_padded_staff3,90,cavalry_die,20,,,,,,,,,,,,,,,,,,,,,,
+Chinese Catapult,,,,,catapult_range_attack1,17,catapult_range_attack3,19,,,catapult_hit,15,catapult_die,14,,,,,,,,,,,,,,,,,,,,,,
+Blank,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Xiongnu Infantry,halberd_attack3,58,halberd_attack,56,battering_attack,2,battering_attack2,3,,,hit_padded_halbert,87,man_die7,105,,,,,,,,,,,,,,,,,,,,,,
+Xiongnu Cavalry,sword_attack,115,sword_attack3,117,bow_firing3,8,bow_firing4,9,,,hit_padded_sword,91,cavalry_die,20,,,,,,,,,,,,,,,,,,,,,,
+Blank,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Blank,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Blank,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Blank,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Korean Infantry,halberd_attack2,57,halberd_attack4,59,battering_attack,2,battering_attack2,3,,,hit_padded_staff2,89,man_die8,106,,,,,,,,,,,,,,,,,,,,,,
+Korean Archer,sword_attack4,118,sword_attack2,116,crossbow_firing2,24,crossbow_firing3,25,,,hit_padded_halbert2,88,man_die9,107,,,,,,,,,,,,,,,,,,,,,,
+Blank,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Blank,,,,,,,,,,,,,,
+Blank,,,,,,,,,,,,,,
+Blank,,,,,,,,,,,,,,
+Khmer Infantry,halberd_attack,56,halberd_attack2,57,battering_attack,2,battering_attack2,3,,,hit_padded_sword2,92,man_die10,100
+Khmer Archer,sword_attack,115,sword_attack4,118,crossbow_firing,23,crossbow_firing2,24,,,hit_padded_staff3,90,man_die1,99
+Blank,,,,,,,,,,,,,,
+Blank,,,,,,,,,,,,,,
+Blank,,,,,,,,,,,,,,
+Blank,,,,,,,,,,,,,,
+Tibetan Infantry,halberd_attack3,58,halberd_attack4,59,battering_attack,2,battering_attack2,3,,,hit_armor_halbert2,74,man_die2,101
+Tibetan Cavalry,sword_attack3,117,sword_attack2,116,bow_firing5,10,bow_firing6,11,,,hit_armor_sword,77,cavalry_die,20
+Blank,,,,,,,,,,,,,,
+Blank,,,,,,,,,,,,,,
+Blank,,,,,,,,,,,,,,
+Blank,,,,,,,,,,,,,,
+Khitan Infantry,halberd_attack3,58,halberd_attack,56,battering_attack,2,battering_attack2,3,,,hit_padded_halbert,87,man_die3,102
+Khitan Cavalry,sword_attack2,116,sword_attack3,117,bow_firing3,8,bow_firing2,7,,,hit_padded_sword,91,cavalry_die,20,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Khitan Catapult,,,,,catapult_range_attack1,17,catapult_range_attack3,19,,,catapult_hit,15,catapult_die,14,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Blank,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Blank,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Blank,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Mongol Infantry,halberd_attack2,57,halberd_attack4,59,battering_attack,2,battering_attack2,3,,,hit_padded_halbert2,88,man_die4,103,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Mongol Archer,sword_attack,115,sword_attack4,118,crossbow_firing3,25,crossbow_firing,23,,,hit_padded_staff2,89,man_die6,104,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Mongol Cavalry,sword_attack3,117,sword_attack,115,bow_firing,6,bow_firing4,9,,,hit_padded_sword2,92,cavalry_die,20,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Mongol Catapult,,,,,catapult_range_attack1,17,catapult_range_attack3,19,,,catapult_hit,15,catapult_die,14,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Blank,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+Blank,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+ALL HEROES,Attack1,ID,Attack2,ID,AltAttack1,ID,AltAttack2,ID,CallTroops,ID,Hit ,ID,Die ,ID,Materialize ,ID,Dematerialize,ID,Bless,ID,Capture Animal (Action1),ID,Action2,ID,,,,,,,,,,,,,,,,,,,,,
+Nuwa (Anc. Wor.) female,,,,,,,,,,,inf_hit,93,heroess_die,71,H_ancestor_apr,44,H_ancestor_disapr2,46,H_ancestor_bless,45,hero_beckon,60,insp_extng_fire,94,,,,,,,,,,,,,,,,,,,,,
+Shennong (Anc. Wor.),,,,,,,,,,,hero_hit_flesh,65,hero_die4,63,H_ancestor_apr,44,H_ancestor_disapr2,46,H_ancestor_bless,45,,,,,,,,,,,,,,,,,,,,,,,,,
+Huangdi (Anc. Wor.) - archer,sword_attack4,118,sword_attack2,116,bow_firing5,10,bow_firing6,11,hero_call_troops2,61,hero_hit_padded,69,hero_die5,64,H_ancestor_apr,44,H_ancestor_disapr2,46,H_ancestor_bless,45,,,,,,,,,,,,,,,,,,,,,,,,,
+Xiwangmu (Daoist) female,,,,,,,,,,,inf_hit,93,heroess_die2,72,H_daoist_apr,53,H_daoist_disapr2,55,H_daoist_bless,54,hero_beckon,60
+Zaojun (Daoist),,,,,,,,,,,hero_hit_flesh2,66,hero_die3,62,H_daoist_apr,53,H_daoist_disapr2,55,H_daoist_bless,54,,
+Guandi (Daoist) - sword,sword_attack3,117,sword_attack,115,,,,,hero_call_troops2,61,hero_hit_metal,67,hero_die4,63,H_daoist_apr,53,H_daoist_disapr2,55,H_daoist_bless,54,,
+Guanyin (Buddist) female,,,,,,,,,,,inf_hit,93,heroess_die,71,H_buddhist_apr,47,H_buddhist_disapr2,49,H_buddhist_bless,48,,
+Bodhidharma (Buddist) - kung fu,kungfu,95,kungfu2,96,,,,,hero_call_troops2,61,hero_hit_padded,69,hero_die4,63,H_buddhist_apr,47,H_buddhist_disapr2,49,H_buddhist_bless,48,,
+Sunwukong (Buddist) -staff,staff_attack,114,guard_attack,43,,,,,hero_call_troops2,61,hero_hit_padded2,70,hero_die3,62,H_buddhist_apr,47,H_buddhist_disapr2,49,H_buddhist_bless,48,hero_beckon,60
+Confucius (Confucian),,,,,,,,,,,hero_hit_flesh,65,hero_die4,63,H_confucian_apr,50,H_confucian_disapr,52,H_confucian_bless,51,,
+Sunzi (Confucian) - halberd,halberd_attack4,59,halberd_attack3,58,,,,,hero_call_troops2,61,hero_hit_metal2,68,hero_die5,64,H_confucian_apr,50,H_confucian_disapr,52,H_confucian_bless,51,hero_beckon,60
+Mencius (Confucian),,,,,,,,,,,hero_hit_flesh2,66,hero_die4,63,H_confucian_apr,50,H_confucian_disapr,52,H_confucian_bless,51,,
+
+
+,,,,,,,,,,,,,,,,,,,,,,

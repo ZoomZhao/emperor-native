@@ -1,0 +1,348 @@
+; SOUND_FXU.TXT
+
+LAYER1_START
+
+FREQUENCY_L1 2000
+; filename		PR     F/S      X	Y	Z	MT	STRT	END	RTDIR	TRSPD	MIND	MAXD
+Bird_A.wav		0 	F 	2 	0 	2 	L 	-1 	-1	RCW	0.025	14	14
+Bird_B.wav		0	F 	2 	0 	2 	L 	-1 	-1	RCW	0.025	7	7
+bugs.wav		0	F 	2 	0 	2 	L 	-1 	-1	RCW	0.025	11	11
+cricket.wav		0 	F 	2 	0 	2 	L 	-1 	-1	RCW	0.025	11	11
+grassy.wav		0 	F 	2 	0 	2 	L 	-1 	-1	RCW	1.0	12	12
+insects1.wav		0 	F 	2 	0 	2 	L   	-1 	-1	RCW	1.0	7	7
+large_gong.wav		0 	F 	2 	0 	2 	L 	-1 	-1	RCW	1.0	10	10
+medium_gong.wav		0 	F 	2 	0 	2 	L 	-1 	-1	RCW	2.0	5	5
+plains_hawk.wav		0 	F  	2 	0 	2 	L 	-1 	-1	RCW	2.0	11	11
+windbird.wav		0 	F 	2 	0 	2 	L 	-1 	-1	RCW	1.0	10	10
+windswept.wav		0	F 	2 	0 	2 	L 	-1 	-1	RCW	1.0	10	10
+windycicadas.wav	0 	F 	2 	0 	2 	L 	-1 	-1	RCW	1.50	12	12
+bamboo_chimes1a.wav	0	F	2	0	2	L	-1	-1	RCW	1.50	10	10
+bamboo_chimes2a.wav	0	F	2	0	2	L	-1	-1	RCW	1.50	6	6
+ceramic_chimes1a.wav	0	F	2	0	2	L	-1	-1	RCW	1.50	10	10
+ceramic_chimes2a.wav	0	F	2	0	2	L	-1	-1	RCW	1.50	10	10
+crickets.wav		0	F	2	0	2	L	-1	-1	RCW	1.50	6	6
+crickets2.wav		0	F	2	0	2	L	-1	-1	RCW	1.50	7	7
+bird_E1.wav		0	F	2	0	2	L	-1	-1	RCW	1.0	7	7
+bird_F1.wav		0	F	2	0	2	L	-1	-1	RCW	1.0	9	9
+bird_G1.wav		0	F	2	0	2	L	-1	-1	RCW	1.0	9	9
+Frog2.wav		0	F	2	0	2	L	-1	-1	RCW	1.0	9	9
+chimes1a.wav	0	F	2	0	2	L	-1	-1	RCW	1.50	10	10
+chimes2a.wav	0	F	2	0	2	L	-1	-1	RCW	1.50	10	10
+
+
+; END OF FILE
+; FREQUENCY_L1= # between 1 and n. The lower the #, the more frequent an L1 wav is played.
+; PR=PITCH RANGE
+; F/S=FIXED OR SWEEP
+; X Y Z=POSITIONAL TRAVEL DISTANCE
+; MT=MOTION TYPE
+; STRT=START ANGLE
+; END=ENDING ANGLE
+; RTDIR=ROTATION DIRECTION
+; TRSPD=TRAVEL SPEED
+; MIND=MINIMUM DURATION
+; MAXD=MAXIMUM DURATION
+
+LAYER2_START
+
+FREQUENCY_L2 300
+
+; FREQUENCY_L2= # between 1 and n. The lower the #, the more frequent an L2 wav is played. 
+;
+; Buildings, terrain, or animals are linked to each L2 Category.
+; Each category has a Weight # from 1 to 100 (e.g., CATEGORY FARMING 30).
+; The higher the Weight #, the more likely a random wav from that Category rather than
+;	a wav from a Category with less Weight will play when an appropriate
+; 	building, terrain or animal is visible on the screen.
+;
+; All entries in a Category must be in the following format:
+;	<filename in Audio\Ambient\Layer2 folder>,<volume>
+;
+;  where <volume> is 0 to 100: 100 is play at normal volume; all others reduced that percentage
+;                 The volume parameter is optional (100 is the default if it is not included)
+;
+
+; BUILDINGS
+CATEGORY COMMON_HOUSING 40
+	common_housing.wav
+	common_housing1.wav
+	common_housing2.wav
+	common_housing3.wav
+	common_housing6.wav
+	common_housing5.wav
+
+CATEGORY ELITE_HOUSING 20
+	elite_housing.wav
+	elite_housing6a.wav
+	elite_housing5b.wav
+	elite_housing2.wav
+
+CATEGORY FARMING 30
+	farmhouse_A.wav
+	hemp_farm.wav,50
+	farmer_work.wav
+	cat_farming_threshing.wav
+	cat_farming_hoeing.wav
+
+CATEGORY ORCHARD 20
+	tea_curing_shed.wav
+	laquer_refinery.wav
+
+CATEGORY SEA 50
+	fishing_quay.wav
+	waves1.wav
+	trading_quay.wav
+
+CATEGORY HUNTING 40
+	hunters_tent2.wav
+	hunters_tent1.wav
+	hunters_tent3.wav
+	cat_hunting.wav
+
+CATEGORY IRRIGATION 40
+	Irrigation_pump.wav
+	irrigation_pump2.wav
+
+CATEGORY LOGGING_SHED 50
+	logging_shed.wav
+	carpenters_guild2.wav
+	logger_work.wav
+
+CATEGORY CLAY_PIT 50
+	clay_pit2.wav
+	Clay_pit1.wav
+
+CATEGORY STONEWORKS 50
+	masons_guild2.wav
+	masons_guild.wav
+	miner_workB.wav
+
+CATEGORY KILN 50
+	Kiln2.wav
+	Ceramists_guild.wav
+	kiln3.wav
+	kiln.wav
+
+CATEGORY JADE_CARVER 50
+	jade_carver.wav,50
+	jade_carver2.wav,50
+
+CATEGORY LACQUERWARE 50
+	laquerware_maker.wav
+	laquerware_maker2.wav
+
+CATEGORY WEAVER 50
+	weaver2.wav
+	weaver.wav
+
+CATEGORY SALT_MINE 40
+	saltmine1.wav
+	saltmine2.wav
+
+CATEGORY SMELTER 40
+	bronze_smelter.wav
+	cat_ironsmelter.wav
+	bronze_maker.wav
+
+CATEGORY PAPER_MAKER 50
+	money_printer.wav
+	paper_maker.wav
+
+CATEGORY STORAGE 30
+	mill.wav
+	warehouse3.wav
+	warehouse1.wav
+	warehouse2.wav
+	grandway.wav
+	trading_station.wav
+
+CATEGORY MARKET_FOOD 30
+	food_shop.wav
+	food_shop2.wav
+
+CATEGORY MARKET_HEMP 30
+	hemp_shop.wav
+	hemp_shop2.wav
+
+CATEGORY MARKET_CERAMICS 30
+	ceramics_shop.wav
+	ceramics_shop2.wav
+
+CATEGORY MARKET_TEA 30
+	tea_shop.wav
+	tea_shop2.wav
+
+CATEGORY MARKET_SILK 30
+	Silk_shop.wav
+	silk_shop2.wav
+
+CATEGORY MARKET_BRONZEWARE 30
+	bronzeware_shop.wav
+	bronzeware_shop2.wav
+
+CATEGORY MARKET_LACQUERWARE 30
+	laquerware_shop.wav
+	laquerware_shop2.wav
+
+CATEGORY MUSIC 50
+	music_school.wav
+	entertainment_area.wav
+	entertainment_area2b.wav
+
+CATEGORY ACROBAT 40
+	acrobat_school1.wav
+	acrobat_school2.wav
+
+CATEGORY DRAMA 30
+	drama_school.wav
+	theater_pavilion.wav
+
+CATEGORY ANCESTOR_WORSHIP 50
+	ancestral_shrine.wav
+	monument_temple.wav
+	ancestral_shrine2.wav
+
+CATEGORY DAOISM 40
+	daoist_temple2.wav
+	daoist_temple.wav
+	daoist_temple3.wav
+
+CATEGORY BUDDHISM 40
+	buddhist_pagoda.wav
+	buddhist_pagoda2.wav
+	monument_grnd_pagoda.wav
+
+CATEGORY INSPECTORS_TOWER 30
+	inspectors_tower.wav,50
+	inspectors_tower2.wav,50
+
+CATEGORY WELL 50
+	well2.wav
+	well.wav
+
+CATEGORY HERBALIST 50
+	herbalist_stall.wav
+	herbalist_stall2.wav
+
+CATEGORY ACUPUNCTURIST 50
+	acupuncturist_clinic1.wav
+	acupuncturist_clinic2.wav
+
+CATEGORY BEAUTIFICATION 30
+	garden.wav
+	flowering_tree.wav
+	sculpture.wav
+	frog1.wav
+
+CATEGORY MUNICIPAL 20
+	admin_city.wav
+	tax_office.wav,50
+	confucian_academy.wav
+
+CATEGORY PALACE 20
+	palace.wav
+	monument_complex.wav
+	monument_palace.wav
+
+CATEGORY DEFENSIVE 30
+	crossbow_fort2.wav
+	catapult_fort.wav
+	infantry_fort.wav
+	tower.wav
+
+CATEGORY WEAPONSMITH 50
+	weaponsmith.wav
+	weaponsmith2.wav
+
+CATEGORY CAVALRY 30
+	cavalry_fort.wav
+	chariot_fort.wav
+	Cavalry.wav
+
+CATEGORY LABORERS_CAMP 30
+	labor_camp.wav
+	labor_camp2.wav
+	laborers_camp.wav
+
+CATEGORY FESTIVAL 100
+	Festival1.wav
+	Festival2.wav
+	Festival3.wav
+
+; TERRAIN
+CATEGORY DESERT 50
+	desert_dunes.wav
+	cat_desert_dirt.wav
+	cat_desert_dirt2.wav
+	cat_desert_saltflats.wav
+
+CATEGORY FARMLAND 50
+	farmland_grass.wav
+	cat_farmland.wav
+	cat_farmland2.wav
+	cat_farmland3.wav
+	cat_farmland4.wav
+	cat_farmland5.wav
+
+CATEGORY ROCKY 50
+	Rocky_slope.wav
+	cat_rocky_pinnacle.wav
+	cat_rocky_quarry.wav
+	crickets2.wav
+
+CATEGORY VEGETATION 50
+	cat_veg_trees.wav
+	cat_veg_trees2.wav
+	cat_veg_trees3.wav
+	cat_veg_trees4.wav
+
+CATEGORY WATER 50
+	terrain_water.wav
+	seagulls.wav
+	beach.wav
+	seaside_birds2.wav
+
+CATEGORY RUINS 50
+	Ruins_eerie.wav
+	cat_ruins_greatwall.wav
+	Bird_B.wav
+
+; ANIMALS
+CATEGORY WILD_PIG 100
+    	cat_wildpig.wav
+	cat_wildpig2.wav
+
+CATEGORY SAIGA_ANTELOPE 100
+    	antelope.wav
+	antelope2.wav
+
+CATEGORY PHEASANT 100
+    	Pheasant.wav
+	pheasant2.wav
+
+CATEGORY TIGER 100
+	cat_tiger.wav
+	cat_tiger2.wav
+
+CATEGORY ALLIGATOR 100
+    	alligator1.wav
+	alligator2.wav
+
+CATEGORY GOBI_BEAR 100
+	bear.wav
+	bear2.wav
+
+CATEGORY BEARDED_VULTURE 100
+	Vulture.wav
+	vulture2.wav
+
+CATEGORY PANDA 100
+    	panda.wav
+	panda2.wav
+
+CATEGORY GIANT_SALAMANDER 100
+    	giant_salamander.wav
+	giant_salamander2.wav
+
+; END OF FILE
+
