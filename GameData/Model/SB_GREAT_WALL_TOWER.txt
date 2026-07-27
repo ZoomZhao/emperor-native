@@ -1,0 +1,101 @@
+; Model\SB_GREAT_WALL_TOWER.txt
+
+; this file is generated automatically, comments will not be preserved
+
+
+; Phase 0
+{2}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{ 155,   17,  155,   17,  155,   17,  155,   17,  155,   17,  155,   17,  155,   17,  155,   17,      2,   100,   1, 1, 1, 1}
+{ 155,   17,  155,   17,  155,   17,  155,   17,  155,   17,  155,   17,  155,   17,  155,   17,      3,   100,   6, 6, 6, 6}
+
+; Phase 1
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{ 159,   20,  159,   20,  159,   20,  159,   20,  159,   20,  159,   20,  159,   20,  159,   20,     29,   100,   1, 1, 1, 1}
+
+; Phase 2
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{ 154,   28,  154,   28,  154,   28,  154,   28,  154,   28,  154,   28,  154,   28,  154,   28,     25,    80,   0, 0, 0, 0}
+
+; Phase 3
+{2}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{ 153,   21,  153,   21,  153,   21,  153,   21,  153,   21,  153,   21,  153,   21,  153,   21,      3,    40,   6, 6, 6, 6}
+{ 153,   21,  153,   21,  153,   21,  153,   21,  153,   21,  153,   21,  153,   21,  153,   21,      3,    40,   2, 2, 2, 2}
+
+; Phase 4
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{ 188,    5,  188,    5,  188,    5,  188,    5,  188,    5,  188,    5,  188,    5,  188,    5,     29,    50,   0, 0, 0, 0}
+
+; Phase 5
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{ 152,   16,  152,   16,  152,   16,  152,   16,  152,   16,  152,   16,  152,   16,  152,   16,     25,    50,   5, 5, 5, 5}
+
+; Phase 6
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{ 152,   16,  152,   16,  152,   16,  152,   16,  152,   16,  152,   16,  152,   16,  152,   16,      3,    50,   0, 0, 0, 0}
+
+; Phase 7
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{ 162,   10,  162,   10,  162,   10,  162,   10,  162,   10,  162,   10,  162,   10,  162,   10,     29,    50,   7, 7, 7, 7}
+
+; Phase 8
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{ 156,   16,  156,   16,  156,   16,  156,   16,  156,   16,  156,   16,  156,   16,  156,   16,     25,    60,   0, 0, 0, 0}
+
+; Phase 9
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{ 156,   16,  156,   16,  156,   16,  156,   16,  156,   16,  156,   16,  156,   16,  156,   16,      3,    50,   5, 5, 5, 5}
+
+; Phase 10
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{ 156,   16,  156,   16,  156,   16,  156,   16,  156,   16,  156,   16,  156,   16,  156,   16,      3,    80,   0, 0, 0, 0}
+
+; Phase 11
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w

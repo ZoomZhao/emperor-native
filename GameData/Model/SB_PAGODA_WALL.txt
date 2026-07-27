@@ -1,0 +1,20 @@
+; Model\SB_PAGODA_WALL.txt
+
+; this file is generated automatically, comments will not be preserved
+
+
+; Phase 0
+{2}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  38,   22,   38,   22,   38,   22,   38,   22,   38,   22,   38,   22,   38,   22,   38,   22,      9,    60,   3, 3, 3, 3}
+{  52,   34,   52,   34,   52,   34,   52,   34,   52,   34,   52,   34,   52,   34,   52,   34,     10,    70,   5, 5, 5, 5}
+
+; Phase 1
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w

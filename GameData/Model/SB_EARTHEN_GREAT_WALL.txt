@@ -1,0 +1,69 @@
+; Model\SB_EARTHEN_GREAT_WALL.txt
+
+; this file is generated automatically, comments will not be preserved
+
+
+; Phase 0
+{1}
+;  start  finish               rotations
+;   x,y  ,  x,y  ,look,distance,n,s,e,w
+{153, 18,153, 18,   2,     100,5,0,0,0}
+
+; Phase 1
+{1}
+;  start  finish               rotations
+;   x,y  ,  x,y  ,look,distance,n,s,e,w
+{160,-24,160,-24,  29,     100,5,0,0,0}
+
+; Phase 2
+{1}
+;  start  finish               rotations
+;   x,y  ,  x,y  ,look,distance,n,s,e,w
+{163,  2,163,  2,  25,     100,2,0,0,0}
+
+; Phase 3
+{1}
+;  start  finish               rotations
+;   x,y  ,  x,y  ,look,distance,n,s,e,w
+{165,  3,165,  3,   2,     100,0,0,0,0}
+
+; Phase 4
+{1}
+;  start  finish               rotations
+;   x,y  ,  x,y  ,look,distance,n,s,e,w
+{169,  7,169,  7,  29,     100,1,0,0,0}
+
+; Phase 5
+{1}
+;  start  finish               rotations
+;   x,y  ,  x,y  ,look,distance,n,s,e,w
+{159,-14,159,-14,  25,     100,0,0,0,0}
+
+; Phase 6
+{1}
+;  start  finish               rotations
+;   x,y  ,  x,y  ,look,distance,n,s,e,w
+{164,-15,164,-15,   2,     100,3,0,0,0}
+
+; Phase 7
+{1}
+;  start  finish               rotations
+;   x,y  ,  x,y  ,look,distance,n,s,e,w
+{174,-13,174,-13,  29,     100,5,0,0,0}
+
+; Phase 8
+{1}
+;  start  finish               rotations
+;   x,y  ,  x,y  ,look,distance,n,s,e,w
+{168,-39,168,-40,  25,     100,2,0,0,0}
+
+; Phase 9
+{1}
+;  start  finish               rotations
+;   x,y  ,  x,y  ,look,distance,n,s,e,w
+{158,-34,158,-34,   3,     100,0,0,0,0}
+
+; Phase 10
+{0}
+;  start  finish               rotations
+;   x,y  ,  x,y  ,look,distance,n,s,e,w

@@ -1,0 +1,51 @@
+; Grand Canal
+;
+;
+;
+;          x,  y,                   type, elev,    pos,    ent,
+/*  0*/ {  0,  0,               SB_CANAL,    0,  NORTH,      0,},
+/*  1*/ {  4,  0,               SB_CANAL,    0,  NORTH,      0,},
+/*  2*/ {  8,  0,               SB_CANAL,    0,  NORTH,      0,},
+/*  3*/ { 12,  0,               SB_CANAL,    0,  NORTH,      0,},
+/*  4*/ { 16,  0,               SB_CANAL,    0,  NORTH,      0,},
+/*  5*/ { 20,  0,               SB_CANAL,    0,  NORTH,      0,},
+/*  6*/ { 24,  0,               SB_CANAL,    0,  NORTH,      0,},
+/*  7*/ { 28,  0,               SB_CANAL,    0,  NORTH,      0,},
+/*  8*/ { 32,  0,               SB_CANAL,    0,  NORTH,      0,},
+/*  9*/ { 36,  0,               SB_CANAL,    0,  NORTH,      0,},
+/* 10*/ { 40,  0,               SB_CANAL,    0,  NORTH,      1,},
+/* 11*/ { 44,  0,               SB_CANAL,    0,  NORTH,      0,},
+/* 12*/ { 48,  0,               SB_CANAL,    0,  NORTH,      0,},
+/* 13*/ { 52,  0,               SB_CANAL,    0,  NORTH,      0,},
+/* 14*/ { 56,  0,               SB_CANAL,    0,  NORTH,      0,},
+/* 15*/ { 60,  0,               SB_CANAL,    0,  NORTH,      0,},
+/* 16*/ { 64,  0,               SB_CANAL,    0,  NORTH,      1,},
+/* 17*/ { 68,  0,               SB_CANAL,    0,  NORTH,      0,},
+/* 18*/ { 72,  0,               SB_CANAL,    0,  NORTH,      0,},
+/* 19*/ { 76,  0,               SB_CANAL,    0,  NORTH,      0,},
+/* 20*/ { 80,  0,               SB_CANAL,    0,  NORTH,      0,},
+/* 21*/ { 84,  0,               SB_CANAL,    0,  NORTH,      0,},
+/* 22*/ { 88,  0,               SB_CANAL,    0,  NORTH,      1,},
+/* 23*/ { 92,  0,               SB_CANAL,    0,  NORTH,      0,},
+/* 24*/ { 96,  0,               SB_CANAL,    0,  NORTH,      0,},
+/* 25*/ {100,  0,               SB_CANAL,    0,  NORTH,      0,},
+/* 26*/ {104,  0,               SB_CANAL,    0,  NORTH,      0,},
+/* 27*/ {108,  0,               SB_CANAL,    0,  NORTH,      0,},
+/* 28*/ {112,  0,               SB_CANAL,    0,  NORTH,      0,},
+/* 29*/ {116,  0,               SB_CANAL,    0,  NORTH,      0,},
+/* 30*/ {120,  0,               SB_CANAL,    0,  NORTH,      0,},
+/* 31*/ {124,  0,               SB_CANAL,    0,  NORTH,      0,},
+/* 32*/ {128,  0,               SB_CANAL,    0,  NORTH,      0,},
+
+;
+;sub-bldg-list-type    0 = single sub-buildings
+; (sub typ)            1 = joined sub-buildings
+;
+;            beg end
+;mon sub lst sub sub beg end
+; ph typ num bld bld  ph  ph
+<  0,  0,  0,  0, 32,  0,  1,>
+<  1,  0,  0,  0, 32,  1,  2,>
+<  2,  0,  0,  0, 32,  2,  3,>
+<  3,  0,  0,  0, 32,  3,  4,>
+<  4,  0,  0,  0, 32,  4,  5,>

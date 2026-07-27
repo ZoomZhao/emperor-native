@@ -1,0 +1,15 @@
+; Model\SB_TEMPLE_WALL.txt
+
+; this file is generated automatically, comments will not be preserved
+
+
+; Phase 0
+{1}
+;  start  finish               rotations
+;   x,y  ,  x,y  ,look,distance,n,s,e,w
+{ 38, 28, 38, 28,   9,     100,4,0,0,0}
+
+; Phase 1
+{0}
+;  start  finish               rotations
+;   x,y  ,  x,y  ,look,distance,n,s,e,w

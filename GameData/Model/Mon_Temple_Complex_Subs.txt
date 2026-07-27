@@ -1,0 +1,189 @@
+;
+; Temple Complex
+;
+;          x,  y,                   type, elev,    pos,    ent,
+/*  0*/ { -2, -3,        SB_TEMPLE_STEPS,    0,     NW,      0,},
+/*  1*/ { -1, -3,        SB_TEMPLE_STEPS,    0,  NORTH,      0,},
+/*  2*/ {  0, -3,        SB_TEMPLE_STEPS,    0,  NORTH,      0,},
+/*  3*/ {  1, -3,        SB_TEMPLE_STEPS,    0,  NORTH,      0,},
+/*  4*/ {  2, -3,        SB_TEMPLE_STEPS,    0,  NORTH,      0,},
+/*  5*/ {  3, -3,        SB_TEMPLE_STEPS,    0,     NE,      0,},
+/*  6*/ { -2, -2,        SB_TEMPLE_STEPS,    0,   WEST,      0,},
+/*  7*/ {  3, -2,        SB_TEMPLE_STEPS,    0,   EAST,      0,},
+/*  8*/ { -2, -1,        SB_TEMPLE_STEPS,    0,   WEST,      0,},
+/*  9*/ {  3, -1,        SB_TEMPLE_STEPS,    0,   EAST,      0,},
+/* 10*/ { -2,  0,        SB_TEMPLE_STEPS,    0,   WEST,      0,},
+/* 11*/ {  3,  0,        SB_TEMPLE_STEPS,    0,   EAST,      0,},
+/* 12*/ { -2,  1,        SB_TEMPLE_STEPS,    0,   WEST,      0,},
+/* 13*/ {  3,  1,        SB_TEMPLE_STEPS,    0,   EAST,      0,},
+/* 14*/ { -2,  2,        SB_TEMPLE_STEPS,    0,     SW,      0,},
+/* 15*/ { -1,  2,        SB_TEMPLE_STEPS,    0,  SOUTH,      0,},
+/* 16*/ {  0,  2,        SB_TEMPLE_STEPS,    0,  SOUTH,      0,},
+/* 17*/ {  1,  2,        SB_TEMPLE_STEPS,    0,  SOUTH,      0,},
+/* 18*/ {  2,  2,        SB_TEMPLE_STEPS,    0,  SOUTH,      0,},
+/* 19*/ {  3,  2,        SB_TEMPLE_STEPS,    0,     SE,      0,},
+
+
+/* 20*/ { -1, -2,       SB_TEMPLE_CENTER,    0,  NORTH,      0,},
+
+/* 21*/ { -6, -7,    SB_TEMPLE_COURTYARD,    0,     NW,      0,},
+/* 22*/ { -4, -7,    SB_TEMPLE_COURTYARD,    0,  NORTH,      0,},
+/* 23*/ { -2, -7,    SB_TEMPLE_COURTYARD,    0,  NORTH,      0,},
+/* 24*/ {  0, -7,    SB_TEMPLE_COURTYARD,    0,  NORTH,      0,},
+/* 25*/ {  2, -7,    SB_TEMPLE_COURTYARD,    0,  NORTH,      0,},
+/* 26*/ {  4, -7,    SB_TEMPLE_COURTYARD,    0,  NORTH,      0,},
+/* 27*/ {  6, -7,    SB_TEMPLE_COURTYARD,    0,     NE,      0,},
+/* 28*/ { -6, -5,    SB_TEMPLE_COURTYARD,    0,   WEST,      0,},
+/* 29*/ { -4, -5,    SB_TEMPLE_COURTYARD,    0, CENTER,      0,},
+/* 30*/ { -2, -5,    SB_TEMPLE_COURTYARD,    0, CENTER,      0,},
+/* 31*/ {  0, -5,    SB_TEMPLE_COURTYARD,    0, CENTER,      0,},
+/* 32*/ {  2, -5,    SB_TEMPLE_COURTYARD,    0, CENTER,      0,},
+/* 33*/ {  4, -5,    SB_TEMPLE_COURTYARD,    0, CENTER,      0,},
+/* 34*/ {  6, -5,    SB_TEMPLE_COURTYARD,    0,   EAST,      0,},
+/* 35*/ { -6, -3,    SB_TEMPLE_COURTYARD,    0,   WEST,      0,},
+/* 36*/ { -4, -3,    SB_TEMPLE_COURTYARD,    0, CENTER,      0,},
+/* 37*/ {  4, -3,    SB_TEMPLE_COURTYARD,    0, CENTER,      0,},
+/* 38*/ {  6, -3,    SB_TEMPLE_COURTYARD,    0,   EAST,      0,},
+/* 39*/ { -6, -1,    SB_TEMPLE_COURTYARD,    0,   WEST,      0,},
+/* 40*/ { -4, -1,    SB_TEMPLE_COURTYARD,    0, CENTER,      0,},
+/* 41*/ {  4, -1,    SB_TEMPLE_COURTYARD,    0, CENTER,      0,},
+/* 42*/ {  6, -1,    SB_TEMPLE_COURTYARD,    0,   EAST,      0,},
+/* 43*/ { -6,  1,    SB_TEMPLE_COURTYARD,    0,   WEST,      0,},
+/* 44*/ { -4,  1,    SB_TEMPLE_COURTYARD,    0, CENTER,      0,},
+/* 45*/ {  4,  1,    SB_TEMPLE_COURTYARD,    0, CENTER,      0,},
+/* 46*/ {  6,  1,    SB_TEMPLE_COURTYARD,    0,   EAST,      0,},
+/* 47*/ { -6,  3,    SB_TEMPLE_COURTYARD,    0,   WEST,      0,},
+/* 48*/ { -4,  3,    SB_TEMPLE_COURTYARD,    0, CENTER,      0,},
+/* 49*/ { -2,  3,    SB_TEMPLE_COURTYARD,    0, CENTER,      0,},
+/* 50*/ {  0,  3,    SB_TEMPLE_COURTYARD,    0, CENTER,      0,},
+/* 51*/ {  2,  3,    SB_TEMPLE_COURTYARD,    0, CENTER,      0,},
+/* 52*/ {  4,  3,    SB_TEMPLE_COURTYARD,    0, CENTER,      0,},
+/* 53*/ {  6,  3,    SB_TEMPLE_COURTYARD,    0,   EAST,      0,},
+/* 54*/ { -6,  5,    SB_TEMPLE_COURTYARD,    0,     SW,      0,},
+/* 55*/ { -4,  5,    SB_TEMPLE_COURTYARD,    0,  SOUTH,      0,},
+/* 56*/ { -2,  5,    SB_TEMPLE_COURTYARD,    0,  SOUTH,      0,},
+/* 57*/ {  0,  5,    SB_TEMPLE_COURTYARD,    0,  SOUTH,      0,},
+/* 58*/ {  2,  5,    SB_TEMPLE_COURTYARD,    0,  SOUTH,      0,},
+/* 59*/ {  4,  5,    SB_TEMPLE_COURTYARD,    0,  SOUTH,      0,},
+/* 60*/ {  6,  5,    SB_TEMPLE_COURTYARD,    0,     SE,      0,},
+/* 61*/ { -7, -8,         SB_TEMPLE_WALL,    0,     NW,      1,},
+/* 62*/ { -6, -8,         SB_TEMPLE_WALL,    0,  NORTH,      1,},
+/* 63*/ { -5, -8,         SB_TEMPLE_WALL,    0,  NORTH,      1,},
+/* 64*/ { -4, -8,         SB_TEMPLE_WALL,    0,  NORTH,      1,},
+/* 65*/ { -3, -8,         SB_TEMPLE_WALL,    0,  NORTH,      1,},
+/* 66*/ { -2, -8,         SB_TEMPLE_WALL,    0,  NORTH,      1,},
+/* 67*/ { -1, -8,         SB_TEMPLE_WALL,    0,  NORTH,      1,},
+/* 68*/ {  0, -8,         SB_TEMPLE_WALL,    0,  NORTH,      3,},
+/* 69*/ {  1, -8,         SB_TEMPLE_WALL,    0,  NORTH,      4,},
+/* 70*/ {  2, -8,         SB_TEMPLE_WALL,    0,  NORTH,      1,},
+/* 71*/ {  3, -8,         SB_TEMPLE_WALL,    0,  NORTH,      1,},
+/* 72*/ {  4, -8,         SB_TEMPLE_WALL,    0,  NORTH,      1,},
+/* 73*/ {  5, -8,         SB_TEMPLE_WALL,    0,  NORTH,      1,},
+/* 74*/ {  6, -8,         SB_TEMPLE_WALL,    0,  NORTH,      1,},
+/* 75*/ {  7, -8,         SB_TEMPLE_WALL,    0,  NORTH,      1,},
+/* 76*/ {  8, -8,         SB_TEMPLE_WALL,    0,     NE,      1,},
+/* 77*/ { -7, -7,         SB_TEMPLE_WALL,    0,   WEST,      1,},
+/* 78*/ {  8, -7,         SB_TEMPLE_WALL,    0,   EAST,      1,},
+/* 79*/ { -7, -6,         SB_TEMPLE_WALL,    0,   WEST,      1,},
+/* 80*/ {  8, -6,         SB_TEMPLE_WALL,    0,   EAST,      1,},
+/* 81*/ { -7, -5,         SB_TEMPLE_WALL,    0,   WEST,      1,},
+/* 82*/ {  8, -5,         SB_TEMPLE_WALL,    0,   EAST,      1,},
+/* 83*/ { -7, -4,         SB_TEMPLE_WALL,    0,   WEST,      1,},
+/* 84*/ {  8, -4,         SB_TEMPLE_WALL,    0,   EAST,      1,},
+/* 85*/ { -7, -3,         SB_TEMPLE_WALL,    0,   WEST,      1,},
+/* 86*/ {  8, -3,         SB_TEMPLE_WALL,    0,   EAST,      1,},
+/* 87*/ { -7, -2,         SB_TEMPLE_WALL,    0,   WEST,      1,},
+/* 88*/ {  8, -2,         SB_TEMPLE_WALL,    0,   EAST,      1,},
+/* 89*/ { -7, -1,         SB_TEMPLE_WALL,    0,   WEST,      4,},
+/* 90*/ {  8, -1,         SB_TEMPLE_WALL,    0,   EAST,      3,},
+/* 91*/ { -7,  0,         SB_TEMPLE_WALL,    0,   WEST,      3,},
+/* 92*/ {  8,  0,         SB_TEMPLE_WALL,    0,   EAST,      4,},
+/* 93*/ { -7,  1,         SB_TEMPLE_WALL,    0,   WEST,      1,},
+/* 94*/ {  8,  1,         SB_TEMPLE_WALL,    0,   EAST,      1,},
+/* 95*/ { -7,  2,         SB_TEMPLE_WALL,    0,   WEST,      1,},
+/* 96*/ {  8,  2,         SB_TEMPLE_WALL,    0,   EAST,      1,},
+/* 97*/ { -7,  3,         SB_TEMPLE_WALL,    0,   WEST,      1,},
+/* 98*/ {  8,  3,         SB_TEMPLE_WALL,    0,   EAST,      1,},
+/* 99*/ { -7,  4,         SB_TEMPLE_WALL,    0,   WEST,      1,},
+/*100*/ {  8,  4,         SB_TEMPLE_WALL,    0,   EAST,      1,},
+/*101*/ { -7,  5,         SB_TEMPLE_WALL,    0,   WEST,      1,},
+/*102*/ {  8,  5,         SB_TEMPLE_WALL,    0,   EAST,      1,},
+/*103*/ { -7,  6,         SB_TEMPLE_WALL,    0,   WEST,      1,},
+/*104*/ {  8,  6,         SB_TEMPLE_WALL,    0,   EAST,      1,},
+/*105*/ { -7,  7,         SB_TEMPLE_WALL,    0,     SW,      1,},
+/*106*/ { -6,  7,         SB_TEMPLE_WALL,    0,  SOUTH,      1,},
+/*107*/ { -5,  7,         SB_TEMPLE_WALL,    0,  SOUTH,      1,},
+/*108*/ { -4,  7,         SB_TEMPLE_WALL,    0,  SOUTH,      1,},
+/*109*/ { -3,  7,         SB_TEMPLE_WALL,    0,  SOUTH,      1,},
+/*110*/ { -2,  7,         SB_TEMPLE_WALL,    0,  SOUTH,      1,},
+/*111*/ { -1,  7,         SB_TEMPLE_WALL,    0,  SOUTH,      1,},
+/*112*/ {  0,  7,         SB_TEMPLE_WALL,    0,  SOUTH,      4,},
+/*113*/ {  1,  7,         SB_TEMPLE_WALL,    0,  SOUTH,      3,},
+/*114*/ {  2,  7,         SB_TEMPLE_WALL,    0,  SOUTH,      1,},
+/*115*/ {  3,  7,         SB_TEMPLE_WALL,    0,  SOUTH,      1,},
+/*116*/ {  4,  7,         SB_TEMPLE_WALL,    0,  SOUTH,      1,},
+/*117*/ {  5,  7,         SB_TEMPLE_WALL,    0,  SOUTH,      1,},
+/*118*/ {  6,  7,         SB_TEMPLE_WALL,    0,  SOUTH,      1,},
+/*119*/ {  7,  7,         SB_TEMPLE_WALL,    0,  SOUTH,      1,},
+/*120*/ {  8,  7,         SB_TEMPLE_WALL,    0,     SE,      1,},
+
+/*121*/ { -1, -2,        SB_TEMPLE_STEPS,    0, CENTER,      0,},
+/*122*/ {  0, -2,        SB_TEMPLE_STEPS,    0, CENTER,      0,},
+/*123*/ {  1, -2,        SB_TEMPLE_STEPS,    0, CENTER,      0,},
+/*124*/ {  2, -2,        SB_TEMPLE_STEPS,    0, CENTER,      0,},
+/*125*/ { -1, -1,        SB_TEMPLE_STEPS,    0, CENTER,      0,},
+/*126*/ {  0, -1,        SB_TEMPLE_STEPS,    0, CENTER,      0,},
+/*127*/ {  1, -1,        SB_TEMPLE_STEPS,    0, CENTER,      0,},
+/*128*/ {  2, -1,        SB_TEMPLE_STEPS,    0, CENTER,      0,},
+/*129*/ { -1,  0,        SB_TEMPLE_STEPS,    0, CENTER,      0,},
+/*130*/ {  0,  0,        SB_TEMPLE_STEPS,    0, CENTER,      0,},
+/*131*/ {  1,  0,        SB_TEMPLE_STEPS,    0, CENTER,      0,},
+/*132*/ {  2,  0,        SB_TEMPLE_STEPS,    0, CENTER,      0,},
+/*133*/ { -1,  1,        SB_TEMPLE_STEPS,    0, CENTER,      0,},
+/*134*/ {  0,  1,        SB_TEMPLE_STEPS,    0, CENTER,      0,},
+/*135*/ {  1,  1,        SB_TEMPLE_STEPS,    0, CENTER,      0,},
+/*136*/ {  2,  1,        SB_TEMPLE_STEPS,    0, CENTER,      0,},
+
+;
+;sub-bldg-list-type    0 = single sub-buildings
+; (sub typ)            1 = joined sub-buildings
+;
+;            beg end
+;mon sub lst sub sub beg end
+; ph typ num bld bld  ph  ph
+<  0,  0,  0,  0, 19,  0,  1,>
+<  0,  0,  0,121,136,  0,  1,>
+
+<  1,  0,  0,  0, 19,  1,  3,>
+<  1,  0,  0,121,136,  1,  3,>
+
+<  2,  0,  0,  0, 19,  3,  4,>
+<  2,  0,  0,121,136,  3,  4,>
+
+<  3,  0,  0,  0, 19,  4,  6,>
+<  3,  0,  0,121,136,  4,  6,>
+
+<  4,  0,  0,  0, 19,  6,  7,>
+<  4,  0,  0,121,136,  6,  7,>
+
+<  5,  0,  0, 20, 20,  0,  1,>
+<  6,  0,  0, 20, 20,  1,  2,>
+<  7,  0,  0, 20, 20,  2,  3,>
+<  8,  0,  0, 20, 20,  3,  4,>
+<  9,  0,  0, 20, 20,  4,  5,>
+< 10,  0,  0, 20, 20,  5,  6,>
+< 11,  0,  0, 20, 20,  6,  7,>
+< 12,  0,  0, 20, 20,  7,  8,>
+
+< 13,  0,  0, 61, 67,  0,  1,>
+< 13,  1,  0, 68, 69,  0,  1,>
+< 13,  0,  0, 70, 88,  0,  1,>
+< 13,  1,  1, 89, 89,  0,  1,>
+< 13,  1,  1, 91, 91,  0,  1,>
+< 13,  1,  2, 90, 90,  0,  1,>
+< 13,  1,  2, 92, 92,  0,  1,>
+< 13,  0,  0, 93,111,  0,  1,>
+< 13,  1,  3,112,113,  0,  1,>
+< 13,  0,  0,114,120,  0,  1,>
+
+< 14,  0,  0, 21, 60,  0,  1,>

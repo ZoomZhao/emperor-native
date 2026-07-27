@@ -1,0 +1,29 @@
+; Model\SB_VAULT_KILN.txt
+
+; this file is generated automatically, comments will not be preserved
+
+
+; Phase 0
+{4}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  83,   18,   83,   18,   83,   18,   83,   18,   83,   18,   83,   18,   35,   28,   35,   28,     16,    80,   7, 0, 0, 0}
+{  83,   18,  -55,   83,   83,   18,   83,   18,   83,   18,   83,   18,   35,   28,  121,   34,     15,    50,   4, 0, 0, 1}
+{ -55,   83,  -55,   83,   83,   18,   83,   18,   83,   18,   83,   18,  121,   34,  121,   34,     16,    60,   5, 0, 0, 1}
+{ -55,   83,  -55,   83,   83,   18,   83,   18,   83,   18,   83,   18,  121,   34,  121,   34,     17,    70,   3, 0, 0, 6}
+
+; Phase 1
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+
+; Phase 2
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w

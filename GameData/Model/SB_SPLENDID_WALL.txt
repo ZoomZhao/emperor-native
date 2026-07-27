@@ -1,0 +1,19 @@
+; Model\SB_SPLENDID_WALL.txt
+
+; this file is generated automatically, comments will not be preserved
+
+
+; Phase 0
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  33,   28,   33,   28,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,      9,    80,   1, 0, 0, 0}
+
+; Phase 1
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w

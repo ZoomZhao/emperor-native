@@ -1,0 +1,13 @@
+TAX RATE AND CITY WIDE TAX COVERAGE EFFECTS ON CITY SENTIMENT
+ROWS REPRESENT TAX RATE
+
+Columns for each tax setting are (in game) tax rate then difficulty level (Very Easy, Easy, Normal, Hard, Very Hard)
+If tax coverage is minimal, the None tax rate numbers are used.
+
+None,		{,0,3,2,1,0,0,}
+Very low,	{,3,2,1,0,0,-1,}
+Low,		{,6,1,0,0,-1,-2,}
+Normal,		{,9,0,0,-1,-2,-3,}
+High,		{,12,0,-1,-2,-3,-4,}
+Very High,	{,15,-1,-2,-3,-4,-5,}
+Outrageous,	{,18,-2,-3,-4,-5,-6,}

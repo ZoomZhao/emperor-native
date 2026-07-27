@@ -1,0 +1,21 @@
+; Model\SB_TUMULUS_RAMP.txt
+
+; this file is generated automatically, comments will not be preserved
+
+
+; Phase 0
+{1}
+;  start  finish               rotations
+;   x,y  ,  x,y  ,look,distance,n,s,e,w
+{ 81, 29, 81, 29,  24,     150,2,0,0,0}
+
+; Phase 1
+{1}
+;  start  finish               rotations
+;   x,y  ,  x,y  ,look,distance,n,s,e,w
+{ 73, 27, 73, 27,  29,      80,5,0,0,0}
+
+; Phase 2
+{0}
+;  start  finish               rotations
+;   x,y  ,  x,y  ,look,distance,n,s,e,w

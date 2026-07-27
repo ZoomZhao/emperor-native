@@ -1,0 +1,92 @@
+; Great Wall
+;
+; MPWall3 (used for the Yulin area; Zhenbeitai tower on big hill)
+;
+;          x,  y,                   type, elev,    pos,    ent,
+/*  0*/ { 0,  0,         SB_GREAT_WALL,    0,  NORTH,     24,},
+/*  1*/ { 0,  4,         SB_GREAT_WALL,    0,  NORTH,     16,},
+/*  2*/ { 0,  8,         SB_GREAT_WALL,    0,  NORTH,     15,},
+/*  3*/ { 0, 12,   SB_GREAT_WALL_TOWER,    0,  NORTH,     27,},
+/*  4*/ { 0, 16,         SB_GREAT_WALL,    0,  NORTH,     10,},
+/*  5*/ { 0, 20,         SB_GREAT_WALL,    0,  NORTH,     11,},
+/*  6*/ { 0, 24,         SB_GREAT_WALL,    0,  NORTH,     17,},
+/*  7*/ { 0, 28,         SB_GREAT_WALL,    1,  NORTH,     17,},
+/*  8*/ { 0, 32,         SB_GREAT_WALL,    2,  NORTH,     17,},
+/*  9*/ { 0, 36,         SB_GREAT_WALL,    3,  NORTH,     17,},
+/* 10*/ { 0, 40,         SB_GREAT_WALL,    4,  NORTH,     17,},
+/* 11*/ { 0, 44,         SB_GREAT_WALL,    5,  NORTH,     24,},
+/* 12*/ { 0, 48,   SB_GREAT_WALL_TOWER,    5,  NORTH,     27,},
+/* 13*/ { 0, 52,         SB_GREAT_WALL,    5,  NORTH,     24,},
+/* 14*/ { 0, 56,         SB_GREAT_WALL,    4,  NORTH,     12,},
+/* 15*/ { 0, 60,         SB_GREAT_WALL,    4,  NORTH,     13,},
+/* 16*/ { 0, 64,         SB_GREAT_WALL,    4,  NORTH,     23,},
+/* 17*/ { 4, 64,         SB_GREAT_WALL,    4,  NORTH,      9,},
+/* 18*/ { 8, 64,         SB_GREAT_WALL,    3,  NORTH,      2,},
+/* 19*/ {12, 64,         SB_GREAT_WALL,    3,  NORTH,      4,},
+/* 20*/ {16, 64,         SB_GREAT_WALL,    3,  NORTH,     22,},
+/* 21*/ {16, 68,         SB_GREAT_WALL,    3,  NORTH,     18,},
+/* 22*/ {16, 72,         SB_GREAT_WALL,    2,  NORTH,     12,},
+/* 23*/ {16, 76,         SB_GREAT_WALL,    2,  NORTH,     24,},
+/* 24*/ {16, 80,   SB_GREAT_WALL_TOWER,    2,  NORTH,     27,},
+/* 25*/ {16, 84,         SB_GREAT_WALL,    2,  NORTH,     24,},
+/* 26*/ {16, 88,         SB_GREAT_WALL,    1,  NORTH,     12,},
+/* 27*/ {16, 92,         SB_GREAT_WALL,    1,  NORTH,     10,},
+/* 28*/ {16, 96,         SB_GREAT_WALL,    1,  NORTH,     11,},
+/* 29*/ {16,100,   SB_GREAT_WALL_TOWER,    1,  NORTH,     27,},
+/* 30*/ {16,104,         SB_GREAT_WALL,    1,  NORTH,     24,},
+/* 31*/ {16,108,         SB_GREAT_WALL,    0,  NORTH,     12,},
+/* 32*/ {16,112,         SB_GREAT_WALL,    0,  NORTH,     24,},
+/* 33*/ {16,116,    SB_GREAT_WALL_GATE,    0,  EAST,      NW,},
+/* 34*/ {18,116,    SB_GREAT_WALL_GATE,    0,  EAST,      NE,},
+/* 35*/ {16,119,    SB_GREAT_WALL_GATE,    0,  EAST,      SW,},
+/* 36*/ {18,119,    SB_GREAT_WALL_GATE,    0,  EAST,      SE,},
+/* 37*/ {16,121,         SB_GREAT_WALL,    0,  NORTH,     19,},
+/* 38*/ {16,125,         SB_GREAT_WALL,    0,  NORTH,     20,},
+/* 39*/ {12,125,         SB_GREAT_WALL,    0,  NORTH,      8,},
+/* 40*/ { 8,125,         SB_GREAT_WALL,    0,  NORTH,      3,},
+/* 41*/ { 4,125,         SB_GREAT_WALL,    0,  NORTH,     21,},
+/* 42*/ { 4,129,         SB_GREAT_WALL,    0,  NORTH,     14,},
+/* 43*/ { 4,133,   SB_GREAT_WALL_TOWER,    0,  NORTH,     27,},
+/* 44*/ { 4,137,         SB_GREAT_WALL,    0,  NORTH,     24,},
+/* 45*/ {16,118,    SB_GREAT_WALL_ROAD,    0,  EAST,       0,},
+/* 46*/ {17,118,    SB_GREAT_WALL_ROAD,    0,  EAST,       0,},
+/* 47*/ {18,118,    SB_GREAT_WALL_ROAD,    0,  EAST,       0,},
+/* 48*/ {19,118,    SB_GREAT_WALL_ROAD,    0,  EAST,       0,},
+
+;
+;sub-bldg-list-type    0 = single sub-buildings
+; (sub typ)            1 = joined sub-buildings
+;
+;            beg end
+;mon sub lst sub sub beg end
+; ph typ num bld bld  ph  ph
+<  0,  0,  0,  0, 32,  0,  1,>
+<  0,  0,  0, 37, 44,  0,  1,>
+<  0,  0,  0, 45, 48,  0,  1,>
+
+<  1,  0,  0,  0, 32,  1,  3,>
+<  1,  0,  0, 37, 44,  1,  3,>
+
+<  2,  0,  0,  0, 32,  3,  4,>
+<  2,  0,  0, 37, 44,  3,  4,>
+
+<  3,  0,  0,  0, 32,  4,  6,>
+<  3,  0,  0, 37, 44,  4,  6,>
+
+<  4,  0,  0,  0, 32,  6,  7,>
+<  4,  0,  0, 37, 44,  6,  7,>
+
+<  5,  0,  0,  0, 32,  7,  9,>
+<  5,  0,  0, 37, 44,  7,  9,>
+
+<  6,  0,  0,  0, 32,  9, 10,>
+<  6,  0,  0, 37, 44,  9, 10,>
+
+<  7,  0,  0,  3,  3, 10, 11,>
+<  7,  0,  0, 12, 12, 10, 11,>
+<  7,  0,  0, 24, 24, 10, 11,>
+<  7,  0,  0, 29, 29, 10, 11,>
+<  7,  0,  0, 43, 43, 10, 11,>
+
+<  8,  1,  0, 33, 36,  0,  1,> 
+<  8,  0,  0, 45, 48,  1,  2,>

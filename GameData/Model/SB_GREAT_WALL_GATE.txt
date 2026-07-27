@@ -1,0 +1,20 @@
+; Model\SB_GREAT_WALL_GATE.txt
+
+; this file is generated automatically, comments will not be preserved
+
+
+; Phase 0
+{2}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  75,   47,   75,   47,   75,   47,   75,   47,   75,   47,   75,   47,   75,   47,   75,   47,      3,    50,   0, 0, 0, 0}
+{  75,   47,   75,   47,   75,   47,   75,   47,   75,   47,   75,   47,   75,   47,   75,   47,      3,    50,   1, 1, 1, 1}
+
+; Phase 1
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w

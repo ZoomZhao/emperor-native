@@ -1,0 +1,447 @@
+; Model\SB_TUMULUS_LOWER.txt
+
+; this file is generated automatically, comments will not be preserved
+
+
+; Phase 0
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+
+; Phase 1
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+
+; Phase 2
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+
+; Phase 3
+{3}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  44,   24,   44,   24,   44,   24,   44,   24,   44,   24,   44,   24,   44,   24,   44,   24,      2,   130,   2, 2, 2, 2}
+{  44,   24,   44,   24,   44,   24,   44,   24,   44,   24,   44,   24,   44,   24,   44,   24,      3,    80,   3, 3, 3, 3}
+{  44,   24,   44,   24,   44,   24,   44,   24,   44,   24,   44,   24,   44,   24,   44,   24,      3,   100,   2, 2, 2, 2}
+
+; Phase 4
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+
+; Phase 5
+{7}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  36,   31,   36,   31,   36,   31,   36,   31,   36,   31,   36,   31,   36,   31,   36,   31,      2,    80,   2, 2, 2, 2}
+{  36,   31,  135,   88,   36,   31,  135,   88,   36,   31,  135,   88,   36,   31,  135,   88,      1,    50,   2, 2, 2, 2}
+{ 135,   88,  135,   88,  135,   88,  135,   88,  135,   88,  135,   88,  135,   88,  135,   88,      2,   120,   5, 5, 5, 5}
+{ 135,   88,  -30,   85,  135,   88,  -30,   85,  135,   88,  -30,   85,  135,   88,  -30,   85,      1,    70,   5, 5, 5, 5}
+{ -30,   85,  -30,   85,  -30,   85,  -30,   85,  -30,   85,  -30,   85,  -30,   85,  -30,   85,      2,    90,   5, 5, 5, 5}
+{ -30,   85,   43,  132,  -30,   85,   43,  132,  -30,   85,   43,  132,  -30,   85,   43,  132,      1,    50,   2, 2, 2, 2}
+{  43,  132,   43,  132,   43,  132,   43,  132,   43,  132,   43,  132,   43,  132,   43,  132,      2,    80,   7, 7, 7, 7}
+
+; Phase 6
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  45,   30,   45,   30,   45,   30,   45,   30,   45,   30,   45,   30,   45,   30,   45,   30,     29,    50,   7, 7, 7, 7}
+
+; Phase 7
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  36,   33,   36,   33,   36,   33,   36,   33,   36,   33,   36,   33,   36,   33,   36,   33,     29,    80,   0, 0, 0, 0}
+
+; Phase 8
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  37,   29,   37,   29,   37,   29,   37,   29,   37,   29,   37,   29,   37,   29,   37,   29,     29,    50,   0, 0, 0, 0}
+
+; Phase 9
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  36,    2,   36,    2,   36,    2,   36,    2,   36,    2,   36,    2,   36,    2,   36,    2,     29,    50,   0, 0, 0, 0}
+
+; Phase 10
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  39,  -11,   39,  -11,   39,  -11,   39,  -11,   39,  -11,   39,  -11,   39,  -11,   39,  -11,     25,    50,   4, 4, 4, 4}
+
+; Phase 11
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  38,   14,   38,   14,   38,   14,   38,   14,   38,   14,   38,   14,   38,   14,   38,   14,     29,    50,   0, 0, 0, 0}
+
+; Phase 12
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  37,  -13,   37,  -13,   37,  -13,   37,  -13,   37,  -13,   37,  -13,   37,  -13,   37,  -13,     29,    50,   1, 1, 1, 1}
+
+; Phase 13
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  34,  -30,   34,  -30,   34,  -30,   34,  -30,   34,  -30,   34,  -30,   34,  -30,   34,  -30,     25,    50,   2, 2, 2, 2}
+
+; Phase 14
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+
+; Phase 15
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  34,   25,   34,   25,   34,   25,   34,   25,   34,   25,   34,   25,   34,   25,   34,   25,     29,    50,   0, 0, 0, 0}
+
+; Phase 16
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+
+; Phase 17
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  35,    6,   35,    6,   35,    6,   35,    6,   35,    6,   35,    6,   35,    6,   35,    6,     29,    50,   2, 2, 2, 2}
+
+; Phase 18
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  42,   13,   43,   13,   42,   13,   43,   13,   42,   13,   43,   13,   42,   13,   43,   13,     25,    50,   5, 5, 5, 5}
+
+; Phase 19
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+
+; Phase 20
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  38,    9,   38,    9,   38,    9,   38,    9,   38,    9,   38,    9,   38,    9,   38,    9,     29,    50,   5, 5, 5, 5}
+
+; Phase 21
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  33,  -13,   33,  -13,   33,  -13,   33,  -13,   33,  -13,   33,  -13,   33,  -13,   33,  -13,     25,    50,   2, 2, 2, 2}
+
+; Phase 22
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+
+; Phase 23
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+
+; Phase 24
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  40,   26,   40,   26,   40,   26,   40,   26,   40,   26,   40,   26,   40,   26,   40,   26,      2,    50,   7, 7, 7, 7}
+
+; Phase 25
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  31,    6,   31,    6,   31,    6,   31,    6,   31,    6,   31,    6,   31,    6,   31,    6,     29,    50,   3, 3, 3, 3}
+
+; Phase 26
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  31,   -8,   32,   -8,   31,   -8,   32,   -8,   31,   -8,   32,   -8,   31,   -8,   32,   -8,     25,    50,   2, 2, 2, 2}
+
+; Phase 27
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  45,    9,   45,    9,   45,    9,   45,    9,   45,    9,   45,    9,   45,    9,   45,    9,      2,    50,   4, 4, 4, 4}
+
+; Phase 28
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  29,  -12,   29,  -12,   29,  -12,   29,  -12,   29,  -12,   29,  -12,   29,  -12,   29,  -12,     29,    50,   5, 5, 5, 5}
+
+; Phase 29
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  36,  -17,   36,  -17,   36,  -17,   36,  -17,   36,  -17,   36,  -17,   36,  -17,   36,  -17,     25,    50,   1, 1, 1, 1}
+
+; Phase 30
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  25,   10,   25,   10,   25,   10,   25,   10,   25,   10,   25,   10,   25,   10,   25,   10,      2,    50,   0, 0, 0, 0}
+
+; Phase 31
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+
+; Phase 32
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  42,   31,   42,   31,   42,   31,   42,   31,   42,   31,   42,   31,   42,   31,   42,   31,      2,    50,   7, 7, 7, 7}
+
+; Phase 33
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  43,   22,   43,   22,   43,   22,   43,   22,   43,   22,   43,   22,   43,   22,   43,   22,     29,    50,   1, 1, 1, 1}
+
+; Phase 34
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  34,   10,   34,   10,   34,   10,   34,   10,   34,   10,   34,   10,   34,   10,   34,   10,     25,    50,   2, 2, 2, 2}
+
+; Phase 35
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  37,   17,   37,   17,   37,   17,   37,   17,   37,   17,   37,   17,   37,   17,   37,   17,      2,    50,   6, 6, 6, 6}
+
+; Phase 36
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  34,  -14,   35,  -14,   34,  -14,   35,  -14,   34,  -14,   35,  -14,   34,  -14,   35,  -14,     29,    50,   6, 6, 6, 6}
+
+; Phase 37
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  31,  -17,   31,  -17,   31,  -17,   31,  -17,   31,  -17,   31,  -17,   31,  -17,   31,  -17,     25,    50,   0, 0, 0, 0}
+
+; Phase 38
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  36,   20,   36,   20,   36,   20,   36,   20,   36,   20,   36,   20,   36,   20,   36,   20,      2,    50,   0, 0, 0, 0}
+
+; Phase 39
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+
+; Phase 40
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  38,   23,   38,   23,   38,   23,   38,   23,   38,   23,   38,   23,   38,   23,   38,   23,      2,    50,   3, 3, 3, 3}
+
+; Phase 41
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  46,   26,   46,   26,   46,   26,   46,   26,   46,   26,   46,   26,   46,   26,   46,   26,     29,    50,   4, 4, 4, 4}
+
+; Phase 42
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  49,   12,   49,   12,   49,   12,   49,   12,   49,   12,   49,   12,   49,   12,   49,   12,     25,    50,   5, 5, 5, 5}
+
+; Phase 43
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  42,   16,   42,   16,   42,   16,   42,   16,   42,   16,   42,   16,   42,   16,   42,   16,      2,    50,   2, 2, 2, 2}
+
+; Phase 44
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  47,   16,   47,   16,   47,   16,   47,   16,   47,   16,   47,   16,   47,   16,   47,   16,     29,    50,   1, 1, 1, 1}
+
+; Phase 45
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  33,   -1,   33,   -1,   33,   -1,   33,   -1,   33,   -1,   33,   -1,   33,   -1,   33,   -1,     25,    50,   2, 2, 2, 2}
+
+; Phase 46
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  47,    9,   47,    9,   47,    9,   47,    9,   47,    9,   47,    9,   47,    9,   47,    9,      2,    50,   5, 5, 5, 5}
+
+; Phase 47
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+
+; Phase 48
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  38,   26,   38,   26,   38,   26,   38,   26,   38,   26,   38,   26,   38,   26,   38,   26,      2,    50,   2, 2, 2, 2}
+
+; Phase 49
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  42,   24,   42,   24,   42,   24,   42,   24,   42,   24,   42,   24,   42,   24,   42,   24,     29,    50,   6, 6, 6, 6}
+
+; Phase 50
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  36,    9,   36,    9,   36,    9,   36,    9,   36,    9,   36,    9,   36,    9,   36,    9,     25,    50,   3, 3, 3, 3}
+
+; Phase 51
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  34,   17,   34,   17,   34,   17,   34,   17,   34,   17,   34,   17,   34,   17,   34,   17,      2,    50,   4, 4, 4, 4}
+
+; Phase 52
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  43,   13,   43,   13,   43,   13,   43,   13,   43,   13,   43,   13,   43,   13,   43,   13,     29,    50,   4, 4, 4, 4}
+
+; Phase 53
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  34,   13,   34,   13,   34,   13,   34,   13,   34,   13,   34,   13,   34,   13,   34,   13,     25,    50,   0, 0, 0, 0}
+
+; Phase 54
+{1}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  48,   12,   48,   12,   48,   12,   48,   12,   48,   12,   48,   12,   48,   12,   48,   12,      2,    50,   5, 5, 5, 5}
+
+; Phase 55
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w

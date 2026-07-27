@@ -1,0 +1,2930 @@
+; China eventmsg.txt																	   
+;REASON PHRASES FOR AUTOMATICALLY TRIGGERED EVENTS
+
+	;Provocation (HIGH BENEVOLENCE/HOSTILITY)
+PHRASE_really_benevolent		"因为 [leader_name] 确实对您感到非常满意"
+PHRASE_benevolent			"因为 [leader_name] 对您感到比较满意"
+PHRASE_hostile				"因为 [leader_name] 被您弄得心烦意乱"
+PHRASE_really_hostile			"因为 [leader_name] 真的非常愤怒"
+		
+ 	;Opportunity
+PHRASE_weakness				"因为 [leader_name] 觉得您很软弱"
+PHRASE_out_of_money 			"因为您需要现金"
+ 
+ 	;Response
+PHRASE_request_response			"为了回应您要求的 [request_type]"
+ 
+ 	;Combat results/results of player actions
+PHRASE_player_attacked			"由于您被 [city_name] 攻击"
+
+;&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&  *********** TEXT FOR EVENTS *******   &&&&&&&&&&&&&&&&&&&&&&&&&&
+
+
+;***************************************************REQUESTS*****************************************
+
+
+; TONES INDICATED ARE:
+; _S = Standard
+; _D = Demand
+; _P = Plea
+
+;**************************************FOOD, GOODS & MONEY REQUESTS**********************************
+
+;******Famine Relief*********************************************************
+PHRASE_famine_relief_relief_title_S 				"[city_name] 发生饥荒"
+PHRASE_famine_relief_relief_spy_report_S				"您好, 最高贵的 [player_name]. 密探报告说您的同盟城市 [city_name], 缺少食物. 他们的领导者 [leader_name] 希望您能帮助他们度过饥荒. 如果您能送给他们 [amount] 份食物, 就能阻止这场灾难, 而 [leader_name] 无疑会向其它盟友说您的好话."
+PHRASE_famine_relief_relief_initial_announcement_S		"我的粮仓几乎都空了 [player_name], 我, [city_name] 的 [leader_name], 现在就只能寄希望于您的帮助了. 我的城市发生了一场饥荒, 我的人民都在挨饿. 我没有办法自己弄到粮食 来喂饱我的人民, 真不知道我的人民长时间吃不到东西 最终会发生什么事情. 请您在 [time_allotted] 个月内送给我的城市 [amount] 份食物, 否则事情就会变得更糟!"
+PHRASE_famine_relief_relief_reminder_S 				"我, [city_name] 的 [leader_name] 请求您, [player_name], 我恳求您帮助您的同胞. 我的人民万分迫切地需要我向您要求的 [amount] 份食物. 时间紧迫. 如果您不能在六个月内把食物送来, 那只有我们的祖先才知道会发生什么事."
+PHRASE_famine_relief_relief_overdue_S 				"[player_name], 我真不敢相信, 您竟然不理睬我的要求! 不过很幸运, 虽然没有您的帮助, 但是我们还是通过祭祀祖先 设法渡过了这次饥荒, 只是 [city_name] 的所有人民都感到很悲哀. 如果您迅速送 [amount] 份食物来补充我们的粮仓, 或许我会原谅您的疏忽 ...只此一次!"
+PHRASE_famine_relief_relief_warning_S 				"[player_name]! 如果您不能在六个月内送给我们的城市 [city_name] [amount] 份食物, 那我就不再麻烦您了. 您让我们的友谊蒙羞!"
+PHRASE_famine_relief_relief_early_reason_S	  		"由于您提前送来 [amount] 份食物帮助我们渡过了饥荒,"
+PHRASE_famine_relief_relief_comply_reason_S  			"由于您给我的人民送来了他们的需要食物,"
+PHRASE_famine_relief_relief_too_late_reason_S 	 		"由于您非常晚才送来我们需要的 [amount] 份食物,"
+PHRASE_famine_relief_relief_refuse_reason_S	 		"由于您没有把 [amount] 份食物送给我的人民,"
+PHRASE_famine_relief_relief_no_reason_S				""
+
+PHRASE_famine_relief_relief_title_D 				"[city_name] 发生饥荒"
+PHRASE_famine_relief_relief_spy_report_D				"最值得尊敬的 [player_name], 密探报告说您的对手 [city_name] 和它的领导者 [leader_name] 遭遇了不幸. 他们那里发生了饥荒, 人民变得虚弱, 令人同情. 如果您在一年内送去 [amount] 份食物, 就能帮他们渡过这次天灾, 或许还能得到 [leader_name] 的尊重."
+PHRASE_famine_relief_relief_initial_announcement_D		"听着, [player_name]. 我, [city_name] 的 [leader_name], 遇到了麻烦, 而您可以帮助我. 我的城市发生了饥荒, 因此我要求您在 [time_allotted] 个月内送来 [amount] 份食物, 这样我的人民就不会挨饿了."
+PHRASE_famine_relief_relief_reminder_D 				"怎么回事? [player_name]? 您没有注意我第一次的要求吗? 我, [city_name] 的 [leader_name] 要您送来的 [amount] 份食物在哪儿? 如果您明白怎么做对自己是最好的, 那就在六个月以内送来 [amount] 份食物."
+PHRASE_famine_relief_relief_overdue_D 				"真是太不明智了, [player_name]! 您应该知道 忽视我不会有好结果的. 尽管我的城市 [city_name] 已经渡过了饥荒, 我的人民也不再吃不上东西, 但我提过的要求不会轻易改变. 快点把我要求的 [amount] 份食物送来, 那样或许我会原谅您的怠慢无礼."
+PHRASE_famine_relief_relief_warning_D 				"好吧, [player_name]. 看来您是想让我这个 [city_name] 的领导者愤怒. 我再给您六个月的时间. 如果那时您还未送来 [amount] 份食物, 我就要做些让您后悔万分的事了."
+PHRASE_famine_relief_relief_early_reason_D	  		"由于您提前预见到了我们的需要, 送来了 [amount] 份食物,"
+PHRASE_famine_relief_relief_comply_reason_D  			"由于您按时送来了 [amount] 份食物,"
+PHRASE_famine_relief_relief_too_late_reason_D 	 		"由于您送来 [amount] 份食物的行动太慢了,"
+PHRASE_famine_relief_relief_refuse_reason_D	 		"由于您拒绝送来 [amount] 份食物,"
+PHRASE_famine_relief_relief_no_reason_D				""
+
+PHRASE_famine_relief_relief_title_P 				"[city_name] 发生饥荒"
+PHRASE_famine_relief_relief_spy_report_P				"您好, [player_name]. 密探报告说您的诸候城市 [city_name] 和它的领导者 [leader_name] 遇到了麻烦. 他们的生活很艰苦, 就要发生的饥荒了. 如果您能在一年时间内送去 [amount] 份食物, [leader_name] 和他的城市 [city_name] 就会得救."
+PHRASE_famine_relief_relief_initial_announcement_P		"最令人敬畏的 [player_name], 我, [city_name] 的 [leader_name], 您谦恭的仆人, 迫切需要您的帮助. 我的城市发生了一场大规模的饥荒. 我的人民正在忍饥挨饿. 恳请您, 最尊贵的主人, 在 [time_allotted] 个月内给我们送来 [amount] 份食物. 您是我们唯一的希望!"
+PHRASE_famine_relief_relief_reminder_P 				"请帮助我, [player_name]! 听着人民饥饿的哀泣, 我的心都碎了! 我, [city_name] 的 [leader_name] 恳求您在六个月内送来 [amount] 份食物!"
+PHRASE_famine_relief_relief_overdue_P 				"为什么您弃我们不顾, [player_name]? 我的人民有很多都饿死了! 而我的城市 [city_name] 再也不象以前那样繁华了. 我们还需要更多的食物, 所以如果您还有良心, 那就快点送来 [amount] 份食物, 您的好心会得到好报的."
+PHRASE_famine_relief_relief_warning_P 				"我们到底做错过什么, 让您如此残忍地对待我们, [player_name]? 我, [leader_name], 一直都忠心地为您服务, 可是现在您却虐待我和我的城市 [city_name]. 如果您在以后的六个月内送来 [amount] 份食物, 我或许会尽力去理解, 您是因为公务繁忙压力太大, 才忽视了我的要求."
+PHRASE_famine_relief_relief_early_reason_P	  		"由于您神奇地预知到我们的需要, 提前送来了 [amount] 份食物,"
+PHRASE_famine_relief_relief_comply_reason_P  			"由于您仁慈地给我的人民送来了需要的 [amount] 份食物,"
+PHRASE_famine_relief_relief_too_late_reason_P 	 		"由于您送出我所需要的 [amount] 份食物的时间太晚了,"
+PHRASE_famine_relief_relief_refuse_reason_P	 		"由于您无情的拒绝了我的恳求, 没有送来 [amount] 份食物,"
+PHRASE_famine_relief_relief_no_reason_P				""
+
+PHRASE_CONDENSED_famine_relief_relief_title_S 				"N/A"
+PHRASE_CONDENSED_famine_relief_relief_spy_report_S			"密探报告 [city_name] 将要发生饥荒. 提前送去 [amount] 份食物 对我们是有利的."
+PHRASE_CONDENSED_famine_relief_relief_initial_announcement_S	"[city_name] 发生饥荒. 在 [time_allotted] 个月内送去 [amount] 份食物 对我们是有利的."
+PHRASE_CONDENSED_famine_relief_relief_reminder_S 			"在六个月内给 [city_name] 送去 [amount] 份食物 对我们是有利的."
+PHRASE_CONDENSED_famine_relief_relief_overdue_S 			"超过最终期限了! 不过, 晚送去 [amount] 份食物总比根本不送要强."
+PHRASE_CONDENSED_famine_relief_relief_warning_S 			"还有六个月的时间给 [city_name] 准备渡过饥荒的食物."
+PHRASE_CONDENSED_famine_relief_relief_early_reason_S	  		"由于您提前给 [city_name] 送去了食物, "
+PHRASE_CONDENSED_famine_relief_relief_comply_reason_S  		"由于您及时给 [city_name] 送去了食物, "
+PHRASE_CONDENSED_famine_relief_relief_too_late_reason_S 	 	"由于您给 [city_name] 送去食物的时间拖得太长, "
+PHRASE_CONDENSED_famine_relief_relief_refuse_reason_S	 		"由于您拒绝给 [city_name] 送去食物, "
+PHRASE_CONDENSED_famine_relief_relief_no_reason_S			""
+
+PHRASE_CONDENSED_famine_relief_relief_title_D 				"N/A"
+PHRASE_CONDENSED_famine_relief_relief_spy_report_D			"密探报告说 [city_name] 将要发生饥荒. 提前送去 [amount] 份食物 对我们是有利的."
+PHRASE_CONDENSED_famine_relief_relief_initial_announcement_D	"[city_name] 要求您在 [time_allotted] 个月内送去 [amount] 份食物 帮他们渡过饥荒."
+PHRASE_CONDENSED_famine_relief_relief_reminder_D 			"[city_name] 正在等待您的援助. 您还有六个月的时间准备食物."
+PHRASE_CONDENSED_famine_relief_relief_overdue_D 			"超过最终期限了! 最好在两年内 送去饥荒食物援助, 避免 [city_name] 人怒火焚心."
+PHRASE_CONDENSED_famine_relief_relief_warning_D 			"还有六个月的时间给 [city_name] 准备渡过饥荒的食物."
+PHRASE_CONDENSED_famine_relief_relief_early_reason_D	  		"由于您提前预见了 [city_name] 对食物援助的需要"
+PHRASE_CONDENSED_famine_relief_relief_comply_reason_D  		"由于您满足了 [city_name] 发生饥荒时要求的食物援助"
+PHRASE_CONDENSED_famine_relief_relief_too_late_reason_D 	 	"由于您给发生饥荒的 [city_name] 送去食物救济的时间晚了"
+PHRASE_CONDENSED_famine_relief_relief_refuse_reason_D	 		"由于您没有给发生饥荒的 [city_name] 送去食物救济"
+PHRASE_CONDENSED_famine_relief_relief_no_reason_D			""
+
+PHRASE_CONDENSED_famine_relief_relief_title_P 				"N/A"
+PHRASE_CONDENSED_famine_relief_relief_spy_report_P			"密探报告说 [city_name] 将要发生饥荒.  提前送去 [amount] 份食物 对我们是有利的."
+PHRASE_CONDENSED_famine_relief_relief_initial_announcement_P	"[city_name] 请求您在 [time_allotted] 个月内送去 [amount] 份食物帮他们渡过饥荒."
+PHRASE_CONDENSED_famine_relief_relief_reminder_P 			"[city_name] 还在等待着您救济. 请在六个月内送去食物援助."
+PHRASE_CONDENSED_famine_relief_relief_overdue_P 			"超过最终期限了! 迅速给 [city_name] 送去食物救济, 避免发生麻烦."
+PHRASE_CONDENSED_famine_relief_relief_warning_P 			"还有六个月的时间给 [city_name] 准备渡过饥荒的食物."
+PHRASE_CONDENSED_famine_relief_relief_early_reason_P	  		"由于您提前给 [city_name] 送去了救济食物,"
+PHRASE_CONDENSED_famine_relief_relief_comply_reason_P  		"由于您及时给 [city_name] 送去了救济食物"
+PHRASE_CONDENSED_famine_relief_relief_too_late_reason_P 	 	"由于您给发生饥荒的 [city_name] 送出食物救济的时间晚了"
+PHRASE_CONDENSED_famine_relief_relief_refuse_reason_P	 		"由于您没有给发生饥荒的 [city_name] 送去食物救济"
+PHRASE_CONDENSED_famine_relief_relief_no_reason_P			""
+
+;*****General Request**********************************
+PHRASE_general_request_title_S 				"[city_name] 需要 [itemshort]"
+PHRASE_general_request_spy_report_S				"据一个可靠的密探报告, 您的同盟城市 [city_name] 的统治者 [leader_name] 今年会向您要求 [amount] [item]. 如果您现在就送出这种物品, 您这种预知未来的神奇能力会让 [leader_name] 害怕!"
+PHRASE_general_request_initial_announcement_S		"您好, [player_name]. 我, [city_name] 的 [leader_name], 需要您在 [time_allotted] 个月内送来 [amount] [item]. 这样就能巩固咱们 两个城市之间的 同盟关系."
+PHRASE_general_request_reminder_S 				"我觉得我应该温柔地提醒您一下, [player_name], 我仍然在等着您送 [amount] [item] 到我的城市 [city_name] 来. 请在六个月内送来那些物品."
+PHRASE_general_request_overdue_S 				"[player_name], 请原谅我打扰您. 我好象还没有看到, 您这个值得我信任的同盟, 按我的要求将 [amount] [item] 送到我的城市 [city_name] 来. 是不是您那些不称职的官员 耽误了我的要求? 如果您现在送来我向您要求的物品, 我一定会报答您的."
+PHRASE_general_request_warning_S 				"我已经开始怀疑 您到底是不是一个真正的盟友, [player_name]. 我, [city_name] 的 [leader_name], 还在等待您送来我向您要求的 [amount] [item]. 我的其它盟友认为 我这样等待不会有什么结果. 请您在六个月内送来那些东西, 否则 咱们的同盟关系 就会有破裂的危险."
+PHRASE_general_request_early_reason_S	  		"由于您神奇预知, 提前送来了我需要的 [amount] [item],"
+PHRASE_general_request_comply_reason_S  			"由于您按照我的要求 及时给我的城市送来了 [amount] [item],"
+PHRASE_general_request_too_late_reason_S 	 		"由于您没有及时给我的城市送来 [amount] [item],"
+PHRASE_general_request_refuse_reason_S	 		"由于您拒绝给我的城市送来 [amount] [item],"
+PHRASE_general_request_no_reason_S				""
+
+PHRASE_general_request_title_D 				"[city_name] 索要 [itemshort]"
+PHRASE_general_request_spy_report_D				"听听这个报告, [player_name], 这是一个密探刚刚送来的. [city_name] 的统治者, 您的对手 [leader_name], 会在一年之内向您索要 [amount] [item]. 他们自己的生产能力 根本比不上您的城市, 而他却羞于向您启齿要求帮助."
+PHRASE_general_request_initial_announcement_D		"[player_name], 您是一个富有的对手. 请在 [time_allotted] 个月内给我的城市 [city_name] 送来 [amount] [item]. 我是强大的 [leader_name], 如果我愿意, 我就能自己到您的城市去拿那些东西, 因此您最好自己把东西送给我."
+PHRASE_general_request_reminder_D 				"您怎么回事, [player_name]? 您的脑子是不是出了什么毛病? 您是不是不明白自己没有选择? 我特此向您索要 [amount] [item], 请将这些东西送到我的城市 [city_name] 来. 在六个月内把东西送来, 我就会忘掉您那难受的表情."
+PHRASE_general_request_overdue_D 				"我诅咒您, [player_name], 您是个脑子进水的傻瓜. 您没有按我的要求把 [amount] [item] 送到我的城市 [city_name] 来. 您很快就会知道忽视我 [leader_name] 这样伟大的领导者是不明智的. 如果您现在送来这些东西, 我会觉得您仅仅是速度慢, 但并不愚蠢."
+PHRASE_general_request_warning_D 				"[player_name], 您这个魔鬼的化身, 您最好快点送来 [amount] [item]! 我可不会再等下去了!"
+PHRASE_general_request_early_reason_D	  		"由于您提前给我的城市送来了 [amount] [item],"
+PHRASE_general_request_comply_reason_D  			"由于您依照我的要求送来了 [amount] [item],"
+PHRASE_general_request_too_late_reason_D 	 		"由于您非常晚才给我的城市送来 [amount] [item],"
+PHRASE_general_request_refuse_reason_D	 		"由于您愚蠢地忽视了我的要求, 没有给我的城市送来 [amount] [item],"
+PHRASE_general_request_no_reason_D				""
+
+PHRASE_general_request_title_P 				"[city_name] 乞求 [itemshort]"
+PHRASE_general_request_spy_report_P				"聪明的密探送来一个新消息, [player_name]. 在一年之内, 您的诸候城市 [city_name] 将会突然出现 [item] 短缺, 从而影响他们城市的发展. [city_name] 的 [leader_name] 会向您求助. 如果您现在就送给他们 [amount] [item], 就能帮他们避免陷入困境."
+PHRASE_general_request_initial_announcement_P		"善良的 [player_name], 请帮助我渡过困境. 由于我们城中最近发生了一场火灾, 我, [city_name] 的 [leader_name], 现在需要 [item], 因此向您求助. 我们的城市 因为物资缺乏而陷入困难时期, 所以我求您在 [time_allotted] 个月内送来 [amount] [item], 帮我们减轻负担."
+PHRASE_general_request_reminder_P 				"您一定是非常忙, [player_name]. 不然还有什么原因 让您至今还没给我的城市 [city_name] 送来 [amount] [item] 呢? 我, [leader_name], 只能依靠您的慈悲了. 请在六个月内送来我需要的东西."
+PHRASE_general_request_overdue_P 				"难道我们对您的依赖是您的烦恼吗, 最尊贵的 [player_name]? 您是不是想给我点教训? 我, [leader_name], 是那么谦恭地向您提出请求, 可是为什么您还没有送来 [amount] [item]? 我的城市 [city_name] 正在受难! 不管怎样, 请求您送东西来吧. 我们依然需要它."
+PHRASE_general_request_warning_P 				"我一直在等待您的帮助, 您的另一个诸候城市也听说了此事, [player_name]. 我无法相信您真的会在我的城市 [city_name] 需要您的时候忘记了我们! 我不相信您会这样傲慢地对待我. 无论如何, 如果您送来 [amount] [item], 我会真心原谅您对我的慢怠."
+PHRASE_general_request_early_reason_P	  		"由于您神奇预知, 提前送来了我需要的 [amount] [item],"
+PHRASE_general_request_comply_reason_P  			"由于您是一位和善的主人, 及时给我的城市送来了 [amount] [item],"
+PHRASE_general_request_too_late_reason_P 	 		"由于您很晚才给我的城市送来 [amount] [item],"
+PHRASE_general_request_refuse_reason_P	 		"由于您残酷地漠视我的恳求, 拒绝送来 [amount] [item],"
+PHRASE_general_request_no_reason_P				""
+
+PHRASE_CONDENSED_general_request_title_S 				"N/A"
+PHRASE_CONDENSED_general_request_spy_report_S			"密探报告 [city_name] 将会需要 [amount] [item]."
+PHRASE_CONDENSED_general_request_initial_announcement_S	"[city_name] 需要 [amount] [item], 在 [time_allotted] 个月内送去 对我们是有利的."
+PHRASE_CONDENSED_general_request_reminder_S 			"六个月内给 [city_name] 送去 [amount] [item]."
+PHRASE_CONDENSED_general_request_overdue_S 			"超过最终期限了! 不过, 晚给 [city_name] 送去东西总比根本不送要好."
+PHRASE_CONDENSED_general_request_warning_S 			"六个月内给 [city_name] 送去 [amount] [item]."
+PHRASE_CONDENSED_general_request_early_reason_S	  		"由于您提前送去了 [amount] [item]"
+PHRASE_CONDENSED_general_request_comply_reason_S  		"由于您及时送去了 [amount] [item]"
+PHRASE_CONDENSED_general_request_too_late_reason_S 	 	"由于您太晚才送去 [amount] [item]"
+PHRASE_CONDENSED_general_request_refuse_reason_S	 	"由于您没有送去 [amount] [item]"
+PHRASE_CONDENSED_general_request_no_reason_S			""
+
+PHRASE_CONDENSED_general_request_title_D 					"N/A"
+PHRASE_CONDENSED_general_request_spy_report_D			"密探报告 [city_name] 将会需要 [amount] [item]."
+PHRASE_CONDENSED_general_request_initial_announcement_D	"[city_name] 需要 [amount] [item], 在 [time_allotted] 个月内送去 对我们是有利的."
+PHRASE_CONDENSED_general_request_reminder_D 			"六个月内给 [city_name] 送去 [amount] [item]."
+PHRASE_CONDENSED_general_request_overdue_D 			"超过最终期限了! 不过, 晚给 [city_name] 送去东西总比根本不送要好."
+PHRASE_CONDENSED_general_request_warning_D 			"六个月内给 [city_name] 送去 [amount] [item]."
+PHRASE_CONDENSED_general_request_early_reason_D	  		"由于您提前送去了 [amount] [item]"
+PHRASE_CONDENSED_general_request_comply_reason_D  		"由于您及时送去了 [amount] [item]"
+PHRASE_CONDENSED_general_request_too_late_reason_D 	 	"由于您太晚才送去 [amount] [item]"
+PHRASE_CONDENSED_general_request_refuse_reason_D	 	"由于您没有送去 [amount] [item]"
+PHRASE_CONDENSED_general_request_no_reason_D			""
+
+PHRASE_CONDENSED_general_request_title_P 				"N/A"
+PHRASE_CONDENSED_general_request_spy_report_P			"密探报告 [city_name] 将会需要 [amount] [item]."
+PHRASE_CONDENSED_general_request_initial_announcement_P	"[city_name] 需要 [amount] [item], 在 [time_allotted] 个月内送去 对我们是有利的."
+PHRASE_CONDENSED_general_request_reminder_P 			"六个月内给 [city_name] 送去 [amount] [item]."
+PHRASE_CONDENSED_general_request_overdue_P 			"超过最终期限了! 不过, 晚给 [city_name] 送去东西总比根本不送要好."
+PHRASE_CONDENSED_general_request_warning_P 			"六个月内给 [city_name] 送去 [amount] [item]."
+PHRASE_CONDENSED_general_request_early_reason_P	  		"由于您提前送去了 [amount] [item]"
+PHRASE_CONDENSED_general_request_comply_reason_P  		"由于您及时送去了 [amount] [item]"
+PHRASE_CONDENSED_general_request_too_late_reason_P 	 	"由于您太晚才送去 [amount] [item]"
+PHRASE_CONDENSED_general_request_refuse_reason_P	 	"由于您没有送去 [amount] [item]"
+PHRASE_CONDENSED_general_request_no_reason_P			""
+
+
+;******Building Project*********************************************************
+PHRASE_building_project_title_S 				"[city_name] 需要 [itemshort]"
+PHRASE_building_project_spy_report_S			"最高贵的 [player_name]! 一个密探报告说 [city_name] 的统治者 [leader_name] 陷入了困境. 一座曾经象征皇权的宫殿, 倒塌成为一片废墟. [leader_name] 将向您要求 [amount] [item] 用于修复损坏的建筑物. 如果您现在就送出那些物资, 您的盟友会惊异于您的先知先觉."
+PHRASE_building_project_initial_announcement_S		"高贵的 [player_name], 我, [city_name] 的 [leader_name], 现在希望得到您的帮助. 我城市里的一座宫殿倒塌成为一片废墟, 我需要 [amount] [item] 才能修复它. 请您在 [time_allotted] 个月内送给我 [itemshort], 那样我们就能修复倒塌的建筑物了."
+PHRASE_building_project_reminder_S 				"亲爱的 [player_name], [city_name] 城里的一座宫殿现在倒塌了, 只有您送来 [amount] [item] 我才能修复它. 请您在六个月内送给我物资."
+PHRASE_building_project_overdue_S 				"我, [city_name] 的 [leader_name], 已经快发狂了, [player_name]. 宫殿依然是一片废墟, 这都是因为您迟迟没有给我送来 [amount] [item]. 如果您现在送来我需要的物资, 我就能继续开工建造完成."
+PHRASE_building_project_warning_S 				"我, [leader_name], 看着我 [city_name] 城内的储备物资 只能苦笑, 而且我认为这一切都要怪您! 您没有送来我要用于修复宫殿的 [amount] [item], 现在宫殿还是一片废墟, 它使我成为人们的笑柄. 建筑工人都要回家了. 如果您现在送来 [amount] [item], 也许我还能说服工人们留下, 继续完成这个工程."
+PHRASE_building_project_early_reason_S	  		"由于您提前送来了我需要的 [amount] [item],"
+PHRASE_building_project_comply_reason_S  	        "由于您及时送来了我需要的 [amount] [item],"
+PHRASE_building_project_too_late_reason_S 	 	"由于您很晚才送来我需要的 [amount] [item],"
+PHRASE_building_project_refuse_reason_S	 		"由于您不理睬我要求的 [amount] [item],"
+PHRASE_building_project_no_reason_S				""
+
+PHRASE_building_project_title_D 				"[city_name] 索要 [itemshort]"
+PHRASE_building_project_spy_report_D			"我的主人, 最近的密探报告中提到: [city_name] 有一条有趣的消息. 那个城市的领导者 [leader_name] 将要建造一座巨大的建筑物, 要您送去 [amount] [item] 才能完成那项工程. 如果您想获得对手的好感, 就在一年之内送去那些物资."
+PHRASE_building_project_initial_announcement_D		"看起来您过得不错啊, [player_name]. 尽管您只是一只微不足道的蚊虫, 不过对我也是有用的. 我需要 [amount] [item] 用于在我的 [city_name] 城内建造一座大型建筑物. 在 [time_allotted] 个月内把东西给我送来, 那样您在我的眼中 就会变成比蚊子稍微大些的飞蝇了."
+PHRASE_building_project_reminder_D 				"您的小脑袋里到底有没有智慧, [player_name]? 我 [city_name] 城需要的 [amount] [item] 物资在哪儿呢? 您忘了吗, 您这个乡下佬? 六个月内把东西给我送来, 不然您就有麻烦了!"
+PHRASE_building_project_overdue_D 				"我真感到震惊, [player_name]. 您不知道我是谁, 是吗? 我是 [leader_name], [city_name] 的伟大领导者! 您怎么敢忽视我的要求, 至今还不送来 [amount] [item]? 由于您没有送来我需要的物资, 我 [city_name] 城的建造工程还未完工! 现在就送来 [item] 吧, 那样至少我还能完成工程."
+PHRASE_building_project_warning_D 				"[player_name], 你这个笨蛋, 你居然敢蔑视我! 我需要 [amount] [item] 在 [city_name] 城建造建筑, 现在就要! 快给我送来. 你明白了吗?"
+PHRASE_building_project_early_reason_D	  		"由于您猜到了我的想法, 提前送来了我的建筑工程需要的 [amount] [item],"
+PHRASE_building_project_comply_reason_D  			"由于您顺从地送来了我的建筑工程需要的 [amount] [item],"
+PHRASE_building_project_too_late_reason_D 	 	"由于您很迟才送来我需要的建筑物资 [amount] [item],"
+PHRASE_building_project_refuse_reason_D	 		"由于您拒绝送来我要求的 [amount] [item], 耽误了我的建筑工程,"
+PHRASE_building_project_no_reason_D				""
+
+PHRASE_building_project_title_P 				"[city_name] 想要 [itemshort]"
+PHRASE_building_project_spy_report_P			"密探报告, 我的主人. 好象您的诸候 [city_name] 的 [leader_name] 要建造一座大型建筑物. 看来那项工程的预算很高, 估计 [leader_name] 会需要 [amount] 或更多的 [item] 才能完成它. 如果您在一年内送去这些物资, 就能帮 [leader_name] 摆脱困境."
+PHRASE_building_project_initial_announcement_P		"最聪明仁慈的 [player_name], 我, [leader_name], 惭愧地要求您的帮助. 我在 [city_name] 开始了一项大工程, 可是因预计不足, 还缺少 [amount] [item]. 现在, 我没办法完成这项工程. 如果您在 [time_allotted] 个月内送来 [amount] [item], 我就把这项工程奉献给您的祖先!"
+PHRASE_building_project_reminder_P 				"哦, 伟大的 [player_name], 我, [leader_name], 觉得有点忧虑. 我们的 [item] 快没有了, 如果想完成 [city_name] 的大工程, 全靠您支持 [amount] [item] 了. 如果有一座未完成的建筑物 留在城中破坏环境, 我担心我的人民 会有什么样反应. 求您了, 发发慈悲, 在六个月内把我需要的物资送来吧."
+PHRASE_building_project_overdue_P 				"我太悲哀了, [player_name], 真的很悲哀! 我的人民觉得我这个 [city_name] 的领导者 [leader_name] 是一个傻瓜, 还有人说要粗暴地把我赶下台. 所有这一切 都是因为您没有送来我需要的 [amount] [item]. 也许您现在送来物资, 我就可以继续完成工程, 从而挽回一部分人民对我的尊重."
+PHRASE_building_project_warning_P 				"难道您不能帮助我吗, [player_name]? 我 [city_name] 城的人民 已经开始做一些无法形容的事情 来诋毁我! 他们说要把我 [leader_name] 赶出城市! 我求您了, 求您送来 [amount] [item] 让我完成我的建筑工程吧!"
+PHRASE_building_project_early_reason_P	  		"由于您在我意识到自己的需要前 就给我的建筑工程送来了 [amount] [item],"
+PHRASE_building_project_comply_reason_P  			"由于您好心地给我的建筑工程送来需要的 [amount] [item],"
+PHRASE_building_project_too_late_reason_P 	 	"由于您太晚才给我的建筑工程送来需要的 [amount] [item],"
+PHRASE_building_project_refuse_reason_P	 		"由于您不理睬我的乞求, 没有送来 [amount] [item] 帮我完成建筑工程,"
+PHRASE_building_project_no_reason_P				""
+
+PHRASE_CONDENSED_building_project_title_S 			"N/A"
+PHRASE_CONDENSED_building_project_spy_report_S			"密探报告说 [city_name] 将需要 [amount] [item] 用于完成一项建筑工程."
+PHRASE_CONDENSED_building_project_initial_announcement_S	"[city_name] 需要 [amount] [item] 用于完成一项建筑工程."
+PHRASE_CONDENSED_building_project_reminder_S 			"六个月内给 [city_name] 送去 [amount] [item] 用于完成一项建筑工程."
+PHRASE_CONDENSED_building_project_overdue_S 			"超过最终期限了! 不过, 晚给 [city_name] 送去 [amount] [item] 总比根本不送要好."
+PHRASE_CONDENSED_building_project_warning_S 			"六个月内给 [city_name] 送去 [amount] [item]."
+PHRASE_CONDENSED_building_project_early_reason_S	  	"由于您提前送去了 [amount] [item]"
+PHRASE_CONDENSED_building_project_comply_reason_S  		"由于及时您送去了 [amount] [item]"
+PHRASE_CONDENSED_building_project_too_late_reason_S 	 	"由于您太晚才送去 [amount] [item]"
+PHRASE_CONDENSED_building_project_refuse_reason_S	 	"由于您没有送去 [amount] [item]"
+PHRASE_CONDENSED_building_project_no_reason_S			""
+
+PHRASE_CONDENSED_building_project_title_D 			"N/A"
+PHRASE_CONDENSED_building_project_spy_report_D			"密探报告说 [city_name] 将向您索要 [amount] [item]."
+PHRASE_CONDENSED_building_project_initial_announcement_D	"[city_name] 索要 [amount] [item] 用于完成一项建筑工程."
+PHRASE_CONDENSED_building_project_reminder_D 			"六个月内给 [city_name] 送去 [amount] [item] 对我们是有利的."
+PHRASE_CONDENSED_building_project_overdue_D 			"超过最终期限了! 不过, 晚给 [city_name] 送去物资总比根本不送要好."
+PHRASE_CONDENSED_building_project_warning_D 			"六个月内给 [city_name] 送去 [amount] [item]."
+PHRASE_CONDENSED_building_project_early_reason_D	  	"由于您提前送去了 [amount] [item]"
+PHRASE_CONDENSED_building_project_comply_reason_D  		"由于您及时送去了 [amount] [item]"
+PHRASE_CONDENSED_building_project_too_late_reason_D 	 	"由于您太晚才送去 [amount] [item]"
+PHRASE_CONDENSED_building_project_refuse_reason_D	 	"由于您没有送去 [amount] [item]"
+PHRASE_CONDENSED_building_project_no_reason_D			""
+
+PHRASE_CONDENSED_building_project_title_P 			"N/A"
+PHRASE_CONDENSED_building_project_spy_report_P			"密探报告说 [city_name] 将需要物资用于建造一项工程."
+PHRASE_CONDENSED_building_project_initial_announcement_P	"[city_name] 希望您送去 [amount] [item] 用于建造工程."
+PHRASE_CONDENSED_building_project_reminder_P 			"六个月内给 [city_name] 送去 [amount] [item]."
+PHRASE_CONDENSED_building_project_overdue_P 			"超过最终期限了! 不过, 晚给 [city_name] 送去物资总比根本不送要好."
+PHRASE_CONDENSED_building_project_warning_P 			"六个月内给 [city_name] 送去 [amount] [item]."
+PHRASE_CONDENSED_building_project_early_reason_P	  	"由于您提前送去了 [amount] [item]"
+PHRASE_CONDENSED_building_project_comply_reason_P  		"由于您及时送去了 [amount] [item]"
+PHRASE_CONDENSED_building_project_too_late_reason_P 	 	"由于您太晚才送去 [amount] [item]"
+PHRASE_CONDENSED_building_project_refuse_reason_P	 	"由于您没有送去 [amount] [item]"
+PHRASE_CONDENSED_building_project_no_reason_P			""
+
+
+;******New Year's Festival*********************************************************
+PHRASE_festival_hold_title                                            	"新年庆典通知"
+PHRASE_festival_hold_initial_announcement                              	"噢, 伟大的 [player_name], 新年到了! 您愿意举行节日庆典, 让您的人民欢庆一下吗?"
+PHRASE_festival_hold_no_reason                                          "N/A"
+
+PHRASE_CONDENSED_festival_hold_title                                    "新年庆典通知"
+PHRASE_CONDENSED_festival_hold_initial_announcement                     "[player_name], 新年到了! 您愿意举行节日庆典吗?"
+PHRASE_CONDENSED_festival_hold_no_reason                                "N/A"
+
+PHRASE_festival_no_hold_title                                           "今年没有节日庆典!"
+PHRASE_festival_no_hold_initial_announcement                            "[player_name], 新年到了. 您不举行节日庆典, 不能向天上的神仙和我们的祖先表示敬意, 所以人们都很不高兴."
+PHRASE_festival_no_hold_no_reason_people                                "[player_name], 新年到了. 唉, 城市中没有足够的人手 来举行一次象样的节日庆典. 希望明年..."
+PHRASE_festival_no_hold_no_reason_cash                                  "[player_name], 新年到了. 您的城市太穷, 没有钱来支付节日庆典的费用. 也许明年可以?"
+PHRASE_festival_no_hold_no_reason_food                                  "[player_name], 新年到了. 然而, 城市中的食物存量太低, 不能准备节日宴会. 真是可怜."
+PHRASE_festival_no_hold_no_reason_venue                                 "[player_name], 新年到了. 如果在此之前您能记得 雇佣些娱乐人员就好了..."
+
+PHRASE_CONDENSED_festival_no_hold_title                                 "悲伤的新年..."
+PHRASE_CONDENSED_festival_no_hold_initial_announcement                  "您拒绝举行节日庆典."
+PHRASE_CONDENSED_festival_no_hold_no_reason_people                      "城市人口太少."
+PHRASE_CONDENSED_festival_no_hold_no_reason_cash                        "城市库存资金不够."
+PHRASE_CONDENSED_festival_no_hold_no_reason_food                        "城市中没有足够的食物."
+PHRASE_CONDENSED_festival_no_hold_no_reason_venue                       "城市中没有娱乐设施."
+
+;******Great festival*********************************************************
+PHRASE_great_festival_title_S 			"[city_name] 的节日"
+PHRASE_great_festival_spy_report_S			"您好, [player_name]. 可靠的密探报告说, 在一年之内, 您的盟友 [city_name] 的领导者 [leader_name] 要为给他们城市带来繁荣的 [hero_name] 举办一次庆典. 我们已经发现, [leader_name] 希望您能送去 [amount] [item], 让庆典举办得更盛大隆重. 如果您能在明年之前送去那些物资, [leader_name] 将会对您赞不绝口!"
+PHRASE_great_festival_initial_announcement_S	"最尊贵的 [player_name], 我需要您的帮助. 我, [city_name] 的 [leader_name], 正在着手准备为 [hero_name] 举办一次最盛大的庆典, 向 [hero_name] 表示我的感激之情. 如果您能送来 [amount] [item], 那我一定可以实现这个目标. 请在 [time_allotted] 个月内给我送来物资."
+PHRASE_great_festival_reminder_S 			"您好, [player_name]. 我正在 [city_name] 为 [hero_name] 准备庆典, 不过我还没有收到您的 [amount] [item]. 请在六个月内送来, 那样 [hero_name] 就会知道我 [leader_name], 是多么感谢神对我的帮助."
+PHRASE_great_festival_overdue_S 			"我是如此的失望, [player_name]. 我, [city_name] 的 [leader_name], 在没有您的帮助的情况下, 设法为 [hero_name] 举办一次庆典. 可是现在, 我的城市缺少 [amount] [item], 所以期望您的援助. 现在送来那些物资吧, 我会用它们充实我的仓库, 然后或许我就不会那么沮丧了."
+PHRASE_great_festival_warning_S 			"我本来以为咱们是朋友, [player_name]. 我为 [hero_name] 举办庆典已经过去很久了... 不过如果您愿意表示友好, 现在送给我的城市 [city_name] [amount] [item], 我还是会感谢您的. 六个月内送出物资, 否则就不用再送来了."
+PHRASE_great_festival_early_reason_S  		"由于您提前送来了 [amount] [item], 我为 [hero_name] 举办的庆典获得了巨大的成功,"
+PHRASE_great_festival_comply_reason_S  		"由于您及时送来了用于给 [hero_name] 举办庆典的 [amount] [item],"
+PHRASE_great_festival_too_late_reason_S 		"由于您过了很久才送来了用于给 [hero_name] 举办庆典的 [amount] [item],"
+PHRASE_great_festival_refuse_reason_S 		"由于您拒绝送来用于给 [hero_name] 举办庆典的 [amount] [item], 我的心情非常糟糕. 因此,"
+PHRASE_great_festival_no_reason_S			""
+
+PHRASE_great_festival_title_D 			"[city_name] 的节日"
+PHRASE_great_festival_spy_report_D			"您好, [player_name]. 您的忠诚的密探报告说, 在一年之内, 您的对手 [city_name] 和它的领导者 [leader_name] 计划给 [hero_name] 举办一次庆典. [leader_name] 将要求您送去 [amount] [item] 帮助他们庆祝. 如果提前送去这些物资, 可能会给 [leader_name] 留下深刻的印象."
+PHRASE_great_festival_initial_announcement_D	"[player_name], 你这条三头狗, [time_allotted] 个月内给我 [amount] [item], 我要在 [city_name] 为 [hero_name] 举办庆典. 我, [leader_name], 已经说过了, 你要记好."
+PHRASE_great_festival_reminder_D 			"听着, [player_name], 你这条九头蛇, 我可不是和你开玩笑, 我要在 [city_name] 为 [hero_name] 举办庆典, 你必须在六个月内送给我送来 [amount] [item], 否则我可能会想办法让你不得安生了."
+PHRASE_great_festival_overdue_D 			"嗨, [player_name], 你这个不知深浅的家伙! 我要的 [amount] [item] 在哪儿? 我在 [city_name] 给 [hero_name] 举办的庆典已经开始了, 可是我却一直没有收到你的东西. 如果你知道怎么做对自己最好, 你就现在送东西过来 - 快点!"
+PHRASE_great_festival_warning_D 			"真是无话可说! 你怎么能这样, [player_name]? 你这样一只不值一提的小跳蚤 居然不理睬我 [city_name] 城伟大的统治者 [leader_name]? 如果你不送来 [hero_name] 庆典上需要用的 [amount] [item], 那么你和你可怜的城市的末日就到了!"
+PHRASE_great_festival_early_reason_D  		"由于你提前送来了我为 [hero_name] 举办庆典需要的 [amount] [item],"
+PHRASE_great_festival_comply_reason_D  		"由于你及时送来了我为 [hero_name] 举办庆典需要的 [amount] [item],"
+PHRASE_great_festival_too_late_reason_D 		"由于你过了很久才送来我为 [hero_name] 举办庆典需要的 [amount] [item],"
+PHRASE_great_festival_refuse_reason_D 		"由于你拒绝送来我为 [hero_name] 举办庆典需要的 [amount] [item],"
+PHRASE_great_festival_no_reason_D			""
+
+PHRASE_great_festival_title_P 			"[city_name] 的节日"
+PHRASE_great_festival_spy_report_P			"一个密探从遥远的地方, 带给您一条重要的消息: 在一年之内, 您的诸候城市 [city_name] 将要为 [hero_name] 举办一次盛大的庆典. 无能的 [leader_name] 一定会把事情搞糟, 最终他会发现自己的城市缺少 [amount] [item]. 如果您现在就送去这些物品, 庆典就能顺利举办, 而且 [leader_name] 一定也会对您感恩戴德."
+PHRASE_great_festival_initial_announcement_P	"最值得尊敬的 [player_name], 我需要您的帮助. 我, [leader_name], 您谦恭的仆人, 正准备在我的城市 [city_name] 为 [hero_name] 举办一次盛大庆典. 可是我城内的 [item] 并不象我想象的那么多, 我担心如果我再得不到 [amount] 这种物品, 庆典就没法举办. 我希望您能在 [time_allotted] 个月内送来 [amount] [item], 那样我就可以顺利举办庆典."
+PHRASE_great_festival_reminder_P 			"我非常紧张, 几乎夜不能寐, [player_name]. 我现在就靠您的慷慨了, 希望您能送来 [amount] [item], 帮助我顺利地在 [city_name] 为 [hero_name] 举办庆典. 请在六个月内送来物资, 那样我才能睡个好觉!"
+PHRASE_great_festival_overdue_P 			"我真是寝食难安了, [player_name]! 因为您没有给我的城市 [city_name] 送来为 [hero_name] 举办庆典需要的 [amount] [item], 所以庆祝活动简直成了一场灾难. 我的市民都在抱怨. 或许我收到先前向您要求的 [amount] [item] 后, 市民们就不会再抱怨了."
+PHRASE_great_festival_warning_P 			"或许我的痛苦就是您的快乐, [player_name]. 我知道我只是您的仆人, 但我仍然还是一个领导者, 应该得到一定的尊重. 请您在六个月内送来 [amount] [item], 我要用它们在 [city_name] 为 [hero_name] 举办庆典, 否则我不会原谅您."
+PHRASE_great_festival_early_reason_P  		"由于您提前送来了我为 [hero_name] 举办庆典需要的 [amount] [item],"
+PHRASE_great_festival_comply_reason_P  		"由于您及时送来了我为 [hero_name] 举办庆典需要的 [amount] [item],"
+PHRASE_great_festival_too_late_reason_P 		"由于您过了很久才送来我为 [hero_name] 举办庆典需要的 [amount] [item],"
+PHRASE_great_festival_refuse_reason_P 		"由于您抛弃了我, 没有送来我为 [hero_name] 举办庆典需要的 [amount] [item],"
+PHRASE_great_festival_no_reason_P			""
+
+PHRASE_CONDENSED_great_festival_title_S 				"N/A"
+PHRASE_CONDENSED_great_festival_spy_report_S			"密探报告说 [city_name] 将需要物资用于庆典."
+PHRASE_CONDENSED_great_festival_initial_announcement_S	"[city_name] 需要 [amount] [item] 用于庆典."
+PHRASE_CONDENSED_great_festival_reminder_S 			"六个月内送给 [city_name] [amount] [item] 用于庆典."
+PHRASE_CONDENSED_great_festival_overdue_S 			"超过最终期限了! 不过, 晚给 [city_name] 送去东西总比根本不送要好."
+PHRASE_CONDENSED_great_festival_warning_S 			"六个月内给 [city_name] 送去 [amount] [item]."
+PHRASE_CONDENSED_great_festival_early_reason_S  		"由于您提前送去了 [amount] [item]"
+PHRASE_CONDENSED_great_festival_comply_reason_S  		"由于您及时送去了 [amount] [item]"
+PHRASE_CONDENSED_great_festival_too_late_reason_S 		"由于您太晚才送去 [amount] [item]"
+PHRASE_CONDENSED_great_festival_refuse_reason_S 		"由于您没有给 [city_name] 送去 [amount] [item]"
+PHRASE_CONDENSED_great_festival_no_reason_S			""
+
+PHRASE_CONDENSED_great_festival_title_D 				"N/A"
+PHRASE_CONDENSED_great_festival_spy_report_D			"密探报告说 [city_name] 将需要物资用于庆典."
+PHRASE_CONDENSED_great_festival_initial_announcement_D	"[city_name] 索要 [amount] [item] 用于庆典."
+PHRASE_CONDENSED_great_festival_reminder_D 			"六个月内给 [city_name] 送去 [amount] [item]."
+PHRASE_CONDENSED_great_festival_overdue_D 			"超过最终期限了! 不过, 晚给 [city_name] 送去东西总比根本不送要好."
+PHRASE_CONDENSED_great_festival_warning_D 			"六个月内给 [city_name] 送去 [amount] [item]."
+PHRASE_CONDENSED_great_festival_early_reason_D  		"由于您提前送去了 [amount] [item]"
+PHRASE_CONDENSED_great_festival_comply_reason_D  		"由于您及时送去了 [amount] [item]"
+PHRASE_CONDENSED_great_festival_too_late_reason_D 		"由于您太晚才送去 [amount] [item]"
+PHRASE_CONDENSED_great_festival_refuse_reason_D 		"由于您没有送去 [amount] [item]"
+PHRASE_CONDENSED_great_festival_no_reason_D			""
+
+PHRASE_CONDENSED_great_festival_title_P 				"N/A"
+PHRASE_CONDENSED_great_festival_spy_report_P			"密探报告说 [city_name] 将需要 [amount] [item] 用于庆典."
+PHRASE_CONDENSED_great_festival_initial_announcement_P	"[city_name] 请求 [amount] [item] 用于庆典."
+PHRASE_CONDENSED_great_festival_reminder_P 			"六个月内送给 [city_name] [amount] [item]."
+PHRASE_CONDENSED_great_festival_overdue_P 			"超过最终期限了! 不过, 晚给 [city_name] 送去物资总比根本不送要好."
+PHRASE_CONDENSED_great_festival_warning_P 			"六个月内给 [city_name] 送去 [amount] [item]."
+PHRASE_CONDENSED_great_festival_early_reason_P  		"由于您提前送去了 [amount] [item]"
+PHRASE_CONDENSED_great_festival_comply_reason_P  		"由于您及时送去了 [amount] [item]"
+PHRASE_CONDENSED_great_festival_too_late_reason_P 		"由于您太晚才送去 [amount] [item]"
+PHRASE_CONDENSED_great_festival_refuse_reason_P 		"由于您没有送去 [amount] [item]"
+PHRASE_CONDENSED_great_festival_no_reason_P			""
+
+;******Financial Woes*********************************************************
+PHRASE_financial_woes_title_S 				"[city_name] 出现财政问题"
+PHRASE_financial_woes_spy_report_S				"一个令人尊敬的密探预见到: 您的同盟城市 [city_name] 及其领导者 [leader_name] 的前景将是一片萧条. 一年之内, [city_name] 会负债, 城内的工人将得不到工资. 如果您现在送去 [amount] 现金, 就能帮助 [leader_name] 避免这种命运."
+PHRASE_financial_woes_initial_announcement_S		"最谦恭的朋友 [player_name], 我, [city_name] 的 [leader_name] 需要您的帮助. 我需要 [amount] 现金, 希望您能在 [time_allotted] 个月内送来现金, 弥补我城市的财政不足. 您知道我并不喜欢向您要钱, 但这次希望能依靠您."
+PHRASE_financial_woes_reminder_S 				"求您了, [player_name], 别再让我向您开口了! 我, [city_name] 的 [leader_name], 还在等待您送来 [amount] 现金, 补充我那捉襟见肘的金库. 我的工人们都拿不到工资了, 他们已经开始不安. 请在六个月内送给我需要的资金."
+PHRASE_financial_woes_overdue_S 				"向您要钱让我感到困窘, [player_name], 您没有答应我谦恭的请求, 应该感到更加困窘. 我已经设法减少了服务行业, 但我还是需要 [amount] 现金. 我请求您, 给我的城市 [city_name] 送来现金."
+PHRASE_financial_woes_warning_S 				"您应该感到惭愧, [player_name]. 我, [city_name] 谦恭的 [leader_name], 如果不是迫切需要, 绝不会开口向您要 [amount] 现金. 如果您确实想帮助我, 就快点送钱来."
+PHRASE_financial_woes_early_reason_S	  		"由于您预知到我会需要 [amount] 现金来避免财政危机, 并在我真正需要之前送来了现金,"
+PHRASE_financial_woes_comply_reason_S  			"由于您送来 [amount] 现金帮助我支付了工人的工资,"
+PHRASE_financial_woes_too_late_reason_S 	 		"由于您过了很久才送来我需要的 [amount] 现金,"
+PHRASE_financial_woes_refuse_reason_S	 		"由于您拒绝送来 [amount] 现金帮我支付工人的工资,"
+PHRASE_financial_woes_no_reason_S				""
+
+PHRASE_financial_woes_title_D 				"[city_name] 出现财政问题"
+PHRASE_financial_woes_spy_report_D				"[player_name], 您的对手 [city_name] 的未来并不光明. 我, 您最好的密探, 预见到 [city_name] 的领导者 [leader_name] 将把他的资金浪费在 举办过多奢侈的庆典上. 他很快就会向您要 [amount] 现金了. 如果您提前送给他这些现金, 他会因您的无私与远见而大为惊异."
+PHRASE_financial_woes_initial_announcement_D		"[player_name], 你这个低能的傻瓜! 我, 强大的 [city_name] 的领主 [leader_name], 强力要求你在 [time_allotted] 个月内送给我 [amount] 现金! 如果你能迅速完成这个要求, 我会在内堂接见 你那卑贱城市来的使者."
+PHRASE_financial_woes_reminder_D 				"[player_name], 你真的那么笨吗? 你不明白 '现在送来 [amount] 现金' 的意思吗? 六个月内把现金送到 [city_name] 来. 我已经等得不耐烦了!"
+PHRASE_financial_woes_overdue_D 				"我, [leader_name], 计划用你送来的 [amount] 现金在 [city_name] 举办一次像样的庆典呢, [player_name]. 太不幸了, 你的钱还没送来! 现在, 我觉得自己就要发怒了! 也许现在你送钱来能让我息怒, 尽管可能已经太晚了."
+PHRASE_financial_woes_warning_D 				"我不喜欢被人忽视, [player_name]. 把 [amount] 现金送到我的城市 [city_name] 来, 马上就送来. 再有任何犹豫, 对你那可怜的城市来说, 后果都是不堪设想的."
+PHRASE_financial_woes_early_reason_D	  		"好象你知道我想的是什么, [player_name]. 用你提前送给我的 [amount] 现金, 我可以举办一场奢华的庆典. 因此,"
+PHRASE_financial_woes_comply_reason_D  			"由于你及时送来了我索要的 [amount] 现金,"
+PHRASE_financial_woes_too_late_reason_D 	 		"由于你过了很久才送来我要的 [amount] 现金,"
+PHRASE_financial_woes_refuse_reason_D	 		"由于你拒绝送来我要的 [amount] 现金,"
+PHRASE_financial_woes_no_reason_D				""
+
+PHRASE_financial_woes_title_P 				"[city_name] 出现财政问题"
+PHRASE_financial_woes_spy_report_P				"原谅我的打扰, 最高贵的 [player_name]. 我, 您最棒的密探之一, 预见到了您的诸候城市 [city_name] 将要出现问题. 一年之内, 那里会出现严重的财政危机, [city_name] 的统治者 [leader_name] 会请求您的援助. 他会向您要求至少 [amount] 现金来补充他的金库. 如果您现在就送去现金, [leader_name] 一定会对您的仁慈称颂不止."
+PHRASE_financial_woes_initial_announcement_P		"最可敬的 [player_name], 我不知道还能求谁帮忙. [city_name] 城里我最信任的一个顾问携款而逃, 城市的财政出现的危机, 因此现在我, 谦恭的 [leader_name] 祈求您的仁慈和慷慨. 请在 [time_allotted] 个月内送来 [amount] 现金, 那样我的城市才能发展. 我知道能够相信您, 请您一定帮助我渡过难关."
+PHRASE_financial_woes_reminder_P 				"求您了, [player_name], 我请求您帮助我! 我非常需要 [amount] 现金! 没有这些钱, 我的城市 [city_name] 就不能运转了, 人民也会把怒火发到我身上! 请在六个月内送钱来!"
+PHRASE_financial_woes_overdue_P 				"您为什么不送 [amount] 现金给我的城市 [city_name]? 我已经听到人们咒骂我, 喊着 '打倒 [leader_name]!' 这全是因为您拒绝我的现金要求. 尽管您没有按时送钱来, 但钱总还是有用的. 如果您现在送来钱, 我可能不会告诉您其它的仆人: 您是如何的冷酷无情."
+PHRASE_financial_woes_warning_P 				"您不是一个善良的主人, [player_name]. 我只是一个谦恭的仆人. 您为什么不给我送来 [amount] 现金? 我, [leader_name], 迫切地需要那些钱 来发展我的城市 [city_name]."
+PHRASE_financial_woes_early_reason_P	  		"由于您预知到我会遇到麻烦, 并在我提出请求前送来了 [amount] 现金,"
+PHRASE_financial_woes_comply_reason_P  			"由于您回应了我的请求, 送来了 [amount] 现金,"
+PHRASE_financial_woes_too_late_reason_P 	 		"由于您过了很久才送来我需要的 [amount] 现金,"
+PHRASE_financial_woes_refuse_reason_P	 		"由于您无情的拒绝了给我送来 [amount] 现金,"
+PHRASE_financial_woes_no_reason_P				""
+
+PHRASE_CONDENSED_financial_woes_title_S 				"N/A"
+PHRASE_CONDENSED_financial_woes_spy_report_S			"密探预料 [city_name] 将需要 [amount] 现金."
+PHRASE_CONDENSED_financial_woes_initial_announcement_S	"[city_name] 需要 [amount] [item], [time_allotted] 个月内送去."
+PHRASE_CONDENSED_financial_woes_reminder_S 			"六个月内给 [city_name] 送去 [amount] 现金."
+PHRASE_CONDENSED_financial_woes_overdue_S 			"超过最终期限了! 不过, 晚给 [city_name] 送去 [amount] 现金总比根本不送要好."
+PHRASE_CONDENSED_financial_woes_warning_S 			"六个月内给 [city_name] 送去 [amount] 现金."
+PHRASE_CONDENSED_financial_woes_early_reason_S	  		"由于您提前送去了 [amount] 现金"
+PHRASE_CONDENSED_financial_woes_comply_reason_S  		"由于您及时送去了 [amount] 现金"
+PHRASE_CONDENSED_financial_woes_too_late_reason_S 	 	"由于您很晚才送去 [amount] 现金"
+PHRASE_CONDENSED_financial_woes_refuse_reason_S	 		"由于您没有送去 [amount] 现金"
+PHRASE_CONDENSED_financial_woes_no_reason_S			""
+
+PHRASE_CONDENSED_financial_woes_title_D 				"N/A"
+PHRASE_CONDENSED_financial_woes_spy_report_D			"密探预料 [city_name] 将索要 [amount] 现金."
+PHRASE_CONDENSED_financial_woes_initial_announcement_D	"[city_name] 索要 [amount] 现金, [time_allotted] 个月内送去."
+PHRASE_CONDENSED_financial_woes_reminder_D 			"六个月内给 [city_name] 送去 [amount] 现金."
+PHRASE_CONDENSED_financial_woes_overdue_D 			"超过最终期限了! 不过, 晚给 [city_name] 送去 [amount] 现金总比根本不送好."
+PHRASE_CONDENSED_financial_woes_warning_D 			"六个月内给 [city_name] 送去 [amount] 现金."
+PHRASE_CONDENSED_financial_woes_early_reason_D	  		"由于您提前送去了 [amount] 现金"
+PHRASE_CONDENSED_financial_woes_comply_reason_D  		"由于您及时送去了 [amount] 现金"
+PHRASE_CONDENSED_financial_woes_too_late_reason_D 	 	"由于您很晚才送去 [amount] 现金"
+PHRASE_CONDENSED_financial_woes_refuse_reason_D	 		"由于您没有送去 [amount] 现金"
+PHRASE_CONDENSED_financial_woes_no_reason_D			""
+
+PHRASE_CONDENSED_financial_woes_title_P 				"N/A"
+PHRASE_CONDENSED_financial_woes_spy_report_P			"密探预料 [city_name] 将请求 [amount] 现金."
+PHRASE_CONDENSED_financial_woes_initial_announcement_P	"[city_name] 请求 [amount] 现金, [time_allotted] 个月内送去."
+PHRASE_CONDENSED_financial_woes_reminder_P 			"六个月内给 [city_name] 送去 [amount] 现金."
+PHRASE_CONDENSED_financial_woes_overdue_P 			"超过最终期限了! 不过, 晚给 [city_name] 送去 [amount] 现金总比根本不送好."
+PHRASE_CONDENSED_financial_woes_warning_P 			"六个月内给 [city_name] 送去 [amount] 现金."
+PHRASE_CONDENSED_financial_woes_early_reason_P	  		"由于您提前送去了 [amount] 现金"
+PHRASE_CONDENSED_financial_woes_comply_reason_P  		"由于您及时送去了 [amount] 现金"
+PHRASE_CONDENSED_financial_woes_too_late_reason_P 	 	"由于您很晚才送去 [amount] 现金"
+PHRASE_CONDENSED_financial_woes_refuse_reason_P	 		"由于您没有送去 [amount] 现金"
+PHRASE_CONDENSED_financial_woes_no_reason_P			""
+
+;******Tribute Due (demand tone only)*********************************************************
+PHRASE_tribute_due_title_D 					"[city_name] 索要贡品"
+PHRASE_tribute_due_spy_report_D				"我是您最信任的密探, 我谦恭的提醒您记住自己的义务. 一年之内, 您将欠 [city_name] 的 [leader_name] [amount] [item] 的贡品. 如果您现在送出贡品, [leader_name] 可能会被您的忠诚恭顺所感动."
+PHRASE_tribute_due_initial_announcement_D			"听着, [player_name], 你这个卑贱的乡下佬. 由于我, [city_name] 强大的 [leader_name] 已经征服了你, 我要求你付出每年 [amount] [item] 作为贡品. 我一定要在 [time_allotted] 个月内收到 [item]."
+PHRASE_tribute_due_reminder_D 				"我光荣的战胜了你, [player_name], 现在你必须注意: 你应给我的贡品 [amount] [item] 在哪儿? 你有六个月的时间, 把贡品送到 [city_name]. 我觉得你没有延迟的理由."
+PHRASE_tribute_due_overdue_D 					"为什么你的贡品 [amount] [item] 还没到, [player_name]? 作为我的诸候, 你必须向我进贡. 你知道什么时候该进贡, 而现在时间已经过去了. 为了让你看看我是多么的公正, 我, [city_name] 的 [leader_name], 再给你一年的时间准备贡品."
+PHRASE_tribute_due_warning_D 					"你只有六个月时间了, [player_name]. 我已经够善良的了. 我, [city_name] 的 [leader_name] 允许你拖延向我交付 [amount] [item] 的贡品. 我开始觉得 你是在滥用我对你的仁慈了!"
+PHRASE_tribute_due_early_reason_D	  			"由于你提前向我交付了 [amount] [item] 的贡品,"
+PHRASE_tribute_due_comply_reason_D  			"由于你准时地向我交付了 [amount] [item] 的贡品,"
+PHRASE_tribute_due_too_late_reason_D 	 		"由于你拖延了交付 [amount] [item] 贡品的时间,"
+PHRASE_tribute_due_refuse_reason_D	 			"由于没有向我交付 [amount] [item] 的贡品,"
+PHRASE_tribute_due_no_reason_D				""
+
+PHRASE_CONDENSED_tribute_due_title_D 			"N/A"
+PHRASE_CONDENSED_tribute_due_spy_report_D			"确切的消息预料到: 您将拖欠要交给 [city_name] 的作为贡品的 [amount] [item]."
+PHRASE_CONDENSED_tribute_due_initial_announcement_D	"[city_name] 在等待作为贡品的 [amount] [item], 请在 [time_allotted] 个月内送出."
+PHRASE_CONDENSED_tribute_due_reminder_D 			"您有六个月的时间准备给 [city_name] 送出 [amount] [item] 的贡品."
+PHRASE_CONDENSED_tribute_due_overdue_D 			"超过最终期限了! 不过, 晚点儿给 [city_name] 送去 [amount] [item] 贡品, 总比不送好."
+PHRASE_CONDENSED_tribute_due_warning_D 			"六个月内给 [city_name] 送去作为贡品的 [amount] [item]."
+PHRASE_CONDENSED_tribute_due_early_reason_D	  	"由于您提前送去了作为贡品的 [amount] [item]"
+PHRASE_CONDENSED_tribute_due_comply_reason_D  		"由于您按时送去了作为贡品的 [amount] [item]"
+PHRASE_CONDENSED_tribute_due_too_late_reason_D 	 	"由于您太晚才送去作为贡品的 [amount] [item]"
+PHRASE_CONDENSED_tribute_due_refuse_reason_D	 	"由于您没有送去作为贡品的 [amount] [item]"
+PHRASE_CONDENSED_tribute_due_no_reason_D			""
+
+
+;******************************************TROOP REQUESTS******************************
+;*****Ally under attack (standard tone only)**********************
+PHRASE_ally_under_attack_title_S				"[city_name] 受到攻击!"
+PHRASE_ally_under_attack_spy_report_S			"我, 您最棒的密探, 听到了一条有趣的消息, [player_name]! 一年之内, 您信任的同盟城 [city_name] 及其领导者 [leader_name] 将会遭到我们的一个对手的攻击! 如果您现在派部队去 [city_name], 就可以帮助 [leader_name] 保卫城市, 抵抗我预见到的攻击."
+PHRASE_ally_under_attack_initial_announcement_S		"这是个喧嚣的时代, [player_name]! 我们最讨厌的对手 [rival_city_name] 正在进攻我 [leader_name] 以及我的城市 [city_name]. 我需要您帮我打退这些坏蛋! 请在 [travel_time] 个月内派部队来帮助我!"
+PHRASE_ally_under_attack_first_reminder_S			"我只能抽出这点儿时间来给您发信息, 最高贵的 [player_name]. [city_name] 的战斗更激烈了. 您现在派部队来还不算太晚. 我们必须迅速打败敌人!"
+PHRASE_ally_under_attack_last_reminder_S			"讨厌的 [rival_city_name] 的军队已经兵临我的城门口了, [player_name]. 作为同盟, 我 [leader_name] 恳求您, 派部队到 [city_name] 来, 快点儿!"
+PHRASE_ally_under_attack_early_reason_S	 		"您的部队赶在入侵我们城市的敌人之前到达, 我们能够打退他们的进攻!"
+PHRASE_ally_under_attack_comply_reason_S	 		"您派来的部队刚好及时赶到, 我们可以一起击退敌人了!"
+PHRASE_ally_under_attack_too_late_reason_S 		"您派来的部队到得太晚了, 没能帮助我保卫城市, 因此我的部队遭受了巨大的损失."
+PHRASE_ally_under_attack_refuse_reason_S	 		"您为什么不派部队救援我? 现在我的城市被摧毁, 我的部队损失惨重!"
+PHRASE_ally_under_attack_lost_battle_reason_S		"您派来帮我的部队太弱了, 根本没什么用处! 我早应该想到: 在您的指挥下, 我是得不到任何帮助的!"
+PHRASE_ally_under_attack_no_reason_S			""
+
+PHRASE_CONDENSED_ally_under_attack_title_S			"N/A"
+PHRASE_CONDENSED_ally_under_attack_spy_report_S			"密探预料到 [rival_city_name] 将进攻 [city_name]."
+PHRASE_CONDENSED_ally_under_attack_initial_announcement_S	"[city_name] 遭到攻击, 您要在 [travel_time] 个月内派出援军."
+PHRASE_CONDENSED_ally_under_attack_first_reminder_S		"立刻派部队去帮助保卫 [city_name]."
+PHRASE_CONDENSED_ally_under_attack_last_reminder_S		"现在应该派部队去 [city_name], 否则就太晚了."
+PHRASE_CONDENSED_ally_under_attack_early_reason_S	 	"您的军队保卫了他们, 因此"
+PHRASE_CONDENSED_ally_under_attack_comply_reason_S	 	"您的军队保卫了他们, 因此"
+PHRASE_CONDENSED_ally_under_attack_too_late_reason_S 		"您的部队到得太晚, 没能保卫他们"
+PHRASE_CONDENSED_ally_under_attack_refuse_reason_S	 	"您没有派部队去保卫他们"
+PHRASE_CONDENSED_ally_under_attack_lost_battle_reason_S	"您派去的部队太弱了"
+PHRASE_CONDENSED_ally_under_attack_no_reason_S			""
+
+;****** Rival under attack (demand tone)******
+PHRASE_rival_under_attack_title_D				"[city_name] 受到攻击!"
+PHRASE_rival_under_attack_spy_report_D				"我, 您最棒的密探, 听到了一条有趣的消息, [player_name]! 一年之内, 您信任的同盟城 [city_name] 及其领导者 [leader_name] 将会遭到我们的一个对手的攻击! 如果您现在派部队去 [city_name], 就可以帮助 [leader_name] 保卫城市, 抵抗我预见到的攻击."
+PHRASE_rival_under_attack_initial_announcement_D		"这是个喧嚣的时代, [player_name]! 我们最讨厌的对手 [rival_city_name] 正在进攻我 [leader_name] 以及我的城市 [city_name]. 我需要您帮我打退这些坏蛋! 请在 [travel_time] 个月内派部队来帮助我!"
+PHRASE_rival_under_attack_first_reminder_D			"我只能抽出这点儿时间来给您发信息, 最高贵的 [player_name]. [city_name] 的战斗更激烈了. 您现在派部队来还不算太晚. 我们必须迅速打败敌人!"
+PHRASE_rival_under_attack_last_reminder_D			"讨厌的 [rival_city_name] 的军队已经兵临我的城门口了, [player_name]. 作为同盟, 我 [leader_name] 恳求您, 派部队到 [city_name] 来, 快点儿!"
+PHRASE_rival_under_attack_early_reason_D	 		"您的部队赶在入侵我们城市的敌人之前到达, 我们能够打退他们的进攻!"
+PHRASE_rival_under_attack_comply_reason_D	 		"您派来的部队刚好及时赶到, 我们可以一起击退敌人了!"
+PHRASE_rival_under_attack_too_late_reason_D 		"您派来的部队到得太晚了, 没能帮助我保卫城市, 因此我的部队遭受了巨大的损失."
+PHRASE_rival_under_attack_refuse_reason_D	 		"您为什么不派部队救援我? 现在我的城市被摧毁, 我的部队损失惨重!"
+PHRASE_rival_under_attack_lost_battle_reason_D		"您派来帮我的部队太弱了, 根本没什么用处! 我早应该想到: 在您的指挥下, 我是得不到任何帮助的!"
+PHRASE_rival_under_attack_no_reason_D			""
+
+PHRASE_CONDENSED_rival_under_attack_title_D			"N/A"
+PHRASE_CONDENSED_rival_under_attack_spy_report_D		"密探预料到 [rival_city_name] 将进攻 [city_name]."
+PHRASE_CONDENSED_rival_under_attack_initial_announcement_D	"[city_name] 遭到攻击, 您要在 [travel_time] 个月内派出援军."
+PHRASE_CONDENSED_rival_under_attack_first_reminder_D		"立刻派部队去帮助保卫 [city_name]."
+PHRASE_CONDENSED_rival_under_attack_last_reminder_D		"现在应该派部队去 [city_name], 否则就太晚了."
+PHRASE_CONDENSED_rival_under_attack_early_reason_D	 	"您的军队保卫了他们, 因此"
+PHRASE_CONDENSED_rival_under_attack_comply_reason_D	 	"您的军队保卫了他们, 因此"
+PHRASE_CONDENSED_rival_under_attack_too_late_reason_D 		"您的部队到得太晚, 没能保卫他们"
+PHRASE_CONDENSED_rival_under_attack_refuse_reason_D	 	"您没有派部队去保卫他们"
+PHRASE_CONDENSED_rival_under_attack_lost_battle_reason_D	"您派去的部队太弱了"
+PHRASE_CONDENSED_rival_under_attack_no_reason_D			""
+
+;*****Vassal under attack (plea tone only)**********************
+PHRASE_vassal_under_attack_title_P					"[city_name] 受到攻击!"
+PHRASE_vassal_under_attack_spy_report_P				"我, 您最好的密探, 在此谨向您报告, [player_name]! 一年之内, 您的诸候城市 [city_name] 会受到 [rival_city_name] 的攻击. [city_name] 的领导者 [leader_name] 会需要您的援助才能击退敌人. 如果您现在派出部队, 就能在敌人到达前 巩固他们城市的防御力量."
+PHRASE_vassal_under_attack_initial_announcement_P		"请求您, [player_name], 我, [leader_name], 您最谦恭的诸候和忠诚的仆人 需要您的帮助! 不知怎么 [rival_city_name] 对我极为不满, 现在他们的军队正在向我的城市 [city_name] 杀来, 准备进攻我们! 我谦恭地请求您在 [travel_time] 个月内派一支部队来帮我守城."
+PHRASE_vassal_under_attack_first_reminder_P			"噢伟大的 [player_name], 如果没有必要我不会求您帮忙! 我, 您谦恭的仆人, [city_name] 的 [leader_name], 迫切需要您迅速派来一支强大的军队, 帮我一起抵挡 [rival_city_name] 进攻, 保卫我的城市!"
+PHRASE_vassal_under_attack_last_reminder_P			"[city_name] 一片惊慌, [player_name]. 我的人民一直在问我, '为什么, [leader_name], 为什么我们最信任的善良的 [player_name] 没有派军队来帮我们? 可恨的 [rival_city_name] 的军队就在我们城市的外边了!' 令人遗憾的是, 我无法回答他们的问题, 只能希望您马上派部队来, 否则就太晚了!"
+PHRASE_vassal_under_attack_early_reason_P	 		 	"您的部队赶在入侵我们城市的敌人之前到达, 因此我们能够保卫 [city_name] 不受侵犯!"
+PHRASE_vassal_under_attack_comply_reason_P	 		"主人, 您强大的军队及时赶到, 因此咱们的联军能够保卫我的城市!"
+PHRASE_vassal_under_attack_too_late_reason_P 			"主人, 您派来的部队到得太晚了, 没能帮助我保卫城市, 因此我的部队遭受了巨大的损失."
+PHRASE_vassal_under_attack_refuse_reason_P	 		"您完全拒绝派援军来帮助我, 这种行为极大的伤害了我和我的人民. 因此,"
+PHRASE_vassal_under_attack_lost_battle_reason_P			"您派来帮我保卫城市的部队实力太弱. 即使和我那些英勇的军队联合 也没能打败敌人!"
+PHRASE_vassal_under_attack_no_reason_P				""
+
+PHRASE_CONDENSED_vassal_under_attack_title_P					"N/A"
+PHRASE_CONDENSED_vassal_under_attack_spy_report_P		"密探报告说 [city_name] 将请求您的军事援助."
+PHRASE_CONDENSED_vassal_under_attack_initial_announcement_P	"[city_name] 请求您在 [travel_time] 个月内派出部队. [rival_city_name] 正在进攻他们."
+PHRASE_CONDENSED_vassal_under_attack_first_reminder_P		"迅速派部队去 [city_name]."
+PHRASE_CONDENSED_vassal_under_attack_last_reminder_P		"马上派部队去 [city_name], 否则就太晚了."
+PHRASE_CONDENSED_vassal_under_attack_early_reason_P	 	"您的军队保卫了他们, 因此"
+PHRASE_CONDENSED_vassal_under_attack_comply_reason_P	    	"您的军队保卫了他们, 因此"
+PHRASE_CONDENSED_vassal_under_attack_too_late_reason_P 	"您的部队到得太晚, 没能保卫他们"
+PHRASE_CONDENSED_vassal_under_attack_refuse_reason_P	 	"您没有派部队去保卫他们"
+PHRASE_CONDENSED_vassal_under_attack_lost_battle_reason_P	"您派去的部队太弱了"
+PHRASE_CONDENSED_vassal_under_attack_no_reason_P		""
+
+;*****Colony under attack (plea tone only)**********************
+
+;*****Parent city under attack (requisition tone only)**********************
+
+;*****Ally attacks rival (standard tone only)*********************
+PHRASE_ally_attacks_rival_title_S 					"[city_name] 进攻 [rival_city_name]"
+PHRASE_ally_attacks_rival_spy_report_S				"出人意料的消息"
+PHRASE_ally_attacks_rival_initial_announcement_S		"一定要小声点, [player_name], 因为我们的计划不能让别人知道. 我, 您的同盟城市 [city_name] 的 [leader_name] 接到一个报告, 说我们共同的敌人 [rival_city_name] 的防御出现了弱点. 现在正是打击他们的最佳时机. 如果您借我一些部队, 咱们就能真的开始行动, 去打败他们! [travel_time] 个月内派部队来, 您就可以与我分享胜利的荣耀."
+PHRASE_ally_attacks_rival_first_reminder_S 			"最高贵的 [player_name], 我的准备工作差不多都做好了. 就等您派来军队, 咱们就可以征服讨厌的 [rival_city_name]. 请迅速派出部队, 否则机会就没了."
+PHRASE_ally_attacks_rival_last_reminder_S 			"您好, [player_name]. 我, [city_name] 的 [leader_name], 不能相信您会放过这样的好机会! 我给了您一个绝好的 一定会胜利的练兵机会, 那就是去攻打 [rival_city_name]. 如果您想分享胜利的光荣, 那就马上派部队来."
+PHRASE_ally_attacks_rival_early_reason_S				"您的部队提前到达了 [rival_city_name], 那不值一提的敌人完全被打败了. 因此,"
+PHRASE_ally_attacks_rival_comply_reason_S				"您派去打击 [rival_city_name] 的部队真是非常强大, 我们迅速击败了敌人. 我的人民歌颂着您的功绩, 而且"
+PHRASE_ally_attacks_rival_too_late_reason_S			"您等了太久才派出进攻 [rival_city_name] 需要的部队!"
+PHRASE_ally_attacks_rival_refuse_reason_S				"您拒绝派给我用于打击 [rival_city_name] 所需的的军队!"
+PHRASE_ally_attacks_rival_lost_battle_reason_S 			"您派来帮助我攻打 [rival_city_name] 的士兵非常虚弱, 所以我们失败了!"
+PHRASE_ally_attacks_rival_no_reason_S				""			
+
+PHRASE_CONDENSED_ally_attacks_rival_title_S 			"N/A"
+PHRASE_CONDENSED_ally_attacks_rival_spy_report_S		"出人意料的消息"
+PHRASE_CONDENSED_ally_attacks_rival_initial_announcement_S	"[city_name] 要进攻对手, 请在 [travel_time] 个月内派出军队援助."
+PHRASE_CONDENSED_ally_attacks_rival_first_reminder_S 		"立刻给 [city_name] 派去他们要求的军队."
+PHRASE_CONDENSED_ally_attacks_rival_last_reminder_S 		"如果您想帮助 [city_name], 那么现在就派出部队."
+PHRASE_CONDENSED_ally_attacks_rival_early_reason_S		"由于您的部队提前到达了 [rival_city_name],"
+PHRASE_CONDENSED_ally_attacks_rival_comply_reason_S 		"由于您的部队帮助 [city_name] 赢得了战斗"
+PHRASE_CONDENSED_ally_attacks_rival_too_late_reason_S		"由于您的部队到得太晚 没能帮助 [city_name]"
+PHRASE_CONDENSED_ally_attacks_rival_refuse_reason_S		"由于您没有派部队去帮助 [city_name]"
+PHRASE_CONDENSED_ally_attacks_rival_lost_battle_reason_S 	"由于您的部队没能帮 [city_name] 取得战斗胜利"
+PHRASE_CONDENSED_ally_attacks_rival_no_reason_S			""	
+
+;*****Vassal attacks rival (plea tone only)*********************
+PHRASE_vassal_attacks_rival_title_P 				"[city_name] 进攻 [rival_city_name]"
+PHRASE_vassal_attacks_rival_spy_report_P			"出人意料的消息"
+PHRASE_vassal_attacks_rival_initial_announcement_P		"我有一条激动人心的消息, 最值得尊敬的 [player_name]. 据我在 [rival_city_name] 密探报告说, 现在正是进攻对手的好时机. 假如我 [city_name] 的卑微的 [leader_name] 打败了他们, 想想他们该有多么惭愧吧 - 当然, 我需要您派部队支援. 请在 [travel_time] 个月内派军队来帮助我."
+PHRASE_vassal_attacks_rival_first_reminder_P 			"如果我们不迅速行动, [player_name], 咱们就没法打败 [rival_city_name] 了. 马上派部队来进攻敌人, 到那时我们的敌人就少了!"
+PHRASE_vassal_attacks_rival_last_reminder_P 			"现在是该行动的时候了, [player_name]. 如果您现在派出军队, 我, [city_name] 的 [leader_name], 还能够打败 [rival_city_name]. 要是您再拖延下去, 机会就溜走了."
+PHRASE_vassal_attacks_rival_early_reason_P			"谢谢您! 感谢您派部队进攻 [rival_city_name]. 您的部队提前到达, 和我的部队联合起来痛击了卑劣的敌人."
+PHRASE_vassal_attacks_rival_comply_reason_P 			"在您那些战术熟练的士兵们的帮助之下, [rival_city_name] 被打败了. 因此,"
+PHRASE_vassal_attacks_rival_too_late_reason_P			"您的士兵到得太晚了, 在我与 [rival_city_name] 的战斗中没能帮上我的忙."
+PHRASE_vassal_attacks_rival_refuse_reason_P			"由于您拒绝派军队去 [rival_city_name],"
+PHRASE_vassal_attacks_rival_lost_battle_reason_P 		"您派去打击 [rival_city_name] 的兵力太弱了! 因此,"
+PHRASE_vassal_attacks_rival_no_reason_P				""	
+
+PHRASE_CONDENSED_vassal_attacks_rival_title_P 				"N/A"
+PHRASE_CONDENSED_vassal_attacks_rival_spy_report_P		"出人意料的消息"
+PHRASE_CONDENSED_vassal_attacks_rival_initial_announcement_P	"[city_name] 请求在 [travel_time] 个月内派部队去进攻 [rival_city_name]."
+PHRASE_CONDENSED_vassal_attacks_rival_first_reminder_P 		"立刻给 [city_name] 派去他们要求的军队."
+PHRASE_CONDENSED_vassal_attacks_rival_last_reminder_P 		"如果您想帮助 [city_name], 那么现在就派出部队."
+PHRASE_CONDENSED_vassal_attacks_rival_early_reason_P			"由于您的部队提前到达帮助了 [city_name]"
+PHRASE_CONDENSED_vassal_attacks_rival_comply_reason_P 		"由于您的部队帮助 [city_name] 取得胜利"
+PHRASE_CONDENSED_vassal_attacks_rival_too_late_reason_P		"由于您的部队到得太晚 没能帮助 [city_name]"
+PHRASE_CONDENSED_vassal_attacks_rival_refuse_reason_P			"由于您没有派部队去帮助 [city_name]"
+PHRASE_CONDENSED_vassal_attacks_rival_lost_battle_reason_P 		"由于您派去帮助 [city_name] 的部队没有打赢敌人"
+PHRASE_CONDENSED_vassal_attacks_rival_no_reason_P			""	
+
+
+
+
+;*******************************************AWARDS*********************************************
+
+;********************Gift**************************
+PHRASE_gift_title 					"[city_name] 送来 [itemshort] 礼物"
+PHRASE_gift_granted					"您好, [player_name]. 请允许我, [city_name] 的 [leader_name], 送给您 [amount] [item] 作为礼物. 请接受我的敬意."
+PHRASE_gift_cash_granted				"您好, [player_name]. 我, [city_name] 的 [leader_name], 想送您 [amount] 现金作为一份小礼物. 请接受我的敬意."
+PHRASE_gift_animal_granted				"您好, [player_name]. 我, [city_name] 的 [leader_name], 想送您 [animal]. 请接受我的敬意."
+PHRASE_gift_partial_space				"您好, [player_name]. 允许我, [city_name] 的 [leader_name], 送给您 [amount] [item] 作为谦恭的礼物. 我已经注意到, 您没有足够的存储空间收下全部礼物. 我可以先把您能收下的部分给您, 或者您可以清理出一些空间来, 我下个月再把剩下的礼物送来."
+PHRASE_gift_insufficient_space 			"您好, [player_name]. 我, [city_name] 的 [leader_name], 想要送您 [amount] [item] 作为礼物. 问题是: 现在您的存储设施里 没有地方接收礼物. 我会一个月后再把礼物送来. 如果您想收下礼物, 就在存储设施里 清理出一些空间来."
+PHRASE_gift_last_chance 				"您好, [player_name]. 我, [city_name] 的 [leader_name], 一直都在努力送您 [amount] [item] 作为礼物. 但是您依然没有地方存放. 如果您现在还是一点礼物都不能收下, 那么我只能把礼物带回去了."
+PHRASE_gift_forfeited 					"您好, [player_name]. 看来您并不想收下我的人民 满怀敬爱之心为您准备的 [amount] [item]. 您根本没有地方存放. 或许我能找到 比您更愿意接受这份礼物的人."
+PHRASE_gift_accepted 					"[player_name], 我, [city_name] 的 [leader_name], 已经在您仅有的一点点存放空间里, 留下了部分礼物."
+PHRASE_gift_cash_accepted 				"[player_name], 您的金库里存放着 [amount_granted] 闪闪发光的现金, 那是我, [city_name] 的 [leader_name],送给您的."
+PHRASE_gift_animal_accepted				"[player_name], 您的皇宫内驯养着可爱的 [animal], 那是我, [city_name] 的 [leader_name], 送给您的."
+PHRASE_gift_postponed 					"我, [city_name] 的 [leader_name], 一个月后还会再把 [amount] [item] 送来."
+PHRASE_gift_refused 					"您真的拒绝接受我的礼物吗, [player_name]? 那样可是太没礼貌了! 我想现在我除了带着本来想送给您的 [item] 回自己的城市 [city_name] 去, 已经没有别的事可做了."
+PHRASE_gift_accepted_reason  	 			"由于您接受了我和我的人民送给您的 [amount] [item] 礼物,"
+PHRASE_gift_forfeited_reason  	 		"由于您没有接受我的人民送给您的 [amount] [item] 礼物,"
+PHRASE_gift_refused_reason  	 			"由于您拒绝接受我的 [amount] [item] 礼物,"
+PHRASE_gift_no_reason  					"na"
+
+PHRASE_CONDENSED_gift_title 				"N/A"
+PHRASE_CONDENSED_gift_granted				"[city_name] 希望您接受 [amount] [item]."
+PHRASE_CONDENSED_gift_cash_granted			"[city_name] 希望您接受 [amount] 现金."
+PHRASE_CONDENSED_gift_animal_granted			"[city_name] 希望您接受 [animal]."
+PHRASE_CONDENSED_gift_partial_space			"现在接受部分礼物 或清理出空间以备接受全部礼物."
+PHRASE_CONDENSED_gift_insufficient_space 		"清理出存储空间准备接受 [city_name] 的礼物."
+PHRASE_CONDENSED_gift_last_chance 			"现在接受部分礼物或放弃全部礼物."
+PHRASE_CONDENSED_gift_forfeited 			"还是没有足够的空间存放 [city_name] 的礼物. 礼物被带回去了."
+PHRASE_CONDENSED_gift_accepted 			"已经尽可能多地接受了 [city_name] 的礼物."
+PHRASE_CONDENSED_gift_cash_accepted 		"金库中装满了 [city_name] 送来的 [amount_granted] 现金."
+PHRASE_CONDENSED_gift_animal_accepted 		"皇宫动物园接受了 [city_name] 送来的 [animal]."
+PHRASE_CONDENSED_gift_postponed 			"下个月 [city_name] 会再把礼物送来."
+PHRASE_CONDENSED_gift_refused 			"[city_name] 的礼物被拒绝了."
+PHRASE_CONDENSED_gift_accepted_reason  	 	"由于您接受了 [city_name] 的 [amount] [item] 礼物"
+PHRASE_CONDENSED_gift_forfeited_reason  	 	"由于您没有接受 [city_name] 的 [amount] [item] 礼物"
+PHRASE_CONDENSED_gift_refused_reason  	 	"由于您没有接受 [city_name] 的 [amount] [item] 礼物"
+PHRASE_CONDENSED_gift_no_reason  			""
+
+;********************Request granted**************************
+PHRASE_request_granted_title 				"[city_name] 同意送 [itemshort]"
+PHRASE_request_granted_granted			"您好, 高贵的 [player_name]. 我, [city_name] 谦恭的 [leader_name], 已经知道了您的要求, 决定满足您. 这里是您要求的 [amount] [item]."
+PHRASE_request_granted_cash_granted			"您好, [player_name]. 您谦恭的要求 [amount] 现金, 看起来是合理的, 因此我, [city_name] 的 [leader_name], 决定满足您的要求."
+PHRASE_request_granted_animal_granted			"您好, [player_name]. 您要求我送给您 [animal], 看来是合情合理的, 因此我, [city_name] 的 [leader_name], 决定满足您的要求."
+PHRASE_request_granted_partial_space		"您好, [player_name]. 我, [city_name] 的 [leader_name], 已经送来您所要求的 [amount] [item]. 然而, 您却没有足够的空间全部接收. 您现有的存储空间能收下一半的东西. 我可以把您能接收的数量送给您, 或者我也可以下个月带着东西再来, 希望那时您已经清理出足够的空间 能存放全部东西了."
+PHRASE_request_granted_insufficient_space 	"您好, [player_name]. 我, [city_name] 的 [leader_name], 已经送来了您想要的 [amount] [item]. 但是您没有足够的存储空间全部接收. 我一个月后会带着 [amount] [item] 再来您的城市. 我建议您在此之前清理出一些空间来."
+PHRASE_request_granted_last_chance 			"[player_name], 我尽力满足您要求的 [item], 但是您却给我造成因扰. 您还是没有足够的空间接收全部东西, 而我也没有心情再来回跑了. 接收您现在能存放的 [item] 量吧, 否则, 我会把全部东西都带回我的城市 [city_name]."
+PHRASE_request_granted_forfeited 			"我有一个小问题, [player_name]. 您要求我, [city_name] 的 [leader_name], 送您 [amount] [item]. 然而, 您却始终没有腾出足够的存储空间. 我会高兴的把东西带回我的城市. 我知道我们有地方放它们."
+PHRASE_request_granted_accepted 			"我已经把 [amount] [item] 中的一部分, 按您城市能存放的量留给您了."
+PHRASE_request_granted_cash_accepted 		"您的金库中装满了 [amount_granted] 现金, 那是我, [city_name] 的 [leader_name], 按您的要求送给您的."
+PHRASE_request_granted_animal_accepted 		"现在您的皇宫中驯养着可爱的 [animal], 那是我, [city_name] 的 [leader_name], 按您的要求送来的."
+PHRASE_request_granted_postponed 			"我会在一个月后带着您要求的 [item] 再来."
+PHRASE_request_granted_refused 			"什么? [player_name], 您真的拒绝接受您向我要求的 [item]? 随您的便吧!"
+PHRASE_request_granted_accepted_reason  	 	"由于您接受了我按您的要求送来的 [amount] [item],"
+PHRASE_request_granted_forfeited_reason  	 	"由于您始终没有足够的存储空间 来接受您向我要求的 [amount] [item],"
+PHRASE_request_granted_refused_reason  	 	"由于您拒绝接受我按您的要求送来的 [amount] [item],"
+PHRASE_request_granted_no_reason  			""
+
+PHRASE_CONDENSED_request_granted_title 				"N/A"
+PHRASE_CONDENSED_request_granted_granted				"[city_name] 同意送您 [item]."
+PHRASE_CONDENSED_request_granted_cash_granted			"[city_name] 同意送您现金."
+PHRASE_CONDENSED_request_granted_animal_granted			"[city_name] 同意送您动物."
+PHRASE_CONDENSED_request_granted_partial_space			"现在接受部分 [item] 或等下个月再接受."
+PHRASE_CONDENSED_request_granted_insufficient_space 		"清理足够的存储空间准备接受 [item]."
+PHRASE_CONDENSED_request_granted_last_chance 			"现在接收部分 [item] 否则就会失去全部."
+PHRASE_CONDENSED_request_granted_forfeited 			"[city_name] 的 [item] 礼物被取消了."
+PHRASE_CONDENSED_request_granted_accepted 			"已经尽可能多的接收了 [item]."
+PHRASE_CONDENSED_request_granted_cash_accepted 			"接收了 [city_name] 的货物."
+PHRASE_CONDENSED_request_granted_animal_accepted 		"接收了 [city_name] 的动物."
+PHRASE_CONDENSED_request_granted_postponed 			"下个月 [city_name] 会再把东西送过来."
+PHRASE_CONDENSED_request_granted_refused 				"拒绝了 [city_name] 的 [item]."
+PHRASE_CONDENSED_request_granted_accepted_reason  	 	"由于您接收了 [city_name] 的 [item]"
+PHRASE_CONDENSED_request_granted_forfeited_reason  	 	"由于您没有接收 [city_name] 的 [item]"
+PHRASE_CONDENSED_request_granted_refused_reason  	 	"由于您拒绝接收 [city_name] 的 [item]"
+PHRASE_CONDENSED_request_granted_no_reason  			""
+
+;********************Tribute Paid**************************
+PHRASE_tribute_paid_title 					"[city_name] 进贡"
+PHRASE_tribute_paid_granted					"最令人敬畏的 [player_name], 我, [city_name] 的 [leader_name], 带着最大的敬意送来了我的年贡 [amount] [item]."
+PHRASE_tribute_paid_cash_granted				"可怕的主人 [player_name], 我, [city_name] 的 [leader_name], 愉快而心甘情愿地送来了我的年贡 [amount] 现金. 您可以在来年用这些钱做高尚的事业."
+PHRASE_tribute_paid_partial_space				"最尊贵的 [player_name], 我, [city_name] 谦恭的 [leader_name], 希望交给您年贡 [amount] [item]. 令人遗憾的是, 您没有足够的存储空间放下全部贡品, 但是我会很高兴按您能接收的量 尽可能多的送出贡品."
+PHRASE_tribute_paid_insufficient_space 			"高尚的 [player_name], 我, [city_name] 的 [leader_name], 我尽力满足您要求的贡品. 但令人遗憾的是: 我有您要的 [amount] [item], 而您却没有存储空间来存放它们."
+PHRASE_tribute_paid_last_chance 				"噢,伟大的 [player_name], 我, [city_name] 的 [leader_name], 我一直尽力完成自己的义务. 我带来了我的年贡 [amount] [item], 但是您还是没有地方接收. 我必须回自己的城市了, 所以现在尽可能的接收我的贡品吧, 或者免除我今年的岁贡."
+PHRASE_tribute_paid_forfeited 				"明智的 [player_name], 您不能接收我的年贡 [amount] [item]. 我, [city_name] 谦恭的 [leader_name], 现在必须回家了. 真是令人遗憾, 我要把 [amount] [item] 带回去了."
+PHRASE_tribute_paid_accepted 					"我已经按您的存储空间, 尽可能多的把 [amount] [item] 中的一部分留下了."
+PHRASE_tribute_paid_cash_accepted 				"我的年贡 [amount] 现金已经放入您的金库. 我为此感到自豪."
+PHRASE_tribute_paid_postponed 				"一个月后我会带着我的年贡 [amount] [item] 回来. 但愿那时您有足够的存储空间."
+PHRASE_tribute_paid_refused 					"我要带着我的年贡 [amount] [item] 回家去了, 因为您拒绝接受它们. 但我求您要守信用, 我才觉得进贡是值得的."
+PHRASE_tribute_paid_accepted_reason  	 		"由于您接收了我的年贡 [amount] [item],"
+PHRASE_tribute_paid_forfeited_reason  	 		"由于您没有接收我的年贡 [amount] [item],"
+PHRASE_tribute_paid_refused_reason  	 		"由于拒绝接收我的年贡 [amount] [item],"
+PHRASE_tribute_paid_no_reason  				""
+
+PHRASE_CONDENSED_tribute_paid_title 			"N/A"
+PHRASE_CONDENSED_tribute_paid_granted			"[city_name] 送来贡品 [amount] [item]."
+PHRASE_CONDENSED_tribute_paid_cash_granted		"[city_name] 送来贡品 [amount] 现金."
+PHRASE_CONDENSED_tribute_paid_partial_space		"[city_name] 送来贡品 [amount] [item]."
+PHRASE_CONDENSED_tribute_paid_insufficient_space 	"没有地方放 [city_name] 的贡品 [amount] [item]."
+PHRASE_CONDENSED_tribute_paid_last_chance 		"现在接收部分贡品或者放弃全部贡品."
+PHRASE_CONDENSED_tribute_paid_forfeited 			"由于缺少存储空间, 失去了 [city_name] 送来的贡品."
+PHRASE_CONDENSED_tribute_paid_accepted 			"[city_name] 的贡品 [amount] [item] 被接受了"
+PHRASE_CONDENSED_tribute_paid_cash_accepted 		"[city_name] 的贡品 [amount_granted] 现金被接受了."
+PHRASE_CONDENSED_tribute_paid_postponed 			"[city_name] 的贡品延迟交付."
+PHRASE_CONDENSED_tribute_paid_refused 			"[city_name] 的贡品被拒绝了."
+PHRASE_CONDENSED_tribute_paid_accepted_reason  	 	"由于您接受了 [city_name] 送来的的贡品"
+PHRASE_CONDENSED_tribute_paid_forfeited_reason 		"由于您失去了 [city_name] 送来的的贡品"
+PHRASE_CONDENSED_tribute_paid_refused_reason  	 	"由于您拒绝了 [city_name] 送来的的贡品"
+PHRASE_CONDENSED_tribute_paid_no_reason  			""
+
+;********************Rescue cash**************************
+PHRASE_rescue_cash_title 					"来自 [city_name] 的援助"
+PHRASE_rescue_cash_granted					"您好, 领主 [player_name]. 您是整个中国最高贵的领导者之一. 最近我注意到您的城市出现了财政困难. 我, [city_name] 的 [leader_name], 很荣幸地送给您 [amount] 现金, 帮您渡过这段艰难时期."
+PHRASE_rescue_cash_cash_granted				"您好, 最值得尊敬的 [player_name]. 我已经注意到您的城市可以使用现金. 因为我对您的评价非常高, 我, [city_name] 谦恭的 [leader_name], 决定送给您 [amount] 现金. 把这些钱用在适当的地方. 或许有一天您能把钱还给我呢 ...还有利息."
+PHRASE_rescue_cash_partial_space				""
+PHRASE_rescue_cash_insufficient_space 			""
+PHRASE_rescue_cash_last_chance 				""
+PHRASE_rescue_cash_forfeited 					""
+PHRASE_rescue_cash_accepted 					"我在您的金库内存了 [amount] 现金. 希望将来能获得更多回报."
+PHRASE_rescue_cash_cash_accepted 				"我答应给您的现金, 现在已经安全地放进了您的金库."
+PHRASE_rescue_cash_postponed 					"您延迟了接受 [city_name] 的财政援助."
+PHRASE_rescue_cash_refused 					"我本来以为您, 即使是面对小小的财政帮助, 也会表示感谢. 但是现在看来您不需要它, 那我就带着我谦恭的礼物 [amount] 现金回家, 因为您是如此不礼貌地拒绝接受它."
+PHRASE_rescue_cash_accepted_reason  	 		"由于您接受了 [city_name] 的财政援助,"
+PHRASE_rescue_cash_forfeited_reason  	 		"由于您失去了 [city_name] 的财政援助,"
+PHRASE_rescue_cash_refused_reason  	 			"由于您拒绝接受 [city_name] 的财政援助,"
+PHRASE_rescue_cash_no_reason  				""
+
+PHRASE_CONDENSED_rescue_cash_title 				""
+PHRASE_CONDENSED_rescue_cash_granted			"[city_name] 同意借给您 [amount] 现金."
+PHRASE_CONDENSED_rescue_cash_cash_granted			"[city_name] 同意借您 [amount] 现金."
+PHRASE_CONDENSED_rescue_cash_partial_space		""
+PHRASE_CONDENSED_rescue_cash_insufficient_space 	""
+PHRASE_CONDENSED_rescue_cash_last_chance 			""
+PHRASE_CONDENSED_rescue_cash_forfeited 			""
+PHRASE_CONDENSED_rescue_cash_accepted 			"[amount] 现金已经存进了您的金库."
+PHRASE_CONDENSED_rescue_cash_cash_accepted 		"[amount] 现金已经存进了您的金库."
+PHRASE_CONDENSED_rescue_cash_postponed 			"[city_name] 的财政援助延迟一个月."
+PHRASE_CONDENSED_rescue_cash_refused 			"拒绝了 [city_name] 的财政援助."
+PHRASE_CONDENSED_rescue_cash_accepted_reason  	 	"由于您接受了 [city_name] 的财政援助"
+PHRASE_CONDENSED_rescue_cash_forfeited_reason  	 	"由于您失去了 [city_name] 的财政援助"
+PHRASE_CONDENSED_rescue_cash_refused_reason  	 	"由于您拒绝了 [city_name] 的财政援助"
+PHRASE_CONDENSED_rescue_cash_no_reason  			""
+
+
+;*******************************************INVASIONS****************************************
+;********Invasion****************************************
+PHRASE_invasion_title 					"[city_name] 发动侵略!"
+PHRASE_invasion_spy_report				"[greeting] [player_name], 请接见我, 您最信任的密探, 因为我有一条重要消息要告诉您! 我们在 [city_name] 密探报告说那个城市的 [a_foreign_army] 现在正准备再次进攻您的城市. 一年之内他们就会到达您的边境."
+PHRASE_invasion_initial_announcement		"恐怖啊, [player_name], [reason_phrase], [city_name] 的领导者 [leader_name] 的 [a_foreign_army] 正在接近, @L他们将在 [time_until_attack] 个月后进攻您的城市."
+PHRASE_invasion_6month_notleft_warning 			"[greeting] [player_name], 就在六个月后, 来自 [city_name] 的 [a_foreign_army] 会到达这里并进攻您的城市. 请务必做好迎战准备."
+PHRASE_invasion_6month_warning 			"[greeting] [player_name], 就在六个月后, 来自 [city_name] 的 [a_foreign_army] 会到达这里并进攻您的城市. 请务必做好迎战准备."
+PHRASE_invasion_2month_warning 			"[greeting] [player_name], 就在两个月后, 来自 [city_name] 的 [a_foreign_army], 会到达这里并进攻您的城市. 请务必做好迎战准备."
+PHRASE_invasion_1month_Warning 			"[greeting] [player_name], 准备时间过去了. [reason_phrase], 就在一个月后, 来自 [city_name] 的 [a_foreign_army], 会到达这里, 他们决心要征服您的城市."
+PHRASE_invasion_city_attacked_alert  		"[greeting] [player_name], 来自 [city_name] 的 [a_foreign_army] 已兵临城下, 他们决心要毁掉我们的城市!"
+PHRASE_invasion_reason  	 	 		"由于您的城市受到了来自 [city_name] 的 [a_foreign_army] 的攻击"
+PHRASE_invasion_no_reason	  	 		"由于他们渴望得到更多的土地,"
+PHRASE_invasion_disembarked_alert  	   	 	"[greeting] [player_name], 来自 [city_name] 的 [a_foreign_army] 已经在您的海岸登陆并开始进攻. 但愿您的士兵都具有黄帝的英勇战斗精神, 能够保卫您的城市!"
+PHRASE_invasion_1month_Warning_AC			"[greeting] [player_name], 准备的时间过去了. 一个月后, [reason_phrase], 来自 [city_name] 的 [a_foreign_army] 就会到达这里, 他们打算征服您的城市. 您的训练有素的指挥官已经准备好, 并制定出了所有的战术战略."
+
+PHRASE_CONDENSED_invasion_title 			"N/A"
+PHRASE_CONDENSED_invasion_spy_report		"密探报告说, [a_foreign_army] 将会在一年时间内, 向您的城市靠近."
+PHRASE_CONDENSED_invasion_initial_announcement	"[a_foreign_army] 将在 [time_until_attack] 个月后侵略您的城市."
+PHRASE_CONDENSED_invasion_6month_notleft_warning 	"[a_foreign_army] 将在六个月后入侵您的城市."
+PHRASE_CONDENSED_invasion_6month_warning 		"[a_foreign_army] 将在六个月后入侵您的城市."
+PHRASE_CONDENSED_invasion_2month_warning 		"[a_foreign_army] 将在两个月后入侵您的城市."
+PHRASE_CONDENSED_invasion_1month_Warning 		"[a_foreign_army] 将在一个月后入侵您的城市."
+PHRASE_CONDENSED_invasion_city_attacked_alert  	"[a_foreign_army] 现在就在您的土地上!"
+PHRASE_CONDENSED_invasion_reason  	 	 	"由于 [a_foreign_army] 进攻了您"
+PHRASE_CONDENSED_invasion_no_reason  	 	""
+PHRASE_CONDENSED_invasion_disembarked_alert	"[a_foreign_army] 已经登陆并且正在进攻城市!"
+PHRASE_CONDENSED_invasion_1month_Warning_AC	"您的将军们正在等待 [a_foreign_army] 一个月后到达."
+
+;******************** INVASION CALLED OFF
+PHRASE_invasion_called_off_title		"[city_name] 取消入侵!!"
+PHRASE_invasion_called_off_ally			"好消息, [player_name]!  我们的同盟 [city_name] 根本不想入侵我们的城市.  或许我们可以相信他们."
+PHRASE_invasion_called_off_overlord		"好消息, [player_name]!  我们无情的领主 [city_name] 毕竟不想入侵我们的城市.  我们得救了 ... 至少现在是这样."
+PHRASE_invasion_called_off_reason		"N/A"
+
+PHRASE_CONDENSED_invasion_called_off_title		"[city_name] 取消入侵!"
+PHRASE_CONDENSED_invasion_called_off_ally			"[city_name] 取消入侵!"
+PHRASE_CONDENSED_invasion_called_off_overlord		"[city_name] 取消入侵!"
+PHRASE_CONDENSED_invasion_called_off_reason		"N/A"
+
+;********************************CITY AND WORLD STATUS CHANGES************************************
+; 'trade suspended' and 'trade resumed' are only triggered by provocation.  Reason phrase may be embedded directly in text.
+;*****Trade suspended**********************************
+PHRASE_trade_suspended_title 						"与 [city_name] 的贸易停顿"
+PHRASE_trade_suspended_initial_announcement    			"您侮辱了我, [player_name]. 我, [city_name] 的 [leader_name], 不想再和您贸易了."
+PHRASE_trade_suspended_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_trade_suspended_title 				"N/A"
+PHRASE_CONDENSED_trade_suspended_initial_announcement		"与 [city_name] 的贸易停止."
+PHRASE_CONDENSED_trade_suspended_no_reason	  		"N/A"
+
+;*****Trade resumed**********************************
+PHRASE_trade_resumed_title 						"与 [city_name] 的贸易恢复"
+PHRASE_trade_resumed_initial_announcement				"好吧, [player_name], 尽管我对您过去的某些行为感到震惊, 但是我, [city_name] 的 [leader_name], 还是重新开始与您贸易."
+PHRASE_trade_resumed_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_trade_resumed_title 				"N/A"
+PHRASE_CONDENSED_trade_resumed_initial_announcement		"与 [city_name] 的贸易恢复."
+PHRASE_CONDENSED_trade_resumed_no_reason	  			"N/A"
+
+;*****Trade Shuts Down**********************************
+PHRASE_trade_shuts_down_title 					"与 [city_name] 的贸易中断"
+PHRASE_trade_shuts_down_spy_report	    				"密探带给您一个消息, [player_name]： 与 [city_name] 的贸易将在一年内中断. "
+PHRASE_trade_shuts_down_initial_announcement    		"您好, [player_name]. 我, [city_name] 的 [leader_name], 很遗憾地通知您: 我不能再与您贸易了. 不过您放心, 这不是因为您的原因."
+PHRASE_trade_shuts_down_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_trade_shuts_down_title 				"N/A"
+PHRASE_CONDENSED_trade_shuts_down_spy_report	    		"密探报告说与 [city_name] 的贸易将要中断."
+PHRASE_CONDENSED_trade_shuts_down_initial_announcement    	"与 [city_name] 的贸易已经中断."
+PHRASE_CONDENSED_trade_shuts_down_no_reason	  		"N/A"
+
+;*****Trade opens up**********************************
+PHRASE_trade_opens_up_title 						"与 [city_name] 的贸易开放"
+PHRASE_trade_opens_up_spy_report					"密探报告说 [city_name] 的 [leader_name] 将在一年内 想办法开放与您的贸易关系."
+PHRASE_trade_opens_up_initial_announcement			"您好, [player_name]. 我, [city_name] 的 [leader_name], 建议我们开始建立贸易关系. 这对咱们双方都有利."
+PHRASE_trade_opens_up_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_trade_opens_up_title 				"N/A"
+PHRASE_CONDENSED_trade_opens_up_spy_report			"密探报告说 [city_name] 将建立与您贸易关系."
+PHRASE_CONDENSED_trade_opens_up_initial_announcement		"[city_name] 现在可以与您贸易了."
+PHRASE_CONDENSED_trade_opens_up_no_reason	  			"N/A"
+
+;*****Trade rejected **********************************
+PHRASE_trade_rejected_title 						"贸易要求被拒绝"
+PHRASE_trade_rejected_spy_report 					"[greeting] [player_name]. 在 [city_name] 的密探报告说: 他们拒绝与您建立贸易关系."
+PHRASE_trade_rejected_initial_announcement 			"[greeting] [player_name]. [city_name] 拒绝了您提出的 建立贸易关系的要求."
+PHRASE_trade_rejected_no_reason 					"N/A"
+
+PHRASE_CONDENSED_trade_rejected_title 				"贸易要求被拒绝"                                                       
+PHRASE_CONDENSED_trade_rejected_spy_report 			"密探报告说 [city_name] 拒绝与您建立贸易关系."
+PHRASE_CONDENSED_trade_rejected_initial_announcement 		"[city_name] 拒绝了您提出的 建立贸易关系的要求."
+PHRASE_CONDENSED_trade_rejected_no_reason 			"N/A"
+
+;*****Alliance rejected**********************************
+PHRASE_alliance_rejected_title 					"结盟被拒绝"
+PHRASE_alliance_rejected_spy_report 				"[greeting] [player_name]. 我们在 [city_name] 的密探有可靠的理由怀疑: 他们将拒绝您提出的结盟的要求."
+PHRASE_alliance_rejected_initial_announcement 			"[greeting] [player_name], [city_name] 拒绝了您提出的结盟的要求."
+PHRASE_alliance_rejected_no_reason 					"N/A"
+
+PHRASE_CONDENSED_alliance_rejected_title 				"结盟被拒绝"                                                            
+PHRASE_CONDENSED_alliance_rejected_spy_report 			"[greeting] [player_name], [city_name] 拒绝了您提出的结盟的要求."
+PHRASE_CONDENSED_alliance_rejected_initial_announcement 	"[greeting] [player_name], [city_name] 拒绝了您提出的结盟的要求."
+PHRASE_CONDENSED_alliance_rejected_no_reason 			"N/A"
+
+;for the following increase/decrease events, 
+; _I = Increase
+; _D = Decrease
+
+;*****Demand Changes**************************
+PHRASE_demand_change_title_I 						"[city_name] 购买更多 [itemshort]"
+PHRASE_demand_change_spy_report_I 					"我们在 [city_name] 的密探报告. 好象 [city_name] 的 [leader_name] 很快就希望与您交易更多的 [item]!"
+PHRASE_demand_change_initial_announcement_I 			"您好, [player_name]. 我, [city_name] 的 [leader_name], 希望从您的城市购买更多的 [item]. 我的城市对这种物品消耗那么快, 真是令人惊异!"
+PHRASE_demand_change_no_reason_I	  ""
+
+PHRASE_CONDENSED_demand_change_title_I 				"N/A"
+PHRASE_CONDENSED_demand_change_spy_report_I 			"密探报告 [city_name] 希望与您交易更多的 [itemshort]."
+PHRASE_CONDENSED_demand_change_initial_announcement_I 	"[city_name] 现在希望与您交易更多的 [itemshort]."
+PHRASE_CONDENSED_demand_change_no_reason_I	  ""
+
+PHRASE_demand_change_title_D 						"[city_name] 减少购买 [itemshort]"
+PHRASE_demand_change_spy_report_D 					"我, 您最信任的密探向您报告, 听说 [city_name] 对 [item] 的需求降低了. 很快就会减少从您的城市购买的数量."
+PHRASE_demand_change_initial_announcement_D 			"情况有了变化, [player_name]. 我, [city_name] 的 [leader_name], 已经决定减少从您的城市购买 [item] 的数量. 我的城市对这种物品的用量 不象以前那么多了."
+PHRASE_demand_change_no_reason_D	  ""
+
+PHRASE_CONDENSED_demand_change_title_D 				"N/A"
+PHRASE_CONDENSED_demand_change_spy_report_D 			"密探报告说 [city_name] 将减少 [itemshort] 购买量."
+PHRASE_CONDENSED_demand_change_initial_announcement_D 	"[city_name] 已经减少了 [itemshort] 的交易数量."
+PHRASE_CONDENSED_demand_change_no_reason_D	  ""
+
+PHRASE_supply_change_title_I 						"[city_name] 出售更多 [itemshort]"
+PHRASE_supply_change_spy_report_I 	    				"我, 您最信任的密探, 看到了最近的报告. 所有的情况都表明 [city_name] 很快就会向您出售更多的 [item]."
+PHRASE_supply_change_initial_announcement_I 			"您好, [player_name]. 我, [city_name] 的 [leader_name], 骄傲的宣布: 我们可以向您出售更多的 [item] 了!"
+PHRASE_supply_change_no_reason_I	  ""
+
+PHRASE_CONDENSED_supply_change_title_I 				"N/A"
+PHRASE_CONDENSED_supply_change_spy_report_I 	    		"密探报告说 [city_name] 将出售更多的 [itemshort]."
+PHRASE_CONDENSED_supply_change_initial_announcement_I 	"[city_name] 现在将出售更多 [itemshort]."
+PHRASE_CONDENSED_supply_change_no_reason_I			""
+
+PHRASE_supply_change_title_D 						"[city_name] 减少 [itemshort] 的出售量"
+PHRASE_supply_change_spy_report_D 					"最后一次密探报告指出, 在一年之内, [city_name] 的 [leader_name] 将减少向您出售 [item] 的数量!"
+PHRASE_supply_change_initial_announcement_D 			"您好, [player_name]. 我, [city_name] 的 [leader_name], 必须遗憾地减少每年卖给您的 [item] 数量. 我自己的城市对这种产品的需求量 比以前高了许多."
+PHRASE_supply_change_no_reason_D				  	""
+
+PHRASE_CONDENSED_supply_change_title_D 				"N/A"
+PHRASE_CONDENSED_supply_change_spy_report_D 			"密探报告说 [city_name] 将减少 [item] 出售量."
+PHRASE_CONDENSED_supply_change_initial_announcement_D 	"[city_name] 现在将卖给您较少的 [item]."
+PHRASE_CONDENSED_supply_change_no_reason_D	            ""
+
+;******Price Changes**************************************
+PHRASE_price_change_title_I 					"[itemshort] 的价格上涨"
+PHRASE_price_change_spy_report_I				"我, 您最能干的密探, 预报在一年内 [itemshort] 的价格将会提高, [player_name]. 进口这种商品的费用会增加, 但是出口这种商品 将得到更高的利润."
+PHRASE_price_change_initial_announcement_I		"声名卓著的 [player_name], 由于全世界的供应减少, [itemshort] 的价格有所上涨, 上涨量显示在上面. 进口这种商品的费用会提高, 但是出口这种商品 能得到更高的利润."
+PHRASE_price_change_no_reason_I		   		""
+
+PHRASE_CONDENSED_price_change_title_I 			"N/A"
+PHRASE_CONDENSED_price_change_spy_report_I		"密探报告说 [itemshort] 的价格将提高."
+PHRASE_CONDENSED_price_change_initial_announcement_I	"[itemshort] 的价格已经上涨."
+PHRASE_CONDENSED_price_change_no_reason_I		   	""
+
+PHRASE_price_change_title_D 					"[itemshort] 的价格下降"
+PHRASE_price_change_spy_report_D				"您好, [player_name]. 我, 您最棒的密探, 预见到了贸易的变化. 一年之内, [itemshort] 供应将过剩, 因此这种商品的价格会下跌. 这样出口这种商品的利润将减少, 但进口它的花费也会降低."
+PHRASE_price_change_initial_announcement_D		"最高贵的 [player_name], 因为整个中国供应过多, [itemshort] 的价格下降了, 下降量显示在上面. 这样出口它利润会降低, 但是进口它也会比以前更便宜."
+PHRASE_price_change_no_reason_D  				""
+
+PHRASE_CONDENSED_price_change_title_D 			"N/A"
+PHRASE_CONDENSED_price_change_spy_report_D		"密探报告 [itemshort] 的价格将下降."
+PHRASE_CONDENSED_price_change_initial_announcement_D	"[itemshort] 的价格已经下降."
+PHRASE_CONDENSED_price_change_no_reason_D  		""
+
+;*****Wage change**************************************
+PHRASE_wage_change_title_I 					"农民的要求提高"
+PHRASE_wage_change_spy_report_I 				"您的密探已经从农民那里 发现一个令人感兴趣的情况. 好象他们在抱怨自己的工资太低, [player_name]."
+PHRASE_wage_change_initial_announcement_I 		"最高贵的 [player_name], 在您的城市里生活费用提高了, 因此人们希望得到更多工资来支付生活费."
+PHRASE_wage_change_no_reason_I_C	  			"N/A"
+
+PHRASE_CONDENSED_wage_change_title_I 			"N/A"
+PHRASE_CONDENSED_wage_change_spy_report_I 		"密探报告说人们将要求 领取更高的工资."
+PHRASE_CONDENSED_wage_change_initial_announcement_I 	"人们希望得到更多工资."
+PHRASE_CONDENSED_wage_change_no_reason_I_C	  	"N/A"
+
+PHRASE_wage_change_title_D 					"人们的工资要求降低"
+PHRASE_wage_change_spy_report_D 				"就算是不会说话的石头, 我, 您最信任的密探, 也能从石头那里得到秘密. 我预计在一年之内, 人们对工资的要求会降低, [player_name]."
+PHRASE_wage_change_initial_announcement_D 		"您好, 最高贵的 [player_name]. 我确信您的市民 可以接受更低的一点的工资. 整个世界的工资都降低了."
+PHRASE_wage_change_no_reason_D_C	  			"N/A"
+
+PHRASE_CONDENSED_wage_change_title_D 			"N/A"
+PHRASE_CONDENSED_wage_change_spy_report_D 		"密探报告 整个世界的工资都将降低."
+PHRASE_CONDENSED_wage_change_initial_announcement_D 	"全世界的工资都已经降低."
+PHRASE_CONDENSED_wage_change_no_reason_D_C	  	"N/A"
+
+; 'tribute suspended' and 'tribute resumed' are only triggered by provocation.  Reason may be embedded directly in text.
+;*****Tribute suspended**********************************
+PHRASE_tribute_suspended_title 					"[city_name] 拒绝进贡"
+PHRASE_tribute_suspended_initial_announcement    		"我可能是您的仆人, [player_name], 但我不愿意您象对待野狗一样对待我! 我, [city_name] 的 [leader_name], 在您改变对我态度前, 拒绝向您进贡!"
+PHRASE_tribute_suspended_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_tribute_suspended_title 				"N/A"
+PHRASE_CONDENSED_tribute_suspended_initial_announcement	"[city_name] 已经停止进贡."
+PHRASE_CONDENSED_tribute_suspended_no_reason	  		"N/A"
+
+;*****Tribute resumed**********************************
+PHRASE_tribute_resumed_title 						"[city_name] 恢复进贡"
+PHRASE_tribute_resumed_initial_announcement			"您好, [player_name]. 尽管您过去 对我度恶劣, 但是我, [city_name] 的 [leader_name], 还是决定尽我的义务重新向您进贡."
+PHRASE_tribute_resumed_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_tribute_resumed_title 				"N/A"
+PHRASE_CONDENSED_tribute_resumed_initial_announcement		"[city_name] 已经恢复向您进贡."
+PHRASE_CONDENSED_tribute_resumed_no_reason	  		"N/A"
+
+;*****Rebellion**********************************
+PHRASE_rebellion_tribute_suspended_title 				"[city_name] 反叛!"
+PHRASE_rebellion_tribute_suspended_initial_announcement	"您的行为应该受到责备, [player_name]. 我, [city_name] 高贵的 [leader_name], 现在开始反抗您了! 您可以忘记我的年贡了, 而且我也不打算和您贸易!"
+PHRASE_rebellion_tribute_suspended_no_reason	  		"N/A"
+
+PHRASE_CONDENSED_rebellion_tribute_suspended_title 				"N/A"
+PHRASE_CONDENSED_rebellion_tribute_suspended_initial_announcement		"[city_name] 已经反叛, 不再向您进贡."
+PHRASE_CONDENSED_rebellion_tribute_suspended_no_reason	  		"N/A"
+
+;*****Rebellion Quelled**********************************
+PHRASE_rebellion_quelled_tribute_resumed_title 					"[city_name] 的反叛被镇压"
+PHRASE_rebellion_quelled_tribute_resumed_initial_announcement		"最明智宽厚的 [player_name], 我, [city_name] 的 [leader_name], 谦恭的站在您面前. 您的军队让我看到了自己的错误, 我不应该反抗您. 现在我又是您忠诚的仆人, 我将恢复与您的贸易并继续向您进贡."
+PHRASE_rebellion_quelled_tribute_resumed_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_rebellion_quelled_tribute_resumed_title 			"N/A"
+PHRASE_CONDENSED_rebellion_quelled_tribute_resumed_initial_announcement	"您已经镇压了 [city_name] 叛乱."
+PHRASE_CONDENSED_rebellion_quelled_tribute_resumed_no_reason	  	"N/A"
+
+;*****Rebellion Over**********************************
+PHRASE_rebellion_over_tribute_resumed_title 					"[city_name] 的叛乱结束"
+PHRASE_rebellion_over_tribute_resumed_spy_report				"最近的密探报告表明: 您的诸候城市 [city_name] 将停止暴躁的行为, 一年内那里的叛乱就会结束. 他们会恢复与您的贸易, 并继续向您进贡."
+PHRASE_rebellion_over_tribute_resumed_initial_announcement			"请原谅我, [player_name]. 我, [city_name] 谦恭的 [leader_name], 现在认识到自己原来是多么愚蠢. 反抗您是一个错误, 所以我再次成为您忠顺的仆人. 我将很高兴地向您进贡, 并且盼望着恢复和您的贸易."
+PHRASE_rebellion_over_tribute_resumed_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_rebellion_over_tribute_resumed_title 			"N/A"
+PHRASE_CONDENSED_rebellion_over_tribute_resumed_spy_report			"密探报告 [city_name] 的叛乱将在一年内结束."
+PHRASE_CONDENSED_rebellion_over_tribute_resumed_initial_announcement	"[city_name] 已经停止反叛."
+PHRASE_CONDENSED_rebellion_over_tribute_resumed_no_reason	  		"N/A"
+
+;*****Military Buildup**********************************
+PHRASE_military_change_title_I 							"[city_name] 建立军事系统"
+PHRASE_military_change_spy_report_I							"密探带给我一些坏消息, [player_name]. 一年内, [city_name] 将加强其军事力量!"
+PHRASE_military_change_initial_announcement_I					"今天有个坏消息, 高贵的 [player_name]. [city_name] 的 [leader_name] 已经加强了他们的军事力量. 没有人知道 [leader_name] 想做什么, 但是我们应该保持警惕."
+PHRASE_military_change_no_reason_I	  						"N/A"
+
+PHRASE_CONDENSED_military_change_title_I 						"N/A"
+PHRASE_CONDENSED_military_change_spy_report_I					"密报告 [city_name] 将加强其军事力量."
+PHRASE_CONDENSED_military_change_initial_announcement_I			"[city_name] 已经加强了军事力量."
+PHRASE_CONDENSED_military_change_no_reason_I	  				"N/A"
+
+;*****Military Decline**********************************
+PHRASE_military_change_title_D 							"[city_name] 军事衰微"
+PHRASE_military_change_spy_report_D							"注意, [player_name], 您的密探从城外带来些有趣的消息. 他们说在一年之内, [city_name] 的军事力量将大大削弱."
+PHRASE_military_change_initial_announcement_D					"最高贵的 [player_name]. 真令人惊奇, [city_name] 的 [leader_name] 解散了许多军队, 他的城市的军事实力全面降低了."
+PHRASE_military_change_no_reason_D	  						"N/A"
+
+PHRASE_CONDENSED_military_change_title_D 						"N/A"
+PHRASE_CONDENSED_military_change_spy_report_D					"密探报告 [city_name] 将裁减其军队."
+PHRASE_CONDENSED_military_change_initial_announcement_D			"[city_name] 已经削弱了自己的军事力量."
+PHRASE_CONDENSED_military_change_no_reason_D	  				"N/A"
+
+;*****Economic Prosperity**********************************
+PHRASE_economic_change_title_I 					"[city_name] 经济繁荣"
+PHRASE_economic_change_spy_report_I					"高贵的 [player_name], 密探带来一条消息. 他们预报在一年内 [city_name] 将变得更加繁荣, 能够生产出更多产品. 您可能需要这条信息, 用于调整您的贸易政策."
+PHRASE_economic_change_initial_announcement_I			"最值得尊敬的 [player_name], 从城外来的报告表明 [city_name] 在 [leader_name] 的领导之下, 经济得到了极大的增长. 他们的城市金库不断流入大量的现金, 城市的工业也比以前更欣欣向荣."
+PHRASE_economic_change_no_reason_I	  				"N/A"
+
+PHRASE_CONDENSED_economic_change_title_I 				"N/A"
+PHRASE_CONDENSED_economic_change_spy_report_I			"密探报告 [city_name] 的经济将在一年内有大幅度增长."
+PHRASE_CONDENSED_economic_change_initial_announcement_I	"[city_name] 的经济已经开始增长."
+PHRASE_CONDENSED_economic_change_no_reason_I	  		"N/A"
+
+;*****Economic Decline**********************************
+PHRASE_economic_change_title_D 					"[city_name] 经济衰退"
+PHRASE_economic_change_spy_report_D					"您好, [player_name]. 从 [city_name] 传来一条有趣的消息. 我们在那里的密探报告说, 那个城市的经济一片混乱, 将在一年内有显著的衰退."
+PHRASE_economic_change_initial_announcement_D			"最值得尊敬的 [player_name], [city_name] 传来消息说那个城市陷入困境. 工业倒闭, 城市也没有以前富裕."
+PHRASE_economic_change_no_reason_D	  				"N/A"
+
+PHRASE_CONDENSED_economic_change_title_D 				"N/A"
+PHRASE_CONDENSED_economic_change_spy_report_D			"密探报告 [city_name] 的经济状况将变坏."
+PHRASE_CONDENSED_economic_change_initial_announcement_D	"[city_name] 经济已经衰退."
+PHRASE_CONDENSED_economic_change_no_reason_D	  		"N/A"
+
+;*******Increased Favor***************************** 
+PHRASE_favor_change_title_I 						"[city_name] 对您的评价提高"
+PHRASE_favor_change_initial_announcement_I 			"[reason_phrase], 我, [city_name] 的 [leader_name], 对您的评价比以前更高了."
+PHRASE_favor_change_no_reason_I	  				"N/A"
+
+PHRASE_CONDENSED_favor_change_title_I 				"N/A"
+PHRASE_CONDENSED_favor_change_initial_announcement_I 		"[city_name] 对您的评价提高了."
+PHRASE_CONDENSED_favor_change_no_reason_I	  			"N/A"
+
+;*******Decreased Favor*****************************
+PHRASE_favor_change_title_D 						"[city_name] 对您的评价降低"
+PHRASE_favor_change_initial_announcement_D 			"[reason_phrase], 我, [city_name] 的 [leader_name], 对您的评价不象以前那么高了."
+PHRASE_favor_change_no_reason_D	  				"N/A"
+
+PHRASE_CONDENSED_favor_change_title_D 				"N/A"
+PHRASE_CONDENSED_favor_change_initial_announcement_D 		"[city_name] [reason_phrase], 对您的评价降低了."
+PHRASE_CONDENSED_favor_change_no_reason_D	  			"N/A"
+
+;********Attack Averted*****************
+PHRASE_attack_averted_title 						"[city_name] 免受攻击"
+PHRASE_attack_averted_initial_announcement 			"我们大获全胜, [player_name]! 由于您的军队提前到达, 增援了我的部队, 帮助我们保卫了城市, 所以敌人象兔子一样逃跑了! 我 [leader_name], 极其感激您, 我对您的评价比以前更高了!"
+PHRASE_attack_averted_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_attack_averted_title 				"N/A"
+PHRASE_CONDENSED_attack_averted_initial_announcement 		"由于免除了被进攻的命运, [city_name] 对您的评价比以前更高了."
+PHRASE_CONDENSED_attack_averted_no_reason	  			"N/A"
+
+;********Allies hate you************************
+PHRASE_allies_hate_you_title 						"同盟讨厌您"
+PHRASE_allies_hate_you_initial_announcement 			"您好, [player_name]. 因为您进攻了一个同盟城市, 现在没有一个盟友相信您了."
+PHRASE_allies_hate_you_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_allies_hate_you_title 				"N/A"
+PHRASE_CONDENSED_allies_hate_you_initial_announcement 	"您损害了自己的盟友!"
+PHRASE_CONDENSED_allies_hate_you_no_reason	  		"N/A"
+
+;********Becomes ally****************************
+PHRASE_becomes_ally_title 						"[city_name] 变成盟友"
+PHRASE_becomes_ally_initial_announcement 				"您好, [player_name]! 我, [city_name] 的 [leader_name], 将要荣幸地与您结盟."
+PHRASE_becomes_ally_no_reason	  					"N/A"
+
+PHRASE_CONDENSED_becomes_ally_title 				"N/A"
+PHRASE_CONDENSED_becomes_ally_initial_announcement 		"[city_name] 现在是您的盟友了."
+PHRASE_CONDENSED_becomes_ally_no_reason	  			"N/A"
+
+;********Becomes rival****************************
+PHRASE_becomes_rival_title 						"[city_name] 变成对手"
+PHRASE_becomes_rival_initial_announcement 			"我们生活在一个有趣的时代, [player_name]. 我, [city_name] 的 [leader_name], 觉得与其做您的盟友, 还不如成为您的对手, 那样我能得到更多的好处."
+PHRASE_becomes_rival_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_becomes_rival_title 				"N/A"
+PHRASE_CONDENSED_becomes_rival_initial_announcement 		"[city_name] 已经变成对手!"
+PHRASE_CONDENSED_becomes_rival_no_reason	  			"N/A"
+
+;********Becomes vassal****************************
+PHRASE_becomes_vassal_title 						"[city_name] 变成诸候"
+PHRASE_becomes_vassal_initial_announcement 			"最强大的 [player_name], 我, [city_name] 的 [leader_name], 我和我的人民 都归顺到您仁慈的统治之下. 我们愿意去做您吩咐的任何事."
+PHRASE_becomes_vassal_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_becomes_vassal_title 				"N/A"
+PHRASE_CONDENSED_becomes_vassal_initial_announcement 		"[city_name] 现在变成了您的诸候."
+PHRASE_CONDENSED_becomes_vassal_no_reason	  			"N/A"
+
+;********City Requests Trade****************************
+PHRASE_city_req_trade                                   	"[city_name] 要求建立贸易关系"
+PHRASE_city_req_trade_initial                           	"[city_name] 的 [leader_name] 派我来向您表达: 他是如何地敬仰您, 并且谦恭地建议咱们两个城市间, 建立互惠互利的贸易关系. 请考虑我们这个谦逊的要求, [player_name]."
+PHRASE_city_req_trade_no_reason                         	"N/A"
+
+PHRASE_CONDENSED_city_req_trade                         	"[city_name] 要求建立贸易关系"
+PHRASE_CONDENSED_city_req_trade_initial                 	"[city_name] 的 [leader_name] 已经请求谈判, 与您的城市建立贸易关系."
+PHRASE_CONDENSED_city_req_trade_no_reason               	"N/A"
+
+;********City Requests Alliance****************************
+PHRASE_city_req_ally                                    	"[city_name] 要求结盟"
+PHRASE_city_req_ally_initial                           	"[city_name] 的 [leader_name] 派我来谈判, 与您的城市结盟. 我们相信这样做, 会让咱们都变得强大起来, [player_name]."
+PHRASE_city_req_ally_no_reason                         	"N/A"
+
+PHRASE_CONDENSED_city_req_ally                          	"[city_name] 要求结盟"
+PHRASE_CONDENSED_city_req_ally_initial                 	"[city_name] 的 [leader_name] 已经与您的城市结成同盟."
+PHRASE_CONDENSED_city_req_ally_no_reason               	"N/A"
+
+;********Swears Fealty****************************
+PHRASE_swears_fealty_title 						"[city_name] 宣誓效忠"
+PHRASE_swears_fealty_initial_announcement 			"最值得尊敬的 [player_name], 我, [city_name] 的 [leader_name], 后悔以前与您为敌. 我发誓: 忠诚于您和您的城市, 我会向您进贡的."
+PHRASE_swears_fealty_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_swears_fealty_title 				"N/A"
+PHRASE_CONDENSED_swears_fealty_initial_announcement 		"[city_name] 已经发誓效忠于您, 现在成为您的一个诸候城市."
+PHRASE_CONDENSED_swears_fealty_no_reason	  			"N/A"
+
+;********Player's City Conquered THIS IS NOT USED, ENEMY_VICTORIOUS REPLACES IT ****************************
+
+;********City conquered by player****************************
+PHRASE_city_conquered_by_player_title 				"您征服了 [city_name]!"
+PHRASE_city_conquered_by_player_initial_announcement 		"最勇猛的 [player_name], 您的军队在 [city_name] 取得了胜利, 那里的领导者 [leader_name] 非常惭愧. [city_name] 现在向我们进贡了."
+PHRASE_city_conquered_by_player_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_city_conquered_by_player_title 			"N/A"
+PHRASE_CONDENSED_city_conquered_by_player_initial_announcement 	"[city_name] 已经被征服..."
+PHRASE_CONDENSED_city_conquered_by_player_no_reason	  		"N/A"
+
+;********Ally conquers rival****************************
+PHRASE_ally_conquers_rival_title 					"[city_name] 征服了 [rival_city_name]"
+PHRASE_ally_conquers_rival_initial_announcement 		"真是个大喜的日子, [player_name]. 我, [city_name] 的 [leader_name], 欣喜地向您宣布: 我的军队打败了我们的对手 [rival_nationality] 及其城市 [rival_city_name]. 胜利的结果就是:  [rival_city_name] 成为了我们的同盟!"
+PHRASE_ally_conquers_rival_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_ally_conquers_rival_title 			"N/A"
+PHRASE_CONDENSED_ally_conquers_rival_initial_announcement 	"您的同盟 [city_name] 已经征服了您的对手 [rival_city_name]."
+PHRASE_CONDENSED_ally_conquers_rival_no_reason	  		"N/A"
+
+;********Vassal conquers rival****************************
+PHRASE_vassal_conquers_rival_title 					"[city_name] 征服了 [rival_city_name]"
+PHRASE_vassal_conquers_rival_initial_announcement 		"一个幸运的消息, [player_name]! 我, [city_name] 的 [leader_name], 已经征服了我们对手 [rival_city_name]. [rival_city_name] 因战败而惭愧, 已经发誓忠诚于您!"
+PHRASE_vassal_conquers_rival_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_vassal_conquers_rival_title 				"N/A"
+PHRASE_CONDENSED_vassal_conquers_rival_initial_announcement 	"您的诸候 [city_name] 已经征服了您的对手 [rival_city_name]."
+PHRASE_CONDENSED_vassal_conquers_rival_no_reason	  		"N/A"
+
+;********Ally conquered by rival****************************
+PHRASE_ally_conquered_by_rival_title 				"[rival_city_name] 征服了 [city_name]!"
+PHRASE_ally_conquered_by_rival_initial_announcement 		"真是条坏消息, [player_name]! 您的对手 [rival_nationality] 及其城市 [rival_city_name] 已经征服了您衷爱的一个同盟 [city_name]. [rival_city_name] 已经切断了我们与 [city_name] 之间的所有普通联系."
+PHRASE_ally_conquered_by_rival_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_ally_conquered_by_rival_title 				"N/A"
+PHRASE_CONDENSED_ally_conquered_by_rival_initial_announcement 	"[rival_city_name] 已经征服的您的同盟 [city_name]!"
+PHRASE_CONDENSED_ally_conquered_by_rival_no_reason	  		"N/A"
+
+;********Vassal conquered by rival****************************
+PHRASE_vassal_conquered_by_rival_title 					"[rival_city_name] 征服了 [city_name]!"
+PHRASE_vassal_conquered_by_rival_initial_announcement 		"现在磨剑已经太晚了, [player_name]. 我, [rival_city_name] 的领导者, 刚刚征服了您的诸候 [city_name]. 不管怎样, 他们和我在一起, 总比和您在一起快乐!"
+PHRASE_vassal_conquered_by_rival_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_vassal_conquered_by_rival_title 			"N/A"
+PHRASE_CONDENSED_vassal_conquered_by_rival_initial_announcement 	"[rival_city_name] 已经征服了您的诸候 [city_name]!"
+PHRASE_CONDENSED_vassal_conquered_by_rival_no_reason	  		"N/A"
+
+;********Colony conquered by rival****************************
+
+;********Colony restored****************************
+
+;********Parent city falls****************************
+
+
+;***********************MISCELLANEOUS EVENTS*******************************
+;*********Rebellion continues*************
+PHRASE_rebellion_continues_title 				"[city_name] 的叛乱还在继续"
+PHRASE_rebellion_continues_initial_announcement 	"哈! 就象您现在看到的, 我们比您预料的要强大, [player_name]! 我, 您的属城 [city_name] 的 [leader_name], 已经带领我的士兵, 打败了您派到这里来的军队. 我们的反抗还在继续!"
+PHRASE_rebellion_continues_no_reason	  		"N/A"
+
+PHRASE_CONDENSED_rebellion_continues_title 			"N/A"
+PHRASE_CONDENSED_rebellion_continues_initial_announcement 	"您的军队在 [city_name] 吃了败仗, 那里的反叛在继续!"
+PHRASE_CONDENSED_rebellion_continues_no_reason	  		"N/A"
+
+;**********Demand refused***********
+PHRASE_demand_refused_title 					"[city_name] 拒绝了您的要求"
+PHRASE_demand_refused_initial_announcement 			"[player_name], 您还想要 [amount] [item]? 您觉得我, [city_name] 的 [leader_name], 会把这些东西送给您? 好好想想吧! 我可不打算满足您那无礼的要求!"
+PHRASE_demand_animal_refused_initial_announcement 		"那么您想要的是动物了, [player_name]? 而我, [city_name] 的 [leader_name], 应该给您送去吗? 你这个坐井观天的癞蛤蟆, 到别处去为你的动物园找动物吧!"
+PHRASE_demand_refused_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_demand_refused_title 			"N/A"
+PHRASE_CONDENSED_demand_refused_initial_announcement 		"[city_name] 已经拒绝送来您要求的 [amount] [item]!"
+PHRASE_CONDENSED_demand_animal_refused_initial_announcement 	"[city_name] 已经拒绝送来您要求的动物!"
+PHRASE_CONDENSED_demand_refused_no_reason	  		"N/A"
+
+;**************Gift refused***********
+PHRASE_gift_refused_title 				"[city_name] 拒绝您的礼物"
+PHRASE_gift_refused_initial_announcement 		"不是我不感激您的关怀, [player_name], 请停止炫耀您的富有吧. 我 [leader_name] 必须告诉您: [city_name] 现在不需要任何多余的 [item]. 随着时间推移一切都会变化, 但是这段时间不要再送来 [itemshort] 烦我了."
+PHRASE_gift_refused_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_gift_refused_title 			"N/A"
+PHRASE_CONDENSED_gift_refused_initial_announcement 	"[city_name] 拒绝了您的礼物 [amount] [item]!"
+PHRASE_CONDENSED_gift_refused_no_reason	  		"N/A"
+
+;**************Ally has become resentful***********
+PHRASE_ally_resentful_title 					"[city_name] 变得怨恨!"
+PHRASE_ally_resentful_initial_announcement 		"我不能再叫您朋友, [player_name]. 我, 您的同盟 [city_name] 的 [leader_name], 无法赞同您最近的某些行为. 我非常怨恨您!"
+PHRASE_ally_resentful_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_ally_resentful_title 			"N/A"
+PHRASE_CONDENSED_ally_resentful_initial_announcement 	"您的同盟 [city_name] 已经开始怨恨您了!"
+PHRASE_CONDENSED_ally_resentful_no_reason	  		"N/A"
+
+;**************Rival has become hostile***********
+PHRASE_rival_hostile_title 					"[city_name] 变得敌对!"
+PHRASE_rival_hostile_initial_announcement 		"我不愿意谈到您的名字, [player_name], 因为您的名字 会在我嘴里留下难闻的味道! 我, [city_name] 的 [leader_name], 对您感到极其愤怒! 我不知道会做出什么事来!"
+PHRASE_rival_hostile_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_rival_hostile_title 			"N/A"
+PHRASE_CONDENSED_rival_hostile_initial_announcement 	"您的同盟 [city_name] 已经变得敌对!"
+PHRASE_CONDENSED_rival_hostile_no_reason	  		"N/A"
+
+;**************Vassal has become rebellious***********
+PHRASE_vassal_rebellious_title 				"[city_name] 变得愤怒!"
+PHRASE_vassal_rebellious_initial_announcement 		"卑鄙的 [player_name], 我 [leader_name], 以及我 [city_name] 所有的人民都鄙视你! 我们刚刚决定要推翻你的政权!"
+PHRASE_vassal_rebellious_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_vassal_rebellious_title 				"N/A"
+PHRASE_CONDENSED_vassal_rebellious_initial_announcement 	"您的同盟 [city_name] 对您感到非常恼火!"
+PHRASE_CONDENSED_vassal_rebellious_no_reason	  		"N/A"
+
+;**************Colony has become rebellious***********
+
+;**************Parent city has become resentful***********
+
+;**************Ally loves you***********
+PHRASE_ally_loves_you_title 					"[city_name] 热爱您"
+PHRASE_ally_loves_you_initial_announcement 		"最仁慈的 [player_name], 我, [city_name] 的 [leader_name], 觉得您是我最喜爱的人. 您是一位传奇般的领导者, 每个人都应该以您为榜样!"
+PHRASE_ally_loves_you_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_ally_loves_you_title 			"N/A"
+PHRASE_CONDENSED_ally_loves_you_initial_announcement 	"[city_name] 热爱您!"
+PHRASE_CONDENSED_ally_loves_you_no_reason	  		"N/A"
+
+;**************Rival pleased with you***********
+PHRASE_rival_pleased_title 					"[city_name] 尊重您"
+PHRASE_rival_pleased_initial_announcement 		"您好, [player_name]!  我,  [city_name] 的 [leader_name] 觉得您是一个真正的对手, 您得到了我的尊重... 随着时间推移我会越来越尊重您."
+PHRASE_rival_pleased_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_rival_pleased_title 			"N/A"
+PHRASE_CONDENSED_rival_pleased_initial_announcement 	"[city_name] 尊重您."
+PHRASE_CONDENSED_rival_pleased_no_reason	  		"N/A"
+
+;**************Vassal loves you***********
+PHRASE_vassal_loves_you_title 				"[city_name] 热爱您"
+PHRASE_vassal_loves_you_initial_announcement 		"享有声誉的 [player_name], 我, [city_name] 的 [leader_name], 和我所有的人民都崇拜您! 如果我们不能生活在您的城市里, 那就让我们成为您的从属城吧!"
+PHRASE_vassal_loves_you_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_vassal_loves_you_title 				"N/A"
+PHRASE_CONDENSED_vassal_loves_you_initial_announcement 	"[city_name] 热爱您!"
+PHRASE_CONDENSED_vassal_loves_you_no_reason	  		"N/A"
+
+;**************Colony loves you***********
+
+;**************Parent city loves you***********
+
+;*****************Rival army away from city***********
+PHRASE_rival_away_title 					"[city_name] 防御薄弱"
+PHRASE_rival_away_spy_report 					"您好, [player_name]. 我们在 [city_name] 的密探报告了一条重要消息! 一年之内, 敌对的 [rival_nationality] 的 [city_name] 的领导者 [leader_name], 要把他的军队转移到别处去, 城市的防御出现了弱点!"
+PHRASE_rival_away_initial_announcement 			"最值得尊敬的 [player_name], 密探报告敌对的 [rival_nationality] 的城市 [city_name] 的领导者 [leader_name], 已经把他的大部分军队派到别处去了. [city_name] 现在几乎是没有防御的空城!"
+PHRASE_rival_away_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_rival_away_title 				"N/A"
+PHRASE_CONDENSED_rival_away_spy_report	 		"密探报告 [city_name] 的军队将要离开自己的城市到别处去."
+PHRASE_CONDENSED_rival_away_initial_announcement 	"您的对手 [city_name] 的军队已经远离了城市!"
+PHRASE_CONDENSED_rival_away_no_reason	  		"N/A"
+
+;**************Player's city saved***********
+PHRASE_players_city_saved_title 				"入侵的军队被打败!"
+PHRASE_players_city_saved_initial_announcement 		"好消息, [player_name]! [city_name] 的软弱的军队 被您的军队打败后, 由他们困窘的统治者 [leader_name] 带着撤退了. 您的城市安全了!"
+PHRASE_players_city_saved_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_players_city_saved_title 			"N/A"
+PHRASE_CONDENSED_players_city_saved_initial_announcement 	"来自 [city_name] 的入侵军队被打败了!"
+PHRASE_CONDENSED_players_city_saved_no_reason	  		"N/A"
+
+;**************Player's conquest fails***********
+PHRASE_players_conquest_fails_title 				"侵略 [city_name] 的军队被打败了"
+PHRASE_players_conquest_fails_initial_announcement 		"可怕的消息, [player_name]. 您的军队在 [nationality] 的城市 [city_name] 被打败了. 它的统治者 [leader_name], 已经挫败了您的侵略."
+PHRASE_players_conquest_fails_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_players_conquest_fails_title 				"N/A"
+PHRASE_CONDENSED_players_conquest_fails_initial_announcement 	"您试图征服 [city_name] 的行动已经失败了!"
+PHRASE_CONDENSED_players_conquest_fails_no_reason	  		"N/A"
+
+;**************Player's conquest bribed***********
+PHRASE_players_conquest_bribed_title 					"[city_name] 贿赂了您的征服部队"
+PHRASE_players_conquest_bribed_initial_announcement 			"顺利的消息, [player_name]. 您的军队已经接受了 [nationality] 的城市 [city_name] 的 [amount] 现金贿赂."
+PHRASE_players_conquest_bribed_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_players_conquest_bribed_title 				"N/A"
+PHRASE_CONDENSED_players_conquest_bribed_initial_announcement 	"您试图征服 [city_name] 的军队被贿赂了!"
+PHRASE_CONDENSED_players_conquest_bribed_no_reason	  		"N/A"
+
+;**************Player's conquest surrender***********
+PHRASE_players_conquest_surrender_title 					"[city_name] 投降了!"
+PHRASE_players_conquest_surrender_initial_announcement 		"快乐的消息, [player_name]. 您的军队使 [nationality] 的城市 [city_name] 惧怕, 因而向您投降了. 它的统治者 [leader_name] 谦恭地恳求您的宽恕!"
+PHRASE_players_conquest_surrender_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_players_conquest_surrender_title 			"N/A"
+PHRASE_CONDENSED_players_conquest_surrender_initial_announcement 	"您征服了 [city_name] !"
+PHRASE_CONDENSED_players_conquest_surrender_no_reason	  		"N/A"
+
+;**************Strike unsuccessful***********
+PHRASE_strike_unsuccessful_title 					"打击 [rival_city_name] 的联合行动失败"
+PHRASE_strike_unsuccessful_initial_announcement 		"无与伦比的 [player_name], 我们已竭尽所能, 但是您命令打击 [rival_city_name] 的行动失败了. 我, [city_name] 的 [leader_name], 已经命令我的残兵败将回家了."
+PHRASE_strike_unsuccessful_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_strike_unsuccessful_title 			"N/A"
+PHRASE_CONDENSED_strike_unsuccessful_initial_announcement 	"打击 [rival_city_name] 的行动失败了!"
+PHRASE_CONDENSED_strike_unsuccessful_no_reason	  		"N/A"
+
+;**************Army returns***********
+PHRASE_army_returns_title 						"士兵从 [city_name] 返回"
+PHRASE_army_returns_initial_announcement 				"您好, [player_name]. 您的勇士们已经从 [city_name] 回来了, 他们满身伤痛, 疲惫不堪."
+PHRASE_army_returns_no_reason	  					"N/A"
+
+PHRASE_CONDENSED_army_returns_title 				"N/A"
+PHRASE_CONDENSED_army_returns_initial_announcement 		"您的士兵已经从 [city_name] 返回."
+PHRASE_CONDENSED_army_returns_no_reason	  			"N/A"
+
+;************* Strike *************
+PHRASE_strike_force_sets_forth_title 				"攻击军队出发去 [rival_city_name]"
+PHRASE_strike_force_sets_forth_initial_announcement 		"军号已经吹响, [player_name]. 我, [city_name] 的 [leader_name], 已经按照您的命令, 派我的部队去进攻 [rival_nationality] 的城市 [rival_city_name]. 我们希望获得胜利, 这样我们就能给您带来荣光!"
+PHRASE_strike_force_sets_forth_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_strike_force_sets_forth_title 				"N/A"
+PHRASE_CONDENSED_strike_force_sets_forth_initial_announcement 	"[city_name] 的军队已经出发去进攻 [rival_city_name]."
+PHRASE_CONDENSED_strike_force_sets_forth_no_reason	  		"N/A"
+
+;TROOPS ON LOAN EVENT TEXT
+
+;**************Support Troops Arrive*****************
+PHRASE_support_troops_arrive_title 					    	"[city_name] 的军队到达"
+PHRASE_support_troops_arrive_initial_announcement 			"您好, [player_name]. 现在, 我, [city_name] 的 [leader_name], 派到您的城市去帮助您的部队 已经到岗了."
+PHRASE_support_troops_arrive_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_support_troops_arrive_title 				"N/A"
+PHRASE_CONDENSED_support_troops_arrive_initial_announcement 	"[city_name] 的援助部队到了"
+PHRASE_CONDENSED_support_troops_arrive_no_reason	  		"N/A"
+
+;**************Support Troops Depart*****************
+PHRASE_support_troops_depart_title 					    	"军队返回 [city_name]"
+PHRASE_support_troops_depart_initial_announcement 			"您好, [player_name]. 我, [city_name] 的 [leader_name], 已经命令我的部队回家. 您的城市没有出现任何军事事件, 我却需要他们回防我的城市."
+PHRASE_support_troops_depart_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_support_troops_depart_title 				"N/A"
+PHRASE_CONDENSED_support_troops_depart_initial_announcement 	"[city_name] 的军队已经离开"
+PHRASE_CONDENSED_support_troops_depart_no_reason	  		"N/A"
+
+;**************Support Troops Defeated*****************
+PHRASE_support_troops_defeated_title 					"雇佣军被打败了!"
+PHRASE_support_troops_defeated_initial_announcement 			"可怕的消息, [player_name]. 从其它城市雇佣来的军队被打败了!"
+PHRASE_support_troops_defeated_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_support_troops_defeated_title 				"N/A"
+PHRASE_CONDENSED_support_troops_defeated_initial_announcement 	"雇佣军被打败了."
+PHRASE_CONDENSED_support_troops_defeated_no_reason	  		"N/A"
+
+
+;**************Rival Emissary Arrives*****************
+PHRASE_rival_emissary_title				"外交使者到达"
+PHRASE_rival_emissary_initial				"请原谅我的打扰, [player_name]. 来自 [city_name] 的使者, 请求进入您的城市. 他的目的可能是和平的, 或者也可能给您的城市带来威胁."
+PHRASE_rival_emissary_no_reason			"N/A"
+
+PHRASE_CONDENSED_rival_emissary_title		"外交使者到达"
+PHRASE_CONDENSED_rival_emissary_initial		"[city_name] 的使者请求进城."
+PHRASE_CONDENSED_rival_emissary_no_reason		"N/A"	
+
+
+;PANHELLENIC GAMES EVENTS
+
+
+;PYTHIAN GAMES
+;**************Pythian Games Begin*****************
+
+;**************Can't participate in Pythian Games*****
+
+;**************Pythian Games conclude***************
+
+;OLYMPIAN
+
+;HOME GAMES
+;*****************Home Games Begin*****************
+
+;******************Home Games Cancelled***************
+
+;**************Home Games conclude***************
+;POPULATION MILESTONES
+;******************Population 100***************
+PHRASE_population_100_title						"人口里程碑： 100 人"
+PHRASE_population_100_initial_announcement			"您年轻的城镇幸运地有了 100 个居民."
+PHRASE_population_100_no_reason					"N/A"
+
+PHRASE_CONDENSED_population_100_title				"N/A"
+PHRASE_CONDENSED_population_100_initial_announcement		"城市人口达到 100."
+PHRASE_CONDENSED_population_100_no_reason				"N/A"
+
+;******************Population 500***************
+PHRASE_population_500_title						"人口里程碑： 500 人"
+PHRASE_population_500_initial_announcement			"祝贺您! 您的城市人口首次达到 500 人."
+PHRASE_population_500_no_reason					"N/A"
+
+PHRASE_CONDENSED_population_500_title				"N/A"
+PHRASE_CONDENSED_population_500_initial_announcement		"城市人口达到 500."
+PHRASE_CONDENSED_population_500_no_reason				"N/A"
+
+;******************Population 1000***************
+PHRASE_population_1000_title						"人口里程碑： 1000 人"
+PHRASE_population_1000_initial_announcement			"人们不断地聚集到您的城市, 人口首次达到 1000 人."
+PHRASE_population_1000_no_reason					"N/A"
+
+PHRASE_CONDENSED_population_1000_title				"N/A"
+PHRASE_CONDENSED_population_1000_initial_announcement		"城市人口达到 1000."
+PHRASE_CONDENSED_population_1000_no_reason			"N/A"
+
+;******************Population 2000***************
+PHRASE_population_2000_title						"人口里程碑： 2000 人"
+PHRASE_population_2000_initial_announcement			"对于城市来说, 这确实是值得骄傲的一天. 人口首次达到了 2000 人."
+PHRASE_population_2000_no_reason					"N/A"
+
+PHRASE_CONDENSED_population_2000_title				"N/A"
+PHRASE_CONDENSED_population_2000_initial_announcement		"城市人口达到 2000."
+PHRASE_CONDENSED_population_2000_no_reason			"N/A"
+
+;******************Population 3000***************
+PHRASE_population_3000_title						"人口里程碑： 3000 人"
+PHRASE_population_3000_initial_announcement			"您的城市人口首次达到 3000 人. 做得好!"
+PHRASE_population_3000_no_reason					"N/A"
+
+PHRASE_CONDENSED_population_3000_title				"N/A"
+PHRASE_CONDENSED_population_3000_initial_announcement		"城市人口达到 3000."
+PHRASE_CONDENSED_population_3000_no_reason			"N/A"
+
+;******************Population 5000***************
+PHRASE_population_5000_title						"人口里程碑： 5000 人"
+PHRASE_population_5000_initial_announcement			"现在有整整 5000 人以您的城市为家. 随着城市规模不断壮大, 城市在整个国家内的地位 也在不断上升."
+PHRASE_population_5000_no_reason					"N/A"
+
+PHRASE_CONDENSED_population_5000_title				"N/A"
+PHRASE_CONDENSED_population_5000_initial_announcement		"城市人口达到 5000."
+PHRASE_CONDENSED_population_5000_no_reason			"N/A"
+
+;******************Population 10000***************
+PHRASE_population_10000_title						"人口里程碑： 10000 人"
+PHRASE_population_10000_initial_announcement			"越来越多的人正在向这里移居! 现在您的城市人口已经达到 10000, 这标志着城市发展的巨大成功."
+PHRASE_population_10000_no_reason					"N/A"
+
+PHRASE_CONDENSED_population_10000_title				"N/A"
+PHRASE_CONDENSED_population_10000_initial_announcement	"城市人口达到 10000."
+PHRASE_CONDENSED_population_10000_no_reason			"N/A"
+
+;******************Population 15000***************
+PHRASE_population_15000_title						"人口里程碑： 15000 人"
+PHRASE_population_15000_initial_announcement			"现在有 15000 居民住在您的城市里!"
+PHRASE_population_15000_no_reason					"N/A"
+
+PHRASE_CONDENSED_population_15000_title				"N/A"
+PHRASE_CONDENSED_population_15000_initial_announcement	"城市人口达到 15000."
+PHRASE_CONDENSED_population_15000_no_reason			"N/A"
+
+;******************Population 20000***************
+PHRASE_population_20000_title						"人口里程碑： 20000 人"
+PHRASE_population_20000_initial_announcement			"有了 20000 人, 您的城市成为整个国家内 最大的城市之一."
+PHRASE_population_20000_no_reason					"N/A"
+
+PHRASE_CONDENSED_population_20000_title				"N/A"
+PHRASE_CONDENSED_population_20000_initial_announcement	"城市人口达到 20000."
+PHRASE_CONDENSED_population_20000_no_reason			"N/A"
+
+;******************Population 25000***************
+PHRASE_population_25000_title						"人口里程碑： 25000 人"
+PHRASE_population_25000_initial_announcement			"谁说的, 您永远不会达到这个人口数? 整整 25000 人, 把您光荣的城市当作自己的家, 依靠您得到工作\ 食物\ 保护和其它生活必需的东西."
+PHRASE_population_25000_no_reason					"N/A"
+
+PHRASE_CONDENSED_population_25000_title				"N/A"
+PHRASE_CONDENSED_population_25000_initial_announcement	"城市人口达到 25000."
+PHRASE_CONDENSED_population_25000_no_reason			"N/A"
+
+;***********COMMEMORATIVE MONUMENT EVENT TEXT******************
+
+;***********Happiness monument available**************
+
+;***********Colony monument available**************
+
+;***********Victory monument available**************
+
+;***********Flood disaster triggered****************
+
+PHRASE_flood_title						"洪水!"
+PHRASE_flood_initial						"无法扼制的洪水淹没了河岸边的土地!"
+PHRASE_flood_phrase_by_hero					"愤怒的祖先召唤了一条河龙袭击土地! 大洪水会造成许多惨剧和破坏!"
+PHRASE_flood_phrase_no_reason					"河水上涨得比以前都高, 溢出河岸变成大洪水! 大水会在您的城市中引起混乱!"
+
+PHRASE_CONDENSED_flood_title					"N/A"
+PHRASE_CONDENSED_flood_phrase_by_hero			"一条河龙引起了一场洪水, 冲刷着土地."
+PHRASE_CONDENSED_flood_phrase_no_reason			"河流洪水泛滥."
+
+;***********Earthquake disaster triggered****************
+
+PHRASE_quake_title						"地震!"
+PHRASE_quake_initial						"一场可怕的地震, 毁坏了您稳定的城市!"
+PHRASE_quake_phrase_by_hero					"祖先们都愤怒了, 他们的暴怒 引起了大地的震颤! 您的城市处于危险当中!"
+PHRASE_quake_phrase_no_reason					"大地在暴怒地摇动, 把您城市中的建筑物震毁!"
+
+PHRASE_CONDENSED_quake_title					"地震!"
+PHRASE_CONDENSED_quake_phrase_by_hero			"您的城市忽视了祭祀祖先们, 最终引发了地震."
+PHRASE_CONDENSED_quake_phrase_no_reason			"地震摇晃撕裂着整个大地."
+
+;***********Drought disaster triggered****************
+
+PHRASE_drought_title						"干旱!"
+PHRASE_drought_initial						"无情的太阳烤炙着大地, 引发干旱, 摧残着您的农作物!"
+PHRASE_drought_phrase_by_hero					"愤怒的祖先诅咒了您的作物! 或许在饥饿的时候, 您才能注意到祖先们的召唤!"
+PHRASE_drought_phrase_no_reason				"可怕的干旱导致您的作物枯萎了!"
+
+PHRASE_CONDENSED_drought_title				"干旱!"
+PHRASE_CONDENSED_drought_phrase_by_hero			"您的城市忽视了祭祀祖先们, 导致了干旱的发生."
+PHRASE_CONDENSED_drought_phrase_no_reason			"干旱已经毁坏了您的庄稼."
+
+;*****************MYTHOLOGICAL EVENT MESSAGES**************************************
+
+;************************WOOING AND JEALOUSY*************************************
+
+;********Zeus*******************
+
+;********Poseidon*******************
+
+;********Hades*******************
+
+;********Demeter*******************
+
+;********Athena*******************
+
+;********Apollo*******************
+
+;********Artemis*******************
+
+;********Ares*******************
+
+;********Hephaestus*******************
+
+;********Aphrodite*******************
+
+;********Hermes*******************
+
+;********Dionysus*******************
+
+;******************************************HERO INVASIONS****************************************
+;********Huang Di invades****************************************
+PHRASE_huangdi_invades_title					"黄帝入侵"
+PHRASE_huangdi_invades_spy_report				"最令人同情的 [player_name], 密探瑟瑟发抖, 他们预见了可怕的情形! 强大的黄帝将在一年内进攻您的城市!"
+PHRASE_huangdi_invades_city_attacked_alert  		"我是黄帝, 你冒犯了我! 因此现在你应该为自己的傲慢 付出代价! 射出去的箭就收不回来了."
+PHRASE_huangdi_invades_reason  	 	 		"N/A"
+PHRASE_huangdi_invades_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_huangdi_invades_title 			"N/A"
+PHRASE_CONDENSED_huangdi_invades_spy_report		"密探预见黄帝将在一年内进攻你的城市."
+PHRASE_CONDENSED_huangdi_invades_city_attacked_alert  "我是伟大的黄帝. 你冒犯了我, 而现在你应该接受惩罚!"
+PHRASE_CONDENSED_huangdi_invades_reason  	 		"N/A"
+PHRASE_CONDENSED_huangdi_invades_no_reason  	 	""
+
+;********Sun Tzu invades****************************************
+PHRASE_suntzu_invades_title 					"孙子入侵"
+PHRASE_suntzu_invades_spy_report				"最高贵的 [player_name], 密探们带回了 会让您的士兵们害怕得 发抖的坏消息! 足智多谋的孙子将在一年内进攻您的城市!"
+PHRASE_suntzu_invades_city_attacked_alert  		"你与我为敌, 我要用我全部的谋略 摧毁你那可怜的城市."
+PHRASE_suntzu_invades_reason  	 	 		"N/A"
+PHRASE_suntzu_invades_no_reason	  	 		"N/A"
+PHRASE_suntzu_invades_disembarked_alert  	    		"N/A"
+
+PHRASE_CONDENSED_suntzu_invades_title 			"N/A"
+PHRASE_CONDENSED_suntzu_invades_spy_report		"密探预见孙子将在一年内进攻你的城市."
+PHRASE_CONDENSED_suntzu_invades_city_attacked_alert  	"你与我为敌!"
+PHRASE_CONDENSED_suntzu_invades_reason  	 	 	"N/A"
+PHRASE_CONDENSED_suntzu_invades_no_reason  	 	""
+PHRASE_CONDENSED_suntzu_invades_disembarked_alert  	"N/A"
+
+;********Guan Di invades****************************************
+PHRASE_guandi_invades_title 					"关公入侵"
+PHRASE_guandi_invades_spy_report				"您好, [player_name]. 我们收到了最令人不安地报告： 武圣人关公将在一年内进攻您的城市!"
+PHRASE_guandi_invades_city_attacked_alert  		"你惹起了我的怒火, 你这个软弱可怜的领导者! 你根本不是我的对手."
+PHRASE_guandi_invades_reason  	 	 		"N/A"
+PHRASE_guandi_invades_no_reason	  	 		"N/A"
+PHRASE_guandi_invades_disembarked_alert  	    		"N/A"
+
+PHRASE_CONDENSED_guandi_invades_title 			"N/A"
+PHRASE_CONDENSED_guandi_invades_spy_report		"密探报告说关公将在一年内进攻你的城市."
+PHRASE_CONDENSED_guandi_invades_city_attacked_alert  	"你惹起了我的怒火!"
+PHRASE_CONDENSED_guandi_invades_reason  	 	 	"N/A"
+PHRASE_CONDENSED_guandi_invades_no_reason  	 	""
+PHRASE_CONDENSED_guandi_invades_disembarked_alert  	"N/A"
+
+;********Sun Wu Kong invades****************************************
+PHRASE_sunwukong_invades_title 				"孙悟空入侵"
+PHRASE_sunwukong_invades_spy_report				"不幸就要降临到您的头上, [player_name]. 密探听说讨厌的孙悟空对您不满意, 要把愤怒发泄到您的城市! 他将在一年内进攻你的城市!"
+PHRASE_sunwukong_invades_city_attacked_alert  		"你妨碍了我的计划, 我要给你个教训! 我是美猴王, 没有一个城市能抵得住我的愤怒!"
+PHRASE_sunwukong_invades_reason  	 	 		"N/A"
+PHRASE_sunwukong_invades_no_reason	  	 		"N/A"
+PHRASE_sunwukong_invades_disembarked_alert  	    	"N/A"
+
+PHRASE_CONDENSED_sunwukong_invades_title 				"N/A"
+PHRASE_CONDENSED_sunwukong_invades_spy_report			"密探预见到孙悟空将在一年内进攻你的城市."
+PHRASE_CONDENSED_sunwukong_invades_city_attacked_alert  	"你妨碍了我的计划, 我要给你个教训!"
+PHRASE_CONDENSED_sunwukong_invades_reason  	 	 	"N/A"
+PHRASE_CONDENSED_sunwukong_invades_no_reason  	 		""
+PHRASE_CONDENSED_sunwukong_invades_disembarked_alert  	"N/A"
+
+
+;*******************HERO ARRIVES******************************************
+;Nu Wa, Shen Nong, Huang Di, Confucius, Sun Tzu, Mencius, Guan Di, Zao Jun, Xi Wang Mu, Guan Yin, Bodhidharma, Sun Wu Kong
+
+;**********Nu Wa Has Arrived******************************
+PHRASE_nuwa_arrives_title 					"女娲降临"
+PHRASE_nuwa_arrives_initial_announcement 			"您使祖先高兴! 我觉得您值得相处, 我愿意为您做任何事."
+PHRASE_nuwa_arrives_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_nuwa_arrives_title 			"N/A"
+PHRASE_CONDENSED_nuwa_arrives_initial_announcement 	"女娲降临您的城市!"
+PHRASE_CONDENSED_nuwa_arrives_no_reason	  		"N/A"
+
+;**********Shen Nong Has Arrived******************************
+PHRASE_shennong_arrives_title 				"神农降临"
+PHRASE_shennong_arrives_initial_announcement 		"您使祖先高兴! 我觉得您值得相处, 我愿意为您做任何事."
+PHRASE_shennong_arrives_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_shennong_arrives_title 				"N/A"
+PHRASE_CONDENSED_shennong_arrives_initial_announcement 	"神农降临您的城市!"
+PHRASE_CONDENSED_shennong_arrives_no_reason	  		"N/A"
+
+;**********Huang Di Has Arrived******************************
+PHRASE_huangdi_arrives_title 					"黄帝降临"
+PHRASE_huangdi_arrives_initial_announcement 		"您使祖先高兴! 我觉得您值得相处, 我愿意为您做任何事."
+PHRASE_huangdi_arrives_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_huangdi_arrives_title 				"N/A"
+PHRASE_CONDENSED_huangdi_arrives_initial_announcement 	"黄帝降临您的城市!"
+PHRASE_CONDENSED_huangdi_arrives_no_reason	  		"N/A"
+
+;**********Confucius Has Arrived******************************
+PHRASE_confucius_arrives_title 					"孔子降临"
+PHRASE_confucius_arrives_initial_announcement 			"您对儒教表示了极大的敬意! 我会帮您改善您的城市."
+PHRASE_confucius_arrives_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_confucius_arrives_title 				"N/A"
+PHRASE_CONDENSED_confucius_arrives_initial_announcement 	"孔圣人在此!"
+PHRASE_CONDENSED_confucius_arrives_no_reason	  		"N/A"
+
+;**********Sun Tzu Has Arrived******************************
+PHRASE_suntzu_arrives_title 						"孙子降临"
+PHRASE_suntzu_arrives_initial_announcement 			"您对我的学说表示了极大的敬意! 无论是什么艰巨的任务, 我都会替您完成!"
+PHRASE_suntzu_arrives_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_suntzu_arrives_title 				"N/A"
+PHRASE_CONDENSED_suntzu_arrives_initial_announcement 		"伟大的军事家孙子在此!"
+PHRASE_CONDENSED_suntzu_arrives_no_reason	  			"N/A"
+
+;**********Mencius Has Arrived******************************
+PHRASE_mencius_arrives_title 						"孟子降临"
+PHRASE_mencius_arrives_initial_announcement 			"您对我的学说表示了极大的敬意! 我会帮您解决您遇到的难题!"
+PHRASE_mencius_arrives_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_mencius_arrives_title 				"N/A"
+PHRASE_CONDENSED_mencius_arrives_initial_announcement 	"亚圣孟子在此!"
+PHRASE_CONDENSED_mencius_arrives_no_reason	  		"N/A"
+
+;**********Guan Di Has Arrived****************************** Guan Di, Zao Jun, Xi Wang Mu,
+PHRASE_guandi_arrives_title 						"关公降临"
+PHRASE_guandi_arrives_initial_announcement 			"我是武圣人. 我觉得您值得相处, 我愿意为您做任何事."
+PHRASE_guandi_arrives_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_guandi_arrives_title 				"N/A"
+PHRASE_CONDENSED_guandi_arrives_initial_announcement 		"关公降临您的城市!"
+PHRASE_CONDENSED_guandi_arrives_no_reason	  			"N/A"
+
+;**********Zao Jun arrives******************************
+PHRASE_zaojun_arrives_title 						"灶君降临"
+PHRASE_zaojun_arrives_initial_announcement 			"我是灶王爷. 我觉得您值得相处, 我愿意为您做任何事."
+PHRASE_zaojun_arrives_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_zaojun_arrives_title 				"N/A"
+PHRASE_CONDENSED_zaojun_arrives_initial_announcement 		"灶君降临您的城市!"
+PHRASE_CONDENSED_zaojun_arrives_no_reason	  			"N/A"
+
+;**********Xi Wang Mu arrives******************************
+PHRASE_xiwangmu_arrives_title 					"西王母降临"
+PHRASE_xiwangmu_arrives_initial_announcement 			"我是西王母. 我觉得您值得相处, 我愿意为您做任何事."
+PHRASE_xiwangmu_arrives_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_xiwangmu_arrives_title 				"N/A"
+PHRASE_CONDENSED_xiwangmu_arrives_initial_announcement 	"西王母降临您的城市!"
+PHRASE_CONDENSED_xiwangmu_arrives_no_reason	  		"N/A"
+
+;**********Guan Yin Has Arrived******************************
+PHRASE_guanyin_arrives_title 						"观音降临"
+PHRASE_guanyin_arrives_initial_announcement 			"您对佛教表示了极大的敬意! 我会教您的市民仁慈的待人之道."
+PHRASE_guanyin_arrives_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_guanyin_arrives_title 				"N/A"
+PHRASE_CONDENSED_guanyin_arrives_initial_announcement 	"温柔的观音在此!"
+PHRASE_CONDENSED_guanyin_arrives_no_reason	  		"N/A"
+
+;**********Bodhidharma Has Arrived******************************
+PHRASE_bodhidharma_arrives_title 					"达摩祖师降临"
+PHRASE_bodhidharma_arrives_initial_announcement 		"您对佛教表示了极大的敬意! 我会教给您茶道, 并且帮助您保卫您的城市."
+PHRASE_bodhidharma_arrives_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_bodhidharma_arrives_title 			"N/A"
+PHRASE_CONDENSED_bodhidharma_arrives_initial_announcement 	"达摩祖师在此!"
+PHRASE_CONDENSED_bodhidharma_arrives_no_reason	  		"N/A"
+
+;**********Sun Wu Kong Has Arrived******************************
+PHRASE_sunwukong_arrives_title 					"孙悟空降临"
+PHRASE_sunwukong_arrives_initial_announcement 			"我是美猴王! 您对佛教表示了极大的敬意, 佛祖让我到这儿来帮助您."
+PHRASE_sunwukong_arrives_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_sunwukong_arrives_title 				"N/A"
+PHRASE_CONDENSED_sunwukong_arrives_initial_announcement 	"斗战胜佛孙悟空在此!"
+PHRASE_CONDENSED_sunwukong_arrives_no_reason	  		"N/A"
+
+;**********Spy Results Phrases******************************
+PHRASE_spy_sabotage_result_title			"您的密探破坏了 [city_name]"
+PHRASE_spy_sabotage_torches				"房子的房梁是树干做的. 您的密探已经严重破坏了 [city_name] 的 [building_name] 的房梁."
+PHRASE_spy_sabotage_production			"一只蚂蚁也可以破坏一道堤坝. 您的密探已经破坏了 [city_name] 的 [building_name] 的生产."
+PHRASE_spy_sabotage_stocks				"覆巢之下, 岂有完卵. 您的密探破坏了 [city_name] 的 [building_name] 的许多食物储藏."
+PHRASE_spy_sabotage_steal				"树大招风, 财大招偷. 您的密探在 [city_name] 的 [building_name] 偷取货物."
+PHRASE_spy_sabotage_nothing				"您的密探不能成功地执行自己的任务."
+PHRASE_spy_sabotage_no_reason				"N/A"
+
+PHRASE_CONDENSED_spy_sabotage_result_title	"您的密探破坏了 [city_name]"
+PHRASE_CONDENSED_spy_sabotage_torches		"您的密探已经严重破坏了 [city_name] 的 [building_name]."
+PHRASE_CONDENSED_spy_sabotage_production		"您的密探已经破坏了 [city_name] 的 [building_name]."
+PHRASE_CONDENSED_spy_sabotage_stocks		"您的密探破坏了 [city_name] 的 [building_name] 的许多食物储藏."
+PHRASE_CONDENSED_spy_sabotage_steal			"您的密探在 [city_name] 的 [building_name] 偷取货物."
+PHRASE_CONDENSED_spy_sabotage_nothing		"您的密探不能成功地执行自己的任务."
+PHRASE_CONDENSED_spy_sabotage_no_reason		"N/A"
+
+PHRASE_spy_sabotage_history				"破坏 [city_name]"
+
+;************************QUESTS*************************************
+
+PHRASE_spy_info_dip_gathered_title			"[rival_city_name] 的外交报告"
+PHRASE_spy_info_gathered_title			"[rival_city_name] 的密探报告"
+PHRASE_spy_info_hero_spawned				"派往 [rival_city_name] 的密探报告说: 那里出现了一个传说中的英雄!"
+PHRASE_spy_info_military_dispatched			"您的密探报告说 [rival_city_name] 已经派出了一支大军!"
+PHRASE_spy_info_invaders_arrived			"密探报告说侵略 [rival_city_name] 的部队已经到达!"
+PHRASE_spy_info_defenders_arrived			"密探报告说 [rival_city_name] 的盟友的军队, 已经到达那里帮他们守城!"
+PHRASE_spy_info_emissary_arrived			"您的密探报告说 [city_name] 使者已经到达 [rival_city_name]!"
+PHRASE_spy_info_emissary_dispatched			"最近的报告中, 您的密探说 [rival_city_name] 已经派出一名使者去 [city_name]!"
+PHRASE_spy_info_spy_dispatched			"[rival_city_name] 已经派出一名密探去 [city_name]!"				
+
+PHRASE_CONDENSED_spy_info_dip_gathered_title	"外交报告"
+PHRASE_CONDENSED_spy_info_gathered_title		"密探报告"
+PHRASE_CONDENSED_spy_info_hero_spawned		"一个传说中的英雄出现在 [rival_city_name]!"
+PHRASE_CONDENSED_spy_info_military_dispatched	"[rival_city_name] 已经派出一支军队!"
+PHRASE_CONDENSED_spy_info_invaders_arrived	"入侵军队到达 [rival_city_name]!"
+PHRASE_CONDENSED_spy_info_defenders_arrived	"部队到达帮助保卫 [rival_city_name]!"
+PHRASE_CONDENSED_spy_info_emissary_arrived	"一名 [city_name] 的使者到达 [rival_city_name]!"
+PHRASE_CONDENSED_spy_info_emissary_dispatched	"[rival_city_name] 派出一名使者去 [city_name]!"
+PHRASE_CONDENSED_spy_info_spy_dispatched		"[rival_city_name] 派出一名密探去 [city_name]!"
+
+
+;********Ally destroyed by [rival_city_name]****************************
+PHRASE_ally_destroyed_by_rival_title 			"[city_name] 被毁!"
+PHRASE_ally_destroyed_by_rival_initial_announcement 	"可怕的消息, [player_name]!  一个令人尊重的盟友 [city_name] 被 [rival_city_name] 破坏!  这真是个悲伤日子."
+PHRASE_ally_destroyed_by_rival_no_reason	  		"N/A"
+
+PHRASE_CONDENSED_ally_destroyed_by_rival_title 				"N/A"
+PHRASE_CONDENSED_ally_destroyed_by_rival_initial_announcement 	"[rival_city_name] 已经摧毁了 [city_name]."
+PHRASE_CONDENSED_ally_destroyed_by_rival_no_reason	  		"N/A"
+
+;********Vassal destroyed by [rival_city_name]****************************
+PHRASE_vassal_destroyed_by_rival_title 				"[city_name] 被毁!"
+PHRASE_vassal_destroyed_by_rival_initial_announcement 	"可怕的消息, [player_name]. 您的诸候城市 [city_name] 已经被 [rival_city_name] 摧毁! [city_name] 的 [leader_name] 不能再向我们进贡, 当然我们也不能和一座不存在的城市贸易."
+PHRASE_vassal_destroyed_by_rival_no_reason	  		"N/A"
+
+PHRASE_CONDENSED_vassal_destroyed_by_rival_title 			"N/A"
+PHRASE_CONDENSED_vassal_destroyed_by_rival_initial_announcement 	"[rival_city_name] 已经摧毁了 [city_name]."
+PHRASE_CONDENSED_vassal_destroyed_by_rival_no_reason	  		"N/A"
+
+;********Colony devastated by [rival_city_name]****************************
+
+;********Parent city destroyed by [rival_city_name]****************************
+
+;*****************GIFT RECEIVED EVENT MESSAGES**************************************
+;************PHRASE VARIABLES
+;[gift_size] (small, medium, large)
+"modest"
+"generous"
+"extravagant"
+
+
+;********Gift received - money**********
+PHRASE_gift_received_money_title 				"[city_name] 感谢您的现金"
+PHRASE_gift_received_money_initial_announcement 	"[greeting] [player_name]. 您最近送出的现金礼物得到了 [city_name] 的极大赞赏."
+PHRASE_gift_received_money_reason	  			"N/A"
+PHRASE_gift_received_money_no_reason	  		"N/A"
+
+PHRASE_CONDENSED_gift_received_money_title 			"N/A"
+PHRASE_CONDENSED_gift_received_money_initial_announcement 	"[city_name] 感谢您送去现金."
+PHRASE_CONDENSED_gift_received_money_reason	  		"N/A"
+PHRASE_CONDENSED_gift_received_money_no_reason	  		"N/A"
+
+;********Gift received - NEEDS item**********
+PHRASE_gift_received_needs_title 				"[city_name] 感激您送去非常需要的 [itemshort]"
+PHRASE_gift_received_needs_initial_announcement 	"[greeting] [player_name], [city_name] 非常感谢您送去 [gift_size] 礼物 [item], 那正是他们非常需要的东西."
+PHRASE_gift_received_needs_reason	  			"N/A"
+PHRASE_gift_received_needs_no_reason	  		"N/A"
+
+PHRASE_CONDENSED_gift_received_needs_title 			"N/A"
+PHRASE_CONDENSED_gift_received_needs_initial_announcement 	"[city_name] 非常感谢您送去的礼物 [itemshort]."
+PHRASE_CONDENSED_gift_received_needs_reason	  		"N/A"
+PHRASE_CONDENSED_gift_received_needs_no_reason 			"N/A"
+
+;********Gift received - DOESN'T NEED item**********
+PHRASE_gift_received_doesnt_need_title 				"[city_name] 对不是特别需要的礼物表示谢意"
+PHRASE_gift_received_doesnt_need_initial_announcement 	"最值得尊敬的 [player_name].  我, [city_name] 的 [leader_name], 已经收到了您的礼物 [item]. 我们 [city_name] 并不是特别需要这种东西, 但是我们还是要感谢您的好意."
+PHRASE_gift_received_doesnt_need_reason	  			"N/A"
+PHRASE_gift_received_doesnt_need_no_reason	  		"N/A"
+
+PHRASE_CONDENSED_gift_received_doesnt_need_title 			"N/A"
+PHRASE_CONDENSED_gift_received_doesnt_need_initial_announcement 	"[city_name] 感谢您的礼物 [item]."
+PHRASE_CONDENSED_gift_received_doesnt_need_reason	  		"N/A"
+PHRASE_CONDENSED_gift_received_doesnt_need_no_reason	  		"N/A"
+
+;********Gift received - PRODUCES item**********
+PHRASE_gift_received_produces_title 			"[city_name] 对自己能生产的礼物表示谢意"
+PHRASE_gift_received_produces_initial_announcement 	"真是个快乐的日子! [player_name]. 我, [city_name] 的 [leader_name], 感谢您送来令人愉快的礼物 [itemshort]. 当然您应该知道, 我们自己可以生产这种物品. 但是我们那通常都沉默寡言的商业大臣 居然露出了笑容, 我因此感谢您."
+PHRASE_gift_received_produces_reason	  		"N/A"
+PHRASE_gift_received_produces_no_reason	  		"N/A"
+
+PHRASE_CONDENSED_gift_received_produces_title 				"N/A"
+PHRASE_CONDENSED_gift_received_produces_initial_announcement 	"[city_name] 告知收到您的礼物, 尽管他们并不需要那种物品."
+PHRASE_CONDENSED_gift_received_produces_reason	  			"N/A"
+PHRASE_CONDENSED_gift_received_produces_no_reason	  		"N/A"
+
+//********Gift received - REJECTED**********
+PHRASE_gift_received_rejected_title						"[city_name] 拒绝您友好的礼物"
+PHRASE_gift_received_rejected_initial_announcement			"没礼貌的 [city_name] 的 [leader_name] 轻率地拒绝了您的礼物!"
+PHRASE_gift_received_rejected_reason					"N/A"
+PHRASE_gift_received_rejected_no_reason					"N/A"
+
+PHRASE_CONDENSED_gift_received_rejected_title				"[city_name] 拒绝您友好的礼物"
+PHRASE_CONDENSED_gift_received_rejected_initial_announcement	"邪恶的 [city_name] 的 [leader_name] 拒绝了您的礼物!"
+PHRASE_CONDENSED_gift_received_rejected_reason				"N/A"
+PHRASE_CONDENSED_gift_received_rejected_no_reason			"N/A"
+
+;*****************Formerly MESS_FIRE, //111
+PHRASE_fire_title 					"城中发生火灾!"
+PHRASE_fire_initial_announcement 			"坏运气降临到我们头上了, [player_name]! 城中发生了火灾! 希望我们的巡视员 能够在火势蔓延开以前扑灭大火."
+PHRASE_fire_no_reason	  				""
+
+PHRASE_CONDENSED_fire_title 				"N/A"
+PHRASE_CONDENSED_fire_initial_announcement 	"城中发生火灾."
+PHRASE_CONDENSED_fire_no_reason	  		"N/A"
+
+;*******************Formerly	MESS_COLLAPSE,		//112
+PHRASE_collapsed_building_title 				"建筑物倒塌!"
+PHRASE_collapsed_building_initial_announcement 		"尊贵的 [player_name], 一栋建筑物倒塌, 变成了废墟. 您应该在那个地区 建造更多的巡视员塔楼, 避免将来再次发生不幸."
+PHRASE_collapsed_building_no_reason	  			""
+
+PHRASE_CONDENSED_collapsed_building_title 			"N/A"
+PHRASE_CONDENSED_collapsed_building_initial_announcement 	"城中的一栋建筑物倒塌了."
+PHRASE_CONDENSED_collapsed_building_no_reason	  		"N/A"
+	
+;*******************Formerly	MESS_UNNAVIGABLE,					//114
+PHRASE_unnavigable_title 					"船只触礁"
+PHRASE_unnavigable_initial_announcement 			"最高贵的 [player_name], 一艘装满货物的商船触礁了. 它周围的水域非常难行驶."
+PHRASE_unnavigable_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_unnavigable_title 				"N/A"
+PHRASE_CONDENSED_unnavigable_initial_announcement 	"一艘商船触礁了."
+PHRASE_CONDENSED_unnavigable_no_reason	  		"N/A"
+	
+;*******************Formerly	MESS_STILL_IN_DEBT,					//121
+PHRASE_still_in_debt_title 					"债务周年"
+PHRASE_still_in_debt_initial_announcement 		"高贵的 [player_name], 又一年过去了, 而您仍然处于负债状态. 您的工人们吵着要拿到自己的工资, 如果您不能快点摆脱债务, 您就会变得非常不得人心! 有钱就是龙; 无钱就是虫."
+PHRASE_still_in_debt_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_still_in_debt_title 			"N/A"
+PHRASE_CONDENSED_still_in_debt_initial_announcement 	"一年过去了, 而您仍然处于负债状态."
+PHRASE_CONDENSED_still_in_debt_no_reason	  		"N/A"
+
+;MESS_INVASION_ENEMY,				//122 this is for one of the pumpkin attacks cheats, and shouldn't be needed.
+
+; mrg 5-19-2000 MESS_UNEMPLOYMENT wasnt being used so these phrases arent being used either
+;*******************Formerly	MESS_UNEMPLOYMENT,				//135
+
+;*******************Formerly	MESS_EMPLOYEES_NEEDED,			//136
+PHRASE_employees_needed_title 					"需要工人"
+PHRASE_employees_needed_initial_announcement 			"值得尊敬的 [player_name], 您的城市需要更多的工人. 如果工作岗位有空缺, 城市服务就会出问题."
+PHRASE_employees_needed_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_employees_needed_title 				"N/A"
+PHRASE_CONDENSED_employees_needed_initial_announcement 	"你的城市需要更多的工人."
+PHRASE_CONDENSED_employees_needed_no_reason	  		"N/A"
+
+;**************THE FOLLOWING TUTORIAL "SPECIAL EVENTS" ARE NOT CURRENTLY NEEDED.  WE'LL SET UP NEW EVENTS TO SUIT THE NEEDS OF THE ZEUS TUTORIAL.
+;MESS_FOOD_OR_FAMINE = 239,			//239 - special event
+;MESS_ENTERTAINMENT,				//240 - special event
+;MESS_TUTORIAL_01,					//241 - special event
+;MESS_TUTORIAL_02,					//242 - special event
+;MESS_TUTORIAL_03,					//243 - special event
+;MESS_TUTORIAL_04,					//244 - special event
+;MESS_TUTORIAL_05,					//245 - special event
+;MESS_TUTORIAL_06,					//246 - special event
+;MESS_TUTORIAL_07,					//247 - special event
+;MESS_TUTORIAL_08,					//248 - special event
+;MESS_TUTORIAL_00,					//249 - special event
+;MESS_BASIC_HEALTH,				    //250 - special event
+;MESS_FIRST_REQUEST,				//251 - special event
+;MESS_FIRST_FIRE,					//252 - special event
+;MESS_FIRST_COLLAPSE,				//253 - special event
+;MESS_HOUSE_LEVEL,					//254 - special event
+;MESS_FIRST_GRANARY,				//255 - special event
+;MESS_MUNICIPAL,					//256 - special event
+;MESS_MONUMENTS_MORE,				//257 - special event
+;MESS_GODS_OF_EGYPT,				//258 - special event
+;MESS_INDUSTRY,					    //259 - special event
+;MESS_FIRST_SCHOOL,				    //260 - special event
+
+;***********OTHER EVENTS NO LONGER NEEDED:
+;MESS_SANDSTORMS,					//264 this is no longer an event, so should be removed
+;MESS_STORMS_AT_SEA,				//265 this is no longer an event, so should be removed
+;MESS_POOR_HEALTH,				//269 this is no longer an event, so should be removed
+;MESS_MINE_COLLAPSES,				//270 this is no longer an event, so should be removed
+;MESS_PIT_FLOODS,					//271 this is no longer an event, so should be removed
+;MESS_TRADE_INCREASED,				//273 This is covered by another event, already in Zeus eventmsg.txt.  The template is still needed in Zeus_MM, however.
+;MESS_TRADE_DECREASED,				//274 This is covered by another event, already in Zeus eventmsg.txt.  The template is still needed in Zeus_MM, however.
+;MESS_PRICE_RISES,					//277 This is covered by another event, already in Zeus eventmsg.txt.  The template is still needed in Zeus_MM, however.
+;MESS_PRICE_FALLS,					//278 This is covered by another event, already in Zeus eventmsg.txt.  The template is still needed in Zeus_MM, however.
+
+;*******************Formerly	MESS_ROME_ROAD_BLOCKED,			//279
+PHRASE_road_rome_blocked_title 					"连接中的道路上有障碍"
+PHRASE_road_rome_blocked_initial_announcement 			"最聪明的 [player_name], 连接您的城市和中国其它部分的道路上有障碍. 如果可能巡视员拆除挡路的建筑物."
+PHRASE_road_rome_blocked_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_road_rome_blocked_title 				"N/A"
+PHRASE_CONDENSED_road_rome_blocked_initial_announcement 	"巡视员必须清除连到中国的主路上的障碍物."
+PHRASE_CONDENSED_road_rome_blocked_no_reason	  		"N/A"
+
+
+;**************THE FOLLOWING TUTORIAL "SPECIAL EVENTS" ARE NOT CURRENTLY NEEDED.
+;MESS_KINGDOM_MAP,				//282 - special event
+;MESS_MONUMENTS,					//283 - special event
+;MESS_TUTORIAL_09,			   		//284 - special event
+;MESS_TUTORIAL_10,			  		//285 - special event
+
+
+	
+;*******************Formerly	MESS_LEGION_RETURNS_BAD,			//287 
+PHRASE_legion_returns_bad_title 					"战败的士兵返回"
+PHRASE_legion_returns_bad_initial_announcement 			"噢伟大的 [player_name], [reason_phrase] 您的一些士兵从战场回来了, 他们疲劳不堪, 还因为在 [city_name] 的战场上打了败仗而惭愧."
+PHRASE_legion_returns_bad_no_reason	  				""
+
+PHRASE_CONDENSED_legion_returns_bad_title 			"N/A"
+PHRASE_CONDENSED_legion_returns_bad_initial_announcement 	"您的一些士兵在 [city_name] 被打败, 现在回来了."
+PHRASE_CONDENSED_legion_returns_bad_no_reason	  		"N/A"
+
+;*******************Formerly	MESS_LEGION_RETURNS_GOOD,	   		//288
+PHRASE_legion_returns_good_title 					"胜利的士兵返回!"
+PHRASE_legion_returns_good_initial_announcement 		"享有声誉的 [player_name], 您的一些在 [city_name] 打了胜仗的士兵回来了. 他们高昂着头, 因胜利而自豪.  [city_name] 的领导者 [leader_name] 被免职了."
+PHRASE_legion_returns_good_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_legion_returns_good_title 			"N/A"
+PHRASE_CONDENSED_legion_returns_good_initial_announcement 	"您那些胜利的士兵从 [city_name] 回来了."
+PHRASE_CONDENSED_legion_returns_good_no_reason	  		"N/A"
+
+;*******************Formerly	MESS_GOT_ENOUGH_DEBENS,			//309 
+PHRASE_got_enough_money_title 					"贡品准备好了"
+PHRASE_got_enough_money_initial_announcement 			"最高贵的 [player_name], 现在您的金库里已经有了足够的钱, 可以向您的领主 [city_name] 的 [leader_name] 进贡现金了."
+PHRASE_got_enough_money_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_got_enough_money_title 				"N/A"
+PHRASE_CONDENSED_got_enough_money_initial_announcement 	"给 [city_name] 的贡品准备好了."
+PHRASE_CONDENSED_got_enough_money_no_reason	  		"N/A"
+
+;*******************Formerly	MESS_GOT_GOODS_STOCKS,			//314 
+PHRASE_got_goods_stocks_title 					"给 [city_name] 的贡品准备好了"
+PHRASE_got_goods_stocks_initial_announcement 			"高贵的 [player_name], 现在您有了足够的货物储备, 可以向您的领主 [city_name] 的 [leader_name] 进贡了."
+PHRASE_got_goods_stocks_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_got_goods_stocks_title 				"N/A"
+PHRASE_CONDENSED_got_goods_stocks_initial_announcement 	"给 [city_name] 的贡品准备好了."
+PHRASE_CONDENSED_got_goods_stocks_no_reason	  		"N/A"
+
+;*******************Formerly	MESS_ROAD_TO_ROME2,				//315
+PHRASE_road_to_rome2_title 						"连接到中国的道路被清除了"
+PHRASE_road_to_rome2_initial_announcement 			"博学的 [player_name],  巡视员已经摧毁了一栋挡在通往城外其它地区的路上的建筑物. 迁出迁入城市的移民和商队现在可以再次出入您的城市了."
+PHRASE_road_to_rome2_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_road_to_rome2_title 				"N/A"
+PHRASE_CONDENSED_road_to_rome2_initial_announcement 		"巡视员清除了挡住进出城市主道路的建筑物."
+PHRASE_CONDENSED_road_to_rome2_no_reason	  			"N/A"	
+	
+;MESS_HEALTH_SYSTEM,				//318 - special event, not needed.
+	
+;*******************Formerly	MESS_DISEASE,					//326
+PHRASE_disease_title 					"疾病暴发"
+PHRASE_disease_initial_announcement 		"[greeting] [player_name], 城中暴发疾病! 采取必要的措施, 比如提供品质更好的食物和建造更多的草药医生诊所, 避免将来再发生这种可怕的事."
+PHRASE_disease_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_disease_title 			"N/A"
+PHRASE_CONDENSED_disease_initial_announcement 	"城市内暴发疾病!"
+PHRASE_CONDENSED_disease_no_reason	  		"N/A"	
+	
+;*******************Formerly	MESS_PLAGUE,					//327
+
+;*************** Lose game phrases *********************
+PHRASE_lose_title				"失败!"
+PHRASE_lose_economical			"再见, [player_name]. 因为您扭转城市负债的局面, 您被没有得到工资的愤怒工人赶出了城市. 记住顺利的时候节约, 才能在困境中生存下去."
+PHRASE_lose_military			"再见, [player_name]. 一支敌人军队两次都完全打败了您, 最终把您赶出了城市. 或许您应该在空闲的时候研究一下 ′孙子兵法′. 甚至是猪都知道老虎和幼兽的区别."
+PHRASE_lose_military_too_big		"再见, [player_name]. 一支不可克服的敌人军队打败了您, 把您赶出了城市. 或许您应该在空闲的时候研究一下 ′孙子兵法′. 甚至是猪都知道老虎和幼兽的区别."
+PHRASE_lose_out_of_time			"太糟了, [player_name] 因为您超过游戏时间限制, 所以您失去了自己的城市. 下一次要更加努力."
+
+PHRASE_CONDENSED_lose_title				""
+PHRASE_CONDENSED_lose_economical			"您失败了, 因为您无法摆脱债务."
+PHRASE_CONDENSED_lose_military				"您失败了因为您被敌人打败了两次."
+PHRASE_CONDENSED_lose_military_too_big			"您失败了因为一个不可克服的敌人打败了您."
+PHRASE_CONDENSED_lose_out_of_time			"您失败了因为您超过了时间限制."
+
+;************* enemy defeats you and you have to pay tribute *********
+PHRASE_enemy_victorious_title 					"战败!"
+PHRASE_enemy_victorious_initial_announcement 			"最高贵的 [player_name], 今天是我们悲哀的日子! 我们城市被肮脏的对手 [city_name] 的 [leader_name] 征服了,我们被迫进贡! 这种苦役的镣铐已经开始让人烦燥了!"
+PHRASE_enemy_victorious_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_enemy_victorious_title 				"N/A"
+PHRASE_CONDENSED_enemy_victorious_initial_announcement 	"您在战斗打败了, 现在必须进贡."
+PHRASE_CONDENSED_enemy_victorious_no_reason	  		"N/A"
+
+
+;************************Other Player Victorious****************************************
+
+PHRASE_other_player_victorious_title			"完全战败!"
+PHRASE_other_player_victorious_main				"噢, 曾经伟大的 [player_name], 伟大的城市 [city_name] 的 [leader_name] 在您自满的时候取得了胜利.  在卓越的 [leader_name] 面前谦恭的鞠躬吧!"
+PHRASE_other_player_victorious_no_reason			"N/A"
+
+PHRASE_CONDENSED_other_player_victorious_title		"完全战败!"
+PHRASE_CONDENSED_other_player_victorious_main		"这是真的 -- 您失败了!"
+PHRASE_CONDENSED_other_player_victorious_no_reason	"N/A"
+
+;************************Other Player Defeated****************************************
+
+PHRASE_other_player_defeated_title				"遥远地方传来的剧变消息!"
+PHRASE_other_player_defeated_military			"[city_name] 的 [leader_name] 在敌人军队仔细搜索城市的时候逃跑了.  您不必再和这个懦弱的敌人竞争了."
+PHRASE_other_player_defeated_economic			"[city_name] 的 [leader_name] 在他们城市的市民厌倦了穷困的家园时选择了放弃城市. 您不必再和这个废物竞争了."
+PHRASE_other_player_defeated_lag				"[city_name] 的 [leader_name] 已经消失得无影无踪, 一个新政府已经建立起来了. 无疑的是 [city_name] 没有实力再象以前那样与您竞争了."
+PHRASE_other_player_defeated_no_reason			"N/A"
+
+PHRASE_CONDENSED_other_player_defeated_title		"剧变!"
+PHRASE_CONDENSED_other_player_defeated_military		"[city_name] 由于被敌人征服而消失."
+PHRASE_CONDENSED_other_player_defeated_economic		"[city_name] 由于经济衰退而消失."
+PHRASE_CONDENSED_other_player_defeated_lag		"[city_name] 处于变革当中."
+PHRASE_CONDENSED_other_player_defeated_no_reason	"N/A"
+
+
+;**************Troops return with plunder***********
+PHRASE_raiding_party_returns_title 					"从 [city_name] 抢劫回来的 [itemshort]!"
+PHRASE_raiding_party_returns_granted				"最高贵的 [player_name], 我们部队得胜而归, 还带着从 [city_name] 抢劫来 [amount] [item]."
+;PHRASE_raiding_party_returns_cash_granted			"享有声誉的  [player_name], 我们部队带着从 [city_name] 抢劫来的 [amount] 现金回来了. 他们会直接把钱送进金库!"
+PHRASE_raiding_party_returns_partial_space			"哦伟大的 [player_name], 我们部队从 [city_name] 回来, 还带着 [amount] [item], 但是您没有足够的存储空间存放.  现在您只能存放一半.  或者, 您可以清理出一些空间, 他们会在下个月把战利品带回来."
+PHRASE_raiding_party_returns_insufficient_space 		"值得尊敬的 [player_name], 我们部队得胜而归, 带着从 [city_name] 抢劫来的 [amount] [item]. 令人遗憾的是, 您没有足够的存储空间存放这些战利品.  现在他们会带着战利品, 等他们下个月回来的时候就要设法存放 [itemshort] 了.  请保证有足够的存储空间."
+PHRASE_raiding_party_returns_last_chance 				"高贵的 [player_name], 您还是没有足够的存储空间存放从 [city_name] 抢劫来的全部 [itemshort]. 如果您现在接受一部分战利品, 就再没有机会拿到了."
+PHRASE_raiding_party_returns_forfeited 				"哦伟大的 [player_name], 您还是没有足够的存储空间存放从 [city_name] 抢劫来的 [itemshort].  部队决定把战利品据为己有."
+PHRASE_raiding_party_returns_accepted 				"哦高贵的 [player_name], 您的存储设施里已经尽可能多的存放了一部分从 [city_name] 抢劫来 [amount] [item]."
+;PHRASE_raiding_party_returns_cash_accepted 			"您的金库里存放着闪闪发光的从 [city_name] 抢来的 [amount_granted] 现金."
+PHRASE_raiding_party_returns_postponed 				"部队会在一个月后带着 [itemshort] 返回."
+PHRASE_raiding_party_returns_refused 				"您已经拒绝了从 [city_name] 抢劫来的东西, 部队已经把它们留下自用了!"
+PHRASE_raiding_party_returns_accepted_reason  	 		"由于您从 [city_name] 抢劫了 [amount] [item],"
+PHRASE_raiding_party_returns_forfeited_reason  	 		"由于您没有接受从 [city_name] 抢来的 [amount] [item],"
+PHRASE_raiding_party_returns_refused_reason  	 		"由于您拒绝接受从 [city_name] 抢来的 [amount] [item],"
+PHRASE_raiding_party_returns_no_reason  				"N/A"
+
+PHRASE_CONDENSED_raiding_party_returns_title 					"N/A"
+PHRASE_CONDENSED_raiding_party_returns_granted					"部队带着战利品从 [city_name] 返回."
+;PHRASE_CONDENSED_raiding_party_returns_cash_granted				"部队带着 [amount] 现金从 [city_name] 返回."
+PHRASE_CONDENSED_raiding_party_returns_partial_space				"接受一部分来自 [city_name] 的战利品, 或者清理存储空间."
+PHRASE_CONDENSED_raiding_party_returns_insufficient_space 			"清理空间存放从 [city_name] 抢来的战利品."
+PHRASE_CONDENSED_raiding_party_returns_last_chance 				"现在接受从 [city_name] 抢来的战利品否则就丧失它."
+PHRASE_CONDENSED_raiding_party_returns_forfeited 				"还是没有足够的存储空间存放从 [city_name] 抢来的战利品. 战利品没有了."
+PHRASE_CONDENSED_raiding_party_returns_accepted 				"尽可能多的接受了从 [city_name] 抢来的战利品."
+;PHRASE_CONDENSED_raiding_party_returns_cash_accepted 			"金库里存满了从 [city_name] 抢来的 [amount_granted] 现金."
+PHRASE_CONDENSED_raiding_party_returns_postponed 				"从 [city_name] 抢来的战利品将在下个月到达."
+PHRASE_CONDENSED_raiding_party_returns_refused 					"从 [city_name] 抢来的战利品被拒绝."
+PHRASE_CONDENSED_raiding_party_returns_accepted_reason  	 		"由于您从 [city_name] 抢来了 [itemshort]"
+PHRASE_CONDENSED_raiding_party_returns_forfeited_reason  	 		"由于您没有接受从 [city_name] 抢来的 [amount] [item]"
+PHRASE_CONDENSED_raiding_party_returns_refused_reason  	 		"由于您拒绝了从 [city_name] 抢来的 [amount] [item]"
+PHRASE_CONDENSED_raiding_party_returns_no_reason  				""
+
+
+;********************NON FAVOR-AFFECTING EVENTS***********************
+PHRASE_nuwa_disaster_history						"由于祖先的愤怒而蒙受损失"
+PHRASE_shennong_disaster_history					"由于祖先的愤怒而蒙受损失"
+PHRASE_huangdi_disaster_history					"由于祖先的愤怒而蒙受损失"
+PHRASE_economic_change_history_D					"经济衰落"
+PHRASE_economic_change_history_I					"享受经济繁荣"
+PHRASE_military_change_history_I					"增加的军事力量"
+PHRASE_military_change_history_D					"降低的军事力量"
+PHRASE_trade_opens_up_history						"开始贸易"
+PHRASE_trade_resumed_history						"恢复贸易"
+PHRASE_trade_shuts_down_history					"停止贸易"
+PHRASE_trade_suspended_history					"贸易中断"
+PHRASE_rebellion_tribute_suspended_history			"叛乱与中断进贡"
+PHRASE_rebellion_over_tribute_resumed_history			"结束叛乱时期再次变得忠诚"
+PHRASE_rebellion_quelled_tribute_resumed_history		"您镇压了 [city_affected] 叛乱"
+PHRASE_tribute_resumed_history					"恢复进贡"
+PHRASE_tribute_suspended_history					"中断进贡"
+PHRASE_demand_change_history_D					"减少要求的 [itemshort]"
+PHRASE_supply_change_history_D					"减少 [itemshort] 的出口量"
+PHRASE_demand_change_history_I					"增加 [itemshort] 的要求"
+PHRASE_supply_change_history_I					"增加 [itemshort] 的出口量"
+
+PHRASE_trade_rejected_history						"贸易被拒绝"
+PHRASE_alliance_rejected_history					"结盟被拒绝"
+
+PHRASE_ally_conquered_by_rival_history				"这座城市被一个对手征服了"
+PHRASE_ally_destroyed_by_rival_history				"[city_affected] 被一个对手摧毁了"	
+PHRASE_becomes_ally_history    						"   这座城市成为您的同盟"
+PHRASE_becomes_rival_history						"   这座城市成为您的对手"
+PHRASE_becomes_vassal_history						"   这座城市成为您的诸候"
+PHRASE_city_conquered_by_player_history				"   这座城市被您的军队征服了"
+
+PHRASE_vassal_conquered_by_rival_history				"   这座城市被一个对手征服了"
+
+PHRASE_swears_fealty_history						"   这座城市发誓忠诚于您"
+PHRASE_vassal_destroyed_by_rival_history				"[city_affected] 被一个对手摧毁了"
+
+
+
+
+;**********************FAVOR AFFECTING EVENTS FOLLOW*********************************
+PHRASE_gift_received_rejects_history                        "   您的友好礼物被 [city_affected] 拒绝"
+PHRASE_gift_received_money_history					"   您送给 [city_affected] 现金礼物"
+PHRASE_gift_received_needs_history					"  您送许多需要的 [itemshort] 给 [city_affected]"
+PHRASE_gift_received_doesnt_need_history				"  您送 [itemshort] 给 [city_affected], 但他并不需要"
+PHRASE_gift_received_produces_history				"   您送 [itemshort] 给 [city_affected], 他们自己存量充足"
+PHRASE_rescue_cash_history						"   这座城市必须帮您摆脱财政问题"
+
+
+;REQUESTS 
+
+;(the following four events may not need the tone index)
+
+PHRASE_building_project_early_history_D			"   您提前满足了 [city_affected] 索要的 [itemshort]"
+PHRASE_building_project_comply_history_D			"   您按时满足了 [city_affected] 索要的 [itemshort]"
+PHRASE_building_project_too_late_history_D		"   您很晚才满足 [city_affected] 索要的 [itemshort]"
+PHRASE_building_project_refuse_history_D			"   您拒绝满足 [city_affected] 索要的 [itemshort]"
+
+PHRASE_building_project_early_history_P			"   您提前回应了 [city_affected] 请求的 [itemshort]"
+PHRASE_building_project_comply_history_P		 	"   您按时回应了 [city_affected] 请求的 [itemshort]"
+PHRASE_building_project_too_late_history_P		"   您很晚才回应 [city_affected] 请求的 [itemshort]"
+PHRASE_building_project_refuse_history_P		 	"   您拒绝回应 [city_affected] 请求的 [itemshort]"
+
+PHRASE_building_project_early_history_S			"   您提前满足了 [city_affected] 要求的 [itemshort]"
+PHRASE_building_project_comply_history_S			"   您按时满足了 [city_affected] 要求的 [itemshort]"
+PHRASE_building_project_too_late_history_S		"   您满足了 [city_affected] 要求的 [itemshort], 尽管晚了"
+PHRASE_building_project_refuse_history_S			"   您没有满足 [city_affected] 要求的 [itemshort]"
+
+
+
+PHRASE_famine_relief_relief_early_history_D		"您提前满足了 [city_affected] 索要的食物"
+PHRASE_famine_relief_relief_comply_history_D	  	"您按时满足了 [city_affected] 索要的食物"
+PHRASE_famine_relief_relief_too_late_history_D	  	"您很晚才满足 [city_affected] 索要的食物"
+PHRASE_famine_relief_relief_refuse_history_D	  	"您拒绝满足 [city_affected] 索要的食物"
+
+PHRASE_famine_relief_relief_early_history_P		"您提前回应了 [city_affected] 乞求的食物"
+PHRASE_famine_relief_relief_comply_history_P	   	"您按时回应了 [city_affected] 乞求的食物"
+PHRASE_famine_relief_relief_too_late_history_P	   	"您很久才回应 [city_affected] 乞求的食物"
+PHRASE_famine_relief_relief_refuse_history_P	   	"您拒绝回应 [city_affected] 乞求的食物"
+
+PHRASE_famine_relief_relief__early_history_S	  	"您提前满足了 [city_affected] 的食物要求"
+PHRASE_famine_relief_relief__comply_history_S	  	"您按时满足了 [city_affected] 的食物要求"
+PHRASE_famine_relief_relief__too_late_history_S	  	"您很晚才满足 [city_affected] 的食物要求"
+PHRASE_famine_relief_relief__refuse_history_S	  	"您拒绝满足 [city_affected] 的食物要求"
+
+
+PHRASE_financial_woes_early_history_D			"您提前满足了 [city_affected] 索要的现金"
+PHRASE_financial_woes_comply_history_D			"您按时满足了 [city_affected] 索要的现金"
+PHRASE_financial_woes_too_late_history_D		  	"您很晚才满足 [city_affected] 索要的现金"
+PHRASE_financial_woes_refuse_history_D			"您拒绝满足 [city_affected] 索要的现金"
+
+PHRASE_financial_woes_early_history_P			"您提前回应了 [city_affected] 乞求的现金"
+PHRASE_financial_woes_comply_history_P			"您按时回应了 [city_affected] 乞求的现金"
+PHRASE_financial_woes_too_late_history_P		   	"您很晚才回应 [city_affected] 乞求的现金"
+PHRASE_financial_woes_refuse_history_P			"您拒绝回应 [city_affected] 乞求的现金"
+
+PHRASE_financial_woes_early_history_S			"您提前满足了 [city_affected] 要求的现金"
+PHRASE_financial_woes_comply_history_S			"您按时满足了 [city_affected] 要求的现金"
+PHRASE_financial_woes_too_late_history_S		  	"您很晚才满足 [city_affected] 要求的现金"
+PHRASE_financial_woes_refuse_history_S			"您拒绝满足 [city_affected] 要求的现金"
+
+
+
+PHRASE_general_request_early_history_D			"您提前满足了 [city_affected] 索要的 [itemshort]"
+PHRASE_general_request_comply_history_D			"您按时满足了 [city_affected] 索要的 [itemshort]"
+PHRASE_general_request_too_late_history_D		   	"您很晚才满足 [city_affected] 索要的 [itemshort]"
+PHRASE_general_request_refuse_history_D			"您拒绝满足 [city_affected] 索要的 [itemshort]"
+
+PHRASE_general_request_early_history_P			"您提前回应了 [city_affected] 请求的 [itemshort]"
+PHRASE_general_request_comply_history_P			"您按时回应了 [city_affected] 请求的 [itemshort]"
+PHRASE_general_request_too_late_history_P		    	"您很晚才回应 [city_affected] 请求的 [itemshort]"
+PHRASE_general_request_refuse_history_P			"您拒绝满足 [city_affected] 索要的 [itemshort]"																		                                                  
+PHRASE_general_request_early_history_S			"您提前送给 [city_affected] 要求的 [itemshort]"
+PHRASE_general_request_comply_history_S			"您按时送给 [city_affected] 要求的 [itemshort]"
+PHRASE_general_request_too_late_history_S		   	"您送给 [city_affected] 要求的 [itemshort], 但是太晚了"
+PHRASE_general_request_refuse_history_S			"您拒绝满足 [city_affected] 索要的 [itemshort]"
+
+
+PHRASE_great_festival_early_history_D			"您提前给 [city_affected] 送去用于庆典的 [itemshort]"
+PHRASE_great_festival_comply_history_D			"您按时给 [city_affected] 送去用于庆典的 [itemshort]"
+PHRASE_great_festival_too_late_history_D		   	"您很晚才给 [city_affected] 送去用于庆典的 [itemshort]"
+PHRASE_great_festival_refuse_history_D			"您拒绝给 [city_affected] 送去用于庆典的 [itemshort]"
+
+PHRASE_great_festival_early_history_P			"您提前给 [city_affected] 送去用于庆典的 [itemshort]"
+PHRASE_great_festival_comply_history_P			"您按时给 [city_affected] 送去用于庆典的 [itemshort]"
+PHRASE_great_festival_too_late_history_P		    	"您很晚才给 [city_affected] 送去用于庆典的 [itemshort]"
+PHRASE_great_festival_refuse_history_P			"您拒绝给 [city_affected] 送去用于庆典的 [itemshort]"
+
+PHRASE_great_festival_early_history_S			"您提前给 [city_affected] 送去用于庆典的 [itemshort]"
+PHRASE_great_festival_comply_history_S			"您按时给 [city_affected] 送去用于庆典的 [itemshort]"
+PHRASE_great_festival_too_late_history_S		    	"您很晚才给 [city_affected] 送去用于庆典的 [itemshort]"
+PHRASE_great_festival_refuse_history_S			"您拒绝给 [city_affected] 送去用于庆典的 [itemshort]"
+
+PHRASE_tribute_due_early_history_D				"您提前满足了 [city_affected] 索要的贡品"
+PHRASE_tribute_due_comply_history_D				"您按时满足了 [city_affected] 索要的贡品"
+PHRASE_tribute_due_too_late_history_D			"您很晚才满足 [city_affected] 索要的贡品"
+PHRASE_tribute_due_refuse_history_D				"您拒绝满足 [city_affected] 索要的贡品"
+
+
+;NEXT FOUR EVENTS CAN SHARE PHRASES ("...under attack")
+PHRASE_ally_under_attack_early_history_S		    	"您的军队提前到达保卫 [city_affected]"
+PHRASE_ally_under_attack_comply_history_S		    	"您派出军队保卫 [city_affected] 免受攻击"
+PHRASE_ally_under_attack_too_late_history_S		"您派出军队保卫 [city_affected], 但他们到得太晚了"
+PHRASE_ally_under_attack_refuse_history_S		    	"您没有派军队去保卫 [city_affected]"
+
+PHRASE_rival_under_attack_early_history_D		    	"您的军队提前到达保卫 [city_affected]"
+PHRASE_rival_under_attack_comply_history_D		    	"您派出军队保卫 [city_affected] 免受攻击"
+PHRASE_rival_under_attack_too_late_history_D		"您派出军队保卫 [city_affected], 但他们到得太晚了"
+PHRASE_rival_under_attack_refuse_history_D		    	"您没有派军队去保卫 [city_affected]"
+
+PHRASE_vassal_under_attack_early_history_P		"您的军队提前到达保卫 [city_affected]"
+PHRASE_vassal_under_attack_comply_history_P		"您派出军队保卫 [city_affected] 免受攻击"
+PHRASE_vassal_under_attack_too_late_history_P		"您派出军队保卫 [city_affected], 但他们到得太晚了"
+PHRASE_vassal_under_attack_refuse_history_P		"您没有派军队去保卫 [city_affected]"
+
+
+;NEXT TWO EVENTS CAN SHARE PHRASES ("...attacks rival")
+PHRASE_ally_attacks_rival_early_history_S			"您提前派军队去帮助 [city_affected] 进攻一个对手"
+PHRASE_ally_attacks_rival_comply_history_S	      "您派军队去帮助 [city_affected] 进攻一个对手"
+PHRASE_ally_attacks_rival_too_late_history_S		"您很晚才派军队去帮助 [city_affected] 进攻一个对手"
+PHRASE_ally_attacks_rival_refuse_history_S		"您拒绝派军队去帮助 [city_affected] 进攻一个对手"
+
+PHRASE_vassal_attacks_rival_early_history_P		"您提前派军队去帮助 [city_affected] 进攻一个对手"
+PHRASE_vassal_attacks_rival_comply_history_P		"您派军队去帮助 [city_affected] 进攻一个对手"
+PHRASE_vassal_attacks_rival_too_late_history_P		"您很晚才派军队去帮助 [city_affected] 进攻一个对手"
+PHRASE_vassal_attacks_rival_refuse_history_P		"您拒绝派军队去帮助 [city_affected] 进攻一个对手"
+
+
+
+;*************HISTORY PHRASES FOR PLAYER ACTIONS FOLLOW*************************
+;attacks  (including strike)
+PHRASE_player_attacked_history				"   您进攻了 [city_affected]"
+PHRASE_player_raided_history					"   您抢劫了 [city_affected]"
+PHRASE_player_struck_history					"   您命令进攻 [city_affected]"
+
+;requests
+PHRASE_player_requests_goods_history			"   您要求 [city_affected] 送给您 [itemshort]"
+PHRASE_player_requests_troops_history   			"   您向 [city_affected] 要求军队支援"
+PHRASE_player_requests_strike_history     		"   您依靠 [city_affected] 进行一次军事进攻" 
+
+;player gifts use "gift_received" events, which are needs-specific
+
+PHRASE_player_waives_tribute					"   您推迟进贡"
+
+
+;********City becomes active****************************
+PHRASE_city_active_title 					"[city_name] 问候世界"
+PHRASE_city_active_initial_announcement 			"[greeting] [player_name], 在 [leader_name] 领导下, [city_name] 已经发展成一个重要城市, 它准备要接触世界了."
+PHRASE_city_active_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_city_active_title 				"N/A"
+PHRASE_CONDENSED_city_active_initial_announcement 	"[city_name] 开始接触世界."
+PHRASE_CONDENSED_city_active_no_reason	  		"N/A"
+
+
+;********City becomes inactive****************************
+PHRASE_city_inactive_title 					"[city_name] 终止接触"
+PHRASE_city_inactive_initial_announcement 		"[greeting] [player_name], [city_name] 陷入一片混乱, 就象龟缩回了自己的硬壳一样中断了与世界的接触.  您与这个城市以前的任何联系都被切断了."
+PHRASE_city_inactive_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_city_inactive_title 			"N/A"
+PHRASE_CONDENSED_city_inactive_initial_announcement 	"[city_name] 终止接触世界."
+PHRASE_CONDENSED_city_inactive_no_reason	  		"N/A"
+
+
+;********City appears****************************
+PHRASE_city_appears_title 					"[city_name] 被发现!"
+PHRASE_city_appears_initial_announcement 			"您好, [player_name], 探索者返回报告说他们发现了一个名叫 [city_name] 的地方."
+PHRASE_city_appears_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_city_appears_title 			"N/A"
+PHRASE_CONDENSED_city_appears_initial_announcement 	"一个名收 [city_name] 地方被发现了."
+PHRASE_CONDENSED_city_appears_no_reason	  		"N/A"
+
+;********City returns emissary
+PHRASE_city_returns_emissary_title 					"[city_name] 拒绝您的使者进入"
+PHRASE_city_returns_emissary_initial_announcement 		"真不幸, [player_name], 您派往 [city_name] 使者没有被允许进入他们的城市."
+PHRASE_city_returns_emissary_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_city_returns_emissary_title 				"N/A"
+PHRASE_CONDENSED_city_returns_emissary_initial_announcement 	"[city_name] 拒绝您的使者进入."
+PHRASE_CONDENSED_city_returns_emissary_no_reason	  		"N/A"
+
+;********City executes emissary
+PHRASE_city_executes_emissary_title 					"[city_name] 野蛮地处决了您的使者!"
+PHRASE_city_executes_emissary_initial_announcement 			"暴行! [player_name], 您派往 [city_name] 的使者被处决了!"
+PHRASE_city_executes_emissary_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_city_executes_emissary_title 				"N/A"
+PHRASE_CONDENSED_city_executes_emissary_initial_announcement 	"[city_name] 处决了您的使者!"
+PHRASE_CONDENSED_city_executes_emissary_no_reason	  		"N/A"
+
+
+;********City disappears****************************
+PHRASE_city_disappears_title 							"[city_name] 消失"
+PHRASE_city_disappears_initial_announcement 				"您好, [player_name]. [city_name] 不再存在了. 曾经是城市街道的地方现在是杂草丛生."
+PHRASE_city_disappears_no_reason	  					"N/A"
+
+PHRASE_CONDENSED_city_disappears_title 					"N/A"
+PHRASE_CONDENSED_city_disappears_initial_announcement 		"[city_name] 消失不见了."
+PHRASE_CONDENSED_city_disappears_no_reason	  			"N/A"
+
+PHRASE_city_active_history							"开始与世界接触"
+PHRASE_city_inactive_history							"终止所有与世界的接触"
+PHRASE_city_appears_history							"   被发现"
+PHRASE_city_returns_emissary_history					"拒绝您的使者进入"
+PHRASE_city_executes_emissary_history					"处决了您的使者"
+PHRASE_city_disappears_history						"逐渐消亡"
+
+;**************** bad commodities *****************
+PHRASE_iron_is_boring_title						"钢比铁好!"
+PHRASE_iron_is_boring_text						"我们的工人们学会了如何炼钢! 钢制武器让我们在对抗野蛮人时具有优势!"
+PHRASE_iron_is_boring_no_reason					"N/A"
+
+PHRASE_CONDENSED_iron_is_boring_title				"钢代替铁!"
+PHRASE_CONDENSED_iron_is_boring_text				"现在我们能够制造钢制武器!"
+PHRASE_CONDENSED_iron_is_boring_no_reason				"N/A"
+
+PHRASE_bronzeware_is_boring_title					"漆器代替铜器!"
+PHRASE_bronzeware_is_boring_text					"这些日子以来, 人们对精美的漆器的需求远远超过了对铜器需求 (可能因为漆器更便于搬动运输!). 因此, 所有的铜器生产都终止了."
+PHRASE_bronzeware_is_boring_no_reason				"N/A"
+
+PHRASE_CONDENSED_bronzeware_is_boring_title			"可以制造漆器了!"
+PHRASE_CONDENSED_bronzeware_is_boring_text			"精美的漆器代替铜器."
+PHRASE_CONDENSED_bronzeware_is_boring_no_reason			"N/A"
+
+
+;***************************God player city Invasion Trade interruption ends*********************************************
+;*********************Zeus invasion ends
+																			
+;*********************Poseidon invasion ends								
+																			
+;*********************Hermes invasion ends									
+
+;************************Monument construction complete***************************
+
+;*******************Great Temple complete		
+PHRASE_great_temple_complete_title						"大寺庙建成"
+PHRASE_great_temple_complete_initial_announcement			"大寺庙现在建成了, 它会让创造女神女娲欣喜万分, 同样城中的居民也非常高兴."
+PHRASE_great_temple_complete_no_reason					"N/A"
+
+PHRASE_CONDENSED_great_temple_complete_title				"N/A"
+PHRASE_CONDENSED_great_temple_complete_initial_announcement		"大寺庙建成."
+PHRASE_CONDENSED_great_temple_complete_no_reason			"N/A"
+
+;*******************Splendid Temple complete		
+PHRASE_splendid_temple_complete_title					"辉煌的寺庙建成"
+PHRASE_splendid_temple_complete_initial_announcement			"现在辉煌的寺庙建成了, 它会让神农高兴无比, 同样城中的居民也非常高兴."
+PHRASE_splendid_temple_complete_no_reason					"N/A"
+
+PHRASE_CONDENSED_splendid_temple_complete_title				"N/A"
+PHRASE_CONDENSED_splendid_temple_complete_initial_announcement	"辉煌的寺庙建成了."
+PHRASE_CONDENSED_splendid_temple_complete_no_reason			"N/A"
+
+;*******************Temple Complex complete		
+PHRASE_temple_complex_complete_title					"综合寺庙建成"
+PHRASE_temple_complex_complete_initial_announcement			"这时的确是非常快乐的时刻! 最协调的综合寺庙已经建成. 创造女神女娲会记住您的, 因为这是伟大的成就."
+PHRASE_temple_complex_complete_no_reason					"N/A"
+
+PHRASE_CONDENSED_temple_complex_complete_title				"N/A"
+PHRASE_CONDENSED_temple_complex_complete_initial_announcement	"综合寺庙建成."
+PHRASE_CONDENSED_temple_complex_complete_no_reason			"N/A"
+
+;*******************Grand Temple Complex complete		
+PHRASE_grand_temple_complex_complete_title				"雄伟的综合寺庙建成"
+PHRASE_grand_temple_complex_complete_initial_announcement		"上天称赞着现在的中国人! 您已经建成了雄伟的综合寺庙, 这是一件真正巨大的工作. 神农会非常高兴的!"
+PHRASE_grand_temple_complex_complete_no_reason				"N/A"
+	
+PHRASE_CONDENSED_grand_temple_complex_complete_title				"N/A"
+PHRASE_CONDENSED_grand_temple_complex_complete_initial_announcement	"雄伟的综合寺庙建成."
+PHRASE_CONDENSED_grand_temple_complex_complete_no_reason			"N/A"
+
+;*******************Tumulus complete		
+PHRASE_tumulus_complete_title							"陵墓建成"
+PHRASE_tumulus_complete_initial_announcement				"安全保护您祖先的遗体的陵墓建成了. 女娲看到了您虔敬的对待祖先的真心."
+PHRASE_tumulus_complete_no_reason						"N/A"
+
+PHRASE_CONDENSED_tumulus_complete_title					"N/A"
+PHRASE_CONDENSED_tumulus_complete_initial_announcement		"陵墓建成."
+PHRASE_CONDENSED_tumulus_complete_no_reason				"N/A"
+
+;*******************Grand Tumulus complete		
+PHRASE_grand_tumulus_complete_title						"大陵墓建成"
+PHRASE_grand_tumulus_complete_initial_announcement			"安全保护您祖先遗体的大陵墓建成了. 神农看到了您虔诚的对待祖先的真心."
+PHRASE_grand_tumulus_complete_no_reason					"N/A"
+
+PHRASE_CONDENSED_grand_tumulus_complete_title				"N/A"
+PHRASE_CONDENSED_grand_tumulus_complete_initial_announcement	"大陵墓建成."
+PHRASE_CONDENSED_grand_tumulus_complete_no_reason			"N/A"
+
+;*******************Large Palace complete		
+PHRASE_large_palace_complete_title						"宏大的宫殿建成"
+PHRASE_large_palace_complete_initial_announcement			"黄帝不可能比今天更高兴了, 因为您建成了宏大的宫殿. 由于这座美丽的建筑物, 您将从您的人民那里得到极大的尊重."
+PHRASE_large_palace_complete_no_reason					"N/A"
+
+PHRASE_CONDENSED_large_palace_complete_title				"N/A"
+PHRASE_CONDENSED_large_palace_complete_initial_announcement		"宏大的宫殿建成."
+PHRASE_CONDENSED_large_palace_complete_no_reason			"N/A"
+
+;*******************Underground Vault complete		
+PHRASE_underground_vault_complete_title					"地下墓室建成"
+PHRASE_underground_vault_complete_initial_announcement		"皇帝非常满意他的保卫地下墓室的军队和壮丽的陵墓, 他的财富可以安全的放在墓室内不会被盗. 我建议您, 在他想起您对这个建筑物知道太多而要除掉您之前告老还乡."
+PHRASE_underground_vault_complete_no_reason				"N/A"
+
+PHRASE_CONDENSED_underground_vault_complete_title				"N/A"
+PHRASE_CONDENSED_underground_vault_complete_initial_announcement		"地下墓室建成."
+PHRASE_CONDENSED_underground_vault_complete_no_reason				"N/A"
+
+;*******************Grand Canal complete		
+PHRASE_grand_canal_complete_title					"大运河建成"
+PHRASE_grand_canal_complete_initial_announcement		"大运河建成了! 创造女神女娲都不可能挖出一条比这更好的渠来. 做得好!"
+PHRASE_grand_canal_complete_no_reason				"N/A"
+
+PHRASE_CONDENSED_grand_canal_complete_title			"N/A"
+PHRASE_CONDENSED_grand_canal_complete_initial_announcement	"大运河现在建成了."
+PHRASE_CONDENSED_grand_canal_complete_no_reason			"N/A"
+
+;*******************Great Wall complete		
+PHRASE_great_wall_complete_title					"长城建成"
+PHRASE_great_wall_complete_initial_announcement			"您在敌人只能在长城外愤怒的嚎叫, 因为长城把他们挡在中原腹地之个."
+PHRASE_great_wall_complete_no_reason				"N/A"
+
+PHRASE_CONDENSED_great_wall_complete_title				"N/A"
+PHRASE_CONDENSED_great_wall_complete_initial_announcement		"长城建成了."
+PHRASE_CONDENSED_great_wall_complete_no_reason				"N/A"
+
+;*******************Clock Tower complete		
+PHRASE_clock_tower_complete_title					"钟楼建成"
+PHRASE_clock_tower_complete_initial_announcement		"您建造的是一座多么奇异的工程学建筑啊! 这个天文钟楼会把我们引入宇宙时代, 并且对历法报告有极大的帮助."
+PHRASE_clock_tower_complete_no_reason				"N/A"
+	
+PHRASE_CONDENSED_clock_tower_complete_title			"N/A"
+PHRASE_CONDENSED_clock_tower_complete_initial_announcement	"钟楼建成了."
+PHRASE_CONDENSED_clock_tower_complete_no_reason			"N/A"
+
+;*******************Grand Pagoda complete		
+PHRASE_grand_pagoda_complete_title					"雄伟的宝塔建成"
+PHRASE_grand_pagoda_complete_initial_announcement		"雄伟的宝塔建成后, 对佛教的崇拜会在全国传播开来."
+PHRASE_grand_pagoda_complete_no_reason				"N/A"
+
+PHRASE_CONDENSED_grand_pagoda_complete_title			"N/A"
+PHRASE_CONDENSED_grand_pagoda_complete_initial_announcement	"雄伟的宝塔建成了."
+PHRASE_CONDENSED_grand_pagoda_complete_no_reason		"N/A"
+
+
+//*******************Gorgar Has Stopped Importing
+PHRASE_gorgar_has_stopped_importing_title					"贸易消息!"
+PHRASE_gorgar_has_stopped_importing_initial_announcement		"令人不安的消息, 大人. 贸易大臣报告说 [leader_name] 已经停止从我的城市进口商品!"
+PHRASE_gorgar_has_stopped_importing_no_reason				"N/A"
+
+PHRASE_CONDENSED_gorgar_has_stopped_importing_title				"贸易消息!"
+PHRASE_CONDENSED_gorgar_has_stopped_importing_initial_announcement	"[leader_name] 已经停止进口"
+PHRASE_CONDENSED_gorgar_has_stopped_importing_no_reason			"N/A"
+
+;*******************Gorgar Has Stopped Exporting
+PHRASE_gorgar_has_stopped_exporting_title					"贸易消息!"
+PHRASE_gorgar_has_stopped_exporting_initial_announcement		"恼人的消息, 最高贵的统治者. 贸易大臣报告说 [leader_name] 已经停止向我们出口商品!"
+PHRASE_gorgar_has_stopped_exporting_no_reason				"N/A"
+
+PHRASE_CONDENSED_gorgar_has_stopped_exporting_title				"贸易消息!"
+PHRASE_CONDENSED_gorgar_has_stopped_exporting_initial_announcement	"[leader_name] 已经停止出口"
+PHRASE_CONDENSED_gorgar_has_stopped_exporting_no_reason			"N/A"
+
+;*******************Gorgar Has Started Importing
+PHRASE_gorgar_has_started_importing_title					"贸易消息!"
+PHRASE_gorgar_has_started_importing_initial_announcement		"可喜的消息! [leader_name] 希望从我们的城市进口新商品. 或许您应该设定一个对我们有利的出口价格."
+PHRASE_gorgar_has_started_importing_no_reason				"N/A"
+
+PHRASE_CONDENSED_gorgar_has_started_importing_title				"贸易消息!"
+PHRASE_CONDENSED_gorgar_has_started_importing_initial_announcement	"[leader_name] 已经开始进口"
+PHRASE_CONDENSED_gorgar_has_started_importing_no_reason			"N/A"
+
+;*******************Gorgar Has Started Exporting
+PHRASE_gorgar_has_started_exporting_title					"贸易消息!"
+PHRASE_gorgar_has_started_exporting_initial_announcement		"贸易大臣报告说 [leader_name] 希望向我们出口新商品."
+PHRASE_gorgar_has_started_exporting_no_reason				"N/A"
+
+PHRASE_CONDENSED_gorgar_has_started_exporting_title				"贸易消息!"
+PHRASE_CONDENSED_gorgar_has_started_exporting_initial_announcement	"[leader_name] 已经开始出口"
+PHRASE_CONDENSED_gorgar_has_started_exporting_no_reason			"N/A"
+
+
+
+;*****************Player's Tribute payment received by non-player city on time (not early)
+PHRASE_tribute_received_title 					"[city_name] 告知收到贡品"
+PHRASE_tribute_received_initial_announcement 			"我, [city_name] 的 [leader_name], 您的领主, 已经收到您的贡品. 这是狗向猛虎称臣."
+PHRASE_tribute_received_reason	  				"N/A"
+PHRASE_tribute_received_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_tribute_received_title 				"N/A"
+PHRASE_CONDENSED_tribute_received_initial_announcement 	"[city_name] 告知收到贡品."
+PHRASE_CONDENSED_tribute_received_reason	  			"N/A"
+PHRASE_CONDENSED_tribute_received_no_reason	  		"N/A"
+
+
+;********************TONE VARIATIONS WHEN COMPLIANCE WITH CASH REQUEST POSSIBLE
+PHRASE_got_enough_shu_S_title 					"给 [city_name] 的钱准备好了"
+PHRASE_got_enough_shu_S_initial_announcement 			"值得尊敬的 [player_name], 您的金库里的钱足够多了, 现在可以满足您的同盟 [city_name] 的 [leader_name] 提出的要求了."
+PHRASE_got_enough_shu_S_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_got_enough_shu_S_title 				"N/A"
+PHRASE_CONDENSED_got_enough_shu_S_initial_announcement 	"您有足够的钱来满足 [city_name] 的要求."
+PHRASE_CONDENSED_got_enough_shu_S_no_reason	  		"N/A"
+
+PHRASE_got_enough_shu_D_title 					"[city_name] 索要的现金已经准备好"
+PHRASE_got_enough_shu_D_initial_announcement 			"高贵的 [player_name], 现在您有足够的现金, 可以满足对手 [city_name] 的 [leader_name] 的要求了."
+PHRASE_got_enough_shu_D_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_got_enough_shu_D_title 				"N/A"
+PHRASE_CONDENSED_got_enough_shu_D_initial_announcement 	"您有足够的钱来满足 [city_name] 的要求."
+PHRASE_CONDENSED_got_enough_shu_D_no_reason	  		"N/A"
+
+PHRASE_got_enough_shu_P_title 					"给 [city_name] 的钱准备好了"
+PHRASE_got_enough_shu_P_initial_announcement 			"善良的 [player_name], 现在您有足够的钱, 可以满足您的诸候 [city_name] 的 [leader_name] 提出的乞求了."
+PHRASE_got_enough_shu_P_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_got_enough_shu_P_title 				"N/A"
+PHRASE_CONDENSED_got_enough_shu_P_initial_announcement 	"您有足够的现金回应 [city_name] 的乞求."
+PHRASE_CONDENSED_got_enough_shu_P_no_reason	  		"N/A"
+
+
+;********************TONE VARIATIONS WHEN COMPLIANCE WITH GOODS REQUEST POSSIBLE
+;*******************Formerly	MESS_GOT_GOODS_STOCKS,				//314 
+PHRASE_got_goods_stocks_S_title 					"[itemshort] 已准备好可以送去 [city_name]"
+PHRASE_got_goods_stocks_S_initial_announcement 			"高贵的 [player_name], 现在您可满足未完成的 [city_name] 的 [leader_name] 要求的 [itemshort]."
+PHRASE_got_goods_stocks_S_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_got_goods_stocks_S_title 			"N/A"
+PHRASE_CONDENSED_got_goods_stocks_S_initial_announcement 	"您的足够的 [itemshort] 可以送去 [city_name]."
+PHRASE_CONDENSED_got_goods_stocks_S_no_reason	  		"N/A"
+
+PHRASE_got_goods_stocks_D_title 					"[itemshort] 已准备好可以送去 [city_name]"
+PHRASE_got_goods_stocks_D_initial_announcement 			"值得尊敬的 [player_name], 现在您有足够的 [itemshort] 储备, 可以满足 [city_name] 的 [leader_name] 索要的数量了."
+PHRASE_got_goods_stocks_D_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_got_goods_stocks_D_title 			"N/A"
+PHRASE_CONDENSED_got_goods_stocks_D_initial_announcement 	"您的足够的 [itemshort] 可以送去 [city_name]."
+PHRASE_CONDENSED_got_goods_stocks_D_no_reason	  		"N/A"
+
+PHRASE_got_goods_stocks_P_title 					"[itemshort] 已准备好可以送去 [city_name]"
+PHRASE_got_goods_stocks_P_initial_announcement 			"英勇的 [player_name], 现在您有足够的 [itemshort] 储备, 可是回应 [city_name] 的 [leader_name] 的乞求了."
+PHRASE_got_goods_stocks_P_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_got_goods_stocks_P_title 			"N/A"
+PHRASE_CONDENSED_got_goods_stocks_P_initial_announcement 	"您的足够的 [itemshort] 可以送去 [city_name]."
+PHRASE_CONDENSED_got_goods_stocks_P_no_reason	  		"N/A"
+
+
+;********Invasion****************************************
+PHRASE_invasion_lastchance_title 					"[city_name] 想要消灭我们!"
+PHRASE_invasion_lastchance_spy_report				"[greeting] [player_name]. 密探潜入了 [city_name] 的 [a_foreign_army] 队伍中. 敌人将在一年内对我们的城市发动进攻... 如果敌人胜利了, 您的城市就不复存在了."
+PHRASE_invasion_lastchance_initial_announcement	    		"恐怖啊, [player_name], [reason_phrase] [city_name] 的领导者 [leader_name] 带领的 [a_foreign_army] 正在接近, 他们将在 [time_until_attack] 个月后进攻我们的城市.  如果您战败了, 那就永远不可能东山再起了."
+PHRASE_invasion_lastchance_6month_notleft_warning 			"[greeting] [player_name], 就在六个月后, 来自 [city_name] 的 [a_foreign_army] 将到达并进攻您的城市.  一定要准备应战, 因为如果您败了, 您就不能再管理这个城市了."
+PHRASE_invasion_lastchance_6month_warning 			"[greeting] [player_name], 就在六个月后, 来自 [city_name] 的 [a_foreign_army] 将到达并进攻您的城市.  一定要准备应战, 因为如果您败了, 您就不能再管理这个城市了."
+PHRASE_invasion_lastchance_2month_warning 			"[greeting] [player_name], 就在两个月后, 来自 [city_name] 的 [a_foreign_army] 将到达并进攻您的城市.  一定要准备应战, 因为如果您败了, 您就不能再管理这个城市了."
+PHRASE_invasion_lastchance_1month_Warning 			"[greeting] [player_name], 准备的时间已经过去了.  一个月后, [reason_phrase] [city_name] 的 [a_foreign_army] 将到达这里, 目的就是征服您的城市. 您必须打败他们, 否则 [leader_name] 就会永远接管您的城市!"
+PHRASE_invasion_lastchance_city_attacked_alert  		"[greeting] [player_name], [city_name] 的 [a_foreign_army] 迫近了, 他们要征服我们的城市! 您必须打胜仗, 因为如果您败了, 您就永远失败了!"
+PHRASE_invasion_lastchance_reason  	 	 		    	"由于您的城市受到了来自 [city_name] 的 [a_foreign_army] 的攻击"
+PHRASE_invasion_lastchance_no_reason	  	 		"由于您的生肖动物冒犯了他们"
+PHRASE_invasion_lastchance_disembarked_alert  	    		"[greeting] [player_name], [city_name] 的 [a_foreign_army] 已经在您的岸边登陆并开始进攻.  但愿您的士兵有黄帝的勇气抵挡住敌人进攻."
+PHRASE_invasion_lastchance_1month_Warning_AC			"[greeting] [player_name], 准备的时间已经过去了. 一个月后, [city_name] 的 [a_foreign_army] 将到达征服您的城市, [reason_phrase]. 您训练有素的指挥官会帮您处理这些战术决策问题."
+
+PHRASE_CONDENSED_invasion_lastchance_title 			"N/A"
+PHRASE_CONDENSED_invasion_lastchance_spy_report			"密探报告 [a_foreign_army] 将在一年内接近您的城市."
+PHRASE_CONDENSED_invasion_lastchance_initial_announcement	"[time_until_attack] 个月后 [a_foreign_army] 将努力消灭您."
+PHRASE_CONDENSED_invasion_lastchance_6month_notleft_warning 		"六个月后 [a_foreign_army] 将会进攻, 目的是永远驱逐您!"
+PHRASE_CONDENSED_invasion_lastchance_6month_warning 		"六个月后 [a_foreign_army] 将会进攻, 目的是永远驱逐您!"
+PHRASE_CONDENSED_invasion_lastchance_2month_warning 		"[a_foreign_army] 将在两个月后进攻, 目的是永远驱逐您!"
+PHRASE_CONDENSED_invasion_lastchance_1month_Warning 		"[a_foreign_army] 将在一个月后进攻, 目的是永远驱逐您!"
+PHRASE_CONDENSED_invasion_lastchance_city_attacked_alert  	"[a_foreign_army] 现在就在我们的土地上, 目的是永远驱逐您!"
+PHRASE_CONDENSED_invasion_lastchance_reason  	 	 	"由于 [a_foreign_army] 进攻了您"
+PHRASE_CONDENSED_invasion_lastchance_no_reason  	 	""
+PHRASE_CONDENSED_invasion_lastchance_disembarked_alert  	"[a_foreign_army] 已经登陆, 目的是永远驱逐您!"
+PHRASE_CONDENSED_invasion_lastchance_1month_Warning_AC	"将军等待 [a_foreign_army] 一个月后到达."
+
+
+; 1A *****************ARMY RETURNS FROM ALLY/VASSAL ATTACKS RIVAL TROOP REQUEST		//287 
+PHRASE_legion_returns_city_attacks_rival_bad_title 					"战败的战士返回"
+PHRASE_legion_returns_city_attacks_rival_bad_initial_announcement 		"哦伟大的 [player_name], [reason_phrase] 我们的一些战士垂头丧气的从 [rival_city_name] 战场返回. 虽然他们尽力帮助 [city_name] 的 [leader_name] 征服敌人, 但他们还是打了败仗."
+PHRASE_legion_returns_city_attacks_rival_bad_no_reason	  			""
+
+PHRASE_CONDENSED_legion_returns_city_attacks_rival_bad_title 			"N/A"
+PHRASE_CONDENSED_legion_returns_city_attacks_rival_bad_initial_announcement 	"[city_name] 进攻 [rival_city_name] 的行动失败. 战败的士兵回来了."
+PHRASE_CONDENSED_legion_returns_city_attacks_rival_bad_no_reason	  		"N/A"
+
+;1B******************
+PHRASE_legion_returns_city_attacks_rival_good_title 					"胜利的战士返回!"
+PHRASE_legion_returns_city_attacks_rival_good_initial_announcement 		"享有声誉的 [player_name], 整个城市里都回响着您的士兵们高兴的叫喊声! 他们已经从 [rival_city_name] 的战场载誉而归. 他们大声谈话, 与 [city_name] 的士兵共同分享胜利的喜悦!"
+PHRASE_legion_returns_city_attacks_rival_good_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_legion_returns_city_attacks_rival_good_title 			"N/A"
+PHRASE_CONDENSED_legion_returns_city_attacks_rival_good_initial_announcement 	"胜利的战士返回."
+PHRASE_CONDENSED_legion_returns_city_attacks_rival_good_no_reason	  		"N/A"
+
+
+;2A*********ARMY RETURNS FROM PLAYER INITIATED ATTACK
+PHRASE_legion_returns_player_action_bad_title 					"战败的战士返回"
+PHRASE_legion_returns_player_action_bad_initial_announcement 		"哦伟大的 [player_name], 我们的战士袭击 [city_name] 的行动失败了, 现在他们回来了, 希望在未来能有机会弥补今天的失败."
+PHRASE_legion_returns_player_action_bad_no_reason	  			""
+
+PHRASE_CONDENSED_legion_returns_player_action_bad_title 				"N/A"
+PHRASE_CONDENSED_legion_returns_player_action_bad_initial_announcement 		"战败的战士从 [city_name] 返回."
+PHRASE_CONDENSED_legion_returns_player_action_bad_no_reason	  			"N/A"
+
+;2B****************   		
+PHRASE_legion_returns_player_action_good_title 						"胜利的战士返回!"
+PHRASE_legion_returns_player_action_good_initial_announcement 			"享有声誉的 [player_name], 我们勇敢的战士们已经从 [city_name] 得胜而归!"
+PHRASE_legion_returns_player_action_good_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_legion_returns_player_action_good_title 				"N/A"
+PHRASE_CONDENSED_legion_returns_player_action_good_initial_announcement 	"您的士兵已经从 [city_name] 得胜而归."
+PHRASE_CONDENSED_legion_returns_player_action_good_no_reason	  		"N/A"
+
+; USED WHEN PLAYER'S CITY IS SAVED VIA BRIBERY
+;**************Player's city saved BY BRIBERY ***********
+PHRASE_players_city_saved_bribery_title 						"入侵者得到了现金!"
+PHRASE_players_city_saved_bribery_initial_announcement 			"现在是该庆祝的时刻, [player_name]! [city_name] 的 [nationality] 军队不是败于军事, 而败于他们自己的贪婪. 我们的城市没有受到任何损害, 因而您送给 [nationality] 军队现金是值得的!"
+PHRASE_players_city_saved_bribery_no_reason	  				"N/A"
+
+PHRASE_CONDENSED_players_city_saved_bribery_title 				"N/A"
+PHRASE_CONDENSED_players_city_saved_bribery_initial_announcement 		"入侵者得到了现金!"
+PHRASE_CONDENSED_players_city_saved_bribery_no_reason	  			"N/A"
+
+;**************Strike successful***********       
+PHRASE_strike_successful_title 						"攻击 [rival_city_name] 的行动胜利了"
+PHRASE_strike_successful_initial_announcement 				"最高贵的 [player_name], 我, [city_name] 的 [leader_name], 十分高兴地向您报告您命令进攻 [rival_city_name], 我们取得了胜利! 我们士兵们正在庆祝, [rival_city_name] 的人感惭愧并向您屈服."
+PHRASE_strike_successful_no_reason	  					"N/A"
+
+PHRASE_CONDENSED_strike_successful_title 					"N/A"
+PHRASE_CONDENSED_strike_successful_initial_announcement 		"攻击 [rival_city_name] 的行动胜利了!"
+PHRASE_CONDENSED_strike_successful_no_reason	  			"N/A"
+
+
+;**********ADDITIONAL HISTORY PHRASES FOR LOST BATTLE IN TROOP REQUESTS***********************
+PHRASE_ally_under_attack_lost_battle_history_S		    	"您的军队太弱了不能帮助 [city_affected]"
+PHRASE_vassal_under_attack_lost_battle_history_P		"您的军队太弱了不能保卫 [city_affected]"
+PHRASE_ally_attacks_rival_lost_battle_history_S		     	"您的军队太弱了不能帮助 [city_affected]"
+PHRASE_vassal_attacks_rival_lost_battle_history_P		"您的军队太弱了不能帮助 [city_affected]"
+PHRASE_ally_terrorized_lost_battle_history			"您的军队太弱了不能保卫 [city_affected]"
+
+PHRASE_vassal_terrorized_lost_battle_history			"您军队不能保卫 [city_affected]"
+PHRASE_ally_conquers_rival_history                      	"被您的同盟征服"   
+PHRASE_vassal_conquers_rival_history                    	"被您的诸候征服" 
+PHRASE_strike_successful_history 					"为了您的利益而被征服"
+
+PHRASE_rival_under_attack_lost_battle_history_D		    	"您的军队太弱了不能帮助 [city_affected]"
+PHRASE_rival_attacks_rival_lost_battle_history_D		     	"您的军队太弱了不能帮助 [city_affected]"
+
+;************ More Multiplayer Troop Request Situations ********
+PHRASE_Support_Met_With_Cataclysm_Title				"支援部队被派遣回家"
+PHRASE_Support_Met_With_Cataclysm_Text				"您的部队到达城市的城门时只发现城市处于可怕的灾难混乱当中. 部队没有战斗就被派遣回家!"
+PHRASE_Support_Met_With_Cataclysm_Reason				"城市剧变"
+
+PHRASE_CONDENSED_Support_Met_With_Cataclysm_Title		"支援部队被派遣回家"
+PHRASE_CONDENSED_Support_Met_With_Cataclysm_Text		"您的部队到达城市的城门时只发现城市处于可怕的灾难混乱当中.  部队没有战斗就被派遣回家!"
+PHRASE_CONDENSED_Support_Met_With_Cataclysm_Reason		"城市剧变"
+
+;******************** Our support not needed - bribe ********************
+PHRASE_legion_returns_player_action_useless_title 				"徒劳无功的战士返回!"
+PHRASE_legion_returns_player_action_bribe_initial_announcement 		"[player_name], 我们派兵去支援 [city_name] 的行为真是可笑! 他们贿赂了入侵者."
+PHRASE_legion_returns_player_action_surrender_initial_announcement 	"[player_name], 我们派兵去支援 [city_name] 的行为真是可笑! 他们向入侵者投降了."
+PHRASE_legion_returns_player_action_useless_no_reason	  			"N/A"
+
+PHRASE_CONDENSED_legion_returns_player_action_useless_title 			"N/A"
+PHRASE_CONDENSED_legion_returns_player_action_bribe_initial_announcement 	"防御部队贿赂了入侵者"
+PHRASE_CONDENSED_legion_returns_player_action_surrender_initial_announcement 	"防御部队投降了"
+PHRASE_CONDENSED_legion_returns_player_action_useless_no_reason	  		"N/A"
+
+;******************* Returning with Plunder
+PHRASE_troops_plunder_title 					"战利品!"
+PHRASE_troops_plunder_text					"最称职的 [player_name], 您的士兵已经战场带着 [amount] 份战利返回!"
+PHRASE_troops_plunder_no_reason		  		"N/A"
+
+PHRASE_CONDENSED_troops_plunder_title 			"战利品"
+PHRASE_CONDENSED_troops_plunder_text		 	"您的士兵已经带着战利品返回"
+PHRASE_CONDENSED_troops_plunder_no_reason  		"N/A"
+
+;******************* Evil Bastard Ben is Attacking Me!
+PHRASE_friend_whines_about_ben_title				"必须制止他们!"
+PHRASE_friend_whines_about_ben_text					"善良的 [player_name], 恶毒的 [leader_name] 已经向我们发动了一次进攻!  我们知道您不能及时派兵来支援我们, 但是如果您进攻 [city_name], 或许还能为我们报仇!"
+PHRASE_friend_whines_about_ben_reason				"N/A"
+
+PHRASE_CONDENSED_friend_whines_about_ben_title			"必须制止他们!"
+PHRASE_CONDENSED_friend_whines_about_ben_text			"请反攻我们的敌人!"
+PHRASE_CONDENSED_friend_whines_about_ben_reason			"N/A"
+
+;******************** Overlord is fickle ********************
+PHRASE_overlord_is_fickle_title					"领主变化无常!"
+PHRASE_overlord_is_fickle_text					"卑劣的 [leader_name] 已经改变了我们的贡品!"
+PHRASE_overlord_is_fickle_reason					"变化无常"
+
+PHRASE_CONDENSED_overlord_is_fickle_title				"领主变化无常"
+PHRASE_CONDENSED_overlord_is_fickle_text				"我们的贡品已经变了!"
+PHRASE_CONDENSED_overlord_is_fickle_reason			"变化无常"
+
+;******************* Please Defend Me ********************
+PHRASE_request_troops_title_Overlord					"[city_nameA] 要求派部队"
+PHRASE_request_troops_spy_Overlord					"万岁 [player_name]! 由于大批入侵者就要进攻他们的城市, 我们的密探预见到 [city_nameA] 很快将需要我们的援助."
+PHRASE_request_troops_text_Overlord					"我的仆人 [player_name]!  我们担忧邪恶的邻近城市就要进攻我们的 [city_nameA], 因此要求您立刻派部队来帮助我们."
+PHRASE_request_troops_remind_first_Overlord				"别忘了派部队来!  我们伟大的城市 [city_nameA] 需要他们!"
+PHRASE_request_troops_remind_last_Overlord				"派出您的部队!  我们伟大的城市 [city_nameA] 马上就要用到他们了!"
+PHRASE_request_troops_early_Overlord					"您的部队提前到达!  做得好!"
+PHRASE_request_troops_comply_Overlord					"您的部队按时到达!  我们非常高兴!"
+PHRASE_request_troops_late_Overlord					"您的部队到晚了!  下次您应该更积极点, 要不然....!"
+PHRASE_request_troops_refuse_Overlord					"拒绝我!?!??!  您对我们一点儿用也没有!  或许我们应该强迫您!"
+PHRASE_request_troops_lost_reason_Overlord				"由于您我们打了败仗!"
+PHRASE_request_troops_no_reason_Overlord				"我们需要帮助"
+
+PHRASE_CONDENSED_request_troops_title_Overlord					"[city_nameA] 要求派部队"
+PHRASE_CONDENSED_request_troops_spy_Overlord					"密探报告 [city_nameA] 将被攻击"
+PHRASE_CONDENSED_request_troops_text_Overlord					"[city_nameA] 需要您的部队援助!"
+PHRASE_CONDENSED_request_troops_remind_first_Overlord				"[city_nameA] 需要您的部队快点去援助!"
+PHRASE_CONDENSED_request_troops_remind_last_Overlord				"[city_nameA] 需要您的部队现在就去帮忙!"
+PHRASE_CONDENSED_request_troops_early_Overlord					"您的部队提前到达!"
+PHRASE_CONDENSED_request_troops_comply_Overlord					"您的部队按时到达!"
+PHRASE_CONDENSED_request_troops_late_Overlord					"您的部队去晚了!"
+PHRASE_CONDENSED_request_troops_refuse_Overlord					"您拒绝派出部队!"
+PHRASE_CONDENSED_request_troops_lost_reason_Overlord				"[city_nameA] 打了败仗!"
+PHRASE_CONDENSED_request_troops_no_reason_Overlord				"要求部队"						
+;**********
+PHRASE_request_troops_title_Rival					"[city_nameA] 要求派部队"
+PHRASE_request_troops_spy_Rival					"万岁 [player_name]! 由于大批入侵者就要进攻他们的城市, 我们的密探预见到 [city_nameA] 很快将需要我们的援助."
+PHRASE_request_troops_text_Rival					"哦 [player_name]!  邪恶的城市进攻我们雄伟的的城市 [city_nameA], 我们强烈要求您派兵支援."
+PHRASE_request_troops_remind_first_Rival				"别忘了派部队来!  我们伟大的城市 [city_nameA] 需要他们!"
+PHRASE_request_troops_remind_last_Rival				"派出您的部队!  我们伟大的城市 [city_nameA] 马上就要用到他们了!"
+PHRASE_request_troops_early_Rival					"您的部队提前到达!  做得好!"
+PHRASE_request_troops_comply_Rival					"您的部队按时到达!  我们非常高兴!"
+PHRASE_request_troops_late_Rival					"您的部队到晚了!  下次您应该更积极点, 要不然....!"
+PHRASE_request_troops_refuse_Rival					"拒绝我!?!??!  您对我们一点儿用也没有!  或许我们应该强迫您!"
+PHRASE_request_troops_lost_reason_Rival				"由于您我们打了败仗!"
+PHRASE_request_troops_no_reason_Rival				"我们需要帮助"
+
+PHRASE_CONDENSED_request_troops_title_Rival					"[city_nameA] 要求派部队"			
+PHRASE_CONDENSED_request_troops_spy_Rival					"密探报告 [city_nameA] 将被攻击"		
+PHRASE_CONDENSED_request_troops_text_Rival					"[city_nameA] 需要您的部队援助!"				
+PHRASE_CONDENSED_request_troops_remind_first_Rival				"[city_nameA] 需要您的部队快点去援助!"			
+PHRASE_CONDENSED_request_troops_remind_last_Rival				"[city_nameA] 需要您的部队现在就去帮忙!"			
+PHRASE_CONDENSED_request_troops_early_Rival					"您的部队提前到达!"				
+PHRASE_CONDENSED_request_troops_comply_Rival					"您的部队按时到达!"				
+PHRASE_CONDENSED_request_troops_late_Rival					"您的部队去晚了!"				
+PHRASE_CONDENSED_request_troops_refuse_Rival					"您拒绝派出部队!"				
+PHRASE_CONDENSED_request_troops_lost_reason_Rival				"[city_nameA] 打了败仗!"			
+PHRASE_CONDENSED_request_troops_no_reason_Rival					"要求部队"						
+;**********
+
+PHRASE_request_troops_title_Ally					"[city_nameA] 要求派部队"
+PHRASE_request_troops_spy_Ally					"万岁 [player_name]! 由于大批入侵者就要进攻他们的城市, 我们的密探预见到 [city_nameA] 很快将需要我们的援助."
+PHRASE_request_troops_text_Ally					"善良的 [player_name]!  我们担忧邪恶的邻近城市就要进攻我们的 [city_nameA], 因此要求您立刻派部队来帮助我们."
+PHRASE_request_troops_remind_first_Ally				"别忘了派部队来!  我们伟大的城市 [city_nameA] 需要他们!"
+PHRASE_request_troops_remind_last_Ally				"派出您的部队!  我们伟大的城市 [city_nameA] 马上就要用到他们了!"
+PHRASE_request_troops_early_Ally					"您的部队提前到达!  做得好!"
+PHRASE_request_troops_comply_Ally					"您的部队按时到达!  我们非常高兴!"
+PHRASE_request_troops_late_Ally					"您的部队到晚了!  下次您应该更积极点, 要不然....!"
+PHRASE_request_troops_refuse_Ally					"拒绝我!?!??!  您对我们一点儿用也没有!  或许我们应该强迫您!"
+PHRASE_request_troops_lost_reason_Ally				"由于您我们打了败仗!"
+PHRASE_request_troops_no_reason_Ally				"我们需要帮助"
+
+PHRASE_CONDENSED_request_troops_title_Ally			"[city_nameA] 要求派部队"				
+PHRASE_CONDENSED_request_troops_spy_Ally				"密探报告 [city_nameA] 将被攻击"			
+PHRASE_CONDENSED_request_troops_text_Ally				"[city_nameA] 需要您的部队援助!"					
+PHRASE_CONDENSED_request_troops_remind_first_Ally			"[city_nameA] 需要您的部队快点去援助!"				
+PHRASE_CONDENSED_request_troops_remind_last_Ally			"[city_nameA] 需要您的部队现在就去帮忙!"				
+PHRASE_CONDENSED_request_troops_early_Ally				"您的部队提前到达!"					
+PHRASE_CONDENSED_request_troops_comply_Ally				"您的部队按时到达!"					
+PHRASE_CONDENSED_request_troops_late_Ally				"您的部队去晚了!"					
+PHRASE_CONDENSED_request_troops_refuse_Ally				"您拒绝派出部队!"					
+PHRASE_CONDENSED_request_troops_lost_reason_Ally			"[city_nameA] 打了败仗!"				
+PHRASE_CONDENSED_request_troops_no_reason_Ally				"要求部队"						
+
+
+;******************** Please Strike Them ********************
+PHRASE_request_strike_title						"[city_nameA] 要求进攻"
+PHRASE_request_strike_text_D						"我的仆人 [player_name]! 我们非常不喜欢 [rival_city_name] 的行为!  立刻派部队去征服他们!"
+PHRASE_request_strike_text_S						"享有声誉的 [player_name]! 我们非常不喜欢 [rival_city_name] 的行为!  请立刻派部队去征服他们!"
+PHRASE_request_strike_reason						"N/A"
+
+PHRASE_CONDENSED_request_strike_title				"[city_nameA] 要求进攻"
+PHRASE_CONDENSED_request_strike_text_D				"立刻进攻 [rival_city_name]!"
+PHRASE_CONDENSED_request_strike_text_S				"请进攻 [rival_city_name]!"
+PHRASE_CONDENSED_request_strike_reason				"N/A"
+
+;********************Broken alliance********************
+PHRASE_broken_alliance_title						"同盟破裂"
+PHRASE_broken_alliance_text						"坏消息, 高贵的 [player_name]! 叛逆 [rival_city_name] 已经不再与我们结盟!"
+PHRASE_broken_alliance_reason						"N/A"
+
+PHRASE_CONDENSED_broken_alliance_title				"同盟破裂"									    
+PHRASE_CONDENSED_broken_alliance_text				"[rival_city_name] 打破盟约!"
+PHRASE_CONDENSED_broken_alliance_reason				"N/A"
+
+;********************New alliance********************
+PHRASE_new_alliance_title						"新同盟"
+PHRASE_new_alliance_text						"享有声誉的 [player_name]! 我们的新朋友 [rival_city_name] 已经与我们建立同盟关系!"
+PHRASE_new_alliance_reason						"N/A"
+
+PHRASE_CONDENSED_new_alliance_title					"新同盟"										     
+PHRASE_CONDENSED_new_alliance_text					"[rival_city_name] 与我们结盟!"
+PHRASE_CONDENSED_new_alliance_reason				"N/A"
+
+;********************New alliance********************
+PHRASE_no_overlord_title						"领主被打倒!"
+PHRASE_no_overlord_text							"强大的 [player_name]! 邪恶的领主 [rival_city_name] 被打倒了! 我们又自由了!"
+PHRASE_no_overlord_reason						"N/A"
+
+PHRASE_CONDENSED_no_overlord_title					"没有领主"										     
+PHRASE_CONDENSED_no_overlord_text					"[rival_city_name] 不再有领主了!"
+PHRASE_CONDENSED_no_overlord_reason					"N/A"
+
+;********************Boon Messages********************
+PHRASE_Boon_Gift_Title					"新年礼物"
+PHRASE_Boon_Gift_None					"哎呀伟大的 [player_name]! 真不幸, 在您的生肖年里, 神仙们却找不到什么可以送给当礼物的东西."
+PHRASE_Boon_Gift_Only_Comm				"真幸运 [player_name]! 对您来说是多么快乐的一年啊! 神仙们把许多 [item] 放入了您的仓库!"
+PHRASE_Boon_Gift_Only_Animal				"真幸运 [player_name]! 对您来说是多么幸福的一年啊! 神仙们把神奇的 [animal] 送进了您的皇宫动物园!"
+PHRASE_Boon_Gift_Both        				"高贵的 [player_name]! 对您来说是多么幸运的一年啊! 神仙们把许多 [item] 放进您的仓库, 还把一只神奇的 [animal] 送进您的皇宫动物园!"
+PHRASE_Boon_Reason					"新年恩惠"
+
+;********************
+PHRASE_Boon_Costs_Text_Wood				"最博学的 [player_name]! 在今年这个您的生肖年当中, 建造伐木小屋, 石弩堡垒, 桑树, 漆树, 园艺花木和麦田的费用都降低了!"
+PHRASE_Boon_Costs_Text_Fire				"最博学的 [player_name]! 在今年这个您的生肖年当中, 建造步兵堡垒, 战车堡垒, 弩兵堡垒, 武器铺和大豆地的费用都降低了!"
+PHRASE_Boon_Costs_Text_Earth				"最博学的 [player_name]! 在今年这个您的生肖年当中, 建造窑窖, 粘土矿, 采石工厂, 城墙和住宅围墙, 工人营地, 以及粟子田的费用都降低了!"
+PHRASE_Boon_Costs_Text_Metal				"最博学的 [player_name]! 在今年这个您的生肖年当中, 建造铸币厂, 骑兵堡垒, 铜器工厂, 冶炼厂, 高炉, 以及亚麻田的费用都降低了!"
+PHRASE_Boon_Costs_Text_Water				"最博学的 [player_name]! 在今年这个您的生肖年当中, 建造水井, 盐矿, 灌溉泵和灌溉渠, 渡口, 池塘和稻田的费用都降低了!"
+
+;********************
+PHRASE_Boon_Yield_Text_Wood				"财富在敲门, [player_name]! 在今年这个您的生肖年当中, 伐木小屋, 桑树, 漆树, 和麦田的产量将非常高!"
+PHRASE_Boon_Yield_Text_Fire				"财富在敲门, [player_name]! 在今年这个您的生肖年当中, 武器铺和大豆地的产量将非常高!"
+PHRASE_Boon_Yield_Text_Earth				"财富在敲门, [player_name]! 在今年这个您的生肖年当中, 窑窖, 粘土矿, 采石工厂和粟子田的产量将非常高!"
+PHRASE_Boon_Yield_Text_Metal				"财富在敲门, [player_name]! 在今年这个您的生肖年当中, 铸币厂, 铜器工厂, 冶炼厂, 高炉和亚麻田的产量将非常高!"
+PHRASE_Boon_Yield_Text_Water				"财富在敲门, [player_name]! 在今年这个您的生肖年当中, 盐矿和农作物, 特别是水稻的产量将非常高!"
+
+;********************
+PHRASE_Boon_Defense_Text_Wood				"最幸运的 [player_name]! 在今年这个您的生肖年当中, 您的部队的士气会提高, 而您的敌人的力量会降低!"
+PHRASE_Boon_Defense_Text_Fire				"最幸运的 [player_name]! 在今年这个您的生肖年当中, 您的部队的移动速度会提高, 而您的敌人的士气会降低!"
+PHRASE_Boon_Defense_Text_Earth			"最幸运的 [player_name]! 在今年这个您的生肖年当中, 您的部队的耐力会提高, 而您的敌人突破您防御的能力会降低!"
+PHRASE_Boon_Defense_Text_Metal			"最幸运的 [player_name]! 在今年这个您的生肖年当中, 您的部队的力量会提高, 而您的敌人的移动速度会降低!"
+PHRASE_Boon_Defense_Text_Water			"最幸运的 [player_name]! 在今年这个您的生肖年当中, 您的部队的防御力会提高, 而您的敌人的破坏建筑的能力会降低!"
+
+;********************Boon Messages********************
+PHRASE_CONDENSED_Boon_Gift_Title			"新年礼物"
+PHRASE_CONDENSED_Boon_Gift_None			"哎呀伟大的 [player_name]! 神仙们没有可以给您当礼物东西."
+PHRASE_CONDENSED_Boon_Gift_Only_Comm		"最高贵的 [player_name]! 神仙们送给您 [item]!"
+PHRASE_CONDENSED_Boon_Gift_Only_Animal		"博学的 [player_name]! 神仙们送给您的动物园一只 [animal]!"
+PHRASE_CONDENSED_Boon_Gift_Both        		"最幸运的 [player_name]! 神仙们送给您 [item] 和一只 [animal]!"
+PHRASE_CONDENSED_Boon_Reason				"新年恩惠"
+
+;********************
+PHRASE_CONDENSED_Boon_Costs_Text_Wood		"富有的 [player_name]! 今年建造伐木小屋, 石弩堡垒, 桑树, 漆树, 园艺花木和麦田的费用都降低了!"
+PHRASE_CONDENSED_Boon_Costs_Text_Fire		"贤明的 [player_name]! 今年建造步兵堡垒, 战车堡垒, 弩兵堡垒, 武器铺和大豆地的费用都降低了!"
+PHRASE_CONDENSED_Boon_Costs_Text_Earth		"谨慎的 [player_name]! 今年建造窑窖, 粘土矿, 采石工厂, 城墙和住宅围墙, 工人营地, 以及粟子田的费用都降低了!"
+PHRASE_CONDENSED_Boon_Costs_Text_Metal		"富有的 [player_name]! 今年建造铸币厂, 骑兵堡垒, 铜器工厂, 冶炼厂, 高炉, 以及亚麻田的费用都降低了!"
+PHRASE_CONDENSED_Boon_Costs_Text_Water		"谨慎的 [player_name]! 今年建造水井, 盐矿, 灌溉泵和灌溉渠, 渡口, 池塘和稻田的费用都降低了!"
+
+;********************
+PHRASE_CONDENSED_Boon_Yield_Text_Wood		"幸运的 [player_name]! 今年伐木小屋, 桑树, 漆树, 和麦田的产量将非常高!"
+PHRASE_CONDENSED_Boon_Yield_Text_Fire		"幸运的 [player_name]! 今年武器铺和大豆地的产量将非常高!"
+PHRASE_CONDENSED_Boon_Yield_Text_Earth		"幸运的 [player_name]! 今年窑窖, 粘土矿, 采石工厂和粟子田的产量将非常高!"
+PHRASE_CONDENSED_Boon_Yield_Text_Metal		"幸运的 [player_name]! 今年铸币厂, 铜器工厂, 冶炼厂, 高炉和亚麻田的产量将非常高!"
+PHRASE_CONDENSED_Boon_Yield_Text_Water		"幸运的 [player_name]! 今年盐矿和农作物, 特别是水稻的产量将非常高!"
+
+;********************
+PHRASE_CONDENSED_Boon_Defense_Text_Wood		"鼓舞人心的 [player_name]! 您的部队的士气会提高, 而您的敌人的力量会降低!"
+PHRASE_CONDENSED_Boon_Defense_Text_Fire		"鼓舞人心的 [player_name]! 您的部队的移动速度会提高, 而您的敌人的士气会降低!"
+PHRASE_CONDENSED_Boon_Defense_Text_Earth		"鼓舞人心的 [player_name]! 您的部队的耐力会提高, 而您的敌人突破您防御的能力会降低!"
+PHRASE_CONDENSED_Boon_Defense_Text_Metal		"鼓舞人心的 [player_name]! 您的部队的力量会提高, 而您的敌人的移动速度会降低!"
+PHRASE_CONDENSED_Boon_Defense_Text_Water		"鼓舞人心的 [player_name]! 您的部队的防御力会提高, 而您的敌人的破坏建筑的能力会降低!"
+
+
+;******************** SPY REVERSED ********************
+PHRASE_spy_reverse_title		"敌人密探投诚!"
+PHRASE_spy_reverse_buyoff_phrase	"好消息, [player_name]!  我们在城里抓到一个来自 [city_nameA] 的敌人密探.  他为赎身交了 [amount] 现金, 而且发誓永远不再打扰我们了."
+PHRASE_spy_reverse_send_phrase		"好消息, [player_name]!  我们在城里抓到一个敌人的密探, 我们知道他是从哪儿来的.  我们已经说服这个贪婪的狐狸为我们工作, 所以他返回 [city_nameA] 去为我们刺探情报了!"
+PHRASE_spy_reverse_reason		"N/A"
+
+PHRASE_CONDENSED_spy_reverse_title		"敌人密探投诚!"
+PHRASE_CONDENSED_spy_reverse_buyoff_phrase	"投诚的密探给了我们 [amount] 现金!"
+PHRASE_CONDENSED_spy_reverse_send_phrase	"我们派一个投诚的密探去 [city_nameA]"
+PHRASE_CONDENSED_spy_reverse_reason		"N/A"
+
+PHRASE_animal_escape_title		"动物逃跑了!"
+PHRASE_animal_escape_phrase		"我的可怜的职责就是报告这个不幸的消息, 伟大的 [player_name]. 动物们从皇宫中跑出来了! 不, 那可不是大臣们在街跑, 聪明的统治者. 那是您的动物园里的动物. 他们逃出来了!"
+PHRASE_animal_escape_reason		"N/A"
+
+PHRASE_CONDENSED_animal_escape_title	"动物逃跑了!"
+PHRASE_CONDENSED_animal_escape_phrase	"动物从皇宫中跑出来了!"
+PHRASE_CONDENSED_animal_escape_reason	"N/A"
+
+;******************** Gimme Stuff ********************
+PHRASE_request_goods_title   "[city_nameA] 的要求"
+PHRASE_request_goods_text_D  "慷慨是一种荣誉, [player_name]. 我非常需要 [item]. 请赶快给我送来一些!"
+PHRASE_request_goods_text_S  "享有声誉的 [player_name], 每个城市都传颂着您慷慨的美德. 我需要 [item]. 请尽快送一些给我, 帮我渡过这段艰难时期!"
+PHRASE_request_animal_text_D  "[player_name], 别那么自顾自地欣赏您动物园里动物. 我比您更喜欢在自己皇宫的动物园内看到新奇的动物. 尽快送一只动物来让我开心一下吧!"
+PHRASE_request_animal_text_S  "博学的 [player_name], 我的皇宫动物园看起来是那么萧条. 那里还需要更多的动物才能显出生机, 我也会快乐起来. 您能不能把您自己动物园内的一只神奇的动物送给我呢?"
+PHRASE_request_cash_text_D  "[player_name], 您的富有让我大为吃惊, 而我现在非常需要现金! 请以最快的速度送些钱给我!"
+PHRASE_request_cash_text_S  "善良而慷慨的 [player_name], 在现在这个最困难的时期, 我的城市金库空虚. 如果您的金库里还有钱, 如果您能尽快送些钱给我, 那对我将是极大的帮助!"
+PHRASE_request_goods_reason  "N/A"
+
+PHRASE_CONDENSED_request_goods_title				"[city_nameA] 的要求"
+PHRASE_CONDENSED_request_goods_text_D				"立刻给我送来 [item]!"
+PHRASE_CONDENSED_request_goods_text_S				"请快点给我送来 [item]!"
+PHRASE_CONDENSED_request_animal_text_D  			"立刻送给我动物!"
+PHRASE_CONDENSED_request_animal_text_S  			"请快点给我送来动物!"
+PHRASE_CONDENSED_request_cash_text_D  				"立刻给我送来钱!"
+PHRASE_CONDENSED_request_cash_text_S  				"请快点给我送来钱!"
+PHRASE_CONDENSED_request_goods_reason				"N/A"
+
+;******************** Legion returns from player city ********************
+
+PHRASE_legion_returns_from_player_city_title			"士兵们从 [city_name] 返回"
+PHRASE_legion_returns_from_player_city_initial_announcement	"声名卓著的 [player_name], 您的士兵从援助 [city_name] 的战斗中回来了."
+PHRASE_legion_returns_from_player_city_no_reason		"N/A"
+
+PHRASE_CONDENSED_legion_returns_from_player_city_title			"士兵返回"
+PHRASE_CONDENSED_legion_returns_from_player_city_initial_announcement	"士兵从 [city_name] 返回"
+PHRASE_CONDENSED_legion_returns_from_player_city_no_reason		"N/A"
+

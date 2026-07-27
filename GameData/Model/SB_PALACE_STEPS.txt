@@ -1,0 +1,20 @@
+; Model\SB_PALACE_STEPS.txt
+
+; this file is generated automatically, comments will not be preserved
+
+
+; Phase 0
+{2}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  65,   23,   65,   23,   34,    5,   34,    5,    9,   14,    9,   14,   35,   16,   35,   16,      9,    80,   5, 0, 0, 0}
+{  32,   -9,   32,   -9,   34,    5,   34,    5,   29,   -9,   29,   -9,   21,  -10,   21,   -9,      9,    80,   5, 0, 0, 0}
+
+; Phase 1
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w

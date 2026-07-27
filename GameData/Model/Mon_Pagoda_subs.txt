@@ -1,0 +1,98 @@
+;
+; Grand Pagoda
+;
+;          x,  y,                   type, elev,    pos,    ent,
+/*  0*/ { -1, -1,              SB_PAGODA,    0,  NORTH,     0,},
+
+/*  1*/ { -4, -4,         SB_PAGODA_WALL,    0,     NW,     0,},
+/*  2*/ { -3, -4,         SB_PAGODA_WALL,    0,  NORTH,     0,},
+/*  3*/ { -2, -4,         SB_PAGODA_WALL,    0,  NORTH,     0,},
+/*  4*/ { -1, -4,         SB_PAGODA_WALL,    0,  NORTH,     0,},
+/*  5*/ {  0, -4,         SB_PAGODA_WALL,    0,  NORTH,     0,},     2
+/*  6*/ {  1, -4,         SB_PAGODA_WALL,    0,  NORTH,     0,},     1
+/*  7*/ {  2, -4,         SB_PAGODA_WALL,    0,  NORTH,     0,},
+/*  8*/ {  3, -4,         SB_PAGODA_WALL,    0,  NORTH,     0,},
+/*  9*/ {  4, -4,         SB_PAGODA_WALL,    0,  NORTH,     0,},
+/* 10*/ {  5, -4,         SB_PAGODA_WALL,    0,     NE,     0,},
+/* 11*/ {  5, -3,         SB_PAGODA_WALL,    0,   EAST,     0,},
+/* 12*/ {  5, -2,         SB_PAGODA_WALL,    0,   EAST,     0,},
+/* 13*/ {  5, -1,         SB_PAGODA_WALL,    0,   EAST,     0,},
+/* 14*/ {  5,  0,         SB_PAGODA_WALL,    0,   EAST,     0,},     2
+/* 15*/ {  5,  1,         SB_PAGODA_WALL,    0,   EAST,     0,},     1
+/* 16*/ {  5,  2,         SB_PAGODA_WALL,    0,   EAST,     0,},
+/* 17*/ {  5,  3,         SB_PAGODA_WALL,    0,   EAST,     0,},
+/* 18*/ {  5,  4,         SB_PAGODA_WALL,    0,   EAST,     0,},
+/* 19*/ {  5,  5,         SB_PAGODA_WALL,    0,     SE,     0,},
+/* 20*/ {  4,  5,         SB_PAGODA_WALL,    0,  SOUTH,     0,},
+/* 21*/ {  3,  5,         SB_PAGODA_WALL,    0,  SOUTH,     0,},
+/* 22*/ {  2,  5,         SB_PAGODA_WALL,    0,  SOUTH,     0,},
+
+/* 23*/ {  1,  5,         SB_PAGODA_WALL,    0,  SOUTH,     2,},
+/* 24*/ {  0,  5,         SB_PAGODA_WALL,    0,  SOUTH,     1,},
+
+/* 25*/ { -1,  5,         SB_PAGODA_WALL,    0,  SOUTH,     0,},
+/* 26*/ { -2,  5,         SB_PAGODA_WALL,    0,  SOUTH,     0,},
+/* 27*/ { -3,  5,         SB_PAGODA_WALL,    0,  SOUTH,     0,},
+/* 28*/ { -4,  5,         SB_PAGODA_WALL,    0,     SW,     0,},
+/* 29*/ { -4,  4,         SB_PAGODA_WALL,    0,   WEST,     0,},
+/* 30*/ { -4,  3,         SB_PAGODA_WALL,    0,   WEST,     0,},
+/* 31*/ { -4,  2,         SB_PAGODA_WALL,    0,   WEST,     0,},
+/* 32*/ { -4,  1,         SB_PAGODA_WALL,    0,   WEST,     0,},     2
+/* 33*/ { -4,  0,         SB_PAGODA_WALL,    0,   WEST,     0,},     1
+/* 34*/ { -4, -1,         SB_PAGODA_WALL,    0,   WEST,     0,},
+/* 35*/ { -4, -2,         SB_PAGODA_WALL,    0,   WEST,     0,},
+/* 36*/ { -4, -3,         SB_PAGODA_WALL,    0,   WEST,     0,},
+
+/* 37*/ { -3, -3,    SB_PAGODA_COURTYARD,    0,     NW,     0,},
+/* 38*/ { -1, -3,    SB_PAGODA_COURTYARD,    0,  NORTH,     0,},
+/* 39*/ {  1, -3,    SB_PAGODA_COURTYARD,    0,  NORTH,     1,},
+/* 40*/ {  3, -3,    SB_PAGODA_COURTYARD,    0,     NE,     0,},
+/* 41*/ {  3, -1,    SB_PAGODA_COURTYARD,    0,   EAST,     0,},
+/* 42*/ {  3,  1,    SB_PAGODA_COURTYARD,    0,   EAST,     1,},
+/* 43*/ {  3,  3,    SB_PAGODA_COURTYARD,    0,     SE,     0,},
+/* 44*/ {  1,  3,    SB_PAGODA_COURTYARD,    0,  SOUTH,     0,},
+/* 45*/ { -1,  3,    SB_PAGODA_COURTYARD,    0,  SOUTH,     1,},
+/* 46*/ { -3,  3,    SB_PAGODA_COURTYARD,    0,     SW,     0,},
+/* 47*/ { -3,  1,    SB_PAGODA_COURTYARD,    0,   WEST,     0,},
+/* 48*/ { -3, -1,    SB_PAGODA_COURTYARD,    0,   WEST,     1,},
+
+;
+;sub-bldg-list-type    0 = single sub-buildings
+; (sub typ)            1 = joined sub-buildings
+;
+;            beg end
+;mon sub lst sub sub beg end
+; ph typ num bld bld  ph  ph
+<  0,  1,  0,  0,  0,  0,  1,>
+<  0,  1,  0, 37, 48,  0,  1,>
+
+<  1,  1,  0,  0,  0,  1,  2,>
+<  1,  1,  0, 37, 48,  1,  2,>
+
+<  2,  1,  0,  0,  0,  2,  3,>
+<  2,  1,  0, 37, 48,  2,  3,>
+
+<  3,  1,  0,  0,  0,  3,  4,>
+<  3,  1,  0, 37, 48,  3,  4,>
+
+<  4,  1,  0,  0,  0,  4,  5,>
+<  4,  1,  0, 37, 48,  4,  5,>
+
+<  5,  1,  0,  0,  0,  5,  6,>
+<  5,  1,  0, 37, 48,  5,  6,>
+
+<  6,  1,  0,  0,  0,  6,  7,>
+<  6,  1,  0, 37, 48,  6,  7,>
+
+<  7,  1,  0,  0,  0,  7,  8,>
+<  7,  1,  0, 37, 48,  7,  8,>
+
+<  8,  1,  0,  0,  0,  8,  9,>
+<  8,  1,  0, 37, 48,  8,  9,>
+
+<  9,  1,  0,  0,  0,  9, 10,>
+<  9,  1,  0, 37, 48,  9, 10,>
+
+< 10,  0,  0,  1, 22,  0,  1,>
+< 10,  0,  0, 25, 36,  0,  1,>
+< 10,  1,  0, 23, 24,  0,  1,>

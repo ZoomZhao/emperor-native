@@ -1,0 +1,15 @@
+[Fire]
+Multiplier=5
+Frequency=4
+BurnLimit=1000
+BurnDamage=100
+FireDamageMult=10
+
+[Damage]
+DamageLimit=1000
+
+[Unrest]
+BeggarFreq=71
+MuggerFreq=80
+ThiefFreq=85
+BanditFreq=90

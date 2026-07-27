@@ -1,0 +1,20 @@
+; Model\SB_CLOCK_TOWER_WALL.txt
+
+; this file is generated automatically, comments will not be preserved
+
+
+; Phase 0
+{2}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w
+{  38,   23,   38,   23,   38,   23,   38,   23,   38,   23,   38,   23,   38,   23,   38,   23,      9,    80,   4, 4, 4, 4}
+{  38,   23,   38,   23,   38,   23,   38,   23,   38,   23,   38,   23,   38,   23,   38,   23,     10,    80,   3, 3, 3, 3}
+
+; Phase 1
+{0}(@)
+;        North                    East                   South                     West                             Facing
+;----------------------  ----------------------  ----------------------  ----------------------                    rotations
+;    start      finish       start      finish       start      finish       start      finish                    ----------
+;   x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,    x,    y,   look, ticks,   n, e, s, w

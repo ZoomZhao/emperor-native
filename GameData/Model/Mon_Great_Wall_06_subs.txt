@@ -1,0 +1,94 @@
+; Great Wall
+;
+; Shanhaiguan
+;
+;          x,  y,                   type, elev,    pos,    ent,
+/*  0*/ { 0,  0,          SB_GREAT_WALL,    5,  NORTH,     25,},
+/*  1*/ { 4,  0,    SB_GREAT_WALL_TOWER,    5,  NORTH,     26,},
+/*  2*/ { 8,  0,          SB_GREAT_WALL,    5,  NORTH,      8,},
+/*  3*/ {12,  0,    	  SB_GREAT_WALL,    5,  NORTH,     20,},
+/*  4*/ {12, -4,          SB_GREAT_WALL,    5,  NORTH,     19,},
+/*  5*/ {12, -8,          SB_GREAT_WALL,    5,  NORTH,     14,},
+/*  6*/ {12,-12,          SB_GREAT_WALL,    5,  NORTH,     21,},
+/*  7*/ {16,-12,          SB_GREAT_WALL,    5,  NORTH,      3,},
+/*  8*/ {20,-12,          SB_GREAT_WALL,    4,  NORTH,      2,},
+/*  9*/ {24,-12,          SB_GREAT_WALL,    3,  NORTH,      2,},
+/* 10*/ {28,-12,          SB_GREAT_WALL,    3,  NORTH,      1,},
+/* 11*/ {32,-12,          SB_GREAT_WALL,    3,  NORTH,      0,},
+/* 12*/ {36,-12,          SB_GREAT_WALL,    2,  NORTH,      2,},
+/* 13*/ {40,-12,          SB_GREAT_WALL,    1,  NORTH,      2,},
+/* 14*/ {44,-12,          SB_GREAT_WALL,    0,  NORTH,      2,},
+/* 15*/ {48,-12,    SB_GREAT_WALL_TOWER,    0,  NORTH,     26,},
+/* 16*/ {52,-12,          SB_GREAT_WALL,    0,  NORTH,      4,},
+/* 17*/ {56,-12,          SB_GREAT_WALL,    0,  NORTH,     22,},
+/* 18*/ {56, -8,          SB_GREAT_WALL,    0,  NORTH,     18,},
+/* 19*/ {56, -4,          SB_GREAT_WALL,    0,  NORTH,     13,},
+/* 20*/ {56,  0,          SB_GREAT_WALL,    0,  NORTH,     23,},
+/* 21*/ {60,  0,          SB_GREAT_WALL,    0,  NORTH,      9,},
+/* 22*/ {64,  0,          SB_GREAT_WALL,    0,  NORTH,      5,},
+/* 23*/ {68,  0,          SB_GREAT_WALL,    0,  NORTH,      6,},
+/* 24*/ {72,  0,          SB_GREAT_WALL,    0,  NORTH,      8,},
+/* 25*/ {76,  0,          SB_GREAT_WALL,    0,  NORTH,     20,},
+/* 26*/ {76, -4,          SB_GREAT_WALL,    0,  NORTH,     19,},
+/* 27*/ {76, -8,          SB_GREAT_WALL,    0,  NORTH,     14,},
+/* 28*/ {76,-12,          SB_GREAT_WALL,    0,  NORTH,     21,},
+/* 29*/ {80,-12,          SB_GREAT_WALL,    0,  NORTH,      3,},
+/* 30*/ {84,-12,    SB_GREAT_WALL_TOWER,    0,  NORTH,     26,},
+/* 31*/ {88,-12,          SB_GREAT_WALL,    0,  NORTH,     25,},
+/* 32*/ {92,-12,          SB_GREAT_WALL,    0,  NORTH,     25,},
+/* 33*/ {96,-12,          SB_GREAT_WALL,    0,  NORTH,     25,},
+/* 34*/ {100,-12,   SB_GREAT_WALL_TOWER,    0,  NORTH,     26,},
+/* 35*/ {104,-12,         SB_GREAT_WALL,    0,  NORTH,     25,},
+/* 36*/ {108,-12,         SB_GREAT_WALL,    0,  NORTH,     25,},
+/* 37*/ {112,-12,    SB_GREAT_WALL_GATE,    0,  NORTH,     NW,},
+/* 38*/ {115,-12,    SB_GREAT_WALL_GATE,    0,  NORTH,     NE,},
+/* 39*/ {112,-10,    SB_GREAT_WALL_GATE,    0,  NORTH,     SW,},
+/* 40*/ {115,-10,    SB_GREAT_WALL_GATE,    0,  NORTH,     SE,},
+/* 41*/ {117,-12,         SB_GREAT_WALL,    0,  NORTH,     25,},
+/* 42*/ {121,-12,         SB_GREAT_WALL,    0,  NORTH,     25,},
+/* 43*/ {125,-12,   SB_GREAT_WALL_TOWER,    0,  NORTH,     26,},
+/* 44*/ {129,-12,         SB_GREAT_WALL,    0,  NORTH,     25,},
+/* 45*/ {133,-12,         SB_GREAT_WALL,    0,  NORTH,     25,},
+/* 46*/ {137,-12,         SB_GREAT_WALL,    0,  NORTH,     25,},
+/* 47*/ {114, -9,    SB_GREAT_WALL_ROAD,    0,  NORTH,      0,},
+/* 48*/ {114,-10,    SB_GREAT_WALL_ROAD,    0,  NORTH,      0,},
+/* 49*/ {114,-11,    SB_GREAT_WALL_ROAD,    0,  NORTH,      0,},
+/* 50*/ {114,-12,    SB_GREAT_WALL_ROAD,    0,  NORTH,      0,},
+
+;
+;sub-bldg-list-type    0 = single sub-buildings
+; (sub typ)            1 = joined sub-buildings
+;
+;            beg end
+;mon sub lst sub sub beg end
+; ph typ num bld bld  ph  ph
+<  0,  0,  0,  0, 36,  0,  1,>
+<  0,  0,  0, 41, 46,  0,  1,>
+<  0,  0,  0, 47, 50,  0,  1,>
+
+<  1,  0,  0,  0, 36,  1,  3,>
+<  1,  0,  0, 41, 46,  1,  3,>
+
+<  2,  0,  0,  0, 36,  3,  4,>
+<  2,  0,  0, 41, 46,  3,  4,>
+
+<  3,  0,  0,  0, 36,  4,  6,>
+<  3,  0,  0, 41, 46,  4,  6,>
+
+<  4,  0,  0,  0, 36,  6,  7,>
+<  4,  0,  0, 41, 46,  6,  7,>
+
+<  5,  0,  0,  0, 36,  7,  9,>
+<  5,  0,  0, 41, 46,  7,  9,>
+
+<  6,  0,  0,  0, 36,  9, 10,>
+<  6,  0,  0, 41, 46,  9, 10,>
+
+<  7,  0,  0,  1,  1, 10, 11,>
+<  7,  0,  0, 15, 15, 10, 11,>
+<  7,  0,  0, 30, 30, 10, 11,>
+<  7,  0,  0, 34, 34, 10, 11,>
+<  7,  0,  0, 43, 43, 10, 11,>
+
+<  8,  1,  0, 37, 40,  0,  1,> 
+<  8,  0,  0, 47, 50,  1,  2,>
