@@ -242,11 +242,26 @@ public final class GameSessionController: @unchecked Sendable {
                 tradeRules: models.trade
             )
             let map = try EmperorMap(url: world.mapAssignment.embeddedMap.mapURL)
-            var newCity = DeterministicCityState(
-                missionSettings: world.startSettings,
-                difficulty: selectedDifficulty,
-                map: map
-            )
+            let canContinueExistingCity = world.mapAssignment.isContinuation
+                && selectedCampaignID == campaignID
+                && selectedMissionID == world.mapAssignment.sourceMissionIndex
+                && activeWorld?.mapAssignment.embeddedMap.mapURL
+                    == world.mapAssignment.embeddedMap.mapURL
+                && campaignRuntime.map {
+                    if case .victory = $0.outcome { return true }
+                    return false
+                } == true
+            var newCity: DeterministicCityState
+            if canContinueExistingCity, var inherited = city {
+                inherited.continueCampaignMission(with: world.startSettings)
+                newCity = inherited
+            } else {
+                newCity = DeterministicCityState(
+                    missionSettings: world.startSettings,
+                    difficulty: selectedDifficulty,
+                    map: map
+                )
+            }
             _ = world.installTradePartners(
                 in: &newCity,
                 rules: EconomyRulesEngine(models: models)

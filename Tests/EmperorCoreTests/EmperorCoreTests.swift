@@ -2253,6 +2253,49 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertFalse(city.canConstructAgriculturalPlot(crop: .wheat, at: plotPoint))
     }
 
+    func testAgriculturalPlotWorkforceUsesProducerModelInsteadOfVisualFieldModel() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let rules = EconomyRulesEngine(models: original)
+        var city = DeterministicCityState(
+            year: 1600,
+            treasury: 10_000,
+            mapWidth: 7,
+            mapHeight: 5
+        )
+        city.workforceEnabled = true
+        _ = city.buildRoad((0...6).map { GridPoint(x: $0, y: 2) }, rules: rules)
+        for x in 0..<3 {
+            XCTAssertNotNil(city.addHouse(
+                levelID: 0,
+                location: GridPoint(x: x, y: 3),
+                models: original.buildings
+            ))
+        }
+        let producerID = try XCTUnwrap(city.constructAgriculturalPlot(
+            crop: .millet,
+            at: GridPoint(x: 3, y: 1),
+            rules: rules
+        ))
+
+        let placement = try XCTUnwrap(city.placement(
+            category: .production,
+            instanceID: producerID
+        ))
+        XCTAssertEqual(placement.buildingID, AgriculturalCrop.millet.plotBuildingID)
+        let assignment = try XCTUnwrap(city.workforceAssignment(
+            for: placement,
+            models: original.buildings
+        ))
+        XCTAssertEqual(
+            assignment.requiredWorkers,
+            original.buildings[buildingID: AgriculturalCrop.millet.producerBuildingID]?.employees
+        )
+        XCTAssertGreaterThan(assignment.requiredWorkers, 0)
+    }
+
     func testLandTradeUsesOriginalQuotaCapacityPricesAndPhysicalRoadDelivery() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")
@@ -4577,14 +4620,13 @@ final class EmperorCoreTests: XCTestCase {
             assignedWorkers: original.buildings[buildingID: 35]?.employees ?? 0,
             rules: rules
         ))
-        let treasury = city.economy.treasury
         city.continueCampaignMission(with: continuation)
         XCTAssertEqual(city.calendar, SimulationCalendar(year: -1559, month: 6))
         XCTAssertEqual(city.missionSettings, continuation)
         XCTAssertEqual(city.population, 100)
         XCTAssertEqual(city.production.buildings.count, 1)
         XCTAssertEqual(city.roadNetwork.points.count, 20)
-        XCTAssertEqual(city.economy.treasury, treasury)
+        XCTAssertEqual(city.economy.treasury, 9_000)
         XCTAssertTrue(city.campaignEvents.invasions.isEmpty)
     }
 

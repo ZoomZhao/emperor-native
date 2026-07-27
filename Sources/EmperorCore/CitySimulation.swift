@@ -387,6 +387,16 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         models: BuildingModelTable
     ) -> [OperationalBuildingKey: Int] {
         var result: [OperationalBuildingKey: Int] = [:]
+        for building in production.buildings where building.agriculture != nil {
+            let key = OperationalBuildingKey(
+                category: .production,
+                instanceID: building.id
+            )
+            result[key] = max(
+                0,
+                models[buildingID: building.buildingID]?.employees ?? 0
+            )
+        }
         for market in markets.markets {
             let key = OperationalBuildingKey(category: .market, instanceID: market.id)
             result[key] = market.shopBuildingIDs.reduce(0) {
@@ -500,12 +510,19 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
     }
 
     /// Advances an existing city into a continuation mission on the same
-    /// authored map. Buildings, population, inventories, roads, treasury and
-    /// military survive; mission-local clocks, event effects and yearly goal
-    /// accounting restart from the new mission's authored date.
+    /// authored map. Buildings, population, inventories, roads and military
+    /// survive; the Campaign Creator's funds rule and all mission-local clocks,
+    /// event effects and yearly goal accounting restart for the new mission.
     public mutating func continueCampaignMission(
         with missionSettings: CampaignMissionStartSettings
     ) {
+        economy = DeterministicEconomyState(
+            treasury: missionSettings.startingTreasury(
+                difficulty: difficulty,
+                inheritedTreasury: economy.treasury
+            ),
+            inventory: economy.inventory
+        )
         calendar = SimulationCalendar(
             year: missionSettings.startYear,
             month: missionSettings.startMonth
