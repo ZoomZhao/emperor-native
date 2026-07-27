@@ -138,6 +138,7 @@ public enum PlayerCommand: Sendable, Hashable, Codable {
     case startCampaignMission(campaignID: Int, missionID: Int)
     case selectConstruction(PlayerConstructionTool)
     case selectAgriculturalCrop(AgriculturalCrop)
+    case selectDifficulty(GameDifficulty)
     case placeSelectedConstruction(at: GridPoint, orientation: IsometricBuildingOrientation)
     case demolish(at: GridPoint)
     case setProductionEnabled(buildingInstanceID: Int, enabled: Bool)

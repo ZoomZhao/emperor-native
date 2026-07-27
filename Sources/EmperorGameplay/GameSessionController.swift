@@ -19,6 +19,7 @@ public final class GameSessionController: @unchecked Sendable {
     public private(set) var speed = 0
     public private(set) var selectedConstruction: PlayerConstructionTool = .inspect
     public private(set) var selectedAgriculturalCrop: AgriculturalCrop = .wheat
+    public private(set) var selectedDifficulty: GameDifficulty = .normal
     public private(set) var lastBlockReason: String?
     public private(set) var evidence = GameSessionEvidence()
     public private(set) var latestTick: CityTickResult?
@@ -94,6 +95,9 @@ public final class GameSessionController: @unchecked Sendable {
             }
             selectedAgriculturalCrop = crop
             result = .applied("selected \(crop.rawValue)")
+        case let .selectDifficulty(difficulty):
+            selectedDifficulty = difficulty
+            result = .applied("difficulty \(difficulty.rawValue)")
         case let .placeSelectedConstruction(point, orientation):
             result = placeSelectedConstruction(at: point, orientation: orientation)
         case let .demolish(point):
@@ -240,7 +244,7 @@ public final class GameSessionController: @unchecked Sendable {
             let map = try EmperorMap(url: world.mapAssignment.embeddedMap.mapURL)
             var newCity = DeterministicCityState(
                 missionSettings: world.startSettings,
-                difficulty: .normal,
+                difficulty: selectedDifficulty,
                 map: map
             )
             _ = world.installTradePartners(

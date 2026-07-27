@@ -44,7 +44,9 @@ struct ContentView: View {
                 .background(EmperorTheme.backgroundApp)
             case let .loaded(source, catalog, probes, models, economy, campaigns):
                 Group {
-                    if library.section == .city {
+                    if library.frontEndStage != .play {
+                        ClassicFrontEndRoot(library: library)
+                    } else if library.section == .city {
                         ClassicCityGameView(library: library, models: economy)
                     } else if library.section == .campaigns {
                         ClassicCampaignLobbyView(
@@ -338,8 +340,7 @@ private struct ClassicCityGameView: View {
                     ClassicImperialHUD(
                         library: library,
                         city: city,
-                        models: models,
-                        selectedCategory: selectedCategory
+                        models: models
                     )
                     .layoutPriority(2)
                     Divider().overlay(EmperorTheme.border)
@@ -432,7 +433,6 @@ private struct ClassicImperialHUD: View {
     @ObservedObject var library: LibraryModel
     let city: DeterministicCityState
     let models: OriginalEconomyModels
-    let selectedCategory: ConstructionToolCategory
 
     var body: some View {
         HStack(spacing: 9) {
@@ -518,26 +518,25 @@ private struct ClassicImperialHUD: View {
                 value: city.economy.treasury.formatted()
             )
             ClassicHUDMetric(
-                symbol: selectedCategory.symbol,
-                title: selectedCategory.rawValue,
-                value: selectedCategoryMetric
+                symbol: "person.2.fill",
+                title: "人口",
+                value: "\(city.population)"
             )
-            .accessibilityIdentifier("hud-category-metric")
-            .accessibilityValue("\(selectedCategory.rawValue)：\(selectedCategoryMetric)")
+            .accessibilityIdentifier("hud-population-metric")
             ClassicHUDMetric(
                 symbol: "calendar",
                 title: "日期",
                 value: imperialDate
             )
 
-            Label("土德", systemImage: "circle.hexagongrid.fill")
+            Label(dynasticVirtue.title, systemImage: "circle.hexagongrid.fill")
                 .font(EmperorTheme.bold(size: 10))
                 .foregroundStyle(ClassicPalette.gold)
                 .padding(.horizontal, 8)
                 .frame(height: 34)
                 .background(ClassicPalette.deepBrown.opacity(0.82))
                 .overlay(Rectangle().strokeBorder(ClassicPalette.border, lineWidth: 1))
-                .help("夏朝崇尚土德")
+                .help(dynasticVirtue.help)
         }
         .padding(.horizontal, 12)
         .frame(height: EmperorTheme.hudHeight)
@@ -593,30 +592,33 @@ private struct ClassicImperialHUD: View {
     }
 
     private var imperialDate: String {
-        city.calendar.year < 0
-            ? "\(abs(city.calendar.year)) 公元前 · \(city.calendar.month)月"
-            : "\(city.calendar.year)年 · \(city.calendar.month)月"
+        let month = "\(city.calendar.month)月"
+        if city.calendar.year < 0 {
+            return "\(month) \(abs(city.calendar.year)) 公元前"
+        }
+        return "\(month) \(city.calendar.year) 年"
     }
 
-    private var selectedCategoryMetric: String {
-        switch selectedCategory {
-        case .residential:
-            "\(city.population) / \(city.housingCapacity(using: models.buildings))"
-        case .production:
-            "\(city.production.buildings.count) 座"
-        case .civic:
-            "\(placedBuildingCount(in: Set([72, 124, 125, 127, 207, 208, 209, 216, 218]))) 座"
-        case .religious:
-            "\(placedBuildingCount(in: Set([214, 215, 217, 219]))) 座"
-        case .military:
-            "\(city.military.units.filter { $0.hitPoints > 0 }.count) 队"
-        case .aesthetics:
-            "\(placedBuildingCount(in: Set(115...122))) 处"
-        case .monuments:
-            "\(placedBuildingCount(in: Set([52, 76, 77, 78, 79, 93, 233, 235, 236]))) 项"
-        case .infrastructure:
-            "\(city.roadNetwork.points.count) 格"
+    private var dynasticVirtue: (title: String, help: String) {
+        let title = library.selectedCampaign.map {
+            ClassicTextLocalization.campaignTitle($0.title)
+        } ?? ""
+        if title.contains("夏") {
+            return ("土德", "夏朝崇尚土德")
         }
+        if title.contains("商") {
+            return ("金德", "商朝崇尚金德")
+        }
+        if title.contains("周") {
+            return ("火德", "周朝崇尚火德")
+        }
+        if title.contains("秦") {
+            return ("水德", "秦朝崇尚水德")
+        }
+        if title.contains("汉") || title.contains("唐") || title.contains("宋") {
+            return ("火德", "本朝崇尚火德")
+        }
+        return ("五行", "城市风水与王朝德运")
     }
 
     private func placedBuildingCount(in buildingIDs: Set<Int>) -> Int {
@@ -1765,19 +1767,71 @@ private struct ClassicMissionGuide: View {
 
     private var nextStep: (title: String, detail: String, complete: Bool) {
         let placements = city.placedBuildings
+        let missionSequence = library.selectedCampaign?.missions
+            .first(where: { $0.id == library.selectedMissionID })?
+            .sequenceNumber ?? 1
+        let goalSnapshot = city.campaignGoalProgressSnapshot()
+        let housingGoal = goalSet?.goals.first(where: { $0.kind == .housing })
+        let targetPopulation: Int = {
+            if let housingGoal,
+               case let .housing(_, residents) = housingGoal.requirement {
+                return max(residents, 1)
+            }
+            return missionSequence <= 1 ? 150 : 250
+        }()
+
         if city.houses.isEmpty {
             return ("先铺路，再建住宅", "选“基础设施 → 道路”，在空地延伸道路；再选“住宅”沿路放置。", false)
         }
         if !placements.contains(where: { $0.buildingID == 72 }) {
-            return ("为住宅供水", "选“住宅 → 水井”，放在道路旁并覆盖住房。", false)
+            return ("为住宅供水", "选分类中的水井，放在道路旁并覆盖住房。", false)
         }
-        let foodIDs: Set<Int> = [33, 53, 59]
-        if !foodIDs.isSubset(of: Set(placements.map(\.buildingID))) {
-            return ("建立食物供应链", "沿路建设猎场、磨坊和市场；猎场须靠近猎物资源。", false)
+
+        let hasHunting = placements.contains(where: { $0.buildingID == 33 })
+        let hasMill = placements.contains(where: { $0.buildingID == 53 })
+        let hasMarket = placements.contains(where: { $0.buildingID == 59 })
+        if !(hasHunting && hasMill && hasMarket) {
+            return (
+                "建立食物供应链",
+                missionSequence >= 2
+                    ? "沿路建设猎场/农场、磨坊和市场；第二关起可用仓库缓冲货物。"
+                    : "沿路建设猎场、磨坊和市场；猎场须靠近猎物资源。",
+                false
+            )
         }
-        if city.population < 150 {
-            return ("让时间运行", "在右栏选择 3×，等待移民入住；保持道路、供水和食物畅通。", false)
+
+        if missionSequence >= 2,
+           city.isAgriculturalCropAvailable(.millet)
+            || city.isAgriculturalCropAvailable(.wheat),
+           !placements.contains(where: { $0.buildingID == 193 }) {
+            return ("开垦粮田", "在低地清地种植粟/麦等本关允许的作物，并保证道路连到磨坊。", false)
         }
+
+        if missionSequence >= 2,
+           !placements.contains(where: { $0.buildingID == 54 }),
+           city.campaignConstructionRestriction(forBuildingID: 54) == nil {
+            return ("建造仓库", "仓库可缓存粮食与苎麻，避免磨坊和市场断供。", false)
+        }
+
+        if !placements.contains(where: { $0.buildingID == 214 }) {
+            return ("供奉先祖", "建造祖庙，让祭司沿路服务住宅，以满足住房升级条件。", false)
+        }
+
+        if city.population < targetPopulation {
+            return (
+                "让时间运行",
+                "在右栏选择 3×，等待移民入住；目标约 \(targetPopulation) 人。",
+                false
+            )
+        }
+
+        if let housingGoal {
+            let progress = CampaignGoalEvaluator.evaluate(housingGoal, against: goalSnapshot)
+            if !progress.isSatisfied {
+                return ("继续提升住房", "保持供水、食物、服务与吸引力，推动住宅升到任务要求等级。", false)
+            }
+        }
+
         return ("城市已经可以运转", "继续满足上方原版任务目标，或保存当前进度。", true)
     }
 

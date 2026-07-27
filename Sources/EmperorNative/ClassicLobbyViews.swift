@@ -139,6 +139,34 @@ struct ClassicCampaignLobbyView: View {
                     symbol: "map.fill"
                 )
 
+                if let art = ClassicFrontEndArt.campaignIllustration(
+                    for: campaign,
+                    sourceRoot: library.dataSourceRoot
+                ) {
+                    Image(nsImage: art)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 168)
+                        .clipped()
+                        .overlay(alignment: .bottomLeading) {
+                            Text(ClassicTextLocalization.campaignSummary(campaign.title))
+                                .font(EmperorTheme.bodySmall)
+                                .foregroundStyle(EmperorTheme.onSurface)
+                                .padding(10)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(EmperorTheme.surfaceDeep.opacity(0.82))
+                        }
+                        .overlay(Rectangle().strokeBorder(EmperorTheme.border))
+                } else {
+                    Text(ClassicTextLocalization.campaignSummary(campaign.title))
+                        .font(EmperorTheme.bodySmall)
+                        .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(EmperorTheme.surfaceDeep.opacity(0.72))
+                }
+
                 missionTimeline(campaign)
 
                 if let mission = previewMission(in: campaign) {
@@ -252,7 +280,7 @@ struct ClassicCampaignLobbyView: View {
                 .overlay(Rectangle().strokeBorder(EmperorTheme.border))
 
                 VStack(alignment: .leading, spacing: 9) {
-                    Label("任务目标", systemImage: "flag.fill")
+                    Label("目标", systemImage: "flag.fill")
                         .font(EmperorTheme.headlineMedium)
                         .foregroundStyle(EmperorTheme.primary)
 
@@ -272,6 +300,12 @@ struct ClassicCampaignLobbyView: View {
                             .controlSize(.small)
                             .foregroundStyle(EmperorTheme.onSurfaceMuted)
                     }
+
+                    Text(ClassicTextLocalization.missionBriefing(mission.title))
+                        .font(EmperorTheme.bodyMedium)
+                        .foregroundStyle(EmperorTheme.primary.opacity(0.92))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 4)
                 }
                 .padding(14)
                 .background(EmperorTheme.surfaceDeep.opacity(0.68))
@@ -286,19 +320,40 @@ struct ClassicCampaignLobbyView: View {
                     .foregroundStyle(EmperorTheme.warning)
                 }
 
-                HStack {
+                HStack(alignment: .center, spacing: 12) {
+                    Text("难度等级")
+                        .font(EmperorTheme.labelMedium)
+                        .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                    Picker(
+                        "难度等级",
+                        selection: Binding(
+                            get: { library.selectedDifficulty },
+                            set: { library.selectedDifficulty = $0 }
+                        )
+                    ) {
+                        ForEach(GameDifficulty.allCases, id: \.self) { difficulty in
+                            Text(ClassicTextLocalization.difficultyTitle(difficulty))
+                                .tag(difficulty)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .accessibilityIdentifier("mission-difficulty-picker")
+
+                    Spacer()
+
                     if let status = library.saveStatus {
                         Text(status)
                             .font(EmperorTheme.bodySmall)
                             .foregroundStyle(EmperorTheme.onSurfaceMuted)
                             .lineLimit(2)
                     }
-                    Spacer()
+
                     Button {
                         library.startMission(mission)
                     } label: {
                         Label(
-                            library.selectedMissionID == mission.id ? "重新开始本关" : "进入本关",
+                            library.selectedMissionID == mission.id ? "重新开始本关" : "到城市去",
                             systemImage: "play.fill"
                         )
                         .frame(minWidth: 120)
@@ -308,7 +363,7 @@ struct ClassicCampaignLobbyView: View {
                     .disabled(!canStart(mission))
                     .accessibilityElement(children: .ignore)
                     .accessibilityLabel(
-                        library.selectedMissionID == mission.id ? "重新开始本关" : "进入本关"
+                        library.selectedMissionID == mission.id ? "重新开始本关" : "到城市去"
                     )
                     .accessibilityIdentifier("mission-start-\(mission.id)")
                 }
@@ -537,7 +592,7 @@ struct ClassicLobbyHeader: View {
             }
             .frame(width: 250, alignment: .leading)
 
-            navButton("继续游戏", symbol: "play.fill", section: nil) {
+            navButton("继续游戏", symbol: "play.fill", section: nil, identifier: "library-continue-game") {
                 library.loadMostRecentSave()
             }
             .disabled(!library.saveHistory.contains(where: \.isReadable))
@@ -549,6 +604,14 @@ struct ClassicLobbyHeader: View {
             }
             navButton("资料库", symbol: "books.vertical.fill", section: .maps) {
                 library.section = .maps
+            }
+            navButton(
+                "返回帐号",
+                symbol: "person.crop.circle",
+                section: nil,
+                identifier: "library-return-account"
+            ) {
+                library.returnToClassicFrontEnd()
             }
 
             Spacer()
@@ -572,6 +635,7 @@ struct ClassicLobbyHeader: View {
         _ title: String,
         symbol: String,
         section: LibrarySection?,
+        identifier: String? = nil,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -590,7 +654,8 @@ struct ClassicLobbyHeader: View {
         .buttonStyle(.plain)
         .accessibilityLabel(title)
         .accessibilityIdentifier(
-            section.map { "library-section-\($0.accessibilitySlug)" }
+            identifier
+                ?? section.map { "library-section-\($0.accessibilitySlug)" }
                 ?? "library-continue-game"
         )
     }

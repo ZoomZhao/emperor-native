@@ -44,7 +44,7 @@ enum ClassicTextLocalization {
     ]
 
     private static let missionTitles: [String: String] = [
-        "Shelter and Sustenance": "安居与生计",
+        "Shelter and Sustenance": "住房与生计",
         "Seeds of Civilization": "文明的种子",
         "The Good Things": "美好生活",
         "Trading and Commerce": "贸易与商业",
@@ -297,7 +297,7 @@ enum ClassicTextLocalization {
     ]
 
     private static let campaignSummaries: [String: String] = [
-        "Xia Dynasty Tutorials": "从聚落营建、农业与贸易开始，逐步掌握古代城市治理。",
+        "Xia Dynasty Tutorials": "从这些简单的教学任务开始你的远古之旅吧。在古老的夏朝，我们的民族学会了定居，并耕种土地谋生。现在，就跟随夏朝的发展足迹前进吧！仔细听，努力学习我们尊敬的祖先传授的知识……",
         "City States of Shang": "在商代城邦兴起之际发展青铜业、宗庙与王朝都城。",
         "Turbulent Winds of Zhou": "承接天命，在周代的变局中营建都邑并开拓铁器时代。",
         "The Mighty Qin": "以水利、城防与统一战争奠定秦帝国的根基。",
@@ -305,6 +305,20 @@ enum ClassicTextLocalization {
         "A Time of Grandeur": "从隋唐统一走向盛世，修筑运河、宫殿并守卫西域。",
         "Invaders from the North": "在宋、金与蒙古交锋的时代维持城市繁荣与北方防线。",
         "Emperor Jin Wudi": "重整国库、开拓长江据点，尝试终结三国分立。",
+    ]
+
+    private static let missionBriefings: [String: String] = [
+        "Shelter and Sustenance": "欢迎来到四千年前的半坡聚落。村民们正从游牧走向定居，你作为族中长老，需要规划道路与住房，提供食物与饮水，并建立对先祖的祭祀，让至少 150 人住进板屋或更高等级的住宅。",
+        "Seeds of Civilization": "半坡的村民欢迎你回来。猎场、磨坊与市场仍在运转，但村民已厌倦乏味的肉食。请在低地开垦粮田，把粟麦送到磨坊，并用仓库稳住供给，让至少 250 人住进石屋或更高等级的住宅。",
+        "The Good Things": "城市开始追求更好的生活。继续扩大住房与服务业，完成住房目标，并向英雄献上足够的敬意。",
+    ]
+
+    private static let difficultyTitles: [GameDifficulty: String] = [
+        .veryEasy: "非常简单",
+        .easy: "简单",
+        .normal: "普通",
+        .hard: "困难",
+        .veryHard: "非常困难",
     ]
 
     private static let commandToolNames: [String: String] = [
@@ -396,6 +410,15 @@ enum ClassicTextLocalization {
 
     static func campaignSummary(_ authoredTitle: String) -> String {
         campaignSummaries[authoredTitle] ?? "原版战役场景，可查看任务目标、年代与初始条件。"
+    }
+
+    static func missionBriefing(_ authoredTitle: String) -> String {
+        missionBriefings[authoredTitle]
+            ?? "查看下方原版任务目标与初始条件，选择难度后进入城市。"
+    }
+
+    static func difficultyTitle(_ difficulty: GameDifficulty) -> String {
+        difficultyTitles[difficulty] ?? "普通"
     }
 
     static func mapName(_ url: URL) -> String {

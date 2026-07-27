@@ -223,6 +223,27 @@ enum LibrarySection: String, CaseIterable, Identifiable {
     var id: Self { self }
 }
 
+private enum ClassicPlayerAccountStore {
+    static let accountsKey = "EmperorNative.playerAccounts"
+    static let selectedKey = "EmperorNative.selectedPlayerAccount"
+
+    static func loadAccounts() -> [String] {
+        UserDefaults.standard.stringArray(forKey: accountsKey) ?? []
+    }
+
+    static func saveAccounts(_ accounts: [String]) {
+        UserDefaults.standard.set(accounts, forKey: accountsKey)
+    }
+
+    static func loadSelected() -> String? {
+        UserDefaults.standard.string(forKey: selectedKey)
+    }
+
+    static func saveSelected(_ name: String?) {
+        UserDefaults.standard.set(name, forKey: selectedKey)
+    }
+}
+
 @MainActor
 final class LibraryModel: ObservableObject {
     private struct AutosaveFingerprint: Equatable {
@@ -238,6 +259,12 @@ final class LibraryModel: ObservableObject {
     }
 
     @Published var state: State = .loading
+    // Classic FE entry precedes the campaign browser unless a UI-smoke harness
+    // asks to jump straight into the playable shell.
+    @Published var frontEndStage: ClassicFrontEndStage = LibraryModel.initialFrontEndStage
+    @Published var playerAccounts: [String] = ClassicPlayerAccountStore.loadAccounts()
+    @Published var selectedPlayerAccount: String? = ClassicPlayerAccountStore.loadSelected()
+    @Published var selectedDifficulty: GameDifficulty = .normal
     // Launch into the playable campaign browser. Map/model diagnostics remain
     // available, but are no longer the first thing a player sees.
     @Published var section: LibrarySection = .campaigns
@@ -299,6 +326,60 @@ final class LibraryModel: ObservableObject {
     private var lastSaveURL: URL?
     private var lastAutosaveFingerprint: AutosaveFingerprint?
     private var gameplayController: GameSessionController?
+
+    var dataSourceRoot: URL? {
+        if case let .loaded(source, _, _, _, _, _) = state {
+            return source.root
+        }
+        return nil
+    }
+
+    private static var initialFrontEndStage: ClassicFrontEndStage {
+        ProcessInfo.processInfo.arguments.contains(where: { $0.hasPrefix("--ui-smoke") })
+            ? .play
+            : .mainMenu
+    }
+
+    func createPlayerAccount(_ rawName: String) {
+        let name = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
+        if !playerAccounts.contains(name) {
+            playerAccounts.append(name)
+            ClassicPlayerAccountStore.saveAccounts(playerAccounts)
+        }
+        selectedPlayerAccount = name
+        ClassicPlayerAccountStore.saveSelected(name)
+        saveStatus = "已创建玩家帐号：\(name)"
+    }
+
+    func deleteSelectedPlayerAccount() {
+        guard let selected = selectedPlayerAccount else { return }
+        playerAccounts.removeAll { $0 == selected }
+        ClassicPlayerAccountStore.saveAccounts(playerAccounts)
+        selectedPlayerAccount = playerAccounts.first
+        ClassicPlayerAccountStore.saveSelected(selectedPlayerAccount)
+        saveStatus = "已删除玩家帐号：\(selected)"
+    }
+
+    func confirmSelectedPlayerAccount() {
+        guard let selected = selectedPlayerAccount else { return }
+        ClassicPlayerAccountStore.saveSelected(selected)
+        frontEndStage = .accountHome
+        saveStatus = "当前统治者：\(selected)"
+    }
+
+    func enterPlaySection(_ section: LibrarySection) {
+        self.section = section
+        frontEndStage = .play
+    }
+
+    func returnToClassicFrontEnd() {
+        frontEndStage = .accountHome
+        section = .campaigns
+        cityState = nil
+        selectedMissionID = nil
+        campaignRuntimeState = nil
+    }
 
     func load() {
         state = .loading
@@ -1210,6 +1291,7 @@ final class LibraryModel: ObservableObject {
     func returnToCampaignList() {
         autosaveIfNeeded(force: true)
         setGameSpeed(0)
+        frontEndStage = .play
         section = .campaigns
     }
 
@@ -1452,6 +1534,9 @@ final class LibraryModel: ObservableObject {
     }
 
     func startMission(_ mission: CampaignMission) {
+        if let controller = gameplayController {
+            _ = controller.perform(.selectDifficulty(selectedDifficulty))
+        }
         if let controller = gameplayController,
            let campaign = selectedCampaign,
            let campaignID = controller.campaignID(fileName: campaign.url.lastPathComponent) {
@@ -1471,8 +1556,10 @@ final class LibraryModel: ObservableObject {
                 }
                 saveStatus = "已开始："
                     + "\(ClassicTextLocalization.missionTitle(mission.title))"
+                    + " · \(ClassicTextLocalization.difficultyTitle(selectedDifficulty))"
                     + " · 国库 \(controller.city?.economy.treasury ?? 0)"
                     + " · \(ClassicTextLocalization.cityName(world.playerCityName))"
+                frontEndStage = .play
                 section = .city
                 autosaveIfNeeded(force: true)
             } else {
@@ -1506,7 +1593,7 @@ final class LibraryModel: ObservableObject {
             } else {
                 city = DeterministicCityState(
                     missionSettings: world.startSettings,
-                    difficulty: .normal,
+                    difficulty: selectedDifficulty,
                     map: originalMap
                 )
             }
@@ -1543,9 +1630,11 @@ final class LibraryModel: ObservableObject {
                 ? (canContinueExistingCity ? " · 已继承前关整座城市" : " · 未找到可继承的前关城市")
                 : ""
             saveStatus = "已开始：\(ClassicTextLocalization.missionTitle(mission.title))"
+                + " · \(ClassicTextLocalization.difficultyTitle(selectedDifficulty))"
                 + " · \(yearLabel) · 国库 \(city.economy.treasury)"
                 + " · \(ClassicTextLocalization.cityName(world.playerCityName))"
                 + " · \(world.tradePartners.count) 条原版贸易路线\(inheritanceLabel)"
+            frontEndStage = .play
             section = .city
             autosaveIfNeeded(force: true)
         } catch {
