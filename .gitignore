@@ -5,5 +5,8 @@
 dist/
 tmp/
 
+# Generated sprite exports stay local.
+GameData/DATA_IMAGES/
+
 # Accidental local scratch pointer.
 Untitled-1
