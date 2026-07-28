@@ -478,6 +478,8 @@ public final class GameSessionController: @unchecked Sendable {
                 orientation: orientation,
                 rules: rules
             ) != nil
+        case .grandCanalSegment:
+            city.advanceGrandCanalSegment(at: point) != nil
         case .barracks, .fort, .catapultFort, .cavalryFort, .chariotFort:
             city.constructMilitaryFort(
                 buildingID: tool.buildingID ?? 0,

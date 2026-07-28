@@ -748,6 +748,12 @@ final class LibraryModel: ObservableObject {
                 return
             }
             saveStatus = constructionSuccess(at: point, city: city, tool: constructionTool)
+        case .grandCanalSegment:
+            guard let segment = city.advanceGrandCanalSegment(at: point) else {
+                saveStatus = "该运河段尚不能推进：请先交付木材、石料并完成相应工期"
+                return
+            }
+            saveStatus = "郑国渠第 \(segment + 1) 段施工阶段已推进"
         case .barracks, .fort, .catapultFort, .cavalryFort, .chariotFort:
             guard let buildingID = constructionTool.buildingID,
                   city.constructMilitaryFort(
@@ -2099,6 +2105,7 @@ final class LibraryModel: ObservableObject {
         case .dramaSchool: .dramaSchool
         case .farmland: .farmland
         case .irrigationPump: .irrigationPump
+        case .grandCanalSegment: .grandCanalSegment
         case .lumberMill: .lumberMill
         case .quarry: .quarry
         case .granary: .granary

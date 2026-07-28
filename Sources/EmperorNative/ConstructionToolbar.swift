@@ -76,6 +76,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
     case daoistShrine
     // Sprint 2 — expanded building menu (20 new tools).
     case irrigationPump
+    case grandCanalSegment
     case farmland
     case lumberMill
     case quarry
@@ -166,6 +167,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .confucianAcademy: "儒家书院"
         case .daoistShrine: "道观"
         case .irrigationPump: "灌溉水车"
+        case .grandCanalSegment: "郑国渠分段"
         case .farmland: "农田"
         case .lumberMill: "伐木棚"
         case .quarry: "石料场"
@@ -237,6 +239,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .confucianAcademy: "books.vertical.fill"
         case .daoistShrine: "sparkles"
         case .irrigationPump: "water.waves"
+        case .grandCanalSegment: "hammer.circle.fill"
         case .farmland: "leaf.circle.fill"
         case .lumberMill: "tree.circle.fill"
         case .quarry: "mountain.2.circle.fill"
@@ -283,7 +286,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
 
     var buildingID: Int? {
         switch self {
-        case .inspect, .demolish, .clearLand, .road, .rally: nil
+        case .inspect, .demolish, .clearLand, .road, .rally, .grandCanalSegment: nil
         case .house: 2
         case .warehouse: 54
         case .mill: 53
@@ -371,7 +374,8 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
              .waysidePavilion, .pond, .taiChiPark, .privateGarden:
             .aesthetics
         case .laborersCamp, .carpentersGuild, .masonsGuild, .ceramistsGuild,
-             .tumulus, .grandTumulus, .greatTemple, .splendidTemple, .grandPagoda:
+             .tumulus, .grandTumulus, .greatTemple, .splendidTemple, .grandPagoda,
+             .grandCanalSegment:
             .monuments
         case .inspect, .demolish, .clearLand, .road, .roadblock, .rally:
             .infrastructure
@@ -526,6 +530,8 @@ struct ConstructionToolbar: View {
             "点击或拖动种植\(library.selectedAgriculturalCrop.fieldTitle) · 须邻接道路 · 右键取消"
         case .irrigationPump:
             "放在河岸清地，须同时邻接水面与道路 · 右键取消"
+        case .grandCanalSegment:
+            "点击地图中任意 4×4 郑国渠段推进当前施工阶段 · 右键取消"
         default:
             if let buildingID = tool.buildingID,
                let footprint = OriginalBuildingFootprintCatalog.footprint(
@@ -606,6 +612,9 @@ struct ConstructionToolbar: View {
     }
 
     private func isAvailable(_ tool: NativeConstructionTool) -> Bool {
+        if tool == .grandCanalSegment {
+            return city.aesthetics.grandCanalProject?.isComplete == false
+        }
         if tool == .rally {
             guard city.missionSettings != nil else { return true }
             return !city.military.forts.isEmpty || !city.military.defensiveStructures.isEmpty

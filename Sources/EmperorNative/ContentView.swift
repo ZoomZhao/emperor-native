@@ -1409,6 +1409,9 @@ private struct ClassicControlPanel: View {
     }
 
     private func isAvailable(_ tool: NativeConstructionTool) -> Bool {
+        if tool == .grandCanalSegment {
+            return city.aesthetics.grandCanalProject?.isComplete == false
+        }
         if tool == .rally {
             guard city.missionSettings != nil else { return true }
             return !city.military.forts.isEmpty || !city.military.defensiveStructures.isEmpty
@@ -1456,6 +1459,27 @@ private struct ClassicCategoryAdvisorPanel: View {
                 .buttonStyle(.plain)
                 .disabled(mapMonumentIsStarted(monumentID))
                 .accessibilityIdentifier("advisor-begin-map-monument")
+
+                if monumentID == GrandCanalProjectRuntime.buildingID,
+                   let canal = city.aesthetics.grandCanalProject,
+                   !canal.isComplete {
+                    Button {
+                        library.selectConstructionTool(.grandCanalSegment)
+                    } label: {
+                        HStack {
+                            Text("选择运河分段施工")
+                            Spacer()
+                            Text("\(canal.completionPercent)%")
+                        }
+                        .font(EmperorTheme.bodySmall)
+                        .padding(.horizontal, 8)
+                        .frame(maxWidth: .infinity, minHeight: 26)
+                        .background(EmperorTheme.surfaceControl)
+                        .overlay(Rectangle().strokeBorder(EmperorTheme.secondary, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("advisor-select-grand-canal-segment")
+                }
             }
 
             ForEach(Array(advisorSummary.enumerated()), id: \.offset) { _, line in
@@ -2472,6 +2496,8 @@ private func constructionInstruction(
         return "作物田：先在农业分类选择具体作物，再点击或拖动清地种植；右键取消"
     case .irrigationPump:
         return "灌溉水车：放在河岸清地，须同时邻接水面与道路；右键取消"
+    case .grandCanalSegment:
+        return "郑国渠分段：点击地图中任意 4×4 预置渠段推进施工；跨路段完工后保留道路通行"
     default:
         guard let buildingID = tool.buildingID,
               let footprint = OriginalBuildingFootprintCatalog.footprint(

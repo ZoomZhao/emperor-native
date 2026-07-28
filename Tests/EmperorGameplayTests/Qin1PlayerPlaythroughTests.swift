@@ -32,9 +32,41 @@ final class Qin1PlayerPlaythroughTests: XCTestCase {
         XCTAssertTrue(begin.wasApplied, begin.message)
         XCTAssertTrue(controller.perform(.setSpeed(3)).wasApplied)
 
+        var advancedCanalSegments = false
         for _ in 0..<(30 * 12 * 8) where controller.campaignRuntime?.outcome == .running {
             let result = controller.perform(.advanceOneTick)
             XCTAssertTrue(result.wasApplied, result.message)
+            if !advancedCanalSegments,
+               let project = controller.city?.aesthetics.monuments.first(
+                   where: { $0.buildingID == 83 }
+               ),
+               project.completedWork == project.requiredWork,
+               project.requiredCommodityUnits.allSatisfy({
+                   project.deliveredCommodityUnits[$0.key, default: 0] >= $0.value
+               }) {
+                XCTAssertTrue(
+                    controller.perform(.selectConstruction(.grandCanalSegment)).wasApplied
+                )
+                let shuffledSegmentOrder = (0..<33).map { ($0 * 17) % 33 }
+                for _ in 0..<GrandCanalProjectRuntime.finalStage {
+                    for index in shuffledSegmentOrder {
+                        let origin = GridPoint(x: 4 + index * 4, y: 68)
+                        let preview = controller.constructionPreview(at: origin)
+                        XCTAssertTrue(
+                            preview.isValid,
+                            "canal segment \(index) should be ready for its next phase"
+                        )
+                        let segmentResult = controller.perform(
+                            .placeSelectedConstruction(
+                                at: origin,
+                                orientation: .northSouth
+                            )
+                        )
+                        XCTAssertTrue(segmentResult.wasApplied, segmentResult.message)
+                    }
+                }
+                advancedCanalSegments = true
+            }
         }
 
         guard case .victory? = controller.campaignRuntime?.outcome else {
@@ -51,6 +83,8 @@ final class Qin1PlayerPlaythroughTests: XCTestCase {
         }
 
         let city = try XCTUnwrap(controller.city)
+        XCTAssertTrue(advancedCanalSegments)
+        XCTAssertTrue(city.aesthetics.grandCanalProject?.isComplete == true)
         XCTAssertTrue(city.aesthetics.completedMonumentBuildingIDs.contains(83))
         XCTAssertGreaterThanOrEqual(
             city.productionAccounting.bestYearlyProductionUnitsByCommodityID[15, default: 0],

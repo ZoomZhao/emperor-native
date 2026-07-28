@@ -25,6 +25,7 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
     case acrobatSchool
     case dramaSchool
     case irrigationPump
+    case grandCanalSegment
     case farmland
     case lumberMill
     case quarry
@@ -70,7 +71,7 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
 
     public var buildingID: Int? {
         switch self {
-        case .inspect, .demolish, .clearLand: nil
+        case .inspect, .demolish, .clearLand, .grandCanalSegment: nil
         case .road: 1
         case .house: 2
         case .fishingWharf: 31

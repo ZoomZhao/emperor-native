@@ -71,8 +71,18 @@ final class QinCampaignBaselineTests: XCTestCase {
                 amount
             )
         }
-        for _ in 0..<40 where !city.aesthetics.completedMonumentBuildingIDs.contains(83) {
+        for _ in 0..<40 {
             _ = city.advanceMonth(rules: rules)
+        }
+        for _ in 0..<GrandCanalProjectRuntime.finalStage {
+            for index in (0..<33).reversed() {
+                XCTAssertEqual(
+                    city.advanceGrandCanalSegment(
+                        at: GridPoint(x: 4 + index * 4, y: 68)
+                    ),
+                    index
+                )
+            }
         }
         XCTAssertTrue(city.aesthetics.completedMonumentBuildingIDs.contains(83))
 

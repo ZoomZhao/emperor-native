@@ -2072,6 +2072,24 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         return id
     }
 
+    public func canAdvanceGrandCanalSegment(at point: GridPoint) -> Bool {
+        guard let canal = aesthetics.grandCanalProject,
+              let segmentIndex = canal.segmentIndex(containing: point),
+              let project = aesthetics.monuments.first(where: { $0.id == canal.projectID }) else {
+            return false
+        }
+        var preview = canal
+        return preview.advanceSegment(index: segmentIndex, project: project)
+    }
+
+    @discardableResult
+    public mutating func advanceGrandCanalSegment(at point: GridPoint) -> Int? {
+        var state = aestheticState ?? DeterministicAestheticState()
+        guard let segment = state.advanceGrandCanalSegment(at: point) else { return nil }
+        aestheticState = state
+        return segment
+    }
+
     public func canConstructAestheticBuilding(
         buildingID: Int,
         at origin: GridPoint,

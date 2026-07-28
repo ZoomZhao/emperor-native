@@ -175,11 +175,20 @@ public struct MonumentProject: Identifiable, Sendable, Hashable, Codable {
         deliveredCommodityUnits[commodityID, default: 0] += max(0, amount)
     }
 
-    mutating func performWork(_ amount: Int) {
+    mutating func performWork(_ amount: Int, allowCompletion: Bool = true) {
         completedWork = min(requiredWork, completedWork + max(0, amount))
-        isComplete = completedWork >= requiredWork && requiredCommodityUnits.allSatisfy {
+        isComplete = allowCompletion
+            && completedWork >= requiredWork && requiredCommodityUnits.allSatisfy {
             deliveredCommodityUnits[$0.key, default: 0] >= $0.value
         }
+    }
+
+    mutating func markSegmentedConstructionComplete() {
+        guard completedWork >= requiredWork,
+              requiredCommodityUnits.allSatisfy({
+                  deliveredCommodityUnits[$0.key, default: 0] >= $0.value
+              }) else { return }
+        isComplete = true
     }
 }
 
@@ -198,12 +207,14 @@ public struct MonumentMonthlySettlement: Sendable, Hashable, Codable {
 public struct DeterministicAestheticState: Sendable, Hashable, Codable {
     public private(set) var constructions: [AestheticConstruction]
     public private(set) var monuments: [MonumentProject]
+    public private(set) var grandCanalProject: GrandCanalProjectRuntime?
     public private(set) var lastMonumentSettlement: MonumentMonthlySettlement?
     private var nextConstructionID: Int
 
     public init() {
         constructions = []
         monuments = []
+        grandCanalProject = nil
         lastMonumentSettlement = nil
         nextConstructionID = 1
     }
@@ -259,7 +270,25 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
             completedWork: 0,
             isComplete: false
         ))
+        if buildingID == GrandCanalProjectRuntime.buildingID {
+            grandCanalProject = GrandCanalProjectRuntime(projectID: id)
+        }
         return id
+    }
+
+    @discardableResult
+    mutating func advanceGrandCanalSegment(at point: GridPoint) -> Int? {
+        guard var canal = grandCanalProject,
+              let segmentIndex = canal.segmentIndex(containing: point),
+              let monumentIndex = monuments.firstIndex(where: { $0.id == canal.projectID }),
+              canal.advanceSegment(index: segmentIndex, project: monuments[monumentIndex]) else {
+            return nil
+        }
+        grandCanalProject = canal
+        if canal.isComplete {
+            monuments[monumentIndex].markSegmentedConstructionComplete()
+        }
+        return segmentIndex
     }
 
     @discardableResult
@@ -305,7 +334,11 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
                     monuments[index].requiredWork - monuments[index].completedWork,
                     crewCount * 100
                 )
-                monuments[index].performWork(performed)
+                monuments[index].performWork(
+                    performed,
+                    allowCompletion: monuments[index].buildingID
+                        != GrandCanalProjectRuntime.buildingID
+                )
                 work[monuments[index].id] = performed
                 if monuments[index].isComplete { completed.append(monuments[index].id) }
             }

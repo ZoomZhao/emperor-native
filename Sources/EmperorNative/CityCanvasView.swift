@@ -1031,6 +1031,7 @@ struct CityCanvas: View {
         case .road: city.canConstructRoad(at: point)
         case .roadblock: city.canConstructRoadBlock(at: point)
         case .rally: city.canIssueMilitaryOrder(to: point)
+        case .grandCanalSegment: city.canAdvanceGrandCanalSegment(at: point)
         case .house: city.canConstructHouse(at: point)
         case .farmland:
             city.canConstructAgriculturalPlot(crop: agriculturalCrop, at: point)
@@ -1679,6 +1680,31 @@ struct CityCanvas: View {
                     usesLegacyHouseAnchor: false,
                     isFigure: false,
                     stableOrder: 10_000 + placementIndex * 100 + componentIndex
+                ))
+            }
+        }
+        if let canal = city.aesthetics.grandCanalProject {
+            for segment in canal.segments where segment.stage > 0 {
+                guard let reference = OriginalBuildingSpriteCatalog.grandCanalSprite(
+                    stage: segment.stage,
+                    isRoadCrossing: canal.isRoadCrossing(segment: segment.index)
+                ), buildingSprites[reference] != nil,
+                let segmentOrigin = canal.worldOrigin(forSegment: segment.index) else {
+                    continue
+                }
+                let footprint = BuildingFootprint(width: 4, height: 4)
+                guard footprint.points(at: segmentOrigin).contains(where: viewport.contains) else {
+                    continue
+                }
+                renderItems.append(BuildingRenderItem(
+                    buildingReference: reference,
+                    figureReference: nil,
+                    mapOrigin: segmentOrigin,
+                    previousMapOrigin: nil,
+                    footprint: footprint,
+                    usesLegacyHouseAnchor: false,
+                    isFigure: false,
+                    stableOrder: 9_000 + segment.index
                 ))
             }
         }

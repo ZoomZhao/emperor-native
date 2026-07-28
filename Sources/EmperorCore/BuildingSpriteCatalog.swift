@@ -75,6 +75,33 @@ public enum OriginalBuildingSpriteCatalog {
     /// Original model-table ID retained after a collapse so the footprint
     /// remains blocked until the player clears the ruins.
     public static let ruinBuildingID = 161
+    public static let grandCanalStageImageIDs: Set<Int> = [201, 212, 224, 229, 232, 234, 238]
+
+    public static func grandCanalSprite(
+        stage: Int,
+        isRoadCrossing: Bool
+    ) -> BuildingSpriteReference? {
+        guard stage > 0 else { return nil }
+        let imageID: Int
+        if isRoadCrossing {
+            imageID = switch stage {
+            case 1: 212
+            case 2: 234
+            default: 238
+            }
+        } else {
+            imageID = switch stage {
+            case 1: 212
+            case 2: 224
+            case 3: 229
+            default: 232
+            }
+        }
+        return BuildingSpriteReference(
+            archiveBaseName: grandCanalArchiveBaseName,
+            imageID: imageID
+        )
+    }
 
     /// Building IDs currently constructible on the native isometric canvas.
     /// Keeping this list in the core makes the asynchronous sprite loader and
@@ -342,6 +369,12 @@ public enum OriginalBuildingSpriteCatalog {
             archiveBaseName: generalArchiveBaseName,
             imageID: operationsFireImageID
         ))
+        references.formUnion(grandCanalStageImageIDs.map {
+            BuildingSpriteReference(
+                archiveBaseName: grandCanalArchiveBaseName,
+                imageID: $0
+            )
+        })
         return Dictionary(grouping: references, by: \.archiveBaseName)
             .mapValues { Set($0.map(\.imageID)) }
     }
