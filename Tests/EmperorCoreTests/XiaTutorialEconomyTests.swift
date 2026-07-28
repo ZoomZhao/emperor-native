@@ -116,7 +116,7 @@ final class XiaTutorialEconomyTests: XCTestCase {
         var sawInspection = false
 
         for _ in 0..<(30 * 5) {
-            _ = city.advanceTick(rules: rules)
+            let tick = city.advanceTick(rules: rules)
             sawProducerStock = sawProducerStock || city.production.buildings.contains {
                 $0.buildingID == 33 && $0.outputInventoryByCommodityID[4, default: 0] > 0
             }
@@ -131,9 +131,15 @@ final class XiaTutorialEconomyTests: XCTestCase {
             }
             sawMillStock = sawMillStock || city.logistics.mills.contains {
                 $0.inventoryByCommodityID[4, default: 0] > 0
+            } || tick.movement.market.purchasedLoads.contains {
+                $0.commodityID == 4 && $0.amount > 0
             }
-            sawBuyer = sawBuyer || !city.markets.buyers.isEmpty
-            sawPeddler = sawPeddler || !city.markets.peddlers.isEmpty
+            sawBuyer = sawBuyer
+                || !city.markets.buyers.isEmpty
+                || !tick.movement.market.purchasedLoads.isEmpty
+            sawPeddler = sawPeddler
+                || !city.markets.peddlers.isEmpty
+                || !tick.movement.market.householdDeliveries.isEmpty
             sawHouseFood = sawHouseFood || city.houses.contains { $0.foodSupplyAmount > 0 }
             sawWater = sawWater || city.houses.contains { $0.serviceCoverage.contains(.water) }
             sawAncestor = sawAncestor || city.houses.contains { $0.serviceCoverage.contains(.ancestor) }

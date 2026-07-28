@@ -68,8 +68,16 @@ public enum DeterministicMigration {
             .filter { house in
                 guard let location = house.location,
                       house.residents < house.capacity(using: models) else { return false }
-                return RoadServiceCoverage.orthogonalNeighbors(of: location)
-                    .contains(where: roadNetwork.contains)
+                let buildingID = house.houseLevelID + 3
+                let footprint = OriginalBuildingFootprintCatalog
+                    .footprint(forBuildingID: buildingID)
+                    ?? BuildingFootprint(width: 1, height: 1)
+                let occupied = Set(footprint.points(at: location))
+                return footprint.points(at: location)
+                    .flatMap(RoadServiceCoverage.orthogonalNeighbors(of:))
+                    .contains {
+                        !occupied.contains($0) && roadNetwork.contains($0)
+                    }
             }
             .sorted { $0.id < $1.id }
         let availableCapacity = eligible.reduce(0) {

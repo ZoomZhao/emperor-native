@@ -43,6 +43,10 @@ public enum TutorialFigureRole: String, CaseIterable, Sendable, Hashable, Codabl
     case acrobat
     case actor
     case musician
+    case chineseInfantry
+    case chineseCrossbow
+    case chineseCavalry
+    case chineseCatapult
 }
 
 public struct FigureSpriteReference: Sendable, Equatable, Hashable {
@@ -107,6 +111,7 @@ public struct FigureSpriteAnimation: Sendable, Equatable, Hashable {
 /// contact sheets are inspectable with `emperor-inspect sg3-figure`.
 public enum OriginalFigureSpriteCatalog {
     public static let mainArchiveBaseName = "SprMain"
+    public static let main2ArchiveBaseName = "SprMain2"
     public static let meatCommodityID = 4
 
     /// `Gen_Transport` stores one 16-frame, eight-direction family per cargo.
@@ -219,6 +224,26 @@ public enum OriginalFigureSpriteCatalog {
             role: .musician, figureID: 34, archiveBaseName: mainArchiveBaseName,
             sourceBitmapName: "Musician", logicalGroupID: 102,
             firstImageID: 7_076, framesPerDirection: 12
+        ),
+        .init(
+            role: .chineseInfantry, figureID: 64, archiveBaseName: main2ArchiveBaseName,
+            sourceBitmapName: "Chinese_InfantryMan", logicalGroupID: 169,
+            firstImageID: 9_990, framesPerDirection: 12
+        ),
+        .init(
+            role: .chineseCrossbow, figureID: 65, archiveBaseName: main2ArchiveBaseName,
+            sourceBitmapName: "Chinese_CrossbowMan", logicalGroupID: 165,
+            firstImageID: 9_606, framesPerDirection: 12
+        ),
+        .init(
+            role: .chineseCavalry, figureID: 66, archiveBaseName: main2ArchiveBaseName,
+            sourceBitmapName: "Chinese_Cavalry", logicalGroupID: 159,
+            firstImageID: 8_970, framesPerDirection: 12
+        ),
+        .init(
+            role: .chineseCatapult, figureID: 68, archiveBaseName: main2ArchiveBaseName,
+            sourceBitmapName: "Chinese_Catapult", logicalGroupID: 154,
+            firstImageID: 8_558, framesPerDirection: 12
         ),
     ]
 

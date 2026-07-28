@@ -1032,13 +1032,16 @@ struct CityCanvas: View {
         case .roadblock: city.canConstructRoadBlock(at: point)
         case .rally: city.canIssueMilitaryOrder(to: point)
         case .grandCanalSegment: city.canAdvanceGrandCanalSegment(at: point)
+        case .largePalacePhase: city.canAdvanceLargePalacePhase(at: point)
         case .house: city.canConstructHouse(at: point)
+        case .eliteHouse: city.canConstructHouse(at: point)
         case .farmland:
             city.canConstructAgriculturalPlot(crop: agriculturalCrop, at: point)
         case .garden, .decorativeSculpture, .ornateSculpture, .floweringTree,
              .waysidePavilion, .pond, .taiChiPark, .privateGarden,
              .laborersCamp, .carpentersGuild, .masonsGuild, .ceramistsGuild,
-             .tumulus, .grandTumulus, .greatTemple, .splendidTemple, .grandPagoda:
+             .tumulus, .grandTumulus, .greatTemple, .splendidTemple, .grandPagoda,
+             .largePalace:
             constructionTool.buildingID.map {
                 city.canConstructAestheticBuilding(
                     buildingID: $0,
@@ -1855,6 +1858,16 @@ struct CityCanvas: View {
                 figureID: peddler.figureID,
                 stableID: 400_000 + peddler.id,
                 point: point,
+                previous: previous
+            )
+        }
+        for unit in city.military.units where unit.status != .destroyed {
+            let previous = unit.route.indices.contains(unit.routeIndex - 1)
+                ? unit.route[unit.routeIndex - 1] : nil
+            append(
+                figureID: unit.figureID,
+                stableID: 600_000 + unit.id,
+                point: unit.currentPoint,
                 previous: previous
             )
         }

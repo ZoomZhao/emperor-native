@@ -119,9 +119,10 @@ public enum DeterministicHousingEvolution {
         models: BuildingModelTable,
         difficulty: GameDifficulty
     ) -> HouseEvolutionEvaluation? {
-        guard house.residents > 0,
-              house.location != nil,
-              let current = models[houseLevelID: house.houseLevelID] else {
+        guard house.location != nil,
+              let current = models[houseLevelID: house.houseLevelID],
+              house.residents > 0
+                || (house.houseLevelID == 8 && current.populationCapacity == 0) else {
             return nil
         }
         let next = nextLevel(after: house.houseLevelID)

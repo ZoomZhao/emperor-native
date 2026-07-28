@@ -201,13 +201,17 @@ public struct DeterministicCityOperationsState: Sendable, Hashable, Codable {
     private static func workforcePriority(_ category: PlacedBuildingCategory) -> Int {
         switch category {
         case .residentialService: 0
-        case .military: 1
-        case .aesthetic: 2
-        case .production: 3
-        case .mill: 4
-        case .warehouse: 5
-        case .market: 6
-        case .trading: 7
+        // Distribution buildings must remain staffed during a shortage or
+        // every producer can be full while no food or goods ever reach homes.
+        // Producers support partial staffing; storage, markets and trade do
+        // not, so give the authored distribution chain first claim.
+        case .warehouse: 1
+        case .mill: 2
+        case .market: 3
+        case .trading: 4
+        case .production: 5
+        case .military: 6
+        case .aesthetic: 7
         }
     }
 }

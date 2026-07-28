@@ -665,6 +665,18 @@ final class LibraryModel: ObservableObject {
                 return
             }
             saveStatus = "已在 \(point.x), \(point.y) 建造住宅 · 国库 \(city.economy.treasury)"
+        case .eliteHouse:
+            guard city.constructHouse(
+                levelID: 8,
+                constructionBuildingID: 11,
+                location: point,
+                orientation: constructionOrientation,
+                rules: rules
+            ) != nil else {
+                saveStatus = constructionFailure(at: point, city: city, tool: constructionTool)
+                return
+            }
+            saveStatus = "已在 \(point.x), \(point.y) 建造贵族住宅 · 国库 \(city.economy.treasury)"
         case .warehouse, .granary:
             guard city.constructWarehouse(
                 at: point,
@@ -696,8 +708,23 @@ final class LibraryModel: ObservableObject {
                 return
             }
             saveStatus = constructionSuccess(at: point, city: city, tool: constructionTool)
+        case .grandMarket:
+            guard city.constructMarket(
+                at: point,
+                orientation: constructionOrientation,
+                marketBuildingID: OriginalMarketCatalog.grandMarketBuildingID,
+                shopBuildingIDs: [
+                    OriginalFoodCatalog.foodShopBuildingID, 65, 67, 68, 69, 70,
+                ],
+                rules: rules
+            ) != nil else {
+                saveStatus = constructionFailure(at: point, city: city, tool: constructionTool)
+                return
+            }
+            saveStatus = constructionSuccess(at: point, city: city, tool: constructionTool)
         case .clayPit, .kiln, .fishingWharf, .huntingCamp, .quarry, .lumberMill,
-             .ironMine, .bronzeWorks, .jadeWorkshop, .lacquerGuild, .silkWeaver, .teaHouse:
+             .ironMine, .bronzeWorks, .jadeWorkshop, .lacquerGuild, .silkWeaver, .teaHouse,
+             .lacquerwareWorkshop, .weaver:
             guard let buildingID = constructionTool.buildingID,
                   models.buildings[buildingID: buildingID] != nil,
                   city.constructProductionBuilding(
@@ -754,6 +781,12 @@ final class LibraryModel: ObservableObject {
                 return
             }
             saveStatus = "郑国渠第 \(segment + 1) 段施工阶段已推进"
+        case .largePalacePhase:
+            guard let phase = city.advanceLargePalacePhase(at: point) else {
+                saveStatus = "大宫殿下一相位尚不能推进：请先交付材料并完成相应工期"
+                return
+            }
+            saveStatus = "大宫殿施工已推进至第 \(phase)/\(LargePalaceProjectRuntime.phaseCount) 相位"
         case .barracks, .fort, .catapultFort, .cavalryFort, .chariotFort:
             guard let buildingID = constructionTool.buildingID,
                   city.constructMilitaryFort(
@@ -782,7 +815,8 @@ final class LibraryModel: ObservableObject {
              .waysidePavilion, .pond, .taiChiPark, .privateGarden,
              .administrativeCity, .palace,
              .laborersCamp, .carpentersGuild, .masonsGuild, .ceramistsGuild,
-             .tumulus, .grandTumulus, .greatTemple, .splendidTemple, .grandPagoda:
+             .tumulus, .grandTumulus, .greatTemple, .splendidTemple, .grandPagoda,
+             .largePalace:
             guard let buildingID = constructionTool.buildingID,
                   city.constructAestheticBuilding(
                     buildingID: buildingID,
@@ -2086,10 +2120,12 @@ final class LibraryModel: ObservableObject {
         case .clearLand: .clearLand
         case .road: .road
         case .house: .house
+        case .eliteHouse: .eliteHouse
         case .warehouse: .warehouse
         case .huntingCamp: .huntingCamp
         case .mill: .mill
         case .market: .market
+        case .grandMarket: .grandMarket
         case .clayPit: .clayPit
         case .kiln: .kiln
         case .well: .well
@@ -2106,6 +2142,8 @@ final class LibraryModel: ObservableObject {
         case .farmland: .farmland
         case .irrigationPump: .irrigationPump
         case .grandCanalSegment: .grandCanalSegment
+        case .largePalace: .largePalace
+        case .largePalacePhase: .largePalacePhase
         case .lumberMill: .lumberMill
         case .quarry: .quarry
         case .granary: .granary
@@ -2124,8 +2162,10 @@ final class LibraryModel: ObservableObject {
         case .ironMine: .ironMine
         case .bronzeWorks: .bronzeWorks
         case .lacquerGuild: .lacquerGuild
+        case .lacquerwareWorkshop: .lacquerwareWorkshop
         case .jadeWorkshop: .jadeWorkshop
         case .silkWeaver: .silkWeaver
+        case .weaver: .weaver
         case .teaHouse: .teaHouse
         case .bathhouse: .bathhouse
         case .magistrate: .magistrate

@@ -7,10 +7,12 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
     case clearLand
     case road
     case house
+    case eliteHouse
     case warehouse
     case huntingCamp
     case mill
     case market
+    case grandMarket
     case clayPit
     case kiln
     case well
@@ -26,6 +28,8 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
     case dramaSchool
     case irrigationPump
     case grandCanalSegment
+    case largePalace
+    case largePalacePhase
     case farmland
     case lumberMill
     case quarry
@@ -45,8 +49,10 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
     case ironMine
     case bronzeWorks
     case lacquerGuild
+    case lacquerwareWorkshop
     case jadeWorkshop
     case silkWeaver
+    case weaver
     case teaHouse
     case bathhouse
     case magistrate
@@ -71,9 +77,10 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
 
     public var buildingID: Int? {
         switch self {
-        case .inspect, .demolish, .clearLand, .grandCanalSegment: nil
+        case .inspect, .demolish, .clearLand, .grandCanalSegment, .largePalacePhase: nil
         case .road: 1
         case .house: 2
+        case .eliteHouse: 11
         case .fishingWharf: 31
         case .huntingCamp: 33
         case .clayPit: 35
@@ -82,17 +89,21 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
         case .bronzeWorks: 39
         case .ironMine: 40
         case .jadeWorkshop: 46
+        case .weaver: 47
         case .kiln: 43
+        case .lacquerwareWorkshop: 44
         case .carpentersGuild: 52
         case .mill: 53
         case .warehouse, .granary: 54
         case .market: 59
+        case .grandMarket: 60
         case .well: 72
         case .tumulus: 76
         case .grandTumulus: 77
         case .greatTemple: 78
         case .splendidTemple: 79
         case .grandPagoda: 93
+        case .largePalace: 82
         case .palace: 110
         case .inspectorTower: 124
         case .taxOffice: 125
@@ -152,6 +163,12 @@ public enum PlayerCommand: Sendable, Hashable, Codable {
         policy: WarehouseCommodityPolicy
     )
     case setTradeEnabled(tradingBuildingID: Int, enabled: Bool)
+    case constructTradingBuilding(
+        partnerID: Int,
+        at: GridPoint,
+        orientation: IsometricBuildingOrientation
+    )
+    case setTaxBand(Int)
     case beginMapMonument(buildingID: Int)
     case setSpeed(Int)
     case advanceOneTick

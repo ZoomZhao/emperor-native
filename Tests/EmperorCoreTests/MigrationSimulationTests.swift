@@ -35,6 +35,37 @@ final class MigrationSimulationTests: XCTestCase {
         XCTAssertEqual(city.houses.first(where: { $0.id == secondID })?.residents, 3)
     }
 
+    func testMigrationFillsEliteCompoundsBeforeLowerTierVacancies() throws {
+        let original = try installedModels()
+        let rules = EconomyRulesEngine(models: original)
+        var city = DeterministicCityState(
+            year: 2038,
+            treasury: 10_000,
+            mapWidth: 12,
+            mapHeight: 5
+        )
+        _ = city.buildRoad(
+            (0..<12).flatMap { x in
+                [GridPoint(x: x, y: 0), GridPoint(x: x, y: 3)]
+            },
+            rules: rules
+        )
+        let commonID = city.addHouse(
+            levelID: 0,
+            location: GridPoint(x: 2, y: 1),
+            models: original.buildings
+        )
+        let eliteID = city.addHouse(
+            levelID: 13,
+            location: GridPoint(x: 5, y: 1),
+            models: original.buildings
+        )
+
+        XCTAssertEqual(city.advanceTick(rules: rules).migratedResidents, 5)
+        XCTAssertEqual(city.houses.first(where: { $0.id == eliteID })?.residents, 5)
+        XCTAssertEqual(city.houses.first(where: { $0.id == commonID })?.residents, 0)
+    }
+
     func testMigrationIgnoresHousingWithoutRoadAccessAndStopsAtCapacity() throws {
         let original = try installedModels()
         let rules = EconomyRulesEngine(models: original)
@@ -50,6 +81,7 @@ final class MigrationSimulationTests: XCTestCase {
         XCTAssertEqual(blocked.migratedResidents, 0)
         XCTAssertEqual(blocked.migrationAssessment.blockReason, .noEligibleHousing)
 
+        _ = city.buildRoad([GridPoint(x: 0, y: 1)], rules: rules)
         _ = city.addHouse(
             levelID: 0,
             location: GridPoint(x: 1, y: 1),

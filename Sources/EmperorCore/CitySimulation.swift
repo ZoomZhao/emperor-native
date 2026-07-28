@@ -392,10 +392,9 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
                 category: .production,
                 instanceID: building.id
             )
-            result[key] = max(
-                0,
-                models[buildingID: building.buildingID]?.employees ?? 0
-            )
+            result[key] = building.isEnabled
+                ? max(0, models[buildingID: building.buildingID]?.employees ?? 0)
+                : 0
         }
         for market in markets.markets {
             let key = OperationalBuildingKey(category: .market, instanceID: market.id)
@@ -1247,7 +1246,17 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
     ) -> Int {
         guard requested > 0, !eligibleHouseIDs.isEmpty else { return 0 }
         var remaining = requested
-        for index in houses.indices.sorted(by: { houses[$0].id < houses[$1].id }) where
+        // Elite compounds attract their own migrant class in the original
+        // game. Prefer the highest authored housing tier, while retaining
+        // stable ID order within a tier, so a large common-housing reserve
+        // cannot permanently starve vacant elite compounds.
+        let admissionOrder = houses.indices.sorted {
+            if houses[$0].houseLevelID != houses[$1].houseLevelID {
+                return houses[$0].houseLevelID > houses[$1].houseLevelID
+            }
+            return houses[$0].id < houses[$1].id
+        }
+        for index in admissionOrder where
             remaining > 0 && eligibleHouseIDs.contains(houses[index].id) {
             let vacancy = max(0, houses[index].capacity(using: models) - houses[index].residents)
             let admitted = min(vacancy, remaining)
@@ -1417,9 +1426,17 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
                 to: footprint.points(at: origin)
               ).first else { return nil }
         var updated = self
+        let agricultureRules = OriginalAgricultureRules(farm: rules.models.farm)
         guard let id = updated.constructAgriculturalProducer(
             crop: crop,
-            fieldCount: 1,
+            // The native tool represents one complete farm/orchard unit, not
+            // one isolated tended square. Bind it to the authored maximum plot
+            // count so its annual yield can support the households staffed by
+            // that farm, matching the original farm-plus-fields abstraction.
+            fieldCount: max(
+                1,
+                agricultureRules.maximumTendedFields(for: crop.category)
+            ),
             fertilityPercent: fertilityPercent,
             climate: climate,
             serviceRoadStart: roadAccessPoint,
@@ -2011,7 +2028,9 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         let id = state.addConstruction(
             buildingID: buildingID,
             kind: kind,
-            location: placement.markerPoint
+            location: placement.markerPoint,
+            origin: placement.origin,
+            orientation: placement.orientation
         )
         updated.aestheticState = state
         updated.recordPlacement(placement, instanceID: id)
@@ -2088,6 +2107,24 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         guard let segment = state.advanceGrandCanalSegment(at: point) else { return nil }
         aestheticState = state
         return segment
+    }
+
+    public func canAdvanceLargePalacePhase(at point: GridPoint) -> Bool {
+        guard let palace = aesthetics.largePalaceProject,
+              palace.contains(point),
+              let project = aesthetics.monuments.first(where: { $0.id == palace.projectID }) else {
+            return false
+        }
+        var preview = palace
+        return preview.advance(project: project)
+    }
+
+    @discardableResult
+    public mutating func advanceLargePalacePhase(at point: GridPoint) -> Int? {
+        var state = aestheticState ?? DeterministicAestheticState()
+        guard let phase = state.advanceLargePalacePhase(at: point) else { return nil }
+        aestheticState = state
+        return phase
     }
 
     public func canConstructAestheticBuilding(
@@ -2334,7 +2371,14 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             roadNetwork: roadNetwork
         ) else { return nil }
         var buildings = residentialServiceBuildingState ?? []
-        let id = (buildings.map(\.id).max() ?? 0) + 1
+        // Ruins deliberately keep their placement after the operational
+        // service building is removed. Include those retained placement IDs
+        // when allocating a replacement so workforce keys never collide.
+        let retainedPlacementID = (buildingPlacementState ?? [])
+            .filter { $0.category == .residentialService }
+            .map(\.instanceID)
+            .max() ?? 0
+        let id = max(buildings.map(\.id).max() ?? 0, retainedPlacementID) + 1
         buildings.append(ResidentialServiceBuilding(
             id: id,
             buildingID: buildingID,
@@ -2972,7 +3016,7 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
                 )
             )
             let purchased = market.advanceBuyers(
-                roadStepsPerBuyer: 1,
+                roadStepsPerBuyer: 10,
                 activeMarketIDs: activeMarketIDs
             )
             market.schedulePeddlers(
@@ -2985,7 +3029,11 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
                 activeMarketIDs: activeMarketIDs
             )
             let delivered = market.advancePeddlers(
-                roadStepsPerPeddler: 1,
+                // A market walker patrols a substantial portion of its
+                // authored 60-tile service range during one game month.
+                // Ten road tiles per daily simulation tick preserves that
+                // cadence on the native day-based clock.
+                roadStepsPerPeddler: 10,
                 houses: &houses,
                 models: rules.models.buildings,
                 activeMarketIDs: activeMarketIDs

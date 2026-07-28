@@ -58,9 +58,11 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
     case road
     case rally
     case house
+    case eliteHouse
     case warehouse
     case mill
     case market
+    case grandMarket
     case clayPit
     case kiln
     case well
@@ -77,6 +79,8 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
     // Sprint 2 — expanded building menu (20 new tools).
     case irrigationPump
     case grandCanalSegment
+    case largePalace
+    case largePalacePhase
     case farmland
     case lumberMill
     case quarry
@@ -97,8 +101,10 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
     case ironMine
     case bronzeWorks
     case lacquerGuild
+    case lacquerwareWorkshop
     case jadeWorkshop
     case silkWeaver
+    case weaver
     case teaHouse
     case bathhouse
     case magistrate
@@ -150,9 +156,11 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .road: "道路"
         case .rally: "部队集结"
         case .house: "住宅"
+        case .eliteHouse: "贵族住宅"
         case .warehouse: "仓库"
         case .mill: "磨坊"
         case .market: "市场"
+        case .grandMarket: "大市场"
         case .clayPit: "粘土坑"
         case .kiln: "窑炉"
         case .well: "水井"
@@ -168,6 +176,8 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .daoistShrine: "道观"
         case .irrigationPump: "灌溉水车"
         case .grandCanalSegment: "郑国渠分段"
+        case .largePalace: "大宫殿"
+        case .largePalacePhase: "大宫殿施工"
         case .farmland: "农田"
         case .lumberMill: "伐木棚"
         case .quarry: "石料场"
@@ -188,8 +198,10 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .ironMine: "炼铁炉"
         case .bronzeWorks: "青铜熔炉"
         case .lacquerGuild: "漆料棚"
+        case .lacquerwareWorkshop: "漆器作坊"
         case .jadeWorkshop: "玉雕坊"
         case .silkWeaver: "养蚕棚"
+        case .weaver: "织布坊"
         case .teaHouse: "制茶棚"
         case .bathhouse: "道教大庙"
         case .magistrate: "佛塔"
@@ -222,9 +234,11 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .road: "point.topleft.down.to.point.bottomright.curvepath"
         case .rally: "flag.checkered"
         case .house: "house.fill"
+        case .eliteHouse: "house.and.flag.fill"
         case .warehouse: "shippingbox.fill"
         case .mill: "gearshape.2.fill"
         case .market: "storefront.fill"
+        case .grandMarket: "storefront.circle.fill"
         case .clayPit: "mountain.2.fill"
         case .kiln: "flame.fill"
         case .well: "drop.fill"
@@ -240,6 +254,8 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .daoistShrine: "sparkles"
         case .irrigationPump: "water.waves"
         case .grandCanalSegment: "hammer.circle.fill"
+        case .largePalace: "building.columns.fill"
+        case .largePalacePhase: "hammer.circle.fill"
         case .farmland: "leaf.circle.fill"
         case .lumberMill: "tree.circle.fill"
         case .quarry: "mountain.2.circle.fill"
@@ -260,8 +276,10 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .ironMine: "hammer.fill"
         case .bronzeWorks: "gearshape.circle.fill"
         case .lacquerGuild: "paintbrush.pointed.fill"
+        case .lacquerwareWorkshop: "paintbrush.fill"
         case .jadeWorkshop: "diamond.fill"
         case .silkWeaver: "scissors"
+        case .weaver: "tshirt.fill"
         case .teaHouse: "cup.and.saucer.fill"
         case .bathhouse: "bathtub.fill"
         case .magistrate: "gavel.fill"
@@ -286,11 +304,14 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
 
     var buildingID: Int? {
         switch self {
-        case .inspect, .demolish, .clearLand, .road, .rally, .grandCanalSegment: nil
+        case .inspect, .demolish, .clearLand, .road, .rally,
+             .grandCanalSegment, .largePalacePhase: nil
         case .house: 2
+        case .eliteHouse: 11
         case .warehouse: 54
         case .mill: 53
         case .market: 59
+        case .grandMarket: 60
         case .clayPit: 35
         case .kiln: 43
         case .well: 72
@@ -325,8 +346,10 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .ironMine: 40
         case .bronzeWorks: 39
         case .lacquerGuild: 238
+        case .lacquerwareWorkshop: 44
         case .jadeWorkshop: 46
         case .silkWeaver: 239
+        case .weaver: 47
         case .teaHouse: 237
         case .bathhouse: 216
         case .magistrate: 218
@@ -348,19 +371,20 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .greatTemple: 78
         case .splendidTemple: 79
         case .grandPagoda: 93
+        case .largePalace: 82
         }
     }
 
     /// Toolbar accordion section this tool belongs to.
     var category: ConstructionToolCategory {
         switch self {
-        case .house, .well, .herbalist, .acupuncture,
+        case .house, .eliteHouse, .well, .herbalist, .acupuncture,
              .musicSchool, .acrobatSchool, .dramaSchool:
             .residential
-        case .warehouse, .mill, .market, .clayPit, .kiln,
+        case .warehouse, .mill, .market, .grandMarket, .clayPit, .kiln,
              .irrigationPump, .farmland, .lumberMill, .quarry, .granary, .fishingWharf,
              .huntingCamp, .ironMine, .bronzeWorks, .jadeWorkshop,
-             .lacquerGuild, .silkWeaver, .teaHouse:
+             .lacquerGuild, .lacquerwareWorkshop, .silkWeaver, .weaver, .teaHouse:
             .production
         case .barracks, .cityWall, .gatehouse, .tower, .fort, .catapultFort,
              .cavalryFort, .chariotFort, .watchtower:
@@ -375,7 +399,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
             .aesthetics
         case .laborersCamp, .carpentersGuild, .masonsGuild, .ceramistsGuild,
              .tumulus, .grandTumulus, .greatTemple, .splendidTemple, .grandPagoda,
-             .grandCanalSegment:
+             .grandCanalSegment, .largePalace, .largePalacePhase:
             .monuments
         case .inspect, .demolish, .clearLand, .road, .roadblock, .rally:
             .infrastructure
@@ -532,6 +556,8 @@ struct ConstructionToolbar: View {
             "放在河岸清地，须同时邻接水面与道路 · 右键取消"
         case .grandCanalSegment:
             "点击地图中任意 4×4 郑国渠段推进当前施工阶段 · 右键取消"
+        case .largePalacePhase:
+            "点击已放置的大宫殿推进下一施工相位 · 右键取消"
         default:
             if let buildingID = tool.buildingID,
                let footprint = OriginalBuildingFootprintCatalog.footprint(
@@ -614,6 +640,9 @@ struct ConstructionToolbar: View {
     private func isAvailable(_ tool: NativeConstructionTool) -> Bool {
         if tool == .grandCanalSegment {
             return city.aesthetics.grandCanalProject?.isComplete == false
+        }
+        if tool == .largePalacePhase {
+            return city.aesthetics.largePalaceProject?.isComplete == false
         }
         if tool == .rally {
             guard city.missionSettings != nil else { return true }

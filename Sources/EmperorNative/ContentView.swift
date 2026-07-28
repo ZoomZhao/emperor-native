@@ -1412,6 +1412,9 @@ private struct ClassicControlPanel: View {
         if tool == .grandCanalSegment {
             return city.aesthetics.grandCanalProject?.isComplete == false
         }
+        if tool == .largePalacePhase {
+            return city.aesthetics.largePalaceProject?.isComplete == false
+        }
         if tool == .rally {
             guard city.missionSettings != nil else { return true }
             return !city.military.forts.isEmpty || !city.military.defensiveStructures.isEmpty
@@ -2492,12 +2495,16 @@ private func constructionInstruction(
         return "部队集结：先选编队，再点地图下令；右键取消"
     case .house:
         return "住宅：2×2 占地，当前\(orientation.localizedTitle)；点击或拖动连续建造；R 旋转；右键取消"
+    case .eliteHouse:
+        return "贵族住宅：2×2 占地，从空置贵族宅独立演化；须供应高品质食物、丝绸和奢侈品"
     case .farmland:
         return "作物田：先在农业分类选择具体作物，再点击或拖动清地种植；右键取消"
     case .irrigationPump:
         return "灌溉水车：放在河岸清地，须同时邻接水面与道路；右键取消"
     case .grandCanalSegment:
         return "郑国渠分段：点击地图中任意 4×4 预置渠段推进施工；跨路段完工后保留道路通行"
+    case .largePalacePhase:
+        return "大宫殿施工：点击已放置的 12×12 宫殿推进下一夯土、殿身、甬道或入口相位"
     default:
         guard let buildingID = tool.buildingID,
               let footprint = OriginalBuildingFootprintCatalog.footprint(

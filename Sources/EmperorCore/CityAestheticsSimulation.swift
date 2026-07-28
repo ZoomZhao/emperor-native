@@ -208,6 +208,7 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
     public private(set) var constructions: [AestheticConstruction]
     public private(set) var monuments: [MonumentProject]
     public private(set) var grandCanalProject: GrandCanalProjectRuntime?
+    public private(set) var largePalaceProject: LargePalaceProjectRuntime?
     public private(set) var lastMonumentSettlement: MonumentMonthlySettlement?
     private var nextConstructionID: Int
 
@@ -215,6 +216,7 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
         constructions = []
         monuments = []
         grandCanalProject = nil
+        largePalaceProject = nil
         lastMonumentSettlement = nil
         nextConstructionID = 1
     }
@@ -227,7 +229,9 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
     mutating func addConstruction(
         buildingID: Int,
         kind: AestheticConstructionKind,
-        location: GridPoint
+        location: GridPoint,
+        origin: GridPoint? = nil,
+        orientation: IsometricBuildingOrientation = .northSouth
     ) -> Int {
         let id = nextConstructionID
         nextConstructionID += 1
@@ -248,6 +252,13 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
                 completedWork: 0,
                 isComplete: false
             ))
+            if buildingID == LargePalaceProjectRuntime.buildingID {
+                largePalaceProject = LargePalaceProjectRuntime(
+                    projectID: id,
+                    origin: origin ?? location,
+                    orientation: orientation
+                )
+            }
         }
         return id
     }
@@ -292,10 +303,29 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
     }
 
     @discardableResult
+    mutating func advanceLargePalacePhase(at point: GridPoint) -> Int? {
+        guard var palace = largePalaceProject,
+              palace.contains(point),
+              let monumentIndex = monuments.firstIndex(where: { $0.id == palace.projectID }),
+              palace.advance(project: monuments[monumentIndex]) else { return nil }
+        largePalaceProject = palace
+        if palace.isComplete {
+            monuments[monumentIndex].markSegmentedConstructionComplete()
+        }
+        return palace.completedPhaseCount
+    }
+
+    @discardableResult
     mutating func removeConstruction(id: Int) -> Bool {
         guard let index = constructions.firstIndex(where: { $0.id == id }) else { return false }
         constructions.remove(at: index)
         monuments.removeAll { $0.id == id }
+        if grandCanalProject?.projectID == id {
+            grandCanalProject = nil
+        }
+        if largePalaceProject?.projectID == id {
+            largePalaceProject = nil
+        }
         return true
     }
 
@@ -338,6 +368,8 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
                     performed,
                     allowCompletion: monuments[index].buildingID
                         != GrandCanalProjectRuntime.buildingID
+                        && monuments[index].buildingID
+                        != LargePalaceProjectRuntime.buildingID
                 )
                 work[monuments[index].id] = performed
                 if monuments[index].isComplete { completed.append(monuments[index].id) }

@@ -160,6 +160,32 @@ public final class GameSessionController: @unchecked Sendable {
             }
             city = updated
             result = .applied(enabled ? "贸易设施已恢复进出口" : "贸易设施已暂停进出口")
+        case let .constructTradingBuilding(partnerID, point, orientation):
+            guard var updated = city,
+                  let tradingBuildingID = updated.constructTradingBuilding(
+                    partnerID: partnerID,
+                    at: point,
+                    orientation: orientation,
+                    rules: EconomyRulesEngine(models: models)
+                  ) else {
+                result = .rejected("贸易设施无法在此建造")
+                break
+            }
+            _ = updated.setTradeEnabled(
+                true,
+                tradingBuildingID: tradingBuildingID
+            )
+            city = updated
+            result = .applied("贸易设施已建成并启用")
+        case let .setTaxBand(bandID):
+            guard models.taxSentiment.bands.contains(where: { $0.id == bandID }),
+                  var updated = city else {
+                result = .rejected("税率档位无效")
+                break
+            }
+            updated.taxBandID = bandID
+            city = updated
+            result = .applied("税率已调整为第 \(bandID) 档")
         case let .beginMapMonument(buildingID):
             guard var updated = city,
                   updated.beginMapMonument(buildingID: buildingID) != nil else {
@@ -390,8 +416,12 @@ public final class GameSessionController: @unchecked Sendable {
             || city.markets.buyers.contains {
                 $0.millID != nil && $0.cargoes.contains { $0.commodityID == 4 && $0.amount > 0 }
             }
-        evidence.sawBuyer = evidence.sawBuyer || !city.markets.buyers.isEmpty
-        evidence.sawPeddler = evidence.sawPeddler || !city.markets.peddlers.isEmpty
+        evidence.sawBuyer = evidence.sawBuyer
+            || !city.markets.buyers.isEmpty
+            || !(city.markets.lastSettlement?.purchasedLoads.isEmpty ?? true)
+        evidence.sawPeddler = evidence.sawPeddler
+            || !city.markets.peddlers.isEmpty
+            || !(city.markets.lastSettlement?.householdDeliveries.isEmpty ?? true)
         evidence.sawHouseFood = evidence.sawHouseFood || city.houses.contains { $0.foodSupplyAmount > 0 }
         evidence.sawWaterService = evidence.sawWaterService || city.houses.contains {
             $0.serviceCoverage.contains(.water)
@@ -423,6 +453,14 @@ public final class GameSessionController: @unchecked Sendable {
                 orientation: orientation,
                 rules: rules
             ) != nil
+        case .eliteHouse:
+            city.constructHouse(
+                levelID: 8,
+                constructionBuildingID: 11,
+                location: point,
+                orientation: orientation,
+                rules: rules
+            ) != nil
         case .warehouse, .granary:
             city.constructWarehouse(
                 at: point,
@@ -431,7 +469,7 @@ public final class GameSessionController: @unchecked Sendable {
             ) != nil
         case .clayPit, .kiln, .fishingWharf, .huntingCamp, .quarry, .lumberMill,
              .ironMine, .bronzeWorks, .jadeWorkshop, .lacquerGuild, .silkWeaver,
-             .teaHouse:
+             .teaHouse, .lacquerwareWorkshop, .weaver:
             city.constructProductionBuilding(
                 buildingID: tool.buildingID ?? 0,
                 at: point,
@@ -445,6 +483,16 @@ public final class GameSessionController: @unchecked Sendable {
                 at: point,
                 orientation: orientation,
                 shopBuildingIDs: [OriginalFoodCatalog.foodShopBuildingID],
+                rules: rules
+            ) != nil
+        case .grandMarket:
+            city.constructMarket(
+                at: point,
+                orientation: orientation,
+                marketBuildingID: OriginalMarketCatalog.grandMarketBuildingID,
+                shopBuildingIDs: [
+                    OriginalFoodCatalog.foodShopBuildingID, 65, 67, 68, 69, 70,
+                ],
                 rules: rules
             ) != nil
         case .taxOffice:
@@ -480,6 +528,8 @@ public final class GameSessionController: @unchecked Sendable {
             ) != nil
         case .grandCanalSegment:
             city.advanceGrandCanalSegment(at: point) != nil
+        case .largePalacePhase:
+            city.advanceLargePalacePhase(at: point) != nil
         case .barracks, .fort, .catapultFort, .cavalryFort, .chariotFort:
             city.constructMilitaryFort(
                 buildingID: tool.buildingID ?? 0,
@@ -498,7 +548,7 @@ public final class GameSessionController: @unchecked Sendable {
              .waysidePavilion, .pond, .taiChiPark, .privateGarden,
              .administrativeCity, .palace, .laborersCamp, .carpentersGuild,
              .masonsGuild, .ceramistsGuild, .tumulus, .grandTumulus,
-             .greatTemple, .splendidTemple, .grandPagoda:
+             .greatTemple, .splendidTemple, .grandPagoda, .largePalace:
             city.constructAestheticBuilding(
                 buildingID: tool.buildingID ?? 0,
                 at: point,

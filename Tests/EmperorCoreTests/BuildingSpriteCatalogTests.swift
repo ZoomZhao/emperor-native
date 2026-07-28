@@ -123,6 +123,22 @@ final class BuildingSpriteCatalogTests: XCTestCase {
         }
     }
 
+    func testQinFortressesUseVerifiedMilitaryHeadquartersSprite() {
+        for buildingID in [220, 221, 223, 224] {
+            XCTAssertEqual(
+                OriginalBuildingSpriteCatalog.buildingSprite(
+                    forBuildingID: buildingID
+                )?.imageID,
+                954
+            )
+            XCTAssertFalse(
+                OriginalBuildingSpriteCatalog.buildingComponents(
+                    forBuildingID: buildingID
+                ).isEmpty
+            )
+        }
+    }
+
     func testIrrigationPumpUsesAllFourVerifiedBankSprites() {
         let expected: [QuayWaterEdge: Int] = [
             .north: 761,

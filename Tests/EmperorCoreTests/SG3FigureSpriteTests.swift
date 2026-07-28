@@ -46,7 +46,7 @@ final class SG3FigureSpriteTests: XCTestCase {
         XCTAssertEqual(Set(OriginalFigureSpriteCatalog.animations.map(\.role)), Set(TutorialFigureRole.allCases))
         XCTAssertEqual(
             Set(OriginalFigureSpriteCatalog.animations.map(\.figureID)),
-            [11, 22, 23, 24, 27, 28, 29, 30, 31, 32, 33, 34, 35, 39]
+            [11, 22, 23, 24, 27, 28, 29, 30, 31, 32, 33, 34, 35, 39, 64, 65, 66, 68]
         )
         for animation in OriginalFigureSpriteCatalog.animations {
             XCTAssertEqual(animation.framesByDirection.count, 8, animation.role.rawValue)
@@ -62,6 +62,24 @@ final class SG3FigureSpriteTests: XCTestCase {
                 stableFigureID: 7
             )
             XCTAssertEqual(first, replay)
+        }
+    }
+
+    func testQinFriendlyUnitsUseVerifiedSprMain2Families() throws {
+        let expected: [Int: (logicalGroup: Int, firstImageID: Int)] = [
+            64: (169, 9_990),
+            65: (165, 9_606),
+            66: (159, 8_970),
+            68: (154, 8_558),
+        ]
+        for (figureID, group) in expected {
+            let animation = try XCTUnwrap(
+                OriginalFigureSpriteCatalog.animation(forFigureID: figureID)
+            )
+            XCTAssertEqual(animation.archiveBaseName, "SprMain2")
+            XCTAssertEqual(animation.logicalGroupID, group.logicalGroup)
+            XCTAssertEqual(animation.framesByDirection.first?.first, group.firstImageID)
+            XCTAssertTrue(animation.framesByDirection.allSatisfy { $0.count == 12 })
         }
     }
 
@@ -124,17 +142,25 @@ final class SG3FigureSpriteTests: XCTestCase {
             throw XCTSkip("Original Emperor assets are not installed")
         }
         let source = try GameDataSource.openDefault()
-        let archive = try SG3Archive(
-            contentsOf: source.dataDirectory.appendingPathComponent("SprMain.sg3")
-        )
-        let pixels = try Data(
-            contentsOf: source.dataDirectory.appendingPathComponent("SprMain.555"),
-            options: [.mappedIfSafe]
-        )
+        let archiveNames = Set(OriginalFigureSpriteCatalog.animations.map(\.archiveBaseName))
+        var archives: [String: SG3Archive] = [:]
+        var pixelData: [String: Data] = [:]
+        for archiveName in archiveNames {
+            archives[archiveName] = try SG3Archive(
+                contentsOf: source.dataDirectory.appendingPathComponent("\(archiveName).sg3")
+            )
+            pixelData[archiveName] = try Data(
+                contentsOf: source.dataDirectory.appendingPathComponent("\(archiveName).555"),
+                options: [.mappedIfSafe]
+            )
+        }
+        let mainArchive = try XCTUnwrap(archives[OriginalFigureSpriteCatalog.mainArchiveBaseName])
         let requiredDistinctNames: Set<String> = ["Peddler", "Immigrant", "Inspector", "WaterBearer"]
-        XCTAssertTrue(requiredDistinctNames.isSubset(of: Set(archive.bitmapNames)))
+        XCTAssertTrue(requiredDistinctNames.isSubset(of: Set(mainArchive.bitmapNames)))
 
         for animation in OriginalFigureSpriteCatalog.animations {
+            let archive = try XCTUnwrap(archives[animation.archiveBaseName])
+            let pixels = try XCTUnwrap(pixelData[animation.archiveBaseName])
             let firstImageID = try XCTUnwrap(animation.framesByDirection.first?.first)
             XCTAssertEqual(Int(archive.groupImageIDs[animation.logicalGroupID]), firstImageID)
             XCTAssertEqual(archive.images[firstImageID].spriteCount, animation.framesByDirection[0].count)

@@ -113,6 +113,7 @@ public enum OriginalBuildingSpriteCatalog {
         115, 116, 117, 118, 119, 126, 127, 129, 130, 131,
         194, 195, 196, 197, 198, 199, 203,
         207, 208, 209, 211, 212, 213, 214, 215, 216, 217, 218, 219,
+        220, 221, 223, 224,
         226, 233, 235, 236, 237, 238,
     ]
 
@@ -236,6 +237,7 @@ public enum OriginalBuildingSpriteCatalog {
         case 217: imageID = 2_258 // Buddhist shrine
         case 218: imageID = 2_296 // Buddhist pagoda
         case 219: imageID = 2_309 // Confucian academy
+        case 220, 221, 223, 224: imageID = 954 // Verified shared military fort HQ
         case 226: imageID = 918 // Weaponsmith
         case 233: imageID = 2_373 // Laborers' camp
         case 235: imageID = 2_331 // Masons' guild
@@ -302,6 +304,20 @@ public enum OriginalBuildingSpriteCatalog {
             return gatehouseComponents(orientation: orientation)
         case 209:
             return administrativeCityComponents(orientation: orientation)
+        case 220, 221, 223, 224:
+            guard let sprite = buildingSprite(
+                forBuildingID: buildingID,
+                orientation: orientation
+            ) else { return [] }
+            // The verified #954 family is the 2×2 headquarters inside the
+            // fort's authored 4×4 courtyard, not a bitmap spanning every
+            // occupied fort tile.
+            canonical = [BuildingSpriteComponent(
+                sprite: sprite,
+                tileOffsetX: 1,
+                tileOffsetY: 1,
+                footprint: BuildingFootprint(width: 2, height: 2)
+            )]
         default:
             guard let sprite = buildingSprite(
                 forBuildingID: buildingID,
