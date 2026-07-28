@@ -130,6 +130,7 @@ private struct ClassicMainMenuView: View {
 private struct ClassicAccountSelectView: View {
     @ObservedObject var library: LibraryModel
     @State private var newAccountName = ""
+    @FocusState private var isAccountNameFocused: Bool
 
     var body: some View {
         ZStack {
@@ -188,9 +189,14 @@ private struct ClassicAccountSelectView: View {
                     VStack(spacing: 12) {
                         TextField("输入统治的名字", text: $newAccountName)
                             .textFieldStyle(.plain)
+                            .focused($isAccountNameFocused)
                             .padding(10)
                             .background(EmperorTheme.surfaceDeep)
-                            .overlay(Rectangle().strokeBorder(EmperorTheme.border))
+                            .overlay(
+                                Rectangle()
+                                    .strokeBorder(EmperorTheme.border)
+                                    .allowsHitTesting(false)
+                            )
                             .foregroundStyle(EmperorTheme.onSurface)
                             .accessibilityIdentifier("frontend-account-name-field")
 
@@ -238,6 +244,9 @@ private struct ClassicAccountSelectView: View {
             .overlay(Rectangle().strokeBorder(EmperorTheme.border, lineWidth: 2))
         }
         .accessibilityIdentifier("classic-account-select")
+        .onAppear {
+            isAccountNameFocused = true
+        }
     }
 }
 
