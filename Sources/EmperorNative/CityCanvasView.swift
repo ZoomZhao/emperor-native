@@ -742,6 +742,13 @@ struct CityCanvas: View {
             viewport: viewport,
             movementProgress: movementProgress
         )
+        drawWalkerHighlights(
+            context: &context,
+            tileWidth: tileWidth,
+            tileHeight: tileHeight,
+            origin: origin,
+            viewport: viewport
+        )
         drawOperationsFailures(
             context: &context,
             tileWidth: tileWidth,
@@ -1360,7 +1367,9 @@ struct CityCanvas: View {
 
         for house in city.houses {
             guard let location = house.location else { continue }
-            let matching = activeServiceLayers.filter { $0.covers(house) }
+            let matching = activeServiceLayers.filter {
+                $0.covers(house, models: models.buildings)
+            }
             for mapPoint in footprint.points(at: location) where viewport.contains(mapPoint) {
                 let center = point(
                     at: mapPoint,
@@ -1982,6 +1991,45 @@ struct CityCanvas: View {
                 tileHeight: tileHeight,
                 origin: origin,
                 viewport: viewport
+            )
+        }
+    }
+
+    private func drawWalkerHighlights(
+        context: inout GraphicsContext,
+        tileWidth: CGFloat,
+        tileHeight: CGFloat,
+        origin: CGPoint,
+        viewport: Viewport
+    ) {
+        guard activeResourceOverlays.contains(.walkers) else { return }
+        let points = city.walkers.walkers.map(\.currentPoint)
+            + city.logistics.deliveryWalkers.compactMap(\.currentPoint)
+            + city.markets.buyers.compactMap(\.currentPoint)
+            + city.markets.peddlers.compactMap(\.currentPoint)
+            + city.trade.visitors.map(\.currentPoint)
+        for mapPoint in points where viewport.contains(mapPoint) {
+            let center = point(
+                at: mapPoint,
+                tileWidth: tileWidth,
+                tileHeight: tileHeight,
+                origin: origin,
+                viewport: viewport
+            )
+            let diameter = max(10, tileHeight * 0.58)
+            let ring = Path(
+                ellipseIn: CGRect(
+                    x: center.x - diameter / 2,
+                    y: center.y - diameter * 0.72,
+                    width: diameter,
+                    height: diameter
+                )
+            )
+            context.fill(ring, with: .color(ResourceOverlayKind.walkers.color.opacity(0.22)))
+            context.stroke(
+                ring,
+                with: .color(ResourceOverlayKind.walkers.color.opacity(0.95)),
+                lineWidth: 1.4
             )
         }
     }

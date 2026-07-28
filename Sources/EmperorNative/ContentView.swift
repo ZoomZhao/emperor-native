@@ -727,6 +727,8 @@ private struct ClassicControlPanel: View {
     @Binding var cameraOffsetX: Int
     @Binding var cameraOffsetY: Int
     @State private var showsCitySummary = false
+    @State private var showsObjectives = false
+    @State private var showsWorldMap = false
 
     private let categoryOrder: [ConstructionToolCategory] = [
         .residential, .production, .civic, .religious,
@@ -735,51 +737,19 @@ private struct ClassicControlPanel: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Button {
-                showsCitySummary.toggle()
-            } label: {
-                HStack {
-                    categoryIcon(selectedCategory, selected: true, width: 25, height: 22)
-                    Text(panelTitle)
-                        .font(EmperorTheme.headlineSmall)
-                    Image(systemName: "chart.bar.xaxis")
-                        .font(EmperorTheme.labelSmall)
-                    Spacer()
-                    Text(
-                        selectedCategory == .residential
-                            ? "\(city.population)"
-                            : selectedToolTitle
-                    )
-                        .font(EmperorTheme.metric)
-                        .lineLimit(1)
-                }
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(ClassicPalette.gold)
-            .padding(.horizontal, 10)
-            .frame(height: EmperorTheme.panelHeaderHeight)
-            .background(ClassicPalette.panelHeader)
-            .help("打开城市状况总览")
-            .accessibilityIdentifier("city-summary-open")
-            .sheet(isPresented: $showsCitySummary) {
-                ClassicCitySummaryView(city: city, models: models)
-            }
+            ClassicPopulationAdvisorPanel(
+                library: library,
+                city: city,
+                models: models,
+                onOpenSummary: { showsCitySummary = true }
+            )
 
             Divider().overlay(ClassicPalette.border)
 
             HStack(alignment: .top, spacing: 0) {
                 categoryRail
                 Divider().overlay(ClassicPalette.border)
-                VStack(spacing: 0) {
-                    ScrollView(.vertical, showsIndicators: true) {
-                        ClassicMissionGuide(library: library, city: city, models: models)
-                            .padding(8)
-                    }
-                    .frame(height: 118)
-
-                    Divider().overlay(ClassicPalette.border)
-                    constructionCatalog
-                }
+                constructionCatalog
             }
             .frame(maxHeight: .infinity)
 
@@ -794,8 +764,24 @@ private struct ClassicControlPanel: View {
 
             Divider().overlay(ClassicPalette.border)
             classicMinimap
+
+            Divider().overlay(ClassicPalette.border)
+            ClassicCityNavigationBar(
+                library: library,
+                onOpenWorldMap: { showsWorldMap = true },
+                onOpenObjectives: { showsObjectives = true }
+            )
         }
         .background(ClassicBronzeTexture())
+        .sheet(isPresented: $showsCitySummary) {
+            ClassicCitySummaryView(city: city, models: models)
+        }
+        .sheet(isPresented: $showsObjectives) {
+            ClassicMissionObjectivesView(library: library, city: city, models: models)
+        }
+        .sheet(isPresented: $showsWorldMap) {
+            ClassicWorldMapView(library: library, models: models)
+        }
     }
 
     private var categoryRail: some View {
@@ -1402,24 +1388,348 @@ private struct ClassicControlPanel: View {
         city.isAgriculturalCropAvailable(crop)
     }
 
-    private var selectedToolTitle: String {
-        library.constructionTool == .farmland
-            ? library.selectedAgriculturalCrop.fieldTitle
-            : library.constructionTool.title
+}
+
+private struct ClassicPopulationAdvisorPanel: View {
+    @ObservedObject var library: LibraryModel
+    let city: DeterministicCityState
+    let models: OriginalEconomyModels
+    let onOpenSummary: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Button(action: onOpenSummary) {
+                HStack {
+                    Text("人口")
+                        .font(EmperorTheme.headlineSmall)
+                    Spacer()
+                    Text("\(city.population)")
+                        .font(EmperorTheme.metric)
+                }
+                .foregroundStyle(ClassicPalette.gold)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help("打开城市状况总览")
+            .accessibilityIdentifier("city-summary-open")
+
+            advisorButton(
+                title: "查看住房供给",
+                kind: .housingSupply,
+                identifier: "advisor-housing-supply"
+            )
+            advisorButton(
+                title: "查看城市行人",
+                kind: .walkers,
+                identifier: "advisor-city-walkers"
+            )
+
+            Text("目前住宅还可容纳 \(availableHousingCapacity) 人居住")
+                .font(EmperorTheme.bodySmall)
+                .foregroundStyle(EmperorTheme.onSurface)
+            Text(migrationStatus)
+                .font(EmperorTheme.bodySmall)
+                .foregroundStyle(
+                    city.migration.lastAssessment?.blockReason == nil
+                        ? EmperorTheme.onSurfaceMuted
+                        : EmperorTheme.warning
+                )
+                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 7)
+        .frame(minHeight: EmperorTheme.populationAdvisorHeight, alignment: .top)
+        .background(ClassicPalette.panelHeader)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("advisor-population-panel")
     }
 
-    private var panelTitle: String {
-        switch selectedCategory {
-        case .residential: "人口"
-        case .production: "农业与工业"
-        case .military: "军事"
-        case .civic: "城市管理"
-        case .religious: "宗教"
-        case .aesthetics: "美化"
-        case .monuments: "纪念建筑"
-        case .infrastructure: "基础设施"
+    private func advisorButton(
+        title: String,
+        kind: ResourceOverlayKind,
+        identifier: String
+    ) -> some View {
+        let isActive = library.activeResourceOverlays.contains(kind)
+        return Button {
+            library.toggleResourceOverlay(kind)
+        } label: {
+            HStack(spacing: 7) {
+                Image(systemName: kind.symbol)
+                    .frame(width: 16)
+                Text(title)
+                Spacer()
+                if isActive {
+                    Image(systemName: "checkmark")
+                }
+            }
+            .font(EmperorTheme.bodySmall)
+            .foregroundStyle(isActive ? ClassicPalette.ink : EmperorTheme.onSurface)
+            .padding(.horizontal, 8)
+            .frame(maxWidth: .infinity, minHeight: 26)
+            .background(isActive ? ClassicPalette.gold : EmperorTheme.surfaceControl)
+            .overlay(Rectangle().strokeBorder(EmperorTheme.secondary, lineWidth: 1))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(identifier)
+        .accessibilityValue(isActive ? "已开启" : "已关闭")
+    }
+
+    private var availableHousingCapacity: Int {
+        max(0, city.housingCapacity(using: models.buildings) - city.population)
+    }
+
+    private var migrationStatus: String {
+        guard let assessment = city.migration.lastAssessment else {
+            return availableHousingCapacity > 0
+                ? "等待下一个模拟日评估迁入条件"
+                : "移民受到限制，原因是：缺乏住房"
+        }
+        switch assessment.blockReason {
+        case .none:
+            if assessment.plannedImmigrants > 0 {
+                return "人们希望迁居你的城市"
+            }
+            return "人口数较稳定"
+        case .noEligibleHousing:
+            return "移民受到限制，原因是：缺乏临路住房"
+        case .negativeTreasury:
+            return "移民受到限制，原因是：国库为负"
+        case let .highUnemployment(percent):
+            return "移民受到限制，原因是：失业率过高（\(percent)%）"
         }
     }
+}
+
+private struct ClassicCityNavigationBar: View {
+    @ObservedObject var library: LibraryModel
+    let onOpenWorldMap: () -> Void
+    let onOpenObjectives: () -> Void
+
+    var body: some View {
+        HStack(spacing: 9) {
+            Spacer(minLength: 0)
+            navigationButton(
+                icon: .cityView,
+                fallback: "building.2.fill",
+                label: "城市",
+                identifier: "city-button-city-view",
+                selected: true,
+                action: {}
+            )
+            navigationButton(
+                icon: .worldMap,
+                fallback: "globe.asia.australia.fill",
+                label: "世界地图",
+                identifier: "city-button-world-map",
+                disabled: library.campaignEmpireMap == nil,
+                action: onOpenWorldMap
+            )
+            navigationButton(
+                icon: .objectives,
+                fallback: "scroll.fill",
+                label: "任务目标",
+                identifier: "city-button-objectives",
+                action: onOpenObjectives
+            )
+            Spacer(minLength: 0)
+        }
+        .frame(height: EmperorTheme.cityNavigationHeight)
+        .background(ClassicPalette.deepBrown.opacity(0.84))
+    }
+
+    private func navigationButton(
+        icon: OriginalInterfaceIcon,
+        fallback: String,
+        label: String,
+        identifier: String,
+        selected: Bool = false,
+        disabled: Bool = false,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            Group {
+                let state: OriginalInterfaceIconState = disabled
+                    ? .disabled
+                    : selected ? .selected : .normal
+                if let imageID = OriginalInterfaceSpriteCatalog.imageID(
+                    for: icon,
+                    state: state
+                ),
+                   let sprite = library.interfaceSprites[imageID] {
+                    Image(decorative: sprite.image, scale: 1)
+                        .resizable()
+                        .interpolation(.none)
+                        .scaledToFit()
+                } else {
+                    Image(systemName: fallback)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(
+                            disabled ? EmperorTheme.onSurfaceMuted : ClassicPalette.gold
+                        )
+                }
+            }
+            .frame(width: 42, height: 28)
+            .background(ClassicPalette.tileBrown)
+            .overlay(Rectangle().strokeBorder(ClassicPalette.border, lineWidth: 0.7))
+        }
+        .buttonStyle(.plain)
+        .disabled(disabled)
+        .help(disabled ? "\(label)在本任务中不可用" : label)
+        .accessibilityLabel(label)
+        .accessibilityIdentifier(identifier)
+    }
+}
+
+private struct ClassicMissionObjectivesView: View {
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject var library: LibraryModel
+    let city: DeterministicCityState
+    let models: OriginalEconomyModels
+
+    var body: some View {
+        VStack(spacing: 0) {
+            classicDialogHeader(
+                title: "任务目标",
+                icon: .objectives,
+                closeIdentifier: "city-objectives-close",
+                dismiss: dismiss.callAsFunction
+            )
+            ScrollView {
+                ClassicMissionGuide(
+                    library: library,
+                    city: city,
+                    models: models,
+                    goalLimit: nil
+                )
+                .padding(16)
+            }
+        }
+        .frame(width: 620, height: 430)
+        .background(EmperorTheme.surface)
+        .overlay(Rectangle().strokeBorder(ClassicPalette.border, lineWidth: 1))
+        .accessibilityIdentifier("city-objectives-dialog")
+    }
+}
+
+private struct ClassicWorldMapView: View {
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject var library: LibraryModel
+    let models: OriginalEconomyModels
+
+    var body: some View {
+        VStack(spacing: 0) {
+            classicDialogHeader(
+                title: "世界地图",
+                icon: .worldMap,
+                closeIdentifier: "city-world-map-close",
+                dismiss: dismiss.callAsFunction
+            )
+            if let empire = library.campaignEmpireMap {
+                ScrollView {
+                    LazyVStack(spacing: 8) {
+                        ForEach(empire.activeCities) { city in
+                            VStack(alignment: .leading, spacing: 5) {
+                                HStack {
+                                    Text(cityName(city))
+                                        .font(EmperorTheme.headlineSmall)
+                                        .foregroundStyle(EmperorTheme.onSurface)
+                                    Spacer()
+                                    Text(routeName(city))
+                                        .font(EmperorTheme.labelMedium)
+                                        .foregroundStyle(ClassicPalette.gold)
+                                }
+                                Text("收购：\(commodityNames(city.demandCommodityIDs))")
+                                Text("出售：\(commodityNames(city.supplyCommodityIDs))")
+                            }
+                            .font(EmperorTheme.bodySmall)
+                            .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                            .padding(10)
+                            .background(EmperorTheme.surfaceDeep)
+                            .overlay(
+                                Rectangle().strokeBorder(
+                                    EmperorTheme.border.opacity(0.72),
+                                    lineWidth: 1
+                                )
+                            )
+                        }
+                    }
+                    .padding(16)
+                }
+            } else {
+                VStack(spacing: 10) {
+                    Image(systemName: "globe.asia.australia")
+                        .font(.system(size: 34))
+                    Text("本任务没有可用的帝国地图")
+                        .font(EmperorTheme.headlineSmall)
+                }
+                .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            Divider().overlay(ClassicPalette.border)
+            Button("返回城市") {
+                dismiss()
+            }
+            .buttonStyle(.borderless)
+            .foregroundStyle(ClassicPalette.gold)
+            .padding(10)
+            .accessibilityIdentifier("city-button-city-view")
+        }
+        .frame(width: 620, height: 480)
+        .background(EmperorTheme.surface)
+        .overlay(Rectangle().strokeBorder(ClassicPalette.border, lineWidth: 1))
+        .accessibilityIdentifier("city-world-map-dialog")
+    }
+
+    private func cityName(_ city: CampaignEmpireCity) -> String {
+        let authored = library.cityNames?[nameID: city.nameID] ?? "城市 #\(city.nameID)"
+        return ClassicTextLocalization.cityName(authored)
+    }
+
+    private func routeName(_ city: CampaignEmpireCity) -> String {
+        switch city.routeKind(using: models.trade) {
+        case .land: "陆路"
+        case .sea: "海路"
+        case nil: "间隔 \(city.tradeVisitInterval)"
+        }
+    }
+
+    private func commodityNames(_ commodityIDs: [Int]) -> String {
+        guard !commodityIDs.isEmpty else { return "—" }
+        return commodityIDs.map {
+            models.trade[commodityID: $0]
+                .map { ClassicTextLocalization.commodityName($0.name) }
+                ?? "#\($0)"
+        }.joined(separator: "、")
+    }
+}
+
+private func classicDialogHeader(
+    title: String,
+    icon: OriginalInterfaceIcon,
+    closeIdentifier: String,
+    dismiss: @escaping () -> Void
+) -> some View {
+    HStack(spacing: 8) {
+        Image(systemName: icon == .worldMap ? "globe.asia.australia.fill" : "scroll.fill")
+            .foregroundStyle(ClassicPalette.gold)
+        Text(title)
+            .font(EmperorTheme.headlineSmall)
+            .foregroundStyle(ClassicPalette.gold)
+        Spacer()
+        Button(action: dismiss) {
+            Image(systemName: "xmark")
+                .frame(width: 24, height: 24)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(EmperorTheme.onSurfaceMuted)
+        .help("关闭\(title)")
+        .accessibilityIdentifier(closeIdentifier)
+    }
+    .padding(.horizontal, 12)
+    .frame(height: 42)
+    .background(ClassicPalette.panelHeader)
 }
 
 private struct ClassicCitySummaryView: View {
@@ -1691,6 +2001,7 @@ private struct ClassicMissionGuide: View {
     @ObservedObject var library: LibraryModel
     let city: DeterministicCityState
     let models: OriginalEconomyModels
+    var goalLimit: Int? = 2
 
     var body: some View {
         VStack(alignment: .leading, spacing: 7) {
@@ -1720,7 +2031,7 @@ private struct ClassicMissionGuide: View {
 
             if let goalSet, !goalSet.goals.isEmpty {
                 let snapshot = city.campaignGoalProgressSnapshot()
-                ForEach(goalSet.goals.prefix(2)) { goal in
+                ForEach(displayedGoals) { goal in
                     CampaignGoalRow(
                         goal: goal,
                         economy: models,
@@ -1757,6 +2068,12 @@ private struct ClassicMissionGuide: View {
     private var goalSet: CampaignMissionGoalSet? {
         guard let missionID = library.selectedMissionID else { return nil }
         return library.campaignGoalArchive?.missions.first { $0.id == missionID }
+    }
+
+    private var displayedGoals: [CampaignMissionGoal] {
+        guard let goals = goalSet?.goals else { return [] }
+        guard let goalLimit else { return goals }
+        return Array(goals.prefix(goalLimit))
     }
 
     private var imperialYear: String {

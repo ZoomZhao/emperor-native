@@ -47,6 +47,8 @@ enum EmperorTheme {
     static let panelHeaderHeight: CGFloat = 34
     static let categoryRailWidth: CGFloat = 54
     static let commandRowHeight: CGFloat = 36
+    static let populationAdvisorHeight: CGFloat = 148
+    static let cityNavigationHeight: CGFloat = 40
     static let minimapSize = CGSize(width: 156, height: 112)
     static let nativeCardRadius: CGFloat = 12
     static let nativeModalRadius: CGFloat = 22

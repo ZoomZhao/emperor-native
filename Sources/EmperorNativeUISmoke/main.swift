@@ -763,6 +763,83 @@ private func runSmoke(arguments: Arguments) throws {
         }
         log.record("started original Xia tutorial mission 0")
 
+        _ = try waitForElement(
+            in: application,
+            identifier: "advisor-population-panel",
+            timeout: 15,
+            requireEnabled: false
+        )
+        let housingSupply = try waitForElement(
+            in: application,
+            identifier: "advisor-housing-supply",
+            timeout: 15
+        )
+        try press(housingSupply, identifier: "advisor-housing-supply")
+        try press(
+            try waitForElement(
+                in: application,
+                identifier: "advisor-housing-supply",
+                timeout: 15
+            ),
+            identifier: "advisor-housing-supply"
+        )
+        let cityWalkers = try waitForElement(
+            in: application,
+            identifier: "advisor-city-walkers",
+            timeout: 15
+        )
+        try press(cityWalkers, identifier: "advisor-city-walkers")
+        try press(
+            try waitForElement(
+                in: application,
+                identifier: "advisor-city-walkers",
+                timeout: 15
+            ),
+            identifier: "advisor-city-walkers"
+        )
+
+        let objectives = try waitForElement(
+            in: application,
+            identifier: "city-button-objectives",
+            timeout: 15
+        )
+        try press(objectives, identifier: "city-button-objectives")
+        _ = try waitForElement(
+            in: application,
+            identifier: "city-objectives-dialog",
+            timeout: 15,
+            requireEnabled: false
+        )
+        let closeObjectives = try waitForElement(
+            in: application,
+            identifier: "city-objectives-close",
+            timeout: 15
+        )
+        try press(closeObjectives, identifier: "city-objectives-close")
+
+        let worldMap = try waitForElement(
+            in: application,
+            identifier: "city-button-world-map",
+            timeout: 15,
+            requireEnabled: false
+        )
+        if boolAttribute(worldMap, kAXEnabledAttribute as CFString) != false {
+            try press(worldMap, identifier: "city-button-world-map")
+            _ = try waitForElement(
+                in: application,
+                identifier: "city-world-map-dialog",
+                timeout: 15,
+                requireEnabled: false
+            )
+            let closeWorldMap = try waitForElement(
+                in: application,
+                identifier: "city-world-map-close",
+                timeout: 15
+            )
+            try press(closeWorldMap, identifier: "city-world-map-close")
+        }
+        log.record("verified classic population advisor and city navigation")
+
         let savesDirectory = arguments.logDirectory.appendingPathComponent("saves")
         let autosaveDeadline = Date().addingTimeInterval(10)
         var autosaveFiles: [URL] = []
