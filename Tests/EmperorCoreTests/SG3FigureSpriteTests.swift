@@ -46,7 +46,7 @@ final class SG3FigureSpriteTests: XCTestCase {
         XCTAssertEqual(Set(OriginalFigureSpriteCatalog.animations.map(\.role)), Set(TutorialFigureRole.allCases))
         XCTAssertEqual(
             Set(OriginalFigureSpriteCatalog.animations.map(\.figureID)),
-            [11, 22, 23, 24, 27, 28, 30, 31, 32, 33, 34, 35, 39]
+            [11, 22, 23, 24, 27, 28, 29, 30, 31, 32, 33, 34, 35, 39]
         )
         for animation in OriginalFigureSpriteCatalog.animations {
             XCTAssertEqual(animation.framesByDirection.count, 8, animation.role.rawValue)
@@ -68,6 +68,7 @@ final class SG3FigureSpriteTests: XCTestCase {
     func testGeneratedServiceWalkersUseOriginalEightDirectionGroups() throws {
         let expected: [Int: (logicalGroup: Int, firstImageID: Int)] = [
             27: (64, 4_425),
+            29: (26, 1_521),
             30: (29, 1_813),
             31: (2, 109),
             32: (147, 8_541),
@@ -103,6 +104,19 @@ final class SG3FigureSpriteTests: XCTestCase {
         )
         XCTAssertEqual(generic.logicalGroupID, 127)
         XCTAssertEqual(generic.imageIDs, Set(7_860..<7_876))
+        XCTAssertEqual(
+            Set(OriginalFigureSpriteCatalog.deliveryAnimationsByCommodityID.keys),
+            Set([4, 22, 23, 24, 25]),
+            "Only visually verified commodity families should be hard-coded"
+        )
+        let verifiedGroups = [22: 134, 23: 135, 24: 139, 25: 137]
+        for (commodityID, logicalGroupID) in verifiedGroups {
+            let cargo = try XCTUnwrap(
+                OriginalFigureSpriteCatalog.deliveryAnimation(forCommodityID: commodityID)
+            )
+            XCTAssertEqual(cargo.logicalGroupID, logicalGroupID)
+            XCTAssertNotEqual(cargo.imageIDs, generic.imageIDs)
+        }
     }
 
     func testLocalTutorialFigureSequencesMatchLogicalGroupsAndDecode() throws {

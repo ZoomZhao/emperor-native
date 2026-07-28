@@ -52,7 +52,9 @@ public enum OriginalInterfaceSpriteCatalog {
         .worldMap: 1_263,
         .cityView: 1_267,
         .objectives: 1_271,
-        .messages: 1_275,
+        // The original message family is not yet verified. IDs 1275...1278
+        // are cabbage/cargo artwork, so callers intentionally use a native
+        // fallback rather than loading a semantically incorrect sprite.
         .undo: 1_287,
         .help: 1_291,
         .zoom: 1_295,

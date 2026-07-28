@@ -608,7 +608,7 @@ struct ConstructionToolbar: View {
     }
 }
 
-private extension ConstructionToolCategory {
+extension ConstructionToolCategory {
     var accessibilitySlug: String {
         switch self {
         case .residential: "residential"
@@ -619,6 +619,77 @@ private extension ConstructionToolCategory {
         case .aesthetics: "aesthetics"
         case .monuments: "monuments"
         case .infrastructure: "infrastructure"
+        }
+    }
+
+    var advisorTitle: String {
+        switch self {
+        case .residential: "人口"
+        case .production: "生产"
+        case .civic: "市政"
+        case .religious: "宗教"
+        case .military: "军事"
+        case .aesthetics: "美化"
+        case .monuments: "纪念碑"
+        case .infrastructure: "基础设施"
+        }
+    }
+
+    func advisorMetric(in city: DeterministicCityState) -> String {
+        if self == .residential { return "\(city.population)" }
+        return "\(matchingPlacements(in: city).count)"
+    }
+
+    func advisorSummary(in city: DeterministicCityState) -> String {
+        let count = matchingPlacements(in: city).count
+        return switch self {
+        case .production: "全城有 \(count) 座生产、仓储或交易建筑"
+        case .civic: "全城有 \(count) 座市政与民生服务建筑"
+        case .religious: "全城有 \(count) 座宗教与文化建筑"
+        case .military: "全城有 \(count) 处城防与军事设施"
+        case .aesthetics: "全城有 \(count) 处园林与美化设施"
+        case .monuments: "全城有 \(count) 处纪念碑及营造设施"
+        case .infrastructure: "当前道路共有 \(city.roadNetwork.points.count) 格"
+        case .residential: "当前人口 \(city.population) 人"
+        }
+    }
+
+    var advisorHint: String {
+        switch self {
+        case .residential: "住房与移民状况"
+        case .production: "选择资源覆盖层可查看适宜的生产位置"
+        case .civic: "巡察、税务与供水覆盖会影响住宅发展"
+        case .religious: "宗教覆盖可满足居民的精神需求"
+        case .military: "城墙、哨塔和要塞共同构成城市防务"
+        case .aesthetics: "园林与雕塑可改善周边住宅吸引力"
+        case .monuments: "大型工程需要劳工营和专业公会支持"
+        case .infrastructure: "道路负责连接住宅、服务与生产设施"
+        }
+    }
+
+    private func matchingPlacements(in city: DeterministicCityState) -> [PlacedBuilding] {
+        city.placedBuildings.filter { placement in
+            switch self {
+            case .residential:
+                false
+            case .production:
+                [.production, .warehouse, .mill, .market, .trading].contains(placement.category)
+            case .civic:
+                placement.category == .residentialService
+                    && (72...213).contains(placement.buildingID)
+            case .religious:
+                (214...219).contains(placement.buildingID)
+            case .military:
+                placement.category == .military
+            case .aesthetics:
+                (115...122).contains(placement.buildingID)
+                    || (243...252).contains(placement.buildingID)
+            case .monuments:
+                [52, 76, 77, 78, 79, 80, 81, 82, 84, 92, 93, 233, 235, 236]
+                    .contains(placement.buildingID)
+            case .infrastructure:
+                [126, 129, 130, 131].contains(placement.buildingID)
+            }
         }
     }
 }

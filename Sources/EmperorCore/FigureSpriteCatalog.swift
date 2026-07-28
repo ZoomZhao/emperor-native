@@ -34,6 +34,7 @@ public enum TutorialFigureRole: String, CaseIterable, Sendable, Hashable, Codabl
     case peddler
     case buyer
     case waterBearer
+    case watchman
     case ancestorPriest
     case inspector
     case taxOfficial
@@ -121,6 +122,33 @@ public enum OriginalFigureSpriteCatalog {
         framesPerDirection: 2
     )
 
+    /// Commodity mappings are deliberately limited to visually verified
+    /// `Gen_Transport` families. The exported first frames show lacquer jars,
+    /// bronze vessels, ceramic pots, and silk bolts respectively. Unverified
+    /// cargo safely uses the timber cart.
+    public static let deliveryAnimationsByCommodityID: [Int: FigureSpriteAnimation] = [
+        meatCommodityID: meatDeliveryAnimation,
+        22: transportAnimation(logicalGroupID: 134, firstImageID: 7_980),
+        23: transportAnimation(logicalGroupID: 135, firstImageID: 7_996),
+        24: transportAnimation(logicalGroupID: 139, firstImageID: 8_060),
+        25: transportAnimation(logicalGroupID: 137, firstImageID: 8_028),
+    ]
+
+    private static func transportAnimation(
+        logicalGroupID: Int,
+        firstImageID: Int
+    ) -> FigureSpriteAnimation {
+        FigureSpriteAnimation(
+            role: .delivery,
+            figureID: 22,
+            archiveBaseName: mainArchiveBaseName,
+            sourceBitmapName: "Gen_Transport",
+            logicalGroupID: logicalGroupID,
+            firstImageID: firstImageID,
+            framesPerDirection: 2
+        )
+    }
+
     public static let animations: [FigureSpriteAnimation] = [
         .init(
             role: .immigrant, figureID: 11, archiveBaseName: mainArchiveBaseName,
@@ -146,6 +174,11 @@ public enum OriginalFigureSpriteCatalog {
             role: .waterBearer, figureID: 28, archiveBaseName: mainArchiveBaseName,
             sourceBitmapName: "WaterBearer", logicalGroupID: 84,
             firstImageID: 5_586, framesPerDirection: 12
+        ),
+        .init(
+            role: .watchman, figureID: 29, archiveBaseName: mainArchiveBaseName,
+            sourceBitmapName: "Watchman", logicalGroupID: 26,
+            firstImageID: 1_521, framesPerDirection: 12
         ),
         .init(
             role: .ancestorPriest, figureID: 35, archiveBaseName: mainArchiveBaseName,
@@ -198,15 +231,12 @@ public enum OriginalFigureSpriteCatalog {
     }
 
     public static func deliveryAnimation(forCommodityID commodityID: Int) -> FigureSpriteAnimation? {
-        if commodityID == meatCommodityID {
-            return meatDeliveryAnimation
-        }
-        return animation(for: .delivery)
+        deliveryAnimationsByCommodityID[commodityID] ?? animation(for: .delivery)
     }
 
     public static var requiredImageIDsByArchive: [String: Set<Int>] {
         Dictionary(
-            grouping: animations + [meatDeliveryAnimation],
+            grouping: animations + Array(deliveryAnimationsByCommodityID.values),
             by: \.archiveBaseName
         ).mapValues { items in
             items.reduce(into: Set<Int>()) { $0.formUnion($1.imageIDs) }

@@ -67,9 +67,12 @@ public enum OriginalBuildingSpriteCatalog {
     public static let marketEntertainmentAreaImageID = 629
     public static let marketTileImageIDs = [632, 633, 634, 635]
     /// Logical group 82: the original small fire effect drawn over a failed
-    /// building. Collapse still uses a diagnostic fallback until the generic
-    /// ruin building's authored image family is verified.
+    /// building. Collapse retains model #161 and uses a procedural rubble bed
+    /// until the generic ruin building's authored image family is verified.
     public static let operationsFireImageID = 2_231
+    /// Original model-table ID retained after a collapse so the footprint
+    /// remains blocked until the player clears the ruins.
+    public static let ruinBuildingID = 161
 
     /// Building IDs currently constructible on the native isometric canvas.
     /// Keeping this list in the core makes the asynchronous sprite loader and
@@ -77,7 +80,7 @@ public enum OriginalBuildingSpriteCatalog {
     public static let supportedPlacedBuildingIDs = [
         26, 27, 28,
         31, 33, 35, 36, 38, 39, 40, 42, 43, 46, 53, 54, 56, 58, 59, 60, 72, 110, 124, 125,
-        126, 129, 130, 131,
+        115, 116, 117, 118, 119, 126, 127, 129, 130, 131,
         194, 195, 196, 197, 198, 199,
         207, 208, 209, 211, 212, 213, 214, 215, 216, 217, 218, 219,
         237, 238, 239,
@@ -166,8 +169,14 @@ public enum OriginalBuildingSpriteCatalog {
         case 46: imageID = 2_832 // Jade carver's studio
         case 53: imageID = 647   // Mill
         case 72: imageID = 1_559 // Well
+        case 115: imageID = 201 // Gardens
+        case 116: imageID = 209 // Decorative sculpture
+        case 117: imageID = 225 // Ornate sculpture
+        case 118: imageID = 241 // Flowering tree
+        case 119: imageID = 250 // Wayside pavilion
         case 124: imageID = 1_704 // Inspector's tower, China_Safety logical group 137
         case 126: imageID = 2_046 // One-tile roadblock sign, China_Government2 logical group 146
+        case 127: imageID = 1_618 // Watchtower, China_Safety logical group 134
         case 129: imageID = orientation == .northSouth ? 892 : 917 // City wall
         case 131: imageID = 879 // Staffed city-wall tower
         case 125: imageID = 1_908 // Tax office

@@ -3567,8 +3567,13 @@ final class EmperorCoreTests: XCTestCase {
         })
         XCTAssertFalse(city.production.buildings.contains { $0.id == kilnID || $0.id == clayID })
         XCTAssertFalse(city.placedBuildings.contains {
-            $0.category == .production && ($0.instanceID == kilnID || $0.instanceID == clayID)
+            $0.category == .production && $0.instanceID == kilnID
         })
+        let ruin = try XCTUnwrap(city.placedBuildings.first {
+            $0.category == .production && $0.instanceID == clayID
+        })
+        XCTAssertEqual(ruin.buildingID, OriginalBuildingSpriteCatalog.ruinBuildingID)
+        XCTAssertEqual(ruin.footprint, BuildingFootprint(width: 2, height: 2))
         XCTAssertEqual(city.operations.lastSettlement?.workforce.availableWorkers, 0)
     }
 

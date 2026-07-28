@@ -71,6 +71,30 @@ final class BuildingSpriteCatalogTests: XCTestCase {
         }
     }
 
+    func testAestheticAndWatchtowerBuildingsUseVerifiedOriginalImages() {
+        let expectedImageIDs = [
+            115: 201,
+            116: 209,
+            117: 225,
+            118: 241,
+            119: 250,
+            127: 1_618,
+        ]
+        for (buildingID, imageID) in expectedImageIDs {
+            XCTAssertEqual(
+                OriginalBuildingSpriteCatalog.buildingSprite(
+                    forBuildingID: buildingID
+                )?.imageID,
+                imageID
+            )
+            XCTAssertFalse(
+                OriginalBuildingSpriteCatalog.buildingComponents(
+                    forBuildingID: buildingID
+                ).isEmpty
+            )
+        }
+    }
+
     func testLocalXiaTutorialOneBuildingSpritesDecode() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")

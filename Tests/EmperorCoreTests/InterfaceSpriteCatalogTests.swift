@@ -4,7 +4,7 @@ import XCTest
 final class InterfaceSpriteCatalogTests: XCTestCase {
     func testEverySemanticIconHasFourDistinctStates() throws {
         var allIDs = Set<Int>()
-        for icon in OriginalInterfaceIcon.allCases {
+        for icon in OriginalInterfaceIcon.allCases where icon != .messages {
             let ids = try OriginalInterfaceIconState.allCases.map {
                 try XCTUnwrap(OriginalInterfaceSpriteCatalog.imageID(for: icon, state: $0))
             }
@@ -13,6 +13,10 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
             allIDs.formUnion(ids)
         }
         XCTAssertEqual(allIDs, OriginalInterfaceSpriteCatalog.requiredImageIDs)
+        XCTAssertNil(
+            OriginalInterfaceSpriteCatalog.imageID(for: .messages),
+            "1275 is cabbage/cargo artwork, not the original message button"
+        )
     }
 
     func testInstalledSemanticInterfaceIconsDecode() throws {

@@ -371,8 +371,8 @@ private struct ClassicCityGameView: View {
                         .frame(width: EmperorTheme.cityMapColumnWidth)
 
                         ClassicPanelHeader(
-                            title: "人口",
-                            value: "\(city.population)",
+                            title: selectedCategory.advisorTitle,
+                            value: selectedCategory.advisorMetric(in: city),
                             onOpenSummary: { showsCitySummary = true }
                         )
                         .frame(width: EmperorTheme.panelWidth)
@@ -765,6 +765,7 @@ private struct ClassicControlPanel: View {
     @Binding var cameraOffsetY: Int
     @State private var showsObjectives = false
     @State private var showsWorldMap = false
+    @State private var showsMessages = false
 
     private let categoryOrder: [ConstructionToolCategory] = [
         .residential, .production, .civic, .religious,
@@ -777,10 +778,11 @@ private struct ClassicControlPanel: View {
                 categoryRail
                 Divider().overlay(ClassicPalette.border)
                 VStack(spacing: 0) {
-                    ClassicPopulationAdvisorPanel(
+                    ClassicCategoryAdvisorPanel(
                         library: library,
                         city: city,
-                        models: models
+                        models: models,
+                        category: selectedCategory
                     )
 
                     Divider().overlay(ClassicPalette.border)
@@ -805,7 +807,8 @@ private struct ClassicControlPanel: View {
             ClassicCityNavigationBar(
                 library: library,
                 onOpenWorldMap: { showsWorldMap = true },
-                onOpenObjectives: { showsObjectives = true }
+                onOpenObjectives: { showsObjectives = true },
+                onOpenMessages: { showsMessages = true }
             )
         }
         .background(ClassicBronzeTexture())
@@ -814,6 +817,9 @@ private struct ClassicControlPanel: View {
         }
         .sheet(isPresented: $showsWorldMap) {
             ClassicWorldMapView(library: library, models: models)
+        }
+        .sheet(isPresented: $showsMessages) {
+            ClassicCityMessagesView(library: library, city: city, models: models)
         }
     }
 
@@ -1423,43 +1429,104 @@ private struct ClassicControlPanel: View {
 
 }
 
-private struct ClassicPopulationAdvisorPanel: View {
+private struct ClassicCategoryAdvisorPanel: View {
     @ObservedObject var library: LibraryModel
     let city: DeterministicCityState
     let models: OriginalEconomyModels
+    let category: ConstructionToolCategory
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            advisorButton(
-                title: "查看住房供给",
-                kind: .housingSupply,
-                identifier: "advisor-housing-supply"
-            )
-            advisorButton(
-                title: "查看城市行人",
-                kind: .walkers,
-                identifier: "advisor-city-walkers"
-            )
-
-            Text("目前住宅还可容纳 \(availableHousingCapacity) 人居住")
-                .font(EmperorTheme.bodySmall)
-                .foregroundStyle(EmperorTheme.onSurface)
-            Text(migrationStatus)
-                .font(EmperorTheme.bodySmall)
-                .foregroundStyle(
-                    city.migration.lastAssessment?.blockReason == nil
-                        ? EmperorTheme.onSurfaceMuted
-                        : EmperorTheme.warning
+            ForEach(advisorActions, id: \.identifier) { action in
+                advisorButton(
+                    title: action.title,
+                    kind: action.kind,
+                    identifier: action.identifier
                 )
-                .lineLimit(2)
-                .fixedSize(horizontal: false, vertical: true)
+            }
+
+            ForEach(Array(advisorSummary.enumerated()), id: \.offset) { _, line in
+                Text(line)
+                    .font(EmperorTheme.bodySmall)
+                    .foregroundStyle(
+                        category == .residential
+                            && city.migration.lastAssessment?.blockReason != nil
+                            && line == migrationStatus
+                            ? EmperorTheme.warning
+                            : EmperorTheme.onSurface
+                    )
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 7)
         .frame(minHeight: EmperorTheme.populationAdvisorHeight, alignment: .top)
         .background(ClassicPalette.panelHeader)
         .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("advisor-population-panel")
+        .accessibilityLabel(category.advisorTitle)
+        .accessibilityIdentifier(
+            category == .residential
+                ? "advisor-population-panel"
+                : "advisor-category-\(category.accessibilitySlug)"
+        )
+    }
+
+    private var advisorActions: [(title: String, kind: ResourceOverlayKind, identifier: String)] {
+        switch category {
+        case .residential:
+            [
+                ("查看住房供给", .housingSupply, "advisor-housing-supply"),
+                ("查看城市行人", .walkers, "advisor-city-walkers"),
+            ]
+        case .production:
+            [
+                ("查看农业生产", .food, "advisor-production-food"),
+                ("查看工业资源", .clay, "advisor-production-industry"),
+            ]
+        case .civic:
+            [
+                ("查看巡察覆盖", .inspection, "advisor-civic-inspection"),
+                ("查看税收征缴", .tax, "advisor-civic-tax"),
+            ]
+        case .religious:
+            [
+                ("查看宗教覆盖", .religion, "advisor-religion-coverage"),
+                ("查看城市行人", .walkers, "advisor-religion-walkers"),
+            ]
+        case .military:
+            [
+                ("查看城防行人", .walkers, "advisor-military-walkers"),
+                ("查看巡察覆盖", .inspection, "advisor-military-inspection"),
+            ]
+        case .aesthetics:
+            [
+                ("查看地区吸引力", .housingSupply, "advisor-aesthetics-appeal"),
+                ("查看居民用水", .water, "advisor-aesthetics-water"),
+            ]
+        case .monuments:
+            [
+                ("查看城市行人", .walkers, "advisor-monuments-walkers"),
+            ]
+        case .infrastructure:
+            [
+                ("查看居民用水", .water, "advisor-infrastructure-water"),
+                ("查看城市行人", .walkers, "advisor-infrastructure-walkers"),
+            ]
+        }
+    }
+
+    private var advisorSummary: [String] {
+        if category == .residential {
+            return [
+                "目前住宅还可容纳 \(availableHousingCapacity) 人居住",
+                migrationStatus,
+            ]
+        }
+        return [
+            category.advisorSummary(in: city),
+            category.advisorHint,
+        ]
     }
 
     private func advisorButton(
@@ -1523,6 +1590,7 @@ private struct ClassicCityNavigationBar: View {
     @ObservedObject var library: LibraryModel
     let onOpenWorldMap: () -> Void
     let onOpenObjectives: () -> Void
+    let onOpenMessages: () -> Void
 
     var body: some View {
         HStack(spacing: 9) {
@@ -1549,6 +1617,13 @@ private struct ClassicCityNavigationBar: View {
                 label: "任务目标",
                 identifier: "city-button-objectives",
                 action: onOpenObjectives
+            )
+            navigationButton(
+                icon: .messages,
+                fallback: "envelope.fill",
+                label: "消息",
+                identifier: "city-button-messages",
+                action: onOpenMessages
             )
             Spacer(minLength: 0)
         }
@@ -1596,6 +1671,88 @@ private struct ClassicCityNavigationBar: View {
         .help(disabled ? "\(label)在本任务中不可用" : label)
         .accessibilityLabel(label)
         .accessibilityIdentifier(identifier)
+    }
+}
+
+private struct ClassicCityMessagesView: View {
+    @Environment(\.dismiss) private var dismiss
+    @ObservedObject var library: LibraryModel
+    let city: DeterministicCityState
+    let models: OriginalEconomyModels
+
+    var body: some View {
+        VStack(spacing: 0) {
+            classicDialogHeader(
+                title: "城市消息",
+                icon: .messages,
+                closeIdentifier: "city-messages-close",
+                dismiss: dismiss.callAsFunction
+            )
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 10) {
+                    if messageRows.isEmpty {
+                        Text("目前没有城市消息")
+                            .font(EmperorTheme.bodyMedium)
+                            .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                    } else {
+                        ForEach(messageRows) { row in
+                            HStack(alignment: .top, spacing: 10) {
+                                Image(systemName: row.symbol)
+                                    .foregroundStyle(row.color)
+                                    .frame(width: 20)
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(row.title)
+                                        .font(EmperorTheme.labelMedium)
+                                    Text(row.detail)
+                                        .font(EmperorTheme.bodySmall)
+                                        .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                                }
+                                Spacer(minLength: 0)
+                            }
+                            .padding(10)
+                            .background(EmperorTheme.surfaceControl)
+                            .overlay(Rectangle().strokeBorder(ClassicPalette.border, lineWidth: 1))
+                        }
+                    }
+                }
+                .padding(16)
+            }
+        }
+        .frame(width: 560, height: 400)
+        .background(EmperorTheme.surface)
+        .overlay(Rectangle().strokeBorder(ClassicPalette.border, lineWidth: 1))
+        .accessibilityIdentifier("city-messages-dialog")
+    }
+
+    private var messageRows: [CityMessageRow] {
+        let campaignRows = city.campaignEvents.messages.reversed().map { message in
+            CityMessageRow(
+                id: "campaign-\(message.id)",
+                symbol: "envelope.fill",
+                title: "战役消息",
+                detail: "事件 \(message.kindRawValue)"
+                    + (message.amount.map { " · 数量 \($0)" } ?? ""),
+                color: ClassicPalette.gold
+            )
+        }
+        let failureRows = (city.operations.lastSettlement?.failures ?? []).map { failure in
+            CityMessageRow(
+                id: "failure-\(failure.key.category.rawValue)-\(failure.key.instanceID)-\(failure.kind)",
+                symbol: failure.kind == .fire ? "flame.fill" : "exclamationmark.triangle.fill",
+                title: failure.kind == .fire ? "建筑失火" : "建筑倒塌",
+                detail: "位置：\(failure.location.x), \(failure.location.y)",
+                color: failure.kind == .fire ? EmperorTheme.warning : EmperorTheme.onSurfaceMuted
+            )
+        }
+        return Array(campaignRows) + failureRows
+    }
+
+    private struct CityMessageRow: Identifiable {
+        let id: String
+        let symbol: String
+        let title: String
+        let detail: String
+        let color: Color
     }
 }
 
@@ -1728,8 +1885,13 @@ private func classicDialogHeader(
     closeIdentifier: String,
     dismiss: @escaping () -> Void
 ) -> some View {
-    HStack(spacing: 8) {
-        Image(systemName: icon == .worldMap ? "globe.asia.australia.fill" : "scroll.fill")
+    let systemName: String = switch icon {
+    case .worldMap: "globe.asia.australia.fill"
+    case .messages: "envelope.fill"
+    default: "scroll.fill"
+    }
+    return HStack(spacing: 8) {
+        Image(systemName: systemName)
             .foregroundStyle(ClassicPalette.gold)
         Text(title)
             .font(EmperorTheme.headlineSmall)

@@ -1061,6 +1061,10 @@ struct CityCanvas: View {
         metrics: RenderMetrics
     ) {
         for placement in city.placedBuildings where !hasRenderableComponents(placement) {
+            if placement.buildingID == OriginalBuildingSpriteCatalog.ruinBuildingID {
+                drawRuinFootprint(placement, context: &context, metrics: metrics)
+                continue
+            }
             let color: Color = switch placement.category {
             case .production: .brown
             case .warehouse: .indigo
@@ -1087,6 +1091,47 @@ struct CityCanvas: View {
                 context.fill(diamond, with: .color(color.opacity(0.46)))
                 context.stroke(diamond, with: .color(color.opacity(0.9)), lineWidth: 0.8)
             }
+        }
+    }
+
+    /// Draws a neutral rubble bed while the shipped Ruin (#161) artwork is
+    /// still being identified. The persisted footprint is intentionally
+    /// visible and blocks construction until it is demolished.
+    private func drawRuinFootprint(
+        _ placement: PlacedBuilding,
+        context: inout GraphicsContext,
+        metrics: RenderMetrics
+    ) {
+        for (index, occupiedPoint) in placement.occupiedPoints.enumerated()
+            where metrics.viewport.contains(occupiedPoint) {
+            let center = point(
+                at: occupiedPoint,
+                tileWidth: metrics.tileWidth,
+                tileHeight: metrics.tileHeight,
+                origin: metrics.origin,
+                viewport: metrics.viewport
+            )
+            let diamond = tileDiamond(
+                center: center,
+                tileWidth: metrics.tileWidth,
+                tileHeight: metrics.tileHeight
+            )
+            context.fill(diamond, with: .color(Color.gray.opacity(0.58)))
+            context.stroke(diamond, with: .color(Color.black.opacity(0.72)), lineWidth: 1)
+
+            let stoneWidth = metrics.tileWidth * 0.19
+            let stoneHeight = metrics.tileHeight * 0.27
+            let xOffset = index.isMultiple(of: 2) ? -stoneWidth * 0.55 : stoneWidth * 0.35
+            let stone = CGRect(
+                x: center.x + xOffset - stoneWidth * 0.5,
+                y: center.y - stoneHeight * 0.55,
+                width: stoneWidth,
+                height: stoneHeight
+            )
+            context.fill(
+                Path(roundedRect: stone, cornerRadius: 1),
+                with: .color(Color(white: 0.28))
+            )
         }
     }
 
@@ -2065,16 +2110,8 @@ struct CityCanvas: View {
                 )
                 continue
             }
-            drawMarker(
-                "塌",
-                at: failure.location,
-                color: .gray,
-                context: &context,
-                tileWidth: tileWidth,
-                tileHeight: tileHeight,
-                origin: origin,
-                viewport: viewport
-            )
+            // Collapse leaves a persistent #161 placement. Its rubble bed is
+            // rendered with the other placed buildings instead of a text marker.
         }
     }
 

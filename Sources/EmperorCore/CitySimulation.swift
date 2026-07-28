@@ -2703,8 +2703,22 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             guard let index = placements.firstIndex(where: {
                 $0.category == failure.key.category && $0.instanceID == failure.key.instanceID
             }) else { continue }
-            removeSimulationInstance(for: placements[index])
-            placements.remove(at: index)
+            let failedPlacement = placements[index]
+            removeSimulationInstance(for: failedPlacement)
+            switch failure.kind {
+            case .collapse:
+                placements[index] = PlacedBuilding(
+                    category: failedPlacement.category,
+                    instanceID: failedPlacement.instanceID,
+                    buildingID: OriginalBuildingSpriteCatalog.ruinBuildingID,
+                    origin: failedPlacement.origin,
+                    orientation: failedPlacement.orientation,
+                    footprint: failedPlacement.footprint,
+                    roadAccessPoint: failedPlacement.roadAccessPoint
+                )
+            case .fire:
+                placements.remove(at: index)
+            }
         }
         buildingPlacementState = placements
     }
