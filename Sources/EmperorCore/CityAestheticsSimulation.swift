@@ -37,6 +37,7 @@ public struct FengShuiCitySummary: Sendable, Hashable, Codable {
 
 public enum AestheticConstructionKind: String, Sendable, Hashable, Codable {
     case scenery
+    case irrigationPump
     case laborersCamp
     case carpentersGuild
     case masonsGuild

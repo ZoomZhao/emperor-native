@@ -59,7 +59,6 @@ final class BuildingSpriteCatalogTests: XCTestCase {
             46: 2_832,
             237: 812,
             238: 840,
-            239: 777,
         ]
         for (buildingID, imageID) in expectedImageIDs {
             XCTAssertEqual(
@@ -69,6 +68,10 @@ final class BuildingSpriteCatalogTests: XCTestCase {
                 imageID
             )
         }
+        XCTAssertNil(
+            OriginalBuildingSpriteCatalog.buildingSprite(forBuildingID: 239),
+            "#777 is an irrigation-pump frame, not a silkworm-shed sprite"
+        )
     }
 
     func testAestheticAndWatchtowerBuildingsUseVerifiedOriginalImages() {
@@ -101,6 +104,9 @@ final class BuildingSpriteCatalogTests: XCTestCase {
             82: .init(archiveBaseName: "China_Mon_Grand_Canal", imageID: 272),
             84: .init(archiveBaseName: "China_Mon_Tumulus", imageID: 376),
             226: .init(archiveBaseName: "China_General", imageID: 918),
+            233: .init(archiveBaseName: "China_General", imageID: 2_373),
+            235: .init(archiveBaseName: "China_General", imageID: 2_331),
+            236: .init(archiveBaseName: "China_General", imageID: 2_352),
         ]
         for (buildingID, reference) in expected {
             XCTAssertEqual(
@@ -113,6 +119,24 @@ final class BuildingSpriteCatalogTests: XCTestCase {
                 OriginalBuildingSpriteCatalog.buildingComponents(
                     forBuildingID: buildingID
                 ).isEmpty
+            )
+        }
+    }
+
+    func testIrrigationPumpUsesAllFourVerifiedBankSprites() {
+        let expected: [QuayWaterEdge: Int] = [
+            .north: 761,
+            .west: 777,
+            .east: 745,
+            .south: 729,
+        ]
+        for (edge, imageID) in expected {
+            XCTAssertEqual(
+                OriginalBuildingSpriteCatalog.buildingComponents(
+                    forBuildingID: 203,
+                    quayWaterEdge: edge
+                ).first?.sprite.imageID,
+                imageID
             )
         }
     }

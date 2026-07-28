@@ -3035,6 +3035,7 @@ struct BuildingInfoPopup: View {
             }) {
                 let purpose = switch construction.kind {
                 case .scenery: "景观美化"
+                case .irrigationPump: "灌溉水车"
                 case .laborersCamp: "劳工营"
                 case .carpentersGuild: "木匠行会"
                 case .masonsGuild: "石匠行会"

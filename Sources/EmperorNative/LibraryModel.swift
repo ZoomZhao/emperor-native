@@ -446,6 +446,24 @@ final class LibraryModel: ObservableObject {
         }
     }
 
+    func beginMapMonument(buildingID: Int) {
+        if let controller = gameplayController,
+           controller.selectedCampaignID != nil,
+           controller.selectedMissionID == selectedMissionID {
+            let result = controller.perform(.beginMapMonument(buildingID: buildingID))
+            syncFromGameplayController()
+            saveStatus = result.message
+            return
+        }
+        guard var city = cityState,
+              city.beginMapMonument(buildingID: buildingID) != nil else {
+            saveStatus = "地图纪念碑不可用或已经开工"
+            return
+        }
+        cityState = city
+        saveStatus = "地图纪念碑 #\(buildingID) 已开工"
+    }
+
     func selectConstructionTool(_ tool: NativeConstructionTool) {
         if let buildingID = tool.buildingID,
            let restriction = cityState?.campaignConstructionRestriction(
@@ -720,6 +738,16 @@ final class LibraryModel: ObservableObject {
                 return
             }
             saveStatus = "已在 \(point.x),\(point.y) 种植\(selectedAgriculturalCrop.fieldTitle)"
+        case .irrigationPump:
+            guard city.constructIrrigationPump(
+                at: point,
+                orientation: constructionOrientation,
+                rules: rules
+            ) != nil else {
+                saveStatus = constructionFailure(at: point, city: city, tool: constructionTool)
+                return
+            }
+            saveStatus = constructionSuccess(at: point, city: city, tool: constructionTool)
         case .barracks, .fort, .catapultFort, .cavalryFort, .chariotFort:
             guard let buildingID = constructionTool.buildingID,
                   city.constructMilitaryFort(
@@ -933,6 +961,15 @@ final class LibraryModel: ObservableObject {
                 return "无法种植\(selectedAgriculturalCrop.fieldTitle)：国库不足或农业模型不可用"
             }
             return "无法种植\(selectedAgriculturalCrop.fieldTitle)：目标格须为邻接道路的无碰撞清地"
+        }
+        if tool == .irrigationPump {
+            if city.canConstructIrrigationPump(
+                at: point,
+                orientation: constructionOrientation
+            ) {
+                return "无法建造灌溉水车：国库不足或建筑模型配置不可用"
+            }
+            return "灌溉水车必须放在同时邻接水面与道路的河岸清地"
         }
         if let buildingID = tool.buildingID,
            let restriction = city.campaignConstructionRestriction(
@@ -2061,6 +2098,7 @@ final class LibraryModel: ObservableObject {
         case .acrobatSchool: .acrobatSchool
         case .dramaSchool: .dramaSchool
         case .farmland: .farmland
+        case .irrigationPump: .irrigationPump
         case .lumberMill: .lumberMill
         case .quarry: .quarry
         case .granary: .granary

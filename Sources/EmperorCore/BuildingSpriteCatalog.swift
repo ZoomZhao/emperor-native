@@ -84,9 +84,9 @@ public enum OriginalBuildingSpriteCatalog {
         31, 33, 35, 36, 38, 39, 40, 42, 43, 46, 52, 53, 54, 56, 58, 59, 60, 72, 82, 84,
         110, 124, 125,
         115, 116, 117, 118, 119, 126, 127, 129, 130, 131,
-        194, 195, 196, 197, 198, 199,
+        194, 195, 196, 197, 198, 199, 203,
         207, 208, 209, 211, 212, 213, 214, 215, 216, 217, 218, 219,
-        226, 237, 238, 239,
+        226, 233, 235, 236, 237, 238,
     ]
 
     /// First mature-stage frame from each authored `China_Fields.bmp`
@@ -210,9 +210,11 @@ public enum OriginalBuildingSpriteCatalog {
         case 218: imageID = 2_296 // Buddhist pagoda
         case 219: imageID = 2_309 // Confucian academy
         case 226: imageID = 918 // Weaponsmith
+        case 233: imageID = 2_373 // Laborers' camp
+        case 235: imageID = 2_331 // Masons' guild
+        case 236: imageID = 2_352 // Ceramists' guild
         case 237: imageID = 812 // Tea curing shed
         case 238: imageID = 840 // Lacquer refinery
-        case 239: imageID = 777 // Silkworm shed
         case 194: imageID = agriculturalPlotImageID(for: .hemp)
         case 195: imageID = agriculturalPlotImageID(for: .wheat)
         case 196: imageID = agriculturalPlotImageID(for: .millet)
@@ -238,6 +240,24 @@ public enum OriginalBuildingSpriteCatalog {
 
         let canonical: [BuildingSpriteComponent]
         switch buildingID {
+        case 203:
+            let edge = quayWaterEdge
+                ?? (orientation == .northSouth ? .north : .east)
+            let imageID = switch edge {
+            case .north: 761
+            case .west: 777
+            case .east: 745
+            case .south: 729
+            }
+            canonical = [BuildingSpriteComponent(
+                sprite: BuildingSpriteReference(
+                    archiveBaseName: generalArchiveBaseName,
+                    imageID: imageID
+                ),
+                tileOffsetX: 0,
+                tileOffsetY: 0,
+                footprint: canonicalFootprint
+            )]
         case 54:
             canonical = warehouseComponents(footprint: canonicalFootprint)
         case 56:
@@ -300,6 +320,16 @@ public enum OriginalBuildingSpriteCatalog {
                         orientation: orientation
                     ).map(\.sprite)
                 )
+            }
+            if buildingID == 203 {
+                for edge in QuayWaterEdge.allCases {
+                    references.formUnion(
+                        buildingComponents(
+                            forBuildingID: buildingID,
+                            quayWaterEdge: edge
+                        ).map(\.sprite)
+                    )
+                }
             }
         }
         references.formUnion(quayHouseImageIDs.values.map {

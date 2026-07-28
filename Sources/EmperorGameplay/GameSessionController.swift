@@ -472,6 +472,12 @@ public final class GameSessionController: @unchecked Sendable {
                 at: point,
                 rules: rules
             ) != nil
+        case .irrigationPump:
+            city.constructIrrigationPump(
+                at: point,
+                orientation: orientation,
+                rules: rules
+            ) != nil
         case .barracks, .fort, .catapultFort, .cavalryFort, .chariotFort:
             city.constructMilitaryFort(
                 buildingID: tool.buildingID ?? 0,

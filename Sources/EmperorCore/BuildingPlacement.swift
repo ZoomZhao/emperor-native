@@ -42,7 +42,7 @@ public enum OriginalBuildingFootprintCatalog {
         // Individually placed crop plots and orchards. The producer buildings
         // use their own larger footprints, but every tended plot occupies one
         // original map tile.
-        case 26...28, 194...199:
+        case 26...28, 194...199, 203:
             BuildingFootprint(width: 1, height: 1)
 
         // Extraction and light industry.

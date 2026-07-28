@@ -75,6 +75,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
     case confucianAcademy
     case daoistShrine
     // Sprint 2 — expanded building menu (20 new tools).
+    case irrigationPump
     case farmland
     case lumberMill
     case quarry
@@ -164,6 +165,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .ancestralShrine: "祖先祠堂"
         case .confucianAcademy: "儒家书院"
         case .daoistShrine: "道观"
+        case .irrigationPump: "灌溉水车"
         case .farmland: "农田"
         case .lumberMill: "伐木棚"
         case .quarry: "石料场"
@@ -234,6 +236,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .ancestralShrine: "house.lodge.fill"
         case .confucianAcademy: "books.vertical.fill"
         case .daoistShrine: "sparkles"
+        case .irrigationPump: "water.waves"
         case .farmland: "leaf.circle.fill"
         case .lumberMill: "tree.circle.fill"
         case .quarry: "mountain.2.circle.fill"
@@ -298,6 +301,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .ancestralShrine: 214
         case .confucianAcademy: 219
         case .daoistShrine: 215
+        case .irrigationPump: 203
         case .farmland: 193
         case .lumberMill: 38
         case .quarry: 36
@@ -351,7 +355,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
              .musicSchool, .acrobatSchool, .dramaSchool:
             .residential
         case .warehouse, .mill, .market, .clayPit, .kiln,
-             .farmland, .lumberMill, .quarry, .granary, .fishingWharf,
+             .irrigationPump, .farmland, .lumberMill, .quarry, .granary, .fishingWharf,
              .huntingCamp, .ironMine, .bronzeWorks, .jadeWorkshop,
              .lacquerGuild, .silkWeaver, .teaHouse:
             .production
@@ -520,6 +524,8 @@ struct ConstructionToolbar: View {
             "点击或拖动建造 2×2 住宅 · \(library.constructionOrientation.localizedTitle) · R 旋转 · 右键取消"
         case .farmland:
             "点击或拖动种植\(library.selectedAgriculturalCrop.fieldTitle) · 须邻接道路 · 右键取消"
+        case .irrigationPump:
+            "放在河岸清地，须同时邻接水面与道路 · 右键取消"
         default:
             if let buildingID = tool.buildingID,
                let footprint = OriginalBuildingFootprintCatalog.footprint(

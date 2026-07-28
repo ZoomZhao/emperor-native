@@ -610,6 +610,12 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         for y in 0...(roadNetwork.height - footprint.height) {
             for x in 0...(roadNetwork.width - footprint.width) {
                 let point = GridPoint(x: x, y: y)
+                if buildingID == 203 {
+                    if canConstructIrrigationPump(at: point, orientation: orientation) {
+                        return point
+                    }
+                    continue
+                }
                 if constructionFootprint(
                     buildingID: buildingID,
                     at: point,
@@ -659,7 +665,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
     }
 
     public func quayWaterEdge(for placement: PlacedBuilding) -> QuayWaterEdge? {
-        guard placement.buildingID == TradeRouteKind.sea.buildingID,
+        guard placement.buildingID == TradeRouteKind.sea.buildingID
+                || placement.buildingID == 203,
               let terrainState else { return nil }
         return terrainState.quayWaterEdge(
             footprintPoints: placement.occupiedPoints,
@@ -2012,6 +2019,47 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         return id
     }
 
+    public func canConstructIrrigationPump(
+        at origin: GridPoint,
+        orientation: IsometricBuildingOrientation = .northSouth
+    ) -> Bool {
+        preparedIrrigationPumpPlacement(
+            at: origin,
+            orientation: orientation
+        ) != nil
+    }
+
+    /// Places the original one-tile water lift on clear bank land. The
+    /// selected bank edge determines which of its four authored sprites is
+    /// rendered; a road on another adjacent edge supplies its workforce.
+    @discardableResult
+    public mutating func constructIrrigationPump(
+        at origin: GridPoint,
+        orientation: IsometricBuildingOrientation = .northSouth,
+        rules: EconomyRulesEngine
+    ) -> Int? {
+        guard let placement = preparedIrrigationPumpPlacement(
+            at: origin,
+            orientation: orientation
+        ) else { return nil }
+        var updated = self
+        guard updated.economy.spendOnConstruction(
+            buildingID: 203,
+            rules: rules,
+            difficulty: difficulty
+        ) else { return nil }
+        var state = updated.aestheticState ?? DeterministicAestheticState()
+        let id = state.addConstruction(
+            buildingID: 203,
+            kind: .irrigationPump,
+            location: placement.markerPoint
+        )
+        updated.aestheticState = state
+        updated.recordPlacement(placement, instanceID: id)
+        self = updated
+        return id
+    }
+
     /// Starts a project whose geometry is authored directly into the mission
     /// map rather than represented by a normal rectangular placement.
     @discardableResult
@@ -2076,6 +2124,39 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             orientation: orientation,
             footprint: footprint,
             roadAccessPoint: adjacentRoadPoints(to: points).first ?? origin
+        )
+    }
+
+    private func preparedIrrigationPumpPlacement(
+        at origin: GridPoint,
+        orientation: IsometricBuildingOrientation
+    ) -> PlacedBuilding? {
+        guard isBuildingAvailableInCampaign(203),
+              let footprint = OriginalBuildingFootprintCatalog.footprint(
+                forBuildingID: 203,
+                orientation: orientation
+              ),
+              let terrainState else { return nil }
+        let points = footprint.points(at: origin)
+        guard points.allSatisfy(roadNetwork.isInside),
+              points.allSatisfy({ !roadNetwork.contains($0) }),
+              points.allSatisfy({ !occupiedBuildingPoints.contains($0) }),
+              terrainState.quayWaterEdge(
+                footprintPoints: points,
+                footprintWidth: footprint.width,
+                footprintHeight: footprint.height,
+                origin: origin
+              ) != nil,
+              let roadAccessPoint = adjacentRoadPoints(to: points).first
+        else { return nil }
+        return PlacedBuilding(
+            category: .aesthetic,
+            instanceID: 0,
+            buildingID: 203,
+            origin: origin,
+            orientation: orientation,
+            footprint: footprint,
+            roadAccessPoint: roadAccessPoint
         )
     }
 

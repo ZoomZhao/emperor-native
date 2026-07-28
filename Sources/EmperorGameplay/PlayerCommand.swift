@@ -24,6 +24,7 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
     case musicSchool
     case acrobatSchool
     case dramaSchool
+    case irrigationPump
     case farmland
     case lumberMill
     case quarry
@@ -108,6 +109,7 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
         case .taiChiPark: 121
         case .privateGarden: 122
         case .farmland: 193
+        case .irrigationPump: 203
         case .herbalist: 207
         case .acupuncture: 208
         case .administrativeCity: 209

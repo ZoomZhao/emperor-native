@@ -1402,7 +1402,11 @@ final class EmperorCoreTests: XCTestCase {
                     orientation: orientation
                 ) {
                     XCTAssertEqual(component.footprint.width, component.footprint.height)
-                    if component.sprite.archiveBaseName
+                    // Water lifts overhang the bank and the laborers' camp
+                    // includes its surrounding work yard, so their authored
+                    // bitmap width intentionally exceeds the occupied tiles.
+                    if buildingID != 203, buildingID != 233,
+                       component.sprite.archiveBaseName
                         == OriginalBuildingSpriteCatalog.generalArchiveBaseName {
                         expectedTileSpanByImageID[component.sprite.imageID]
                             = component.footprint.width

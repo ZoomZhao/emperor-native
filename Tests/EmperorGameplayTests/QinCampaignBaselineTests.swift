@@ -97,6 +97,26 @@ final class QinCampaignBaselineTests: XCTestCase {
         XCTAssertTrue(configuration.requiredSupportKinds.contains(.masonsGuild))
     }
 
+    func testQinMissionOneCanPlaceVerifiedIrrigationPumpOnAuthoredBank() throws {
+        let controller = try startedQinMissionOne()
+        let city = try XCTUnwrap(controller.city)
+        let point = try XCTUnwrap(
+            city.nextBuildingConstructionLocation(buildingID: 203),
+            "Haunxian needs a clear riverbank tile beside the authored road"
+        )
+        XCTAssertTrue(controller.perform(.selectConstruction(.irrigationPump)).wasApplied)
+        let preview = controller.constructionPreview(at: point)
+        XCTAssertTrue(preview.isValid, preview.reason ?? "invalid irrigation pump")
+        let result = controller.perform(
+            .placeSelectedConstruction(at: point, orientation: .northSouth)
+        )
+        XCTAssertTrue(result.wasApplied, result.message)
+        let placement = try XCTUnwrap(
+            controller.city?.placedBuildings.first(where: { $0.buildingID == 203 })
+        )
+        XCTAssertNotNil(controller.city?.quayWaterEdge(for: placement))
+    }
+
     private func startedQinMissionOne() throws -> GameSessionController {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")

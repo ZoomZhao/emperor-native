@@ -1438,6 +1438,26 @@ private struct ClassicCategoryAdvisorPanel: View {
                 )
             }
 
+            if let monumentID = activeMapMonumentID {
+                Button {
+                    library.beginMapMonument(buildingID: monumentID)
+                } label: {
+                    HStack {
+                        Text(mapMonumentIsStarted(monumentID) ? "工程已经开工" : "开始营造")
+                        Spacer()
+                        Text("#\(monumentID)")
+                    }
+                    .font(EmperorTheme.bodySmall)
+                    .padding(.horizontal, 8)
+                    .frame(maxWidth: .infinity, minHeight: 26)
+                    .background(EmperorTheme.surfaceControl)
+                    .overlay(Rectangle().strokeBorder(EmperorTheme.secondary, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .disabled(mapMonumentIsStarted(monumentID))
+                .accessibilityIdentifier("advisor-begin-map-monument")
+            }
+
             ForEach(Array(advisorSummary.enumerated()), id: \.offset) { _, line in
                 Text(line)
                     .font(EmperorTheme.bodySmall)
@@ -1507,6 +1527,26 @@ private struct ClassicCategoryAdvisorPanel: View {
                 ("查看城市行人", .walkers, "advisor-infrastructure-walkers"),
             ]
         }
+    }
+
+    private var activeMapMonumentID: Int? {
+        guard category == .monuments,
+              let missionID = library.selectedMissionID,
+              let goalSet = library.campaignGoalArchive?.missions.first(where: {
+                  $0.id == missionID
+              }) else { return nil }
+        return goalSet.goals.compactMap { goal in
+            if case let .monument(buildingID) = goal.requirement,
+               buildingID == 83 || buildingID == 85 {
+                return buildingID
+            }
+            return nil
+        }.first
+    }
+
+    private func mapMonumentIsStarted(_ buildingID: Int) -> Bool {
+        city.aesthetics.monuments.contains { $0.buildingID == buildingID }
+            || city.aesthetics.completedMonumentBuildingIDs.contains(buildingID)
     }
 
     private var advisorSummary: [String] {
@@ -2430,6 +2470,8 @@ private func constructionInstruction(
         return "住宅：2×2 占地，当前\(orientation.localizedTitle)；点击或拖动连续建造；R 旋转；右键取消"
     case .farmland:
         return "作物田：先在农业分类选择具体作物，再点击或拖动清地种植；右键取消"
+    case .irrigationPump:
+        return "灌溉水车：放在河岸清地，须同时邻接水面与道路；右键取消"
     default:
         guard let buildingID = tool.buildingID,
               let footprint = OriginalBuildingFootprintCatalog.footprint(
