@@ -49,6 +49,130 @@ enum ClassicFrontEndArt {
         }
         return image(for: .campaignSelection, sourceRoot: sourceRoot)
     }
+
+    /// Fallback when a synthesized fill cannot be built from the shipping JPG.
+    static let letterboxFallbackColor = NSColor(calibratedRed: 94 / 255, green: 0, blue: 1 / 255, alpha: 1)
+
+    private static var letterboxFillCache: [String: NSImage] = [:]
+
+    /// Large non-repeating crimson field synthesized from a quiet crop of the
+    /// screen art (texture-bombing), so enlarged windows don't show a tiled grid.
+    static func letterboxFill(for screen: Screen, sourceRoot: URL?) -> NSImage? {
+        let cacheKey = screen.rawValue
+        if let cached = letterboxFillCache[cacheKey] {
+            return cached
+        }
+        guard let synthesized = synthesizeLetterboxFill(for: screen, sourceRoot: sourceRoot) else {
+            return nil
+        }
+        letterboxFillCache[cacheKey] = synthesized
+        return synthesized
+    }
+
+    private static func synthesizeLetterboxFill(for screen: Screen, sourceRoot: URL?) -> NSImage? {
+        guard let source = image(for: screen, sourceRoot: sourceRoot),
+              let cgImage = source.cgImage(forProposedRect: nil, context: nil, hints: nil)
+        else {
+            return nil
+        }
+
+        let patchSide = 160
+        let origin = CGPoint(x: 12, y: 12)
+        let maxX = max(0, cgImage.width - patchSide)
+        let maxY = max(0, cgImage.height - patchSide)
+        let crop = CGRect(
+            x: min(Int(origin.x), maxX),
+            y: min(Int(origin.y), maxY),
+            width: patchSide,
+            height: patchSide
+        )
+        guard let patch = cgImage.cropping(to: crop) else {
+            return nil
+        }
+
+        let outputSide = 1536
+        guard let rep = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: outputSide,
+            pixelsHigh: outputSide,
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        ) else {
+            return nil
+        }
+
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+        defer { NSGraphicsContext.restoreGraphicsState() }
+
+        letterboxFallbackColor.setFill()
+        NSRect(x: 0, y: 0, width: outputSide, height: outputSide).fill()
+
+        let patchImage = NSImage(cgImage: patch, size: NSSize(width: patchSide, height: patchSide))
+        let seed: UInt64
+        switch screen {
+        case .mainMenu: seed = 0xE4E7_4D01
+        case .registry: seed = 0xE4E7_4D02
+        case .chooseGame: seed = 0xE4E7_4D03
+        default: seed = 0xE4E7_4D00
+        }
+        var rng = LetterboxRNG(seed: seed)
+        let step = 52
+        var stampY = -patchSide / 2
+        while stampY < outputSide + patchSide {
+            var stampX = -patchSide / 2
+            while stampX < outputSide + patchSide {
+                let jitterX = rng.nextInt(in: -14...14)
+                let jitterY = rng.nextInt(in: -14...14)
+                let dest = NSRect(
+                    x: stampX + jitterX,
+                    y: stampY + jitterY,
+                    width: patchSide,
+                    height: patchSide
+                )
+                let alpha = CGFloat(0.34 + Double(rng.nextInt(in: 0...24)) / 100)
+                patchImage.draw(
+                    in: dest,
+                    from: NSRect(origin: .zero, size: patchImage.size),
+                    operation: .sourceOver,
+                    fraction: alpha
+                )
+                stampX += step
+            }
+            stampY += step
+        }
+
+        let image = NSImage(size: NSSize(width: outputSide, height: outputSide))
+        image.addRepresentation(rep)
+        return image
+    }
+}
+
+/// Tiny deterministic RNG for texture bombing (no Foundation GameplayKit dependency).
+private struct LetterboxRNG {
+    private var state: UInt64
+
+    init(seed: UInt64) {
+        state = seed == 0 ? 0x9E37_79B9_7F4A_7C15 : seed
+    }
+
+    mutating func next() -> UInt64 {
+        state &+= 0x9E37_79B9_7F4A_7C15
+        var z = state
+        z = (z ^ (z >> 30)) &* 0xBF58_476D_1CE4_E5B9
+        z = (z ^ (z >> 27)) &* 0x94D0_49BB_1331_11EB
+        return z ^ (z >> 31)
+    }
+
+    mutating func nextInt(in range: ClosedRange<Int>) -> Int {
+        let span = UInt64(range.upperBound - range.lowerBound + 1)
+        return range.lowerBound + Int(next() % span)
+    }
 }
 
 struct ClassicFrontEndRoot: View {
@@ -71,36 +195,27 @@ struct ClassicFrontEndRoot: View {
 private struct ClassicMainMenuView: View {
     @ObservedObject var library: LibraryModel
 
-    var body: some View {
-        ZStack {
-            ClassicFrontEndBackdrop(screen: .mainMenu, sourceRoot: library.dataSourceRoot)
-            VStack {
-                Spacer()
-                VStack(spacing: 10) {
-                    Text("皇帝：龙之崛起")
-                        .font(EmperorTheme.headlineLarge)
-                        .foregroundStyle(EmperorTheme.primary)
-                        .accessibilityAddTraits(.isHeader)
+    /// Hotspots over the empty parchment in `China_FE_MainMenu.jpg` (1024×768),
+    /// matching the original Wine front-end button column under the logo banner.
+    private static let menuRect = CGRect(x: 266, y: 324, width: 192, height: 234)
+    private static let menuSpacing: CGFloat = 18
 
-                    menuButton("单人游戏", identifier: "frontend-single-player") {
-                        library.frontEndStage = .accountSelect
-                    }
-                    menuButton("多人游戏", identifier: "frontend-multiplayer", enabled: false) {}
-                    menuButton("最高得分", identifier: "frontend-high-scores", enabled: false) {}
-                    menuButton("游戏网站", identifier: "frontend-website", enabled: false) {}
-                    menuButton("战役编辑", identifier: "frontend-campaign-editor", enabled: false) {}
-                    menuButton("退出游戏", identifier: "frontend-quit") {
-                        NSApp.terminate(nil)
-                    }
+    var body: some View {
+        ClassicFrontEndCanvas(screen: .mainMenu, sourceRoot: library.dataSourceRoot) { layout in
+            VStack(spacing: Self.menuSpacing) {
+                menuButton("单人游戏", identifier: "frontend-single-player") {
+                    library.frontEndStage = .accountSelect
                 }
-                .padding(28)
-                .frame(width: 360)
-                .background(EmperorTheme.surface.opacity(0.92))
-                .overlay(Rectangle().strokeBorder(EmperorTheme.border, lineWidth: 2))
-                .padding(.trailing, 64)
-                .padding(.bottom, 72)
-                .frame(maxWidth: .infinity, alignment: .trailing)
+                menuButton("多人游戏", identifier: "frontend-multiplayer", enabled: false) {}
+                menuButton("最高得分", identifier: "frontend-high-scores", enabled: false) {}
+                menuButton("游戏网站", identifier: "frontend-website", enabled: false) {}
+                menuButton("战役编辑", identifier: "frontend-campaign-editor", enabled: false) {}
+                menuButton("退出游戏", identifier: "frontend-quit") {
+                    NSApp.terminate(nil)
+                }
             }
+            .frame(width: Self.menuRect.width, height: Self.menuRect.height)
+            .position(layout.point(for: CGPoint(x: Self.menuRect.midX, y: Self.menuRect.midY)))
         }
         .accessibilityIdentifier("classic-main-menu")
     }
@@ -113,17 +228,199 @@ private struct ClassicMainMenuView: View {
     ) -> some View {
         Button(action: action) {
             Text(title)
-                .font(EmperorTheme.headlineSmall)
-                .foregroundStyle(enabled ? EmperorTheme.onSurface : EmperorTheme.onSurfaceMuted)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
-                .background(EmperorTheme.surfaceControl.opacity(enabled ? 0.95 : 0.55))
-                .overlay(Rectangle().strokeBorder(EmperorTheme.border))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(ClassicMainMenuButtonStyle())
         .disabled(!enabled)
         .accessibilityIdentifier(identifier)
         .help(enabled ? title : "\(title)（本版暂未开放）")
+    }
+}
+
+private struct ClassicMainMenuButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(EmperorTheme.headlineSmall)
+            .foregroundStyle(isEnabled ? EmperorTheme.onSurface : EmperorTheme.onSurfaceMuted)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(
+                EmperorTheme.surfaceControl.opacity(
+                    configuration.isPressed ? 0.32 : (isEnabled ? 0.22 : 0.12)
+                )
+            )
+            .overlay(
+                Rectangle()
+                    .strokeBorder(
+                        EmperorTheme.border.opacity(isEnabled ? 0.86 : 0.62),
+                        lineWidth: 1
+                    )
+            )
+            .contentShape(Rectangle())
+    }
+}
+
+/// Places the 1024×768 front-end plate at native 1×, centered in the window.
+private struct ClassicFrontEndLayout {
+    let container: CGSize
+
+    var viewport: CGSize { EmperorTheme.classicViewportSize }
+
+    var artOrigin: CGPoint {
+        CGPoint(
+            x: (container.width - viewport.width) * 0.5,
+            y: (container.height - viewport.height) * 0.5
+        )
+    }
+
+    /// Maps a point from the 1024×768 art into the window.
+    func point(for artPoint: CGPoint) -> CGPoint {
+        CGPoint(
+            x: artOrigin.x + artPoint.x,
+            y: artOrigin.y + artPoint.y
+        )
+    }
+}
+
+/// Centers classic front-end art at 1×; extra window space uses a matching field.
+private struct ClassicFrontEndCanvas<Content: View>: View {
+    let screen: ClassicFrontEndArt.Screen
+    let sourceRoot: URL?
+    @ViewBuilder var content: (ClassicFrontEndLayout) -> Content
+
+    var body: some View {
+        GeometryReader { geometry in
+            let layout = ClassicFrontEndLayout(container: geometry.size)
+            ZStack {
+                ClassicFrontEndLetterboxFill(
+                    screen: screen,
+                    sourceRoot: sourceRoot,
+                    artFrame: CGRect(
+                        origin: layout.artOrigin,
+                        size: layout.viewport
+                    )
+                )
+
+                ClassicFrontEndBackdrop(screen: screen, sourceRoot: sourceRoot)
+                    .frame(width: layout.viewport.width, height: layout.viewport.height)
+                    .position(
+                        x: layout.artOrigin.x + layout.viewport.width * 0.5,
+                        y: layout.artOrigin.y + layout.viewport.height * 0.5
+                    )
+                    .allowsHitTesting(false)
+
+                content(layout)
+            }
+            .frame(width: geometry.size.width, height: geometry.size.height)
+            .clipped()
+        }
+    }
+}
+
+/// Fills enlarged-window gutters with a synthesized crimson field, then feathers
+/// real art edge strips near the plate so the join is continuous.
+private struct ClassicFrontEndLetterboxFill: View {
+    let screen: ClassicFrontEndArt.Screen
+    let sourceRoot: URL?
+    let artFrame: CGRect
+
+    var body: some View {
+        Canvas { context, size in
+            let fallback = Color(
+                red: 94 / 255,
+                green: 0 / 255,
+                blue: 1 / 255
+            )
+            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(fallback))
+
+            if let fill = ClassicFrontEndArt.letterboxFill(for: screen, sourceRoot: sourceRoot) {
+                context.draw(
+                    Image(nsImage: fill),
+                    in: CGRect(origin: .zero, size: size)
+                )
+            }
+
+            if let art = ClassicFrontEndArt.image(for: screen, sourceRoot: sourceRoot),
+               let cgImage = art.cgImage(forProposedRect: nil, context: nil, hints: nil) {
+                drawEdgeFeather(
+                    context: context,
+                    cgImage: cgImage,
+                    artFrame: artFrame,
+                    containerSize: size,
+                    feather: 48
+                )
+            }
+        }
+        .allowsHitTesting(false)
+    }
+
+    /// Copies a short band of real art texels into the adjacent gutter so the
+    /// 1× plate does not sit on a hard seam. Farther gutters keep the fill.
+    private func drawEdgeFeather(
+        context: GraphicsContext,
+        cgImage: CGImage,
+        artFrame: CGRect,
+        containerSize: CGSize,
+        feather: CGFloat
+    ) {
+        let iw = CGFloat(cgImage.width)
+        let ih = CGFloat(cgImage.height)
+
+        func drawCrop(_ crop: CGRect, into dest: CGRect, opacity: Double) {
+            guard crop.width > 1, crop.height > 1, dest.width > 0, dest.height > 0,
+                  let piece = cgImage.cropping(to: crop) else { return }
+            var rectContext = context
+            rectContext.opacity = opacity
+            rectContext.draw(
+                Image(nsImage: NSImage(
+                    cgImage: piece,
+                    size: NSSize(width: crop.width, height: crop.height)
+                )),
+                in: dest
+            )
+        }
+
+        // Top feather
+        if artFrame.minY > 0 {
+            let height = min(feather, artFrame.minY)
+            drawCrop(
+                CGRect(x: 0, y: 0, width: iw, height: min(feather, ih)),
+                into: CGRect(x: artFrame.minX, y: artFrame.minY - height, width: artFrame.width, height: height),
+                opacity: 0.92
+            )
+        }
+
+        // Bottom feather
+        let bottomGutter = containerSize.height - artFrame.maxY
+        if bottomGutter > 0 {
+            let height = min(feather, bottomGutter)
+            drawCrop(
+                CGRect(x: 0, y: ih - min(feather, ih), width: iw, height: min(feather, ih)),
+                into: CGRect(x: artFrame.minX, y: artFrame.maxY, width: artFrame.width, height: height),
+                opacity: 0.92
+            )
+        }
+
+        // Left feather from quiet left columns
+        if artFrame.minX > 0 {
+            let width = min(feather, artFrame.minX)
+            drawCrop(
+                CGRect(x: 0, y: 0, width: min(feather, iw), height: ih),
+                into: CGRect(x: artFrame.minX - width, y: artFrame.minY, width: width, height: artFrame.height),
+                opacity: 0.92
+            )
+        }
+
+        // Right feather also from quiet left columns (avoid stretching the dragon)
+        let rightGutter = containerSize.width - artFrame.maxX
+        if rightGutter > 0 {
+            let width = min(feather, rightGutter)
+            drawCrop(
+                CGRect(x: 0, y: 0, width: min(feather, iw), height: ih),
+                into: CGRect(x: artFrame.maxX, y: artFrame.minY, width: width, height: artFrame.height),
+                opacity: 0.85
+            )
+        }
     }
 }
 
@@ -133,8 +430,7 @@ private struct ClassicAccountSelectView: View {
     @FocusState private var isAccountNameFocused: Bool
 
     var body: some View {
-        ZStack {
-            ClassicFrontEndBackdrop(screen: .registry, sourceRoot: library.dataSourceRoot)
+        ClassicFrontEndCanvas(screen: .registry, sourceRoot: library.dataSourceRoot) { _ in
             VStack(spacing: 0) {
                 Text("选择玩家帐号")
                     .font(EmperorTheme.display)
@@ -254,8 +550,7 @@ private struct ClassicAccountHomeView: View {
     @ObservedObject var library: LibraryModel
 
     var body: some View {
-        ZStack {
-            ClassicFrontEndBackdrop(screen: .chooseGame, sourceRoot: library.dataSourceRoot)
+        ClassicFrontEndCanvas(screen: .chooseGame, sourceRoot: library.dataSourceRoot) { _ in
             VStack(spacing: 18) {
                 VStack(spacing: 4) {
                     Text("玩家帐号")
@@ -336,12 +631,20 @@ private struct ClassicFrontEndBackdrop: View {
             if let image = ClassicFrontEndArt.image(for: screen, sourceRoot: sourceRoot) {
                 Image(nsImage: image)
                     .resizable()
-                    .scaledToFill()
+                    .interpolation(.high)
+                    .scaledToFit()
+                    .frame(
+                        width: EmperorTheme.classicViewportSize.width,
+                        height: EmperorTheme.classicViewportSize.height
+                    )
             } else {
                 ClassicLobbyBackground()
             }
         }
-        .ignoresSafeArea()
-        .overlay(EmperorTheme.overlayScrim.opacity(0.18).ignoresSafeArea())
+        .frame(
+            width: EmperorTheme.classicViewportSize.width,
+            height: EmperorTheme.classicViewportSize.height
+        )
+        .clipped()
     }
 }
