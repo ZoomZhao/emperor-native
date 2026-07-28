@@ -79,7 +79,7 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
         case .lumberMill: 38
         case .bronzeWorks: 39
         case .ironMine: 40
-        case .jadeWorkshop: 42
+        case .jadeWorkshop: 46
         case .kiln: 43
         case .carpentersGuild: 52
         case .mill: 53

@@ -36,6 +36,12 @@ public enum TutorialFigureRole: String, CaseIterable, Sendable, Hashable, Codabl
     case waterBearer
     case ancestorPriest
     case inspector
+    case taxOfficial
+    case herbalist
+    case acupuncturist
+    case acrobat
+    case actor
+    case musician
 }
 
 public struct FigureSpriteReference: Sendable, Equatable, Hashable {
@@ -94,9 +100,9 @@ public struct FigureSpriteAnimation: Sendable, Equatable, Hashable {
     }
 }
 
-/// The deliberately small, verified catalog needed by Xia tutorial mission 1.
-/// Each entry starts at an SG3 logical animation boundary and covers eight
-/// contiguous directions. The adjacent source-record names and exported
+/// Verified original figure animations used by the native city simulation.
+/// Each walking entry starts at an SG3 logical animation boundary and covers
+/// eight contiguous directions. The adjacent source-record names and exported
 /// contact sheets are inspectable with `emperor-inspect sg3-figure`.
 public enum OriginalFigureSpriteCatalog {
     public static let mainArchiveBaseName = "SprMain"
@@ -150,6 +156,36 @@ public enum OriginalFigureSpriteCatalog {
             role: .inspector, figureID: 39, archiveBaseName: mainArchiveBaseName,
             sourceBitmapName: "Inspector", logicalGroupID: 8,
             firstImageID: 433, framesPerDirection: 12
+        ),
+        .init(
+            role: .taxOfficial, figureID: 27, archiveBaseName: mainArchiveBaseName,
+            sourceBitmapName: "Clerk", logicalGroupID: 64,
+            firstImageID: 4_425, framesPerDirection: 12
+        ),
+        .init(
+            role: .herbalist, figureID: 30, archiveBaseName: mainArchiveBaseName,
+            sourceBitmapName: "herbalist", logicalGroupID: 29,
+            firstImageID: 1_813, framesPerDirection: 12
+        ),
+        .init(
+            role: .acupuncturist, figureID: 31, archiveBaseName: mainArchiveBaseName,
+            sourceBitmapName: "Acupuncturist", logicalGroupID: 2,
+            firstImageID: 109, framesPerDirection: 12
+        ),
+        .init(
+            role: .acrobat, figureID: 32, archiveBaseName: mainArchiveBaseName,
+            sourceBitmapName: "Acrobat", logicalGroupID: 147,
+            firstImageID: 8_541, framesPerDirection: 12
+        ),
+        .init(
+            role: .actor, figureID: 33, archiveBaseName: mainArchiveBaseName,
+            sourceBitmapName: "Actor", logicalGroupID: 106,
+            firstImageID: 7_205, framesPerDirection: 12
+        ),
+        .init(
+            role: .musician, figureID: 34, archiveBaseName: mainArchiveBaseName,
+            sourceBitmapName: "Musician", logicalGroupID: 102,
+            firstImageID: 7_076, framesPerDirection: 12
         ),
     ]
 

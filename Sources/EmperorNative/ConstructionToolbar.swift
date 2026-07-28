@@ -165,8 +165,8 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .confucianAcademy: "儒家书院"
         case .daoistShrine: "道观"
         case .farmland: "农田"
-        case .lumberMill: "伐木场"
-        case .quarry: "采石场"
+        case .lumberMill: "伐木棚"
+        case .quarry: "石料场"
         case .granary: "粮仓"
         case .barracks: "步兵堡"
         case .cityWall: "城墙"
@@ -179,16 +179,16 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .catapultFort: "投石车堡"
         case .cavalryFort: "骑兵堡"
         case .chariotFort: "战车堡"
-        case .fishingWharf: "渔港"
+        case .fishingWharf: "捕鱼码头"
         case .huntingCamp: "猎场"
-        case .ironMine: "铁矿"
-        case .bronzeWorks: "青铜作坊"
-        case .lacquerGuild: "漆器坊"
-        case .jadeWorkshop: "玉器坊"
-        case .silkWeaver: "织造坊"
-        case .teaHouse: "茶馆"
-        case .bathhouse: "澡堂"
-        case .magistrate: "衙门"
+        case .ironMine: "炼铁炉"
+        case .bronzeWorks: "青铜熔炉"
+        case .lacquerGuild: "漆料棚"
+        case .jadeWorkshop: "玉雕坊"
+        case .silkWeaver: "养蚕棚"
+        case .teaHouse: "制茶棚"
+        case .bathhouse: "道教大庙"
+        case .magistrate: "佛塔"
         case .watchtower: "瞭望塔"
         case .garden: "花园"
         case .decorativeSculpture: "装饰雕塑"
@@ -318,7 +318,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .ironMine: 40
         case .bronzeWorks: 39
         case .lacquerGuild: 238
-        case .jadeWorkshop: 42
+        case .jadeWorkshop: 46
         case .silkWeaver: 239
         case .teaHouse: 237
         case .bathhouse: 216

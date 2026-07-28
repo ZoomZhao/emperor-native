@@ -66,13 +66,17 @@ public enum OriginalBuildingSpriteCatalog {
     public static let foodShopImageID = 611
     public static let marketEntertainmentAreaImageID = 629
     public static let marketTileImageIDs = [632, 633, 634, 635]
+    /// Logical group 82: the original small fire effect drawn over a failed
+    /// building. Collapse still uses a diagnostic fallback until the generic
+    /// ruin building's authored image family is verified.
+    public static let operationsFireImageID = 2_231
 
     /// Building IDs currently constructible on the native isometric canvas.
     /// Keeping this list in the core makes the asynchronous sprite loader and
     /// archive validation tests consume exactly the same catalog.
     public static let supportedPlacedBuildingIDs = [
         26, 27, 28,
-        31, 33, 35, 36, 38, 39, 40, 42, 43, 53, 54, 56, 58, 59, 60, 72, 110, 124, 125,
+        31, 33, 35, 36, 38, 39, 40, 42, 43, 46, 53, 54, 56, 58, 59, 60, 72, 110, 124, 125,
         126, 129, 130, 131,
         194, 195, 196, 197, 198, 199,
         207, 208, 209, 211, 212, 213, 214, 215, 216, 217, 218, 219,
@@ -150,9 +154,16 @@ public enum OriginalBuildingSpriteCatalog {
         case 26: imageID = agriculturalPlotImageID(for: .tea)
         case 27: imageID = agriculturalPlotImageID(for: .lacquer)
         case 28: imageID = agriculturalPlotImageID(for: .mulberry)
+        case 31: imageID = 721   // Fishing quay
         case 33: imageID = 825   // Hunting camp, China_Husbandry logical group 173
         case 35: imageID = 2_789 // Clay pit
+        case 36: imageID = 2_741 // Stoneworks
+        case 38: imageID = 2_726 // Logging shed
+        case 39: imageID = 2_697 // Bronze smelter
+        case 40: imageID = 2_698 // Iron smelter
+        case 42: imageID = 2_750 // Bronzeware maker
         case 43: imageID = 2_788 // Kiln
+        case 46: imageID = 2_832 // Jade carver's studio
         case 53: imageID = 647   // Mill
         case 72: imageID = 1_559 // Well
         case 124: imageID = 1_704 // Inspector's tower, China_Safety logical group 137
@@ -171,6 +182,9 @@ public enum OriginalBuildingSpriteCatalog {
         case 217: imageID = 2_258 // Buddhist shrine
         case 218: imageID = 2_296 // Buddhist pagoda
         case 219: imageID = 2_309 // Confucian academy
+        case 237: imageID = 812 // Tea curing shed
+        case 238: imageID = 840 // Lacquer refinery
+        case 239: imageID = 777 // Silkworm shed
         case 194: imageID = agriculturalPlotImageID(for: .hemp)
         case 195: imageID = agriculturalPlotImageID(for: .wheat)
         case 196: imageID = agriculturalPlotImageID(for: .millet)
@@ -262,6 +276,7 @@ public enum OriginalBuildingSpriteCatalog {
         }
         imageIDs.formUnion(quayHouseImageIDs.values)
         imageIDs.formUnion(quayDeckImageIDs.values)
+        imageIDs.insert(operationsFireImageID)
         return imageIDs
     }
 

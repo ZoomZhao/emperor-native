@@ -44,7 +44,10 @@ final class SG3FigureSpriteTests: XCTestCase {
 
     func testTutorialFigureCatalogIsDeterministicAndEightDirectional() throws {
         XCTAssertEqual(Set(OriginalFigureSpriteCatalog.animations.map(\.role)), Set(TutorialFigureRole.allCases))
-        XCTAssertEqual(Set(OriginalFigureSpriteCatalog.animations.map(\.figureID)), [11, 22, 23, 24, 28, 35, 39])
+        XCTAssertEqual(
+            Set(OriginalFigureSpriteCatalog.animations.map(\.figureID)),
+            [11, 22, 23, 24, 27, 28, 30, 31, 32, 33, 34, 35, 39]
+        )
         for animation in OriginalFigureSpriteCatalog.animations {
             XCTAssertEqual(animation.framesByDirection.count, 8, animation.role.rawValue)
             XCTAssertTrue(animation.framesByDirection.allSatisfy { !$0.isEmpty })
@@ -59,6 +62,26 @@ final class SG3FigureSpriteTests: XCTestCase {
                 stableFigureID: 7
             )
             XCTAssertEqual(first, replay)
+        }
+    }
+
+    func testGeneratedServiceWalkersUseOriginalEightDirectionGroups() throws {
+        let expected: [Int: (logicalGroup: Int, firstImageID: Int)] = [
+            27: (64, 4_425),
+            30: (29, 1_813),
+            31: (2, 109),
+            32: (147, 8_541),
+            33: (106, 7_205),
+            34: (102, 7_076),
+        ]
+        for (figureID, group) in expected {
+            let animation = try XCTUnwrap(
+                OriginalFigureSpriteCatalog.animation(forFigureID: figureID)
+            )
+            XCTAssertEqual(animation.logicalGroupID, group.logicalGroup)
+            XCTAssertEqual(animation.framesByDirection.first?.first, group.firstImageID)
+            XCTAssertEqual(animation.framesByDirection.count, 8)
+            XCTAssertTrue(animation.framesByDirection.allSatisfy { $0.count == 12 })
         }
     }
 

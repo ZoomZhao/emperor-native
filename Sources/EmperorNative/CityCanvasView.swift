@@ -2042,10 +2042,33 @@ struct CityCanvas: View {
         viewport: Viewport
     ) {
         for failure in city.operations.lastSettlement?.failures ?? [] {
+            if failure.kind == .fire,
+               let sprite = buildingSprites[OriginalBuildingSpriteCatalog.operationsFireImageID] {
+                let center = point(
+                    at: failure.location,
+                    tileWidth: tileWidth,
+                    tileHeight: tileHeight,
+                    origin: origin,
+                    viewport: viewport
+                )
+                let scale = tileWidth / CGFloat(80)
+                let drawWidth = CGFloat(sprite.width) * scale
+                let drawHeight = CGFloat(sprite.height) * scale
+                context.draw(
+                    Image(decorative: sprite.image, scale: 1),
+                    in: CGRect(
+                        x: center.x - drawWidth / 2,
+                        y: center.y + tileHeight / 2 - drawHeight,
+                        width: drawWidth,
+                        height: drawHeight
+                    )
+                )
+                continue
+            }
             drawMarker(
-                failure.kind == .fire ? "火" : "塌",
+                "塌",
                 at: failure.location,
-                color: failure.kind == .fire ? .red : .gray,
+                color: .gray,
                 context: &context,
                 tileWidth: tileWidth,
                 tileHeight: tileHeight,
