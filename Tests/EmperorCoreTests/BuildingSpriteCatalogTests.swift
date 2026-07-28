@@ -95,6 +95,28 @@ final class BuildingSpriteCatalogTests: XCTestCase {
         }
     }
 
+    func testQinSupportAndMonumentBuildingsUseVerifiedOriginalImages() {
+        let expected: [Int: BuildingSpriteReference] = [
+            52: .init(archiveBaseName: "China_General", imageID: 2_310),
+            82: .init(archiveBaseName: "China_Mon_Grand_Canal", imageID: 272),
+            84: .init(archiveBaseName: "China_Mon_Tumulus", imageID: 376),
+            226: .init(archiveBaseName: "China_General", imageID: 918),
+        ]
+        for (buildingID, reference) in expected {
+            XCTAssertEqual(
+                OriginalBuildingSpriteCatalog.buildingSprite(
+                    forBuildingID: buildingID
+                ),
+                reference
+            )
+            XCTAssertFalse(
+                OriginalBuildingSpriteCatalog.buildingComponents(
+                    forBuildingID: buildingID
+                ).isEmpty
+            )
+        }
+    }
+
     func testLocalXiaTutorialOneBuildingSpritesDecode() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")
@@ -148,6 +170,31 @@ final class BuildingSpriteCatalogTests: XCTestCase {
             )
             XCTAssertGreaterThan(decoded.width, 0, "#\(imageID)")
             XCTAssertGreaterThan(decoded.height, 0, "#\(imageID)")
+        }
+    }
+
+    func testLocalMultiArchiveBuildingSpritesDecode() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let source = try GameDataSource.openDefault()
+        for (baseName, imageIDs) in OriginalBuildingSpriteCatalog.requiredImageIDsByArchive {
+            let archive = try SG3Archive(
+                contentsOf: source.dataDirectory.appendingPathComponent("\(baseName).sg3")
+            )
+            let pixels = try Data(
+                contentsOf: source.dataDirectory.appendingPathComponent("\(baseName).555"),
+                options: [.mappedIfSafe]
+            )
+            for imageID in imageIDs {
+                XCTAssertTrue(archive.images.indices.contains(imageID), "\(baseName) #\(imageID)")
+                let decoded = try SpriteDecoder.decode(
+                    image: archive.images[imageID],
+                    pixelData: pixels
+                )
+                XCTAssertGreaterThan(decoded.width, 0, "\(baseName) #\(imageID)")
+                XCTAssertGreaterThan(decoded.height, 0, "\(baseName) #\(imageID)")
+            }
         }
     }
 }

@@ -1402,7 +1402,11 @@ final class EmperorCoreTests: XCTestCase {
                     orientation: orientation
                 ) {
                     XCTAssertEqual(component.footprint.width, component.footprint.height)
-                    expectedTileSpanByImageID[component.sprite.imageID] = component.footprint.width
+                    if component.sprite.archiveBaseName
+                        == OriginalBuildingSpriteCatalog.generalArchiveBaseName {
+                        expectedTileSpanByImageID[component.sprite.imageID]
+                            = component.footprint.width
+                    }
                 }
             }
         }
@@ -1620,6 +1624,22 @@ final class EmperorCoreTests: XCTestCase {
         }
         XCTAssertEqual(wallIDs.count, 40)
         XCTAssertEqual(Set(wallIDs), Set(201...216))
+        let earthenWallArchive = try SG3Archive(
+            contentsOf: source.dataDirectory.appendingPathComponent(
+                "China_Mon_Earthen_Greatwall_1.sg3"
+            )
+        )
+        let earthenWallIDs = (0..<wallMap.height).flatMap { y in
+            (0..<wallMap.width).compactMap { x in
+                wallMap.chinaEarthenGreatWall1SpriteID(
+                    x: x,
+                    y: y,
+                    imageCount: earthenWallArchive.images.count
+                )
+            }
+        }
+        XCTAssertGreaterThan(earthenWallIDs.count, 700)
+        XCTAssertTrue(Set(earthenWallIDs).isSubset(of: Set(earthenWallArchive.images.indices)))
 
         let canalMap = try EmperorMap(
             url: source.citiesDirectory.appendingPathComponent("MPcanal1.map")

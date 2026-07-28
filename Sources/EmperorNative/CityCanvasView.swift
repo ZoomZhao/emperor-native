@@ -171,7 +171,7 @@ private final class ConstructionCancelMonitorView: NSView {
 
 struct CityCanvas: View {
     let city: DeterministicCityState
-    let buildingSprites: [Int: RenderedTerrainSprite]
+    let buildingSprites: [BuildingSpriteReference: RenderedTerrainSprite]
     let interfaceSprites: [Int: RenderedTerrainSprite]
     let figureSprites: [FigureSpriteReference: RenderedTerrainSprite]
     let originalMap: RenderedMap?
@@ -239,7 +239,7 @@ struct CityCanvas: View {
     }
 
     private struct BuildingRenderItem {
-        let imageID: Int?
+        let buildingReference: BuildingSpriteReference?
         let figureReference: FigureSpriteReference?
         let mapOrigin: GridPoint
         let previousMapOrigin: GridPoint?
@@ -920,7 +920,7 @@ struct CityCanvas: View {
                 highlightedPoints = [origin]
             }
             let hasSpritePreview = constructionPreviewComponents(at: origin).contains {
-                buildingSprites[$0.sprite.imageID] != nil
+                buildingSprites[$0.sprite] != nil
             }
             for highlightedPoint in highlightedPoints where metrics.viewport.contains(highlightedPoint) {
                 let center = point(
@@ -993,7 +993,7 @@ struct CityCanvas: View {
         var previewContext = context
         previewContext.opacity = isValid ? 0.72 : 0.48
         for component in components {
-            guard let sprite = buildingSprites[component.sprite.imageID] else { continue }
+            guard let sprite = buildingSprites[component.sprite] else { continue }
             let componentOrigin = component.origin(relativeTo: buildingOrigin)
             let center = point(
                 at: componentOrigin,
@@ -1639,12 +1639,12 @@ struct CityCanvas: View {
         for (index, house) in city.houses.enumerated() {
             let fallback = GridPoint(x: 1 + (index % 4) * 3, y: 1 + (index / 4) * 3)
             let location = house.location ?? fallback
-            guard let imageID = OriginalBuildingSpriteCatalog.housingSprite(
+            guard let reference = OriginalBuildingSpriteCatalog.housingSprite(
                 forHouseLevelID: house.houseLevelID,
                 orientation: house.orientation
-            )?.imageID, buildingSprites[imageID] != nil else { continue }
+            ), buildingSprites[reference] != nil else { continue }
             renderItems.append(BuildingRenderItem(
-                imageID: imageID,
+                buildingReference: reference,
                 figureReference: nil,
                 mapOrigin: location,
                 previousMapOrigin: nil,
@@ -1665,13 +1665,13 @@ struct CityCanvas: View {
                 quayWaterEdge: city.quayWaterEdge(for: placement)
             )
             for (componentIndex, component) in components.enumerated()
-                where buildingSprites[component.sprite.imageID] != nil {
+                where buildingSprites[component.sprite] != nil {
                 let componentOrigin = component.origin(relativeTo: placement.origin)
                 guard component.footprint.points(at: componentOrigin).contains(where: viewport.contains) else {
                     continue
                 }
                 renderItems.append(BuildingRenderItem(
-                    imageID: component.sprite.imageID,
+                    buildingReference: component.sprite,
                     figureReference: nil,
                     mapOrigin: componentOrigin,
                     previousMapOrigin: nil,
@@ -1693,8 +1693,8 @@ struct CityCanvas: View {
         }
         for item in renderItems {
             let sprite: RenderedTerrainSprite?
-            if let imageID = item.imageID {
-                sprite = buildingSprites[imageID]
+            if let reference = item.buildingReference {
+                sprite = buildingSprites[reference]
             } else if let reference = item.figureReference {
                 sprite = figureSprites[reference]
             } else {
@@ -1775,7 +1775,7 @@ struct CityCanvas: View {
                 stableFigureID: stableID
             )
             items.append(BuildingRenderItem(
-                imageID: nil,
+                buildingReference: nil,
                 figureReference: reference,
                 mapOrigin: point,
                 previousMapOrigin: interpolatesMovement ? previous : nil,
@@ -1884,7 +1884,7 @@ struct CityCanvas: View {
             quayWaterEdge: city.quayWaterEdge(for: placement)
         )
         return !components.isEmpty
-            && components.allSatisfy { buildingSprites[$0.sprite.imageID] != nil }
+            && components.allSatisfy { buildingSprites[$0.sprite] != nil }
     }
 
     private func drawWalkers(
@@ -2088,7 +2088,10 @@ struct CityCanvas: View {
     ) {
         for failure in city.operations.lastSettlement?.failures ?? [] {
             if failure.kind == .fire,
-               let sprite = buildingSprites[OriginalBuildingSpriteCatalog.operationsFireImageID] {
+               let sprite = buildingSprites[BuildingSpriteReference(
+                archiveBaseName: OriginalBuildingSpriteCatalog.generalArchiveBaseName,
+                imageID: OriginalBuildingSpriteCatalog.operationsFireImageID
+               )] {
                 let center = point(
                     at: failure.location,
                     tileWidth: tileWidth,

@@ -747,12 +747,8 @@ private struct ClassicMapHint: View {
         } else {
             reference = nil
         }
-        guard let reference,
-              reference.archiveBaseName
-                == OriginalBuildingSpriteCatalog.generalArchiveBaseName else {
-            return nil
-        }
-        return library.buildingSprites[reference.imageID]
+        guard let reference else { return nil }
+        return library.buildingSprites[reference]
     }
 }
 
@@ -1158,18 +1154,15 @@ private struct ClassicControlPanel: View {
         } else {
             reference = nil
         }
-        guard let reference,
-              reference.archiveBaseName == OriginalBuildingSpriteCatalog.generalArchiveBaseName else {
-            return nil
-        }
-        return library.buildingSprites[reference.imageID]
+        guard let reference else { return nil }
+        return library.buildingSprites[reference]
     }
 
     private func agriculturalSprite(
         for crop: AgriculturalCrop
     ) -> RenderedTerrainSprite? {
         library.buildingSprites[
-            OriginalBuildingSpriteCatalog.agriculturalPlotImageID(for: crop)
+            OriginalBuildingSpriteCatalog.agriculturalPlotSprite(for: crop)
         ]
     }
 

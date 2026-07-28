@@ -149,6 +149,7 @@ public enum PlayerCommand: Sendable, Hashable, Codable {
         policy: WarehouseCommodityPolicy
     )
     case setTradeEnabled(tradingBuildingID: Int, enabled: Bool)
+    case beginMapMonument(buildingID: Int)
     case setSpeed(Int)
     case advanceOneTick
     case replayMission

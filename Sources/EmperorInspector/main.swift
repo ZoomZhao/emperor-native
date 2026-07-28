@@ -1223,8 +1223,13 @@ do {
         let grandCanalImageCount = try SG3Archive(
             contentsOf: game.dataDirectory.appendingPathComponent("China_Mon_Grand_Canal.sg3")
         ).images.count
+        let earthenGreatWallImageCount = try SG3Archive(
+            contentsOf: game.dataDirectory.appendingPathComponent(
+                "China_Mon_Earthen_Greatwall_1.sg3"
+            )
+        ).images.count
         let cells = (0..<map.height).flatMap { y in
-            (0..<map.width).compactMap { x -> (UInt32, Int?, Int?, Int?, Int?, Int?)? in
+            (0..<map.width).compactMap { x -> (UInt32, Int?, Int?, Int?, Int?, Int?, Int?)? in
                 guard let imageID = map.imageID(x: x, y: y) else { return nil }
                 return (
                     imageID,
@@ -1236,7 +1241,12 @@ do {
                     ),
                     map.chinaElevationDirtSpriteID(x: x, y: y, imageCount: dirtElevationImageCount),
                     map.chinaGreatWall1SpriteID(x: x, y: y, imageCount: greatWallImageCount),
-                    map.chinaGrandCanalSpriteID(x: x, y: y, imageCount: grandCanalImageCount)
+                    map.chinaGrandCanalSpriteID(x: x, y: y, imageCount: grandCanalImageCount),
+                    map.chinaEarthenGreatWall1SpriteID(
+                        x: x,
+                        y: y,
+                        imageCount: earthenGreatWallImageCount
+                    )
                 )
             }
         }
@@ -1247,9 +1257,10 @@ do {
         let dirtElevation = cells.compactMap(\.3)
         let greatWall = cells.compactMap(\.4)
         let grandCanal = cells.compactMap(\.5)
+        let earthenGreatWall = cells.compactMap(\.6)
         let unresolved = cells.compactMap { cell in
             cell.0 != 0 && cell.1 == nil && cell.2 == nil && cell.3 == nil
-                && cell.4 == nil && cell.5 == nil ? cell.0 : nil
+                && cell.4 == nil && cell.5 == nil && cell.6 == nil ? cell.0 : nil
         }
         let parityCounts = (0..<map.height).reduce(into: [0, 0]) { result, y in
             for x in 0..<map.width where map.imageID(x: x, y: y) != 0 {
@@ -1261,7 +1272,7 @@ do {
         print("  global range=\(nonzero.min() ?? 0)...\(nonzero.max() ?? 0)")
         print("  China_Terrain local range=\(terrain.min() ?? 0)...\(terrain.max() ?? 0), mapped=\(terrain.count)")
         print("  China_Elevation local range=\(elevation.min() ?? 0)...\(elevation.max() ?? 0), mapped=\(elevation.count)")
-        print("  China_Elevation_dirt mapped=\(dirtElevation.count), China_Mon_GreatWall_1 mapped=\(greatWall.count), China_Mon_Grand_Canal mapped=\(grandCanal.count)")
+        print("  China_Elevation_dirt mapped=\(dirtElevation.count), China_Mon_GreatWall_1 mapped=\(greatWall.count), China_Mon_Grand_Canal mapped=\(grandCanal.count), China_Mon_Earthen_Greatwall_1 mapped=\(earthenGreatWall.count)")
         print("  unresolved nonzero=\(unresolved.count), unique=\(Set(unresolved).count), range=\(unresolved.min() ?? 0)...\(unresolved.max() ?? 0)")
         print("  unresolved common: \(Dictionary(grouping: unresolved, by: { $0 }).mapValues(\.count).sorted { $0.value > $1.value }.prefix(12).map { "\($0.key):\($0.value)" }.joined(separator: ", "))")
         print("  most common: \(Dictionary(grouping: nonzero, by: { $0 }).mapValues(\.count).sorted { $0.value > $1.value }.prefix(12).map { "\($0.key):\($0.value)" }.joined(separator: ", "))")

@@ -44,6 +44,10 @@ let mapSpriteArchiveDescriptors: [MapSpriteArchiveDescriptor] = [
     .init(baseName: "China_Elevation_dirt", globalImageBase: EmperorMap.chinaElevationDirtGlobalImageBase),
     .init(baseName: "China_Mon_GreatWall_1", globalImageBase: EmperorMap.chinaGreatWall1GlobalImageBase),
     .init(baseName: "China_Mon_Grand_Canal", globalImageBase: EmperorMap.chinaGrandCanalGlobalImageBase),
+    .init(
+        baseName: "China_Mon_Earthen_Greatwall_1",
+        globalImageBase: EmperorMap.chinaEarthenGreatWall1GlobalImageBase
+    ),
 ]
 
 struct DecodedMapSpriteArchive: Sendable {
@@ -309,7 +313,7 @@ final class LibraryModel: ObservableObject {
     /// Drives the auto-advance loop while `gameSpeed > 0`.
     private var speedTimerCancellable: AnyCancellable?
     @Published var renderedMap: RenderedMap?
-    @Published var buildingSprites: [Int: RenderedTerrainSprite] = [:]
+    @Published var buildingSprites: [BuildingSpriteReference: RenderedTerrainSprite] = [:]
     @Published var figureSprites: [FigureSpriteReference: RenderedTerrainSprite] = [:]
     @Published var interfaceSprites: [Int: RenderedTerrainSprite] = [:]
     /// Resource deposit overlays currently highlighted on the city canvas.
@@ -1867,30 +1871,47 @@ final class LibraryModel: ObservableObject {
     private func loadBuildingSprites(dataDirectory: URL) {
         Task.detached(priority: .utility) {
             do {
-                let baseName = OriginalBuildingSpriteCatalog.generalArchiveBaseName
-                let archive = try SG3Archive(contentsOf: dataDirectory.appendingPathComponent("\(baseName).sg3"))
-                let pixels = try Data(
-                    contentsOf: dataDirectory.appendingPathComponent("\(baseName).555"),
-                    options: [.mappedIfSafe]
-                )
-                let imageIDs = OriginalBuildingSpriteCatalog.requiredImageIDs
-                var decoded: [Int: DecodedSprite] = [:]
-                for imageID in imageIDs.sorted() where archive.images.indices.contains(imageID) {
-                    decoded[imageID] = try SpriteDecoder.decode(
-                        image: archive.images[imageID],
-                        pixelData: pixels
-                    )
+                struct DecodedBuilding: Sendable {
+                    let reference: BuildingSpriteReference
+                    let sprite: DecodedSprite
+                    let offsetX: Int
+                    let offsetY: Int
                 }
-                let decodedSprites = decoded
+                var decodedSprites: [DecodedBuilding] = []
+                for (baseName, imageIDs) in
+                    OriginalBuildingSpriteCatalog.requiredImageIDsByArchive {
+                    let archive = try SG3Archive(
+                        contentsOf: dataDirectory.appendingPathComponent("\(baseName).sg3")
+                    )
+                    let pixels = try Data(
+                        contentsOf: dataDirectory.appendingPathComponent("\(baseName).555"),
+                        options: [.mappedIfSafe]
+                    )
+                    for imageID in imageIDs.sorted() where archive.images.indices.contains(imageID) {
+                        decodedSprites.append(DecodedBuilding(
+                            reference: BuildingSpriteReference(
+                                archiveBaseName: baseName,
+                                imageID: imageID
+                            ),
+                            sprite: try SpriteDecoder.decode(
+                                image: archive.images[imageID],
+                                pixelData: pixels
+                            ),
+                            offsetX: archive.images[imageID].spriteOffsetX,
+                            offsetY: archive.images[imageID].spriteOffsetY
+                        ))
+                    }
+                }
+                let loadedSprites = decodedSprites
                 await MainActor.run {
-                    self.buildingSprites = decodedSprites.reduce(into: [:]) { result, item in
-                        guard let image = item.value.makeCGImage() else { return }
-                        result[item.key] = RenderedTerrainSprite(
+                    self.buildingSprites = loadedSprites.reduce(into: [:]) { result, item in
+                        guard let image = item.sprite.makeCGImage() else { return }
+                        result[item.reference] = RenderedTerrainSprite(
                             image: image,
-                            width: item.value.width,
-                            height: item.value.height,
-                            offsetX: archive.images[item.key].spriteOffsetX,
-                            offsetY: archive.images[item.key].spriteOffsetY
+                            width: item.sprite.width,
+                            height: item.sprite.height,
+                            offsetX: item.offsetX,
+                            offsetY: item.offsetY
                         )
                     }
                 }

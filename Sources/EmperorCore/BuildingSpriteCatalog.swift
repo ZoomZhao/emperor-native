@@ -47,6 +47,8 @@ public struct BuildingSpriteComponent: Sendable, Equatable, Hashable {
 
 public enum OriginalBuildingSpriteCatalog {
     public static let generalArchiveBaseName = "China_General"
+    public static let grandCanalArchiveBaseName = "China_Mon_Grand_Canal"
+    public static let tumulusArchiveBaseName = "China_Mon_Tumulus"
     public static let vacantCommonHouseImageID = 1_508
     public static let vacantEliteHouseImageID = 1_525
 
@@ -79,11 +81,12 @@ public enum OriginalBuildingSpriteCatalog {
     /// archive validation tests consume exactly the same catalog.
     public static let supportedPlacedBuildingIDs = [
         26, 27, 28,
-        31, 33, 35, 36, 38, 39, 40, 42, 43, 46, 53, 54, 56, 58, 59, 60, 72, 110, 124, 125,
+        31, 33, 35, 36, 38, 39, 40, 42, 43, 46, 52, 53, 54, 56, 58, 59, 60, 72, 82, 84,
+        110, 124, 125,
         115, 116, 117, 118, 119, 126, 127, 129, 130, 131,
         194, 195, 196, 197, 198, 199,
         207, 208, 209, 211, 212, 213, 214, 215, 216, 217, 218, 219,
-        237, 238, 239,
+        226, 237, 238, 239,
     ]
 
     /// First mature-stage frame from each authored `China_Fields.bmp`
@@ -152,6 +155,20 @@ public enum OriginalBuildingSpriteCatalog {
         forBuildingID buildingID: Int,
         orientation: IsometricBuildingOrientation = .northSouth
     ) -> BuildingSpriteReference? {
+        switch buildingID {
+        case 82:
+            return BuildingSpriteReference(
+                archiveBaseName: grandCanalArchiveBaseName,
+                imageID: 272
+            )
+        case 84:
+            return BuildingSpriteReference(
+                archiveBaseName: tumulusArchiveBaseName,
+                imageID: 376
+            )
+        default:
+            break
+        }
         let imageID: Int
         switch buildingID {
         case 26: imageID = agriculturalPlotImageID(for: .tea)
@@ -167,6 +184,7 @@ public enum OriginalBuildingSpriteCatalog {
         case 42: imageID = 2_750 // Bronzeware maker
         case 43: imageID = 2_788 // Kiln
         case 46: imageID = 2_832 // Jade carver's studio
+        case 52: imageID = 2_310 // Carpenters' guild
         case 53: imageID = 647   // Mill
         case 72: imageID = 1_559 // Well
         case 115: imageID = 201 // Gardens
@@ -191,6 +209,7 @@ public enum OriginalBuildingSpriteCatalog {
         case 217: imageID = 2_258 // Buddhist shrine
         case 218: imageID = 2_296 // Buddhist pagoda
         case 219: imageID = 2_309 // Confucian academy
+        case 226: imageID = 918 // Weaponsmith
         case 237: imageID = 812 // Tea curing shed
         case 238: imageID = 840 // Lacquer refinery
         case 239: imageID = 777 // Silkworm shed
@@ -267,26 +286,38 @@ public enum OriginalBuildingSpriteCatalog {
         }
     }
 
-    public static var requiredImageIDs: Set<Int> {
-        var imageIDs = Set((0...14).flatMap { levelID in
+    public static var requiredImageIDsByArchive: [String: Set<Int>] {
+        var references = Set((0...14).flatMap { levelID in
             IsometricBuildingOrientation.allCases.compactMap {
-                housingSprite(forHouseLevelID: levelID, orientation: $0)?.imageID
+                housingSprite(forHouseLevelID: levelID, orientation: $0)
             }
         })
         for buildingID in supportedPlacedBuildingIDs {
             for orientation in IsometricBuildingOrientation.allCases {
-                imageIDs.formUnion(
+                references.formUnion(
                     buildingComponents(
                         forBuildingID: buildingID,
                         orientation: orientation
-                    ).map(\.sprite.imageID)
+                    ).map(\.sprite)
                 )
             }
         }
-        imageIDs.formUnion(quayHouseImageIDs.values)
-        imageIDs.formUnion(quayDeckImageIDs.values)
-        imageIDs.insert(operationsFireImageID)
-        return imageIDs
+        references.formUnion(quayHouseImageIDs.values.map {
+            BuildingSpriteReference(archiveBaseName: generalArchiveBaseName, imageID: $0)
+        })
+        references.formUnion(quayDeckImageIDs.values.map {
+            BuildingSpriteReference(archiveBaseName: generalArchiveBaseName, imageID: $0)
+        })
+        references.insert(BuildingSpriteReference(
+            archiveBaseName: generalArchiveBaseName,
+            imageID: operationsFireImageID
+        ))
+        return Dictionary(grouping: references, by: \.archiveBaseName)
+            .mapValues { Set($0.map(\.imageID)) }
+    }
+
+    public static var requiredImageIDs: Set<Int> {
+        requiredImageIDsByArchive[generalArchiveBaseName, default: []]
     }
 
     private static func administrativeCityComponents(

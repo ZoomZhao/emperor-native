@@ -126,6 +126,13 @@ public struct OriginalMonumentConfiguration: Sendable, Hashable, Codable {
                 requiredCommodityUnits: [10: 1_000, 18: 1_200],
                 requiredSupportKinds: labor.union(carpenter).union(ceramist)
             )
+        case 85: // Earthen Great Wall, assembled from map-authored segments.
+            return Self(
+                buildingID: buildingID,
+                requiredWork: 3_600,
+                requiredCommodityUnits: [10: 800, 20: 1_200],
+                requiredSupportKinds: labor.union(carpenter).union(mason)
+            )
         case 92: // Clock tower needs wood and bronze; no labor camp.
             return Self(
                 buildingID: buildingID,
@@ -230,6 +237,27 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
                 isComplete: false
             ))
         }
+        return id
+    }
+
+    @discardableResult
+    mutating func addMapMonument(buildingID: Int) -> Int? {
+        guard monuments.contains(where: { $0.buildingID == buildingID }) == false,
+              let configuration = OriginalMonumentConfiguration.configuration(
+                buildingID: buildingID
+              ) else { return nil }
+        let id = nextConstructionID
+        nextConstructionID += 1
+        monuments.append(MonumentProject(
+            id: id,
+            buildingID: buildingID,
+            requiredWork: configuration.requiredWork,
+            requiredCommodityUnits: configuration.requiredCommodityUnits,
+            requiredSupportKinds: configuration.requiredSupportKinds,
+            deliveredCommodityUnits: [:],
+            completedWork: 0,
+            isComplete: false
+        ))
         return id
     }
 

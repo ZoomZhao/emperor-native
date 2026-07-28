@@ -2012,6 +2012,18 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         return id
     }
 
+    /// Starts a project whose geometry is authored directly into the mission
+    /// map rather than represented by a normal rectangular placement.
+    @discardableResult
+    public mutating func beginMapMonument(buildingID: Int) -> Int? {
+        guard buildingID == 83 || buildingID == 85,
+              isBuildingAvailableInCampaign(buildingID) else { return nil }
+        var state = aestheticState ?? DeterministicAestheticState()
+        guard let id = state.addMapMonument(buildingID: buildingID) else { return nil }
+        aestheticState = state
+        return id
+    }
+
     public func canConstructAestheticBuilding(
         buildingID: Int,
         at origin: GridPoint,

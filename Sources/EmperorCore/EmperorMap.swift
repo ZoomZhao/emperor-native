@@ -79,6 +79,7 @@ public struct EmperorMap: Sendable {
     public static let chinaElevationDirtGlobalImageBase: UInt32 = 34_203
     public static let chinaGreatWall1GlobalImageBase: UInt32 = 82_032
     public static let chinaGrandCanalGlobalImageBase: UInt32 = 98_117
+    public static let chinaEarthenGreatWall1GlobalImageBase: UInt32 = 130_874
 
     public let url: URL
     public let formatVersion: UInt16
@@ -339,6 +340,15 @@ public struct EmperorMap: Sendable {
             x: x,
             y: y,
             globalImageBase: Self.chinaGrandCanalGlobalImageBase,
+            imageCount: imageCount
+        )
+    }
+
+    public func chinaEarthenGreatWall1SpriteID(x: Int, y: Int, imageCount: Int) -> Int? {
+        localSpriteID(
+            x: x,
+            y: y,
+            globalImageBase: Self.chinaEarthenGreatWall1GlobalImageBase,
             imageCount: imageCount
         )
     }

@@ -160,6 +160,14 @@ public final class GameSessionController: @unchecked Sendable {
             }
             city = updated
             result = .applied(enabled ? "贸易设施已恢复进出口" : "贸易设施已暂停进出口")
+        case let .beginMapMonument(buildingID):
+            guard var updated = city,
+                  updated.beginMapMonument(buildingID: buildingID) != nil else {
+                result = .rejected("地图纪念碑不可用或已经开工")
+                break
+            }
+            city = updated
+            result = .applied("地图纪念碑 #\(buildingID) 已开工")
         case let .setSpeed(requested):
             if campaignRuntime?.outcome != .running, requested > 0 {
                 result = .rejected("mission has reached a terminal outcome")
