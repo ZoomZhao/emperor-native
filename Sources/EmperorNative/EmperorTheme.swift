@@ -42,16 +42,33 @@ enum EmperorTheme {
 
     // MARK: Layout
 
-    static let hudHeight: CGFloat = 48
-    static let panelWidth: CGFloat = 286
+    /// The original city screen renders into a 1024 × 768 logical canvas.
+    /// Keeping these dimensions centralized makes screenshot comparison
+    /// deterministic and prevents the map / HUD split from drifting.
+    static let classicViewportSize = CGSize(width: 1_024, height: 768)
+    static let cityMapColumnWidth: CGFloat = 800
+    static let hudHeight: CGFloat = 40
+    static let panelWidth: CGFloat = 224
     static let panelHeaderHeight: CGFloat = 34
     static let categoryRailWidth: CGFloat = 54
     static let commandRowHeight: CGFloat = 36
-    static let populationAdvisorHeight: CGFloat = 148
+    static let populationAdvisorHeight: CGFloat = 210
     static let cityNavigationHeight: CGFloat = 40
-    static let minimapSize = CGSize(width: 156, height: 112)
+    static let minimapSize = CGSize(width: 112, height: 112)
     static let nativeCardRadius: CGFloat = 12
     static let nativeModalRadius: CGFloat = 22
+
+    static func classicIntegerScale(fitting size: CGSize) -> CGFloat {
+        max(
+            1,
+            floor(
+                min(
+                    size.width / classicViewportSize.width,
+                    size.height / classicViewportSize.height
+                )
+            )
+        )
+    }
 
     // MARK: Typography
 

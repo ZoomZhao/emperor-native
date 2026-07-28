@@ -10,20 +10,18 @@ struct EmperorNativeApp: App {
 
     init() {
         usesFixedSmokeWindow = ProcessInfo.processInfo.arguments.contains("--ui-smoke-fixed-window")
-        if usesFixedSmokeWindow, let visibleSize = NSScreen.main?.visibleFrame.size {
-            defaultWidth = max(1_120, min(1_240, visibleSize.width - 60))
-            defaultHeight = max(680, min(700, visibleSize.height - 60))
-        } else {
-            defaultWidth = 1_240
-            defaultHeight = 760
-        }
+        defaultWidth = EmperorTheme.classicViewportSize.width
+        defaultHeight = EmperorTheme.classicViewportSize.height
         NativeDiagnostics.record("Emperor Native 1.0.0 starting")
     }
 
     var body: some Scene {
         WindowGroup("皇帝：龙之崛起") {
             ContentView(library: library)
-                .frame(minWidth: 1_120, minHeight: 680)
+                .frame(
+                    minWidth: EmperorTheme.classicViewportSize.width,
+                    minHeight: EmperorTheme.classicViewportSize.height
+                )
                 .background(
                     FixedWindowConfigurator(
                         contentSize: usesFixedSmokeWindow

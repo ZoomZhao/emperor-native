@@ -329,21 +329,55 @@ private struct ClassicCityGameView: View {
     @State private var cameraOffsetX = 0
     @State private var cameraOffsetY = 0
     @State private var selectedCategory: ConstructionToolCategory = .residential
+    @State private var showsCitySummary = false
 
     var body: some View {
+        GeometryReader { geometry in
+            let scale = EmperorTheme.classicIntegerScale(fitting: geometry.size)
+
+            ZStack {
+                EmperorTheme.backgroundApp
+                    .ignoresSafeArea()
+
+                classicViewport
+                    .frame(
+                        width: EmperorTheme.classicViewportSize.width,
+                        height: EmperorTheme.classicViewportSize.height
+                    )
+                    .scaleEffect(scale)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .accessibilityElement(children: .contain)
+        .onChange(of: library.selectedMissionID) { _ in
+            cameraOffsetX = 0
+            cameraOffsetY = 0
+        }
+    }
+
+    @ViewBuilder
+    private var classicViewport: some View {
         ZStack {
             EmperorTheme.backgroundApp
-                .ignoresSafeArea()
 
             if let city = library.cityState {
                 VStack(spacing: 0) {
-                    ClassicImperialHUD(
-                        library: library,
-                        city: city,
-                        models: models
-                    )
-                    .layoutPriority(2)
-                    Divider().overlay(EmperorTheme.border)
+                    HStack(spacing: 0) {
+                        ClassicImperialHUD(
+                            library: library,
+                            city: city,
+                            models: models
+                        )
+                        .frame(width: EmperorTheme.cityMapColumnWidth)
+
+                        ClassicPanelHeader(
+                            title: "人口",
+                            value: "\(city.population)",
+                            onOpenSummary: { showsCitySummary = true }
+                        )
+                        .frame(width: EmperorTheme.panelWidth)
+                    }
+                    .frame(height: EmperorTheme.hudHeight)
 
                     HStack(spacing: 0) {
                         CityCanvas(
@@ -369,7 +403,8 @@ private struct ClassicCityGameView: View {
                             showsNavigationOverlay: false
                         )
                         .id(library.selectedMap?.url)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .frame(width: EmperorTheme.cityMapColumnWidth)
+                        .frame(maxHeight: .infinity)
                         .background(Color.black)
                         .overlay(alignment: .topLeading) {
                             ClassicMapHint(
@@ -397,6 +432,10 @@ private struct ClassicCityGameView: View {
                         )
                         .frame(width: EmperorTheme.panelWidth)
                     }
+                    .frame(
+                        height: EmperorTheme.classicViewportSize.height
+                            - EmperorTheme.hudHeight
+                    )
                 }
 
                 if let runtime = library.campaignRuntimeState,
@@ -416,16 +455,52 @@ private struct ClassicCityGameView: View {
                     .foregroundStyle(EmperorTheme.onSurface)
             }
         }
-        .accessibilityElement(children: .contain)
-        .onChange(of: library.selectedMissionID) { _ in
-            cameraOffsetX = 0
-            cameraOffsetY = 0
+        .sheet(isPresented: $showsCitySummary) {
+            if let city = library.cityState {
+                ClassicCitySummaryView(city: city, models: models)
+            }
         }
     }
 
     private var activeMission: CampaignMission? {
         guard let missionID = library.selectedMissionID else { return nil }
         return library.selectedCampaign?.missions.first { $0.id == missionID }
+    }
+}
+
+private struct ClassicPanelHeader: View {
+    let title: String
+    let value: String
+    let onOpenSummary: () -> Void
+
+    var body: some View {
+        Button(action: onOpenSummary) {
+            HStack(spacing: 8) {
+                Text(title)
+                    .font(EmperorTheme.headlineSmall)
+                Spacer(minLength: 4)
+                Text(value)
+                    .font(EmperorTheme.metric)
+            }
+            .foregroundStyle(ClassicPalette.gold)
+            .padding(.horizontal, 10)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .background(ClassicPalette.panelHeader)
+        .overlay(alignment: .leading) {
+            Rectangle()
+                .fill(ClassicPalette.border)
+                .frame(width: 1)
+        }
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(ClassicPalette.gold.opacity(0.48))
+                .frame(height: 1)
+        }
+        .help("打开城市状况总览")
+        .accessibilityIdentifier("city-summary-open")
     }
 }
 
@@ -482,35 +557,9 @@ private struct ClassicImperialHUD: View {
 
             Rectangle()
                 .fill(ClassicPalette.border.opacity(0.72))
-                .frame(width: 1, height: 26)
+                .frame(width: 1, height: 22)
 
-            HStack(spacing: 8) {
-                Text(missionStage)
-                    .font(EmperorTheme.labelSmall)
-                    .foregroundStyle(ClassicPalette.gold)
-                    .lineLimit(1)
-                Text(localizedMissionTitle)
-                    .font(EmperorTheme.headlineSmall)
-                    .foregroundStyle(EmperorTheme.onSurface)
-                    .lineLimit(1)
-
-                Label(localizedCityName, systemImage: "mappin.and.ellipse")
-                    .font(EmperorTheme.labelSmall)
-                    .foregroundStyle(ClassicPalette.gold)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 4)
-                    .background(ClassicPalette.deepBrown.opacity(0.82))
-                    .overlay(
-                        Rectangle()
-                            .strokeBorder(ClassicPalette.border, lineWidth: 1)
-                    )
-                    .fixedSize()
-            }
-            .frame(maxWidth: 390, alignment: .leading)
-            .layoutPriority(1)
-            .help(missionAccessibilityLabel)
-
-            Spacer(minLength: 4)
+            Spacer(minLength: 6)
 
             ClassicHUDMetric(
                 symbol: "banknote.fill",
@@ -523,22 +572,15 @@ private struct ClassicImperialHUD: View {
                 value: "\(city.population)"
             )
             .accessibilityIdentifier("hud-population-metric")
+            ClassicHUDResource(symbol: "drop.fill", title: "水")
+            ClassicHUDResource(symbol: "takeoutbag.and.cup.and.straw.fill", title: "食物")
             ClassicHUDMetric(
                 symbol: "calendar",
                 title: "日期",
                 value: imperialDate
             )
-
-            Label(dynasticVirtue.title, systemImage: "circle.hexagongrid.fill")
-                .font(EmperorTheme.bold(size: 10))
-                .foregroundStyle(ClassicPalette.gold)
-                .padding(.horizontal, 8)
-                .frame(height: 34)
-                .background(ClassicPalette.deepBrown.opacity(0.82))
-                .overlay(Rectangle().strokeBorder(ClassicPalette.border, lineWidth: 1))
-                .help(dynasticVirtue.help)
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 9)
         .frame(height: EmperorTheme.hudHeight)
         .fixedSize(horizontal: false, vertical: true)
         .background(
@@ -556,6 +598,7 @@ private struct ClassicImperialHUD: View {
                 .fill(ClassicPalette.gold.opacity(0.48))
                 .frame(height: 1)
         }
+        .help(missionAccessibilityLabel)
     }
 
     private var activeMission: CampaignMission? {
@@ -599,28 +642,6 @@ private struct ClassicImperialHUD: View {
         return "\(month) \(city.calendar.year) 年"
     }
 
-    private var dynasticVirtue: (title: String, help: String) {
-        let title = library.selectedCampaign.map {
-            ClassicTextLocalization.campaignTitle($0.title)
-        } ?? ""
-        if title.contains("夏") {
-            return ("土德", "夏朝崇尚土德")
-        }
-        if title.contains("商") {
-            return ("金德", "商朝崇尚金德")
-        }
-        if title.contains("周") {
-            return ("火德", "周朝崇尚火德")
-        }
-        if title.contains("秦") {
-            return ("水德", "秦朝崇尚水德")
-        }
-        if title.contains("汉") || title.contains("唐") || title.contains("宋") {
-            return ("火德", "本朝崇尚火德")
-        }
-        return ("五行", "城市风水与王朝德运")
-    }
-
     private func placedBuildingCount(in buildingIDs: Set<Int>) -> Int {
         city.placedBuildings.count { buildingIDs.contains($0.buildingID) }
     }
@@ -632,8 +653,9 @@ private struct ClassicHUDMetric: View {
     let value: String
 
     var body: some View {
-        HStack(spacing: 7) {
+        HStack(spacing: 4) {
             Image(systemName: symbol)
+                .font(.system(size: 10, weight: .semibold))
                 .foregroundStyle(ClassicPalette.gold)
             Text(title)
                 .font(EmperorTheme.labelSmall)
@@ -642,13 +664,28 @@ private struct ClassicHUDMetric: View {
                 .font(EmperorTheme.metric)
                 .foregroundStyle(EmperorTheme.onSurface)
         }
-        .padding(.horizontal, 8)
-        .frame(height: 34)
-        .background(ClassicPalette.deepBrown.opacity(0.54))
-        .overlay(
-            Rectangle()
-                .strokeBorder(ClassicPalette.border.opacity(0.72), lineWidth: 1)
-        )
+        .padding(.horizontal, 3)
+        .frame(height: 24)
+        .fixedSize()
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct ClassicHUDResource: View {
+    let symbol: String
+    let title: String
+
+    var body: some View {
+        HStack(spacing: 3) {
+            Image(systemName: symbol)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(ClassicPalette.gold)
+            Text(title)
+                .font(EmperorTheme.labelSmall)
+                .foregroundStyle(EmperorTheme.onSurface)
+        }
+        .padding(.horizontal, 2)
+        .frame(height: 24)
         .fixedSize()
         .accessibilityElement(children: .combine)
     }
@@ -726,7 +763,6 @@ private struct ClassicControlPanel: View {
     @Binding var selectedCategory: ConstructionToolCategory
     @Binding var cameraOffsetX: Int
     @Binding var cameraOffsetY: Int
-    @State private var showsCitySummary = false
     @State private var showsObjectives = false
     @State private var showsWorldMap = false
 
@@ -737,19 +773,19 @@ private struct ClassicControlPanel: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ClassicPopulationAdvisorPanel(
-                library: library,
-                city: city,
-                models: models,
-                onOpenSummary: { showsCitySummary = true }
-            )
-
-            Divider().overlay(ClassicPalette.border)
-
             HStack(alignment: .top, spacing: 0) {
                 categoryRail
                 Divider().overlay(ClassicPalette.border)
-                constructionCatalog
+                VStack(spacing: 0) {
+                    ClassicPopulationAdvisorPanel(
+                        library: library,
+                        city: city,
+                        models: models
+                    )
+
+                    Divider().overlay(ClassicPalette.border)
+                    constructionCatalog
+                }
             }
             .frame(maxHeight: .infinity)
 
@@ -773,9 +809,6 @@ private struct ClassicControlPanel: View {
             )
         }
         .background(ClassicBronzeTexture())
-        .sheet(isPresented: $showsCitySummary) {
-            ClassicCitySummaryView(city: city, models: models)
-        }
         .sheet(isPresented: $showsObjectives) {
             ClassicMissionObjectivesView(library: library, city: city, models: models)
         }
@@ -1394,25 +1427,9 @@ private struct ClassicPopulationAdvisorPanel: View {
     @ObservedObject var library: LibraryModel
     let city: DeterministicCityState
     let models: OriginalEconomyModels
-    let onOpenSummary: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Button(action: onOpenSummary) {
-                HStack {
-                    Text("人口")
-                        .font(EmperorTheme.headlineSmall)
-                    Spacer()
-                    Text("\(city.population)")
-                        .font(EmperorTheme.metric)
-                }
-                .foregroundStyle(ClassicPalette.gold)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .help("打开城市状况总览")
-            .accessibilityIdentifier("city-summary-open")
-
             advisorButton(
                 title: "查看住房供给",
                 kind: .housingSupply,

@@ -88,18 +88,21 @@ spacing:
   lg: 16px
   xl: 24px
   xxl: 32px
-  window-min-width: 1120px
-  window-min-height: 680px
-  window-default-width: 1240px
-  window-default-height: 760px
-  hud-height: 48px
-  panel-width: 286px
+  classic-logical-width: 1024px
+  classic-logical-height: 768px
+  window-min-width: 1024px
+  window-min-height: 768px
+  window-default-width: 1024px
+  window-default-height: 768px
+  city-map-column-width: 800px
+  hud-height: 40px
+  panel-width: 224px
   panel-header-height: 34px
   category-rail-width: 54px
   command-row-height: 36px
-  population-advisor-height: 148px
+  population-advisor-height: 210px
   city-navigation-height: 40px
-  minimap-width: 156px
+  minimap-width: 112px
   minimap-height: 112px
 components:
   imperial-hud:
@@ -216,20 +219,20 @@ Emperor Native 是面向 macOS 的《皇帝：龙之崛起》原生重实现。�
 
 主城市界面采用固定框架的 **Map-first Docked Shell**：
 
-- 窗口最小内容尺寸为 `1120 × 680`，默认 `1240 × 760`。
-- 顶部 `48px` HUD 横跨窗口；地图占据剩余空间；右侧面板固定 `286px`，不压缩地图高度。
-- HUD 从左到右依次为文件/选项/帮助、任务与城市身份、弹性空白、国库/人口/日期、情境徽记。高频指标必须单行可扫读。
+- 原版截图去掉 macOS 窗框后的逻辑画布固定为 `1024 × 768`；窗口默认和最小内容尺寸均以此为基线。更大的可用空间只按整数倍缩放，采用 nearest-neighbor 插值并居中留边，禁止通过响应式拉伸改变各区域比例。
+- 顶部 `40px` HUD 中左侧城市栏固定 `800px`、右侧顾问标题固定 `224px`；HUD 以下地图继续占 `800px`，右侧控制面板占 `224px`。
+- HUD 从左到右依次为文件/选项/帮助、弹性空白、国库/人口、水/食物和日期。任务、城市身份及王朝徽记不占用原版没有的常驻顶栏位置，通过目标卷轴、tooltip 和辅助功能提供。
 - 右侧面板按“人口顾问（住房供给/城市行人）→ 分类轨道与建造目录 → 常驻工具条（浏览/道路/清理/拆除）→ 资源图层 → 命令/速度 → 迷你地图 → 城市/世界地图/目标导航”排列。完整任务目标由底栏卷轴按钮打开，不常驻挤占建造目录。
-- 分类轨道宽 `54px`；建造目录使用两列紧凑网格。固定宽面板内不得再嵌套横向滚动。
+- 分类轨道从 HUD 下缘开始，宽 `54px`；人口顾问和建造目录位于轨道右侧，建造目录使用紧凑网格。固定宽面板内不得再嵌套横向滚动。
 - 常驻工具条始终可见，使用原版道路图块与清除/拆除图标；不要把长城分类按钮当作修路入口。
-- 迷你地图保持 `156 × 112` 的核心画面，并与方向控制共同停靠在面板底部。
+- 迷你地图保持 `112 × 112` 的原版逻辑尺寸，并与方向控制共同停靠在面板底部。
 - 地图上的临时提示贴近左上安全边距 `8px`，只展示当前工具和一句可执行指令。
 
 使用 4px 基线节奏。面板内部常用 8px，顶栏与较大组合使用 12px，叙事/诊断页面的大区块使用 16–24px。紧凑不等于拥挤：不同任务域之间用边框或 12px 以上空间明确分组。
 
 战役和任务选择页沿用参考图的“双册页”逻辑：左侧为可选择列表，右侧为插画/说明/目标。大幅背景图仅在有合法运行时素材时使用；否则用深色渐变和地图预览，不制造仿原版插画。
 
-窗口变窄时保持 HUD、右侧面板和地图的职责，不把所有内容改造成纵向卡片流。资料与诊断页则可以随窗口宽度在三栏、两栏之间响应式变化。
+城内画布不响应式重排；小于基线的窗口不允许出现，大于基线的窗口以整数倍画布或居中留边呈现。资料与诊断页仍可以随窗口宽度在三栏、两栏之间响应式变化。
 
 ## Elevation & Depth
 
@@ -259,11 +262,11 @@ Emperor Native 是面向 macOS 的《皇帝：龙之崛起》原生重实现。�
 
 ### Imperial HUD
 
-高度固定 48px，使用由 `surface-raised` 到 `surface-deep` 的水平渐变，底部一条半透明金线。菜单保持 macOS 原生行为。指标由金色图标、弱化标签和象牙白等宽数值组成；不得添加可滚动内容或超过两行的信息。
+高度固定 40px，左侧宽 800px，使用由 `surface-raised` 到 `surface-deep` 的水平渐变，底部一条半透明金线。菜单保持 macOS 原生行为。指标由金色图标、弱化标签和象牙白等宽数值组成；不得添加可滚动内容或超过一行的信息。
 
 ### Docked control panel
 
-面板宽 286px 且占满 HUD 以下高度。顶部人口顾问高 148px，显示住房容量、迁入状态以及住房供给/城市行人覆盖入口。所有工具、速度、迷你地图和底栏导航都在此处闭环，避免在地图四周再堆第二套悬浮工具条。
+面板宽 224px 且占满 HUD 以下高度。顶部标题与 HUD 同高；分类轨道从标题下方直达主内容底部，人口顾问位于轨道右侧、高 210px，显示住房容量、迁入状态以及住房供给/城市行人覆盖入口。所有工具、速度、迷你地图和底栏导航都在此处闭环，避免在地图四周再堆第二套悬浮工具条。
 
 ### Category rail and construction tiles
 
