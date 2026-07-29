@@ -123,6 +123,35 @@ public enum OriginalBuildingSpriteCatalog {
         )
     }
 
+    /// Returns only phase sprites whose original frame mapping is verified.
+    /// The grand-tumulus ramp family is a complete four-direction group.
+    /// Other mausoleum sub-buildings retain their authored phase state but
+    /// deliberately do not guess an image until the Windows visual comparison
+    /// resolves their elevation/orientation lookup.
+    public static func phasedMonumentSubBuildingSprite(
+        buildingID: Int,
+        subBuilding: PhasedMonumentSubBuilding,
+        currentSubBuildingPhase: Int
+    ) -> BuildingSpriteReference? {
+        guard currentSubBuildingPhase > 0,
+              buildingID == 77,
+              subBuilding.kind == "SB_TUMULUS_RAMP" else {
+            return nil
+        }
+        let directionOffset: Int
+        switch subBuilding.orientation {
+        case "NORTH": directionOffset = 0
+        case "EAST": directionOffset = 1
+        case "SOUTH": directionOffset = 2
+        case "WEST": directionOffset = 3
+        default: return nil
+        }
+        return BuildingSpriteReference(
+            archiveBaseName: tumulusArchiveBaseName,
+            imageID: 371 + directionOffset
+        )
+    }
+
     /// Building IDs currently constructible on the native isometric canvas.
     /// Keeping this list in the core makes the asynchronous sprite loader and
     /// archive validation tests consume exactly the same catalog.
@@ -429,6 +458,12 @@ public enum OriginalBuildingSpriteCatalog {
             BuildingSpriteReference(
                 archiveBaseName: tumulusArchiveBaseName,
                 imageID: earthenGreatWallCutImageBase + $0.cutVariant
+            )
+        })
+        references.formUnion((371...374).map {
+            BuildingSpriteReference(
+                archiveBaseName: tumulusArchiveBaseName,
+                imageID: $0
             )
         })
         return Dictionary(grouping: references, by: \.archiveBaseName)

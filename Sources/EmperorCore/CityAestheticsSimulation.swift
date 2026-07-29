@@ -74,8 +74,20 @@ public struct OriginalMonumentConfiguration: Sendable, Hashable, Codable {
         case 77:
             return Self(
                 buildingID: buildingID,
+                // Emperor Heaven records 89 loads of wood, 11 loads of
+                // lacquerware or bronzeware, 10 silk, 9 ceramics, 7 weapons,
+                // and 4 carved-jade loads. One warehouse load is 100 internal
+                // units. Dirt remains represented by requiredWork because it
+                // is excavated by laborers rather than stored as a commodity.
                 requiredWork: 2_400,
-                requiredCommodityUnits: [10: 800, 17: 200, 21: 200, 23: 300, 24: 300, 25: 300],
+                requiredCommodityUnits: [
+                    10: 8_900,
+                    21: 700,
+                    22: 1_100,
+                    24: 1_000,
+                    25: 900,
+                    26: 400,
+                ],
                 requiredSupportKinds: labor.union(carpenter)
             )
         case 78: // Great Temple.
@@ -123,8 +135,10 @@ public struct OriginalMonumentConfiguration: Sendable, Hashable, Codable {
         case 84:
             return Self(
                 buildingID: buildingID,
+                // 106 wood loads and 11 clay loads. The 337 dirt loads are
+                // laborer work and therefore do not enter the warehouse map.
                 requiredWork: 4_000,
-                requiredCommodityUnits: [10: 1_000, 18: 1_200],
+                requiredCommodityUnits: [10: 10_600, 18: 1_100],
                 requiredSupportKinds: labor.union(carpenter).union(ceramist)
             )
         case 85: // Earthen Great Wall, assembled from map-authored segments.
@@ -166,9 +180,33 @@ public struct MonumentProject: Identifiable, Sendable, Hashable, Codable {
 
     public var completionPercent: Int {
         let materialRequired = requiredCommodityUnits.values.reduce(0, +)
-        let materialDelivered = deliveredCommodityUnits.values.reduce(0, +)
+        let materialDelivered = requiredCommodityUnits.reduce(0) {
+            $0 + min(
+                $1.value,
+                deliveredUnits(satisfyingRequirementFor: $1.key)
+            )
+        }
         let totalRequired = max(1, requiredWork + materialRequired)
         return min(100, (completedWork + materialDelivered) * 100 / totalRequired)
+    }
+
+    /// Building #77 accepts the original burial-provision alternatives:
+    /// lacquerware (22) and bronzeware (23) can be mixed to satisfy the single
+    /// 11-load requirement. Qin V has no legal bronzeware source, so normal
+    /// play supplies lacquerware without losing compatibility with other
+    /// scenarios or imported saves that already delivered bronzeware.
+    public func deliveredUnits(satisfyingRequirementFor commodityID: Int) -> Int {
+        if buildingID == 77, commodityID == 22 {
+            return deliveredCommodityUnits[22, default: 0]
+                + deliveredCommodityUnits[23, default: 0]
+        }
+        return deliveredCommodityUnits[commodityID, default: 0]
+    }
+
+    public func hasDelivered(_ requirements: [Int: Int]) -> Bool {
+        requirements.allSatisfy {
+            deliveredUnits(satisfyingRequirementFor: $0.key) >= $0.value
+        }
     }
 
     mutating func recordDelivery(commodityID: Int, amount: Int) {
@@ -178,16 +216,13 @@ public struct MonumentProject: Identifiable, Sendable, Hashable, Codable {
     mutating func performWork(_ amount: Int, allowCompletion: Bool = true) {
         completedWork = min(requiredWork, completedWork + max(0, amount))
         isComplete = allowCompletion
-            && completedWork >= requiredWork && requiredCommodityUnits.allSatisfy {
-            deliveredCommodityUnits[$0.key, default: 0] >= $0.value
-        }
+            && completedWork >= requiredWork
+            && hasDelivered(requiredCommodityUnits)
     }
 
     mutating func markSegmentedConstructionComplete() {
         guard completedWork >= requiredWork,
-              requiredCommodityUnits.allSatisfy({
-                  deliveredCommodityUnits[$0.key, default: 0] >= $0.value
-              }) else { return }
+              hasDelivered(requiredCommodityUnits) else { return }
         isComplete = true
     }
 }
@@ -420,7 +455,10 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
             for (commodityID, required) in requiredCommodityUnits.sorted(by: { $0.key < $1.key }) {
                 let remaining = max(
                     0,
-                    required - monuments[index].deliveredCommodityUnits[commodityID, default: 0]
+                    required
+                        - monuments[index].deliveredUnits(
+                            satisfyingRequirementFor: commodityID
+                        )
                 )
                 let load = min(DeterministicLogisticsState.originalDeliveryLoad, remaining)
                 if load > 0, logistics.takeCampaignRequestGoods(
@@ -432,9 +470,7 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
                     deliveries[monuments[index].id, default: [:]][commodityID, default: 0] += load
                 }
             }
-            let hasMaterials = requiredCommodityUnits.allSatisfy {
-                monuments[index].deliveredCommodityUnits[$0.key, default: 0] >= $0.value
-            }
+            let hasMaterials = monuments[index].hasDelivered(requiredCommodityUnits)
             let crewCount = monuments[index].requiredSupportKinds
                 .map { supportCounts[$0, default: 0] }
                 .min() ?? 0

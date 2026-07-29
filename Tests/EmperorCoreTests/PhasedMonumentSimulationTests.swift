@@ -32,6 +32,10 @@ final class PhasedMonumentSimulationTests: XCTestCase {
                 && $0.firstSubBuildingIndex == 337
                 && $0.lastSubBuildingIndex == 339
         })
+        XCTAssertEqual(
+            PhasedMonumentLayout.original(buildingID: 84),
+            vault
+        )
 
         let tumulus = try XCTUnwrap(PhasedMonumentLayout.parse(
             subBuildingText: String(contentsOf: tumulusURL, encoding: .utf8),
@@ -47,6 +51,10 @@ final class PhasedMonumentSimulationTests: XCTestCase {
             ]
         )
         XCTAssertEqual(tumulus.phaseRules.map(\.monumentPhase).max(), 42)
+        XCTAssertEqual(
+            PhasedMonumentLayout.original(buildingID: 77),
+            tumulus
+        )
     }
 
     func testQinFiveProjectsRequireEveryPlayerVisiblePhase() throws {
@@ -90,6 +98,96 @@ final class PhasedMonumentSimulationTests: XCTestCase {
                 runtime
             )
         }
+    }
+
+    func testGrandTumulusAcceptsLacquerwareOrBronzewareAsBurialProvision() throws {
+        let configuration = try XCTUnwrap(
+            OriginalMonumentConfiguration.configuration(buildingID: 77)
+        )
+        XCTAssertEqual(
+            configuration.requiredCommodityUnits,
+            [10: 8_900, 21: 700, 22: 1_100, 24: 1_000, 25: 900, 26: 400]
+        )
+
+        var project = MonumentProject(
+            id: 77,
+            buildingID: 77,
+            requiredWork: configuration.requiredWork,
+            requiredCommodityUnits: configuration.requiredCommodityUnits,
+            requiredSupportKinds: configuration.requiredSupportKinds,
+            deliveredCommodityUnits: [:],
+            completedWork: 0,
+            isComplete: false
+        )
+        project.recordDelivery(commodityID: 22, amount: 600)
+        project.recordDelivery(commodityID: 23, amount: 500)
+        XCTAssertEqual(
+            project.deliveredUnits(satisfyingRequirementFor: 22),
+            1_100
+        )
+        XCTAssertTrue(project.hasDelivered([22: 1_100]))
+        XCTAssertFalse(project.hasDelivered([22: 1_101]))
+    }
+
+    func testAuthoredPhaseOnlyAdvancesItsDeclaredSubBuildings() throws {
+        let vault = try XCTUnwrap(PhasedMonumentLayout.original(buildingID: 84))
+        let configuration = try XCTUnwrap(
+            OriginalMonumentConfiguration.configuration(buildingID: 84)
+        )
+        let project = fullyFundedProject(
+            buildingID: 84,
+            configuration: configuration
+        )
+        var runtime = try XCTUnwrap(PhasedMonumentProjectRuntime(
+            projectID: 84,
+            buildingID: 84,
+            origin: GridPoint(x: 10, y: 10),
+            orientation: .northSouth
+        ))
+
+        XCTAssertTrue(runtime.advance(project: project, layout: vault))
+        XCTAssertEqual(runtime.subBuildingPhase(index: 337), 1)
+        XCTAssertEqual(runtime.subBuildingPhase(index: 339), 1)
+        XCTAssertEqual(runtime.subBuildingPhase(index: 336), 0)
+        XCTAssertEqual(runtime.subBuildingPhase(index: 0), 0)
+
+        XCTAssertTrue(runtime.advance(project: project, layout: vault))
+        XCTAssertEqual(runtime.subBuildingPhase(index: 0), 1)
+        XCTAssertEqual(runtime.subBuildingPhase(index: 336), 1)
+        XCTAssertEqual(runtime.subBuildingPhase(index: 337), 1)
+
+        let data = try JSONEncoder().encode(runtime)
+        XCTAssertEqual(
+            try JSONDecoder().decode(
+                PhasedMonumentProjectRuntime.self,
+                from: data
+            ),
+            runtime
+        )
+    }
+
+    func testGrandTumulusRampDirectionsUseVerifiedFrames() throws {
+        let tumulus = try XCTUnwrap(PhasedMonumentLayout.original(buildingID: 77))
+        let ramps = tumulus.subBuildings.filter {
+            $0.kind == "SB_TUMULUS_RAMP"
+        }
+        XCTAssertEqual(ramps.map(\.orientation), ["NORTH", "WEST", "EAST", "SOUTH"])
+        XCTAssertEqual(
+            ramps.compactMap {
+                OriginalBuildingSpriteCatalog.phasedMonumentSubBuildingSprite(
+                    buildingID: 77,
+                    subBuilding: $0,
+                    currentSubBuildingPhase: 1
+                )?.imageID
+            },
+            [371, 374, 372, 373]
+        )
+        XCTAssertTrue((371...374).allSatisfy {
+            OriginalBuildingSpriteCatalog.requiredImageIDsByArchive[
+                OriginalBuildingSpriteCatalog.tumulusArchiveBaseName,
+                default: []
+            ].contains($0)
+        })
     }
 
     func testAestheticStateCreatesAndPersistsBothQinFivePhaseRuntimes() throws {
@@ -154,5 +252,26 @@ final class PhasedMonumentSimulationTests: XCTestCase {
             CampaignMissionRuntimeState.canonicalMenagerieProductID(77),
             38
         )
+    }
+
+    private func fullyFundedProject(
+        buildingID: Int,
+        configuration: OriginalMonumentConfiguration
+    ) -> MonumentProject {
+        var project = MonumentProject(
+            id: buildingID,
+            buildingID: buildingID,
+            requiredWork: configuration.requiredWork,
+            requiredCommodityUnits: configuration.requiredCommodityUnits,
+            requiredSupportKinds: configuration.requiredSupportKinds,
+            deliveredCommodityUnits: [:],
+            completedWork: 0,
+            isComplete: false
+        )
+        for (commodityID, amount) in configuration.requiredCommodityUnits {
+            project.recordDelivery(commodityID: commodityID, amount: amount)
+        }
+        project.performWork(configuration.requiredWork, allowCompletion: false)
+        return project
     }
 }

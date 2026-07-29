@@ -87,6 +87,30 @@ public struct PhasedMonumentLayout: Sendable, Hashable, Codable {
             }
         )
     }
+
+    public static func original(buildingID: Int) -> Self? {
+        originalLayoutsByBuildingID[buildingID]
+    }
+
+    private static let originalLayoutsByBuildingID: [Int: Self] = {
+        let specifications: [(buildingID: Int, fileName: String, subCount: Int, phaseCount: Int)] = [
+            (77, "Mon_Grand_Tumulus_subs.txt", 148, 43),
+            (84, "Mon_Underground_Vault_Subs.txt", 340, 9),
+        ]
+        let modelRoot = GameDataSource.defaultRoot.appendingPathComponent("Model")
+        return Dictionary(uniqueKeysWithValues: specifications.compactMap { specification in
+            let url = modelRoot.appendingPathComponent(specification.fileName)
+            guard let text = try? String(contentsOf: url, encoding: .utf8),
+                  let layout = parse(
+                      subBuildingText: text,
+                      expectedSubBuildingCount: specification.subCount,
+                      expectedPhaseCount: specification.phaseCount
+                  ) else {
+                return nil
+            }
+            return (specification.buildingID, layout)
+        })
+    }()
 }
 
 /// Player-visible construction phases for the two Qin V mausoleum projects.
@@ -110,6 +134,7 @@ public struct PhasedMonumentProjectRuntime: Sendable, Hashable, Codable {
     public private(set) var completedPhaseCount: Int
     public private(set) var deliveredCommodityUnits: [Int: Int]
     public private(set) var completedWork: Int
+    private var subBuildingPhasesState: [Int: Int]?
 
     public init?(
         projectID: Int,
@@ -128,10 +153,16 @@ public struct PhasedMonumentProjectRuntime: Sendable, Hashable, Codable {
         completedPhaseCount = 0
         deliveredCommodityUnits = [:]
         completedWork = 0
+        subBuildingPhasesState = [:]
     }
 
     public var isComplete: Bool { completedPhaseCount == phaseCount }
     public var completionPercent: Int { completedPhaseCount * 100 / phaseCount }
+    public var subBuildingPhases: [Int: Int] { subBuildingPhasesState ?? [:] }
+
+    public func subBuildingPhase(index: Int) -> Int {
+        subBuildingPhases[index, default: 0]
+    }
 
     public func contains(_ point: GridPoint) -> Bool {
         (OriginalBuildingFootprintCatalog.footprint(
@@ -141,12 +172,17 @@ public struct PhasedMonumentProjectRuntime: Sendable, Hashable, Codable {
             .points(at: origin).contains(point)
     }
 
-    mutating func advance(project: MonumentProject) -> Bool {
+    mutating func advance(
+        project: MonumentProject,
+        layout: PhasedMonumentLayout? = nil
+    ) -> Bool {
         guard let requirements = nextPhaseRequirements(project: project),
               project.completedWork >= requirements.work,
-              requirements.commodityUnits.allSatisfy({
-                  project.deliveredCommodityUnits[$0.key, default: 0] >= $0.value
-              }) else { return false }
+              project.hasDelivered(requirements.commodityUnits) else { return false }
+        applyAuthoredSubBuildingPhase(
+            monumentPhase: completedPhaseCount,
+            layout: layout ?? PhasedMonumentLayout.original(buildingID: buildingID)
+        )
         completedPhaseCount = requirements.completedPhaseCount
         completedWork = requirements.work
         deliveredCommodityUnits = requirements.commodityUnits
@@ -176,6 +212,23 @@ public struct PhasedMonumentProjectRuntime: Sendable, Hashable, Codable {
     private static func cumulativeShare(total: Int, completed: Int, count: Int) -> Int {
         guard completed > 0 else { return 0 }
         return (total * min(completed, count) + count - 1) / count
+    }
+
+    private mutating func applyAuthoredSubBuildingPhase(
+        monumentPhase: Int,
+        layout: PhasedMonumentLayout?
+    ) {
+        guard let layout else { return }
+        var phases = subBuildingPhases
+        for rule in layout.phaseRules where rule.monumentPhase == monumentPhase {
+            for index in rule.firstSubBuildingIndex...rule.lastSubBuildingIndex {
+                guard layout.subBuildings.indices.contains(index) else { continue }
+                let current = phases[index, default: 0]
+                guard current >= rule.firstSubBuildingPhase else { continue }
+                phases[index] = max(current, rule.lastSubBuildingPhase)
+            }
+        }
+        subBuildingPhasesState = phases
     }
 }
 
