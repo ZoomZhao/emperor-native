@@ -309,6 +309,9 @@ public final class GameSessionController: @unchecked Sendable {
                     if case .victory = $0.outcome { return true }
                     return false
                 } == true
+            let inheritedMenagerie = canContinueExistingCity
+                ? campaignRuntime?.menagerieAnimalCountsByProductID
+                : nil
             var newCity: DeterministicCityState
             if canContinueExistingCity, var inherited = city {
                 inherited.continueCampaignMission(with: world.startSettings)
@@ -325,7 +328,7 @@ public final class GameSessionController: @unchecked Sendable {
                 rules: EconomyRulesEngine(models: models)
             )
             city = newCity
-            campaignRuntime = CampaignMissionRuntimeState(
+            var newRuntime = CampaignMissionRuntimeState(
                 missionID: missionID,
                 startYear: world.startSettings.startYear,
                 startMonth: world.startSettings.startMonth,
@@ -335,6 +338,12 @@ public final class GameSessionController: @unchecked Sendable {
                 playerCityID: world.playerCity?.id,
                 cityNames: cityNames
             )
+            if let inheritedMenagerie {
+                newRuntime.inheritMenagerie(
+                    animalCountsByProductID: inheritedMenagerie
+                )
+            }
+            campaignRuntime = newRuntime
             activeWorld = world
             activeGoalSet = goals.missions[missionID]
             selectedCampaignID = campaignID
@@ -559,6 +568,8 @@ public final class GameSessionController: @unchecked Sendable {
             city.advanceEarthenGreatWallSegment(at: point) != nil
         case .largePalacePhase:
             city.advanceLargePalacePhase(at: point) != nil
+        case .phasedMonumentPhase:
+            city.advancePhasedMonument(at: point) != nil
         case .barracks, .fort, .catapultFort, .cavalryFort, .chariotFort:
             city.constructMilitaryFort(
                 buildingID: tool.buildingID ?? 0,
@@ -577,7 +588,8 @@ public final class GameSessionController: @unchecked Sendable {
              .waysidePavilion, .pond, .taiChiPark, .privateGarden,
              .administrativeCity, .palace, .laborersCamp, .carpentersGuild,
              .masonsGuild, .ceramistsGuild, .tumulus, .grandTumulus,
-             .greatTemple, .splendidTemple, .grandPagoda, .largePalace:
+             .undergroundVault, .greatTemple, .splendidTemple, .grandPagoda,
+             .largePalace:
             city.constructAestheticBuilding(
                 buildingID: tool.buildingID ?? 0,
                 at: point,

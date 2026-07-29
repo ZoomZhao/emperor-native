@@ -128,7 +128,8 @@ public enum OriginalBuildingSpriteCatalog {
     /// archive validation tests consume exactly the same catalog.
     public static let supportedPlacedBuildingIDs = [
         26, 27, 28,
-        31, 33, 35, 36, 38, 39, 40, 42, 43, 46, 52, 53, 54, 56, 58, 59, 60, 72, 82, 84,
+        31, 33, 35, 36, 38, 39, 40, 42, 43, 46, 52, 53, 54, 56, 58, 59, 60, 72,
+        77, 82, 84,
         110, 124, 125,
         115, 116, 117, 118, 119, 126, 127, 129, 130, 131,
         194, 195, 196, 197, 198, 199, 203,
@@ -204,6 +205,11 @@ public enum OriginalBuildingSpriteCatalog {
         orientation: IsometricBuildingOrientation = .northSouth
     ) -> BuildingSpriteReference? {
         switch buildingID {
+        case 77:
+            return BuildingSpriteReference(
+                archiveBaseName: tumulusArchiveBaseName,
+                imageID: 201
+            )
         case 82:
             return BuildingSpriteReference(
                 archiveBaseName: grandCanalArchiveBaseName,

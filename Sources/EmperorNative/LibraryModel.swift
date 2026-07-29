@@ -793,6 +793,12 @@ final class LibraryModel: ObservableObject {
                 return
             }
             saveStatus = "大宫殿施工已推进至第 \(phase)/\(LargePalaceProjectRuntime.phaseCount) 相位"
+        case .phasedMonumentPhase:
+            guard let phase = city.advancePhasedMonument(at: point) else {
+                saveStatus = "陵墓下一相位尚不能推进：请先交付材料并完成相应工期"
+                return
+            }
+            saveStatus = "陵墓施工已推进至第 \(phase) 相位"
         case .barracks, .fort, .catapultFort, .cavalryFort, .chariotFort:
             guard let buildingID = constructionTool.buildingID,
                   city.constructMilitaryFort(
@@ -821,8 +827,8 @@ final class LibraryModel: ObservableObject {
              .waysidePavilion, .pond, .taiChiPark, .privateGarden,
              .administrativeCity, .palace,
              .laborersCamp, .carpentersGuild, .masonsGuild, .ceramistsGuild,
-             .tumulus, .grandTumulus, .greatTemple, .splendidTemple, .grandPagoda,
-             .largePalace:
+             .tumulus, .grandTumulus, .undergroundVault, .greatTemple,
+             .splendidTemple, .grandPagoda, .largePalace:
             guard let buildingID = constructionTool.buildingID,
                   city.constructAestheticBuilding(
                     buildingID: buildingID,
@@ -1673,6 +1679,9 @@ final class LibraryModel: ObservableObject {
                 && activeMissionWorld?.mapAssignment.embeddedMap.mapURL
                     == world.mapAssignment.embeddedMap.mapURL
                 && cityState != nil
+            let inheritedMenagerie = canContinueExistingCity
+                ? campaignRuntimeState?.menagerieAnimalCountsByProductID
+                : nil
             var city: DeterministicCityState
             if canContinueExistingCity, var inherited = cityState {
                 inherited.continueCampaignMission(with: world.startSettings)
@@ -1696,7 +1705,7 @@ final class LibraryModel: ObservableObject {
             constructionOrientation = .northSouth
             latestTick = nil
             latestSettlement = nil
-            campaignRuntimeState = CampaignMissionRuntimeState(
+            var newRuntime = CampaignMissionRuntimeState(
                 missionID: mission.id,
                 startYear: world.startSettings.startYear,
                 startMonth: world.startSettings.startMonth,
@@ -1706,6 +1715,12 @@ final class LibraryModel: ObservableObject {
                 playerCityID: world.playerCity?.id,
                 cityNames: cityNames
             )
+            if let inheritedMenagerie {
+                newRuntime.inheritMenagerie(
+                    animalCountsByProductID: inheritedMenagerie
+                )
+            }
+            campaignRuntimeState = newRuntime
             latestCampaignAdvance = nil
             setGameSpeed(0)
             selectedMap = probe
@@ -2151,6 +2166,7 @@ final class LibraryModel: ObservableObject {
         case .earthenGreatWallSegment: .earthenGreatWallSegment
         case .largePalace: .largePalace
         case .largePalacePhase: .largePalacePhase
+        case .phasedMonumentPhase: .phasedMonumentPhase
         case .lumberMill: .lumberMill
         case .quarry: .quarry
         case .granary: .granary
@@ -2191,6 +2207,7 @@ final class LibraryModel: ObservableObject {
         case .ceramistsGuild: .ceramistsGuild
         case .tumulus: .tumulus
         case .grandTumulus: .grandTumulus
+        case .undergroundVault: .undergroundVault
         case .greatTemple: .greatTemple
         case .splendidTemple: .splendidTemple
         case .grandPagoda: .grandPagoda

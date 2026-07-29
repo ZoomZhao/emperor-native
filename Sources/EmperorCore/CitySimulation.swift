@@ -2161,6 +2161,27 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         return phase
     }
 
+    public func canAdvancePhasedMonument(at point: GridPoint) -> Bool {
+        guard let runtime = aesthetics.phasedMonumentProjects.first(where: {
+            !$0.isComplete && $0.contains(point)
+        }),
+        let project = aesthetics.monuments.first(where: {
+            $0.id == runtime.projectID
+        }) else { return false }
+        var preview = runtime
+        return preview.advance(project: project)
+    }
+
+    @discardableResult
+    public mutating func advancePhasedMonument(at point: GridPoint) -> Int? {
+        var state = aestheticState ?? DeterministicAestheticState()
+        guard let phase = state.advancePhasedMonument(at: point) else {
+            return nil
+        }
+        aestheticState = state
+        return phase
+    }
+
     public func canConstructAestheticBuilding(
         buildingID: Int,
         at origin: GridPoint,

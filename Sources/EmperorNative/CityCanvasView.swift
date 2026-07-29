@@ -1034,6 +1034,7 @@ struct CityCanvas: View {
         case .grandCanalSegment: city.canAdvanceGrandCanalSegment(at: point)
         case .earthenGreatWallSegment: city.canAdvanceEarthenGreatWallSegment(at: point)
         case .largePalacePhase: city.canAdvanceLargePalacePhase(at: point)
+        case .phasedMonumentPhase: city.canAdvancePhasedMonument(at: point)
         case .house: city.canConstructHouse(at: point)
         case .eliteHouse: city.canConstructHouse(at: point)
         case .farmland:
@@ -1041,8 +1042,8 @@ struct CityCanvas: View {
         case .garden, .decorativeSculpture, .ornateSculpture, .floweringTree,
              .waysidePavilion, .pond, .taiChiPark, .privateGarden,
              .laborersCamp, .carpentersGuild, .masonsGuild, .ceramistsGuild,
-             .tumulus, .grandTumulus, .greatTemple, .splendidTemple, .grandPagoda,
-             .largePalace:
+             .tumulus, .grandTumulus, .undergroundVault, .greatTemple,
+             .splendidTemple, .grandPagoda, .largePalace:
             constructionTool.buildingID.map {
                 city.canConstructAestheticBuilding(
                     buildingID: $0,

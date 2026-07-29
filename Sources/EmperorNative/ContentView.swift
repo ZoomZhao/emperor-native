@@ -1418,6 +1418,9 @@ private struct ClassicControlPanel: View {
         if tool == .largePalacePhase {
             return city.aesthetics.largePalaceProject?.isComplete == false
         }
+        if tool == .phasedMonumentPhase {
+            return city.aesthetics.phasedMonumentProjects.contains { !$0.isComplete }
+        }
         if tool == .rally {
             guard city.missionSettings != nil else { return true }
             return !city.military.forts.isEmpty || !city.military.defensiveStructures.isEmpty
@@ -2530,6 +2533,8 @@ private func constructionInstruction(
         return "土长城分段：点击八达岭山脊中的预置 4×4 墙段推进施工"
     case .largePalacePhase:
         return "大宫殿施工：点击已放置的 12×12 宫殿推进下一夯土、殿身、甬道或入口相位"
+    case .phasedMonumentPhase:
+        return "陵墓施工：点击已放置的大陵冢或地下兵马俑坑推进下一原版施工相位"
     default:
         guard let buildingID = tool.buildingID,
               let footprint = OriginalBuildingFootprintCatalog.footprint(

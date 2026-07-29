@@ -1,21 +1,15 @@
 import Foundation
 
-public enum LargePalaceSubBuildingKind: String, Sendable, Hashable, Codable {
-    case templeSteps = "SB_TEMPLE_STEPS"
-    case palace = "SB_PALACE"
-    case causeway = "SB_PALACE_CAUSEWAY"
-    case courtyard = "SB_PALACE_COURTYARD"
-    case palaceSteps = "SB_PALACE_STEPS"
-}
-
-public struct LargePalaceSubBuilding: Sendable, Hashable, Codable {
+public struct PhasedMonumentSubBuilding: Sendable, Hashable, Codable {
     public let index: Int
     public let localOrigin: GridPoint
-    public let kind: LargePalaceSubBuildingKind
-    public let isRoadEntrance: Bool
+    public let kind: String
+    public let elevation: Int
+    public let orientation: String
+    public let variant: String
 }
 
-public struct LargePalacePhaseRule: Sendable, Hashable, Codable {
+public struct PhasedMonumentPhaseRule: Sendable, Hashable, Codable {
     public let monumentPhase: Int
     public let isJoined: Bool
     public let firstSubBuildingIndex: Int
@@ -24,13 +18,17 @@ public struct LargePalacePhaseRule: Sendable, Hashable, Codable {
     public let lastSubBuildingPhase: Int
 }
 
-public struct LargePalaceLayout: Sendable, Hashable, Codable {
-    public let subBuildings: [LargePalaceSubBuilding]
-    public let phaseRules: [LargePalacePhaseRule]
+public struct PhasedMonumentLayout: Sendable, Hashable, Codable {
+    public let subBuildings: [PhasedMonumentSubBuilding]
+    public let phaseRules: [PhasedMonumentPhaseRule]
 
-    public static func parse(subBuildingText: String) -> LargePalaceLayout? {
+    public static func parse(
+        subBuildingText: String,
+        expectedSubBuildingCount: Int,
+        expectedPhaseCount: Int
+    ) -> Self? {
         let itemExpression = try? NSRegularExpression(
-            pattern: #"/\*\s*(\d+)\*/\s*\{\s*(-?\d+),\s*(-?\d+),\s*(SB_[A-Z_]+),\s*\d+,\s*[A-Z]+,\s*(\d+),"#
+            pattern: #"/\*\s*(\d+)\*/\s*\{\s*(-?\d+),\s*(-?\d+),\s*(SB_[A-Z_]+),\s*(-?\d+),\s*([A-Z]+),\s*([A-Z]+|\d+),"#
         )
         let phaseExpression = try? NSRegularExpression(
             pattern: #"<\s*(\d+),\s*(\d+),\s*\d+,\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+),"#
@@ -38,29 +36,36 @@ public struct LargePalaceLayout: Sendable, Hashable, Codable {
         guard let itemExpression, let phaseExpression else { return nil }
         let range = NSRange(subBuildingText.startIndex..., in: subBuildingText)
         let items = itemExpression.matches(in: subBuildingText, range: range).compactMap {
-            match -> LargePalaceSubBuilding? in
+            match -> PhasedMonumentSubBuilding? in
             guard let index = match.integer(at: 1, in: subBuildingText),
                   let x = match.integer(at: 2, in: subBuildingText),
                   let y = match.integer(at: 3, in: subBuildingText),
-                  let kindName = match.string(at: 4, in: subBuildingText),
-                  let kind = LargePalaceSubBuildingKind(rawValue: kindName),
-                  let entry = match.integer(at: 5, in: subBuildingText) else { return nil }
-            return LargePalaceSubBuilding(
+                  let kind = match.string(at: 4, in: subBuildingText),
+                  let elevation = match.integer(at: 5, in: subBuildingText),
+                  let orientation = match.string(at: 6, in: subBuildingText),
+                  let variant = match.string(at: 7, in: subBuildingText) else {
+                return nil
+            }
+            return PhasedMonumentSubBuilding(
                 index: index,
                 localOrigin: GridPoint(x: x, y: y),
                 kind: kind,
-                isRoadEntrance: entry == 1
+                elevation: elevation,
+                orientation: orientation,
+                variant: variant
             )
         }
         let phases = phaseExpression.matches(in: subBuildingText, range: range).compactMap {
-            match -> LargePalacePhaseRule? in
+            match -> PhasedMonumentPhaseRule? in
             guard let phase = match.integer(at: 1, in: subBuildingText),
                   let type = match.integer(at: 2, in: subBuildingText),
                   let first = match.integer(at: 3, in: subBuildingText),
                   let last = match.integer(at: 4, in: subBuildingText),
                   let firstPhase = match.integer(at: 5, in: subBuildingText),
-                  let lastPhase = match.integer(at: 6, in: subBuildingText) else { return nil }
-            return LargePalacePhaseRule(
+                  let lastPhase = match.integer(at: 6, in: subBuildingText) else {
+                return nil
+            }
+            return PhasedMonumentPhaseRule(
                 monumentPhase: phase,
                 isJoined: type == 1,
                 firstSubBuildingIndex: first,
@@ -69,10 +74,11 @@ public struct LargePalaceLayout: Sendable, Hashable, Codable {
                 lastSubBuildingPhase: lastPhase
             )
         }
-        guard items.count == 153, Set(phases.map(\.monumentPhase)) == Set(0...15) else {
+        guard items.count == expectedSubBuildingCount,
+              Set(phases.map(\.monumentPhase)) == Set(0..<expectedPhaseCount) else {
             return nil
         }
-        return LargePalaceLayout(
+        return Self(
             subBuildings: items.sorted { $0.index < $1.index },
             phaseRules: phases.sorted {
                 $0.monumentPhase == $1.monumentPhase
@@ -83,38 +89,55 @@ public struct LargePalaceLayout: Sendable, Hashable, Codable {
     }
 }
 
-public struct LargePalaceProjectRuntime: Sendable, Hashable, Codable {
-    public static let buildingID = 82
-    public static let phaseCount = 16
+/// Player-visible construction phases for the two Qin V mausoleum projects.
+///
+/// The Windows data authors the underground vault as nine monument phases and
+/// the grand tumulus as forty-three. The detailed sub-building animation is
+/// separate from this runtime; this type owns the deterministic material/work
+/// gates and save state so a fully supplied project cannot complete without
+/// the player advancing every authored phase.
+public struct PhasedMonumentProjectRuntime: Sendable, Hashable, Codable {
+    public static let phaseCountsByBuildingID = [
+        77: 43, // Grand Tumulus
+        84: 9,  // Underground Vault
+    ]
 
     public let projectID: Int
+    public let buildingID: Int
     public let origin: GridPoint
     public let orientation: IsometricBuildingOrientation
+    public let phaseCount: Int
     public private(set) var completedPhaseCount: Int
     public private(set) var deliveredCommodityUnits: [Int: Int]
     public private(set) var completedWork: Int
 
-    public init(
+    public init?(
         projectID: Int,
+        buildingID: Int,
         origin: GridPoint,
         orientation: IsometricBuildingOrientation
     ) {
+        guard let phaseCount = Self.phaseCountsByBuildingID[buildingID] else {
+            return nil
+        }
         self.projectID = projectID
+        self.buildingID = buildingID
         self.origin = origin
         self.orientation = orientation
+        self.phaseCount = phaseCount
         completedPhaseCount = 0
         deliveredCommodityUnits = [:]
         completedWork = 0
     }
 
-    public var isComplete: Bool { completedPhaseCount == Self.phaseCount }
-    public var completionPercent: Int { completedPhaseCount * 100 / Self.phaseCount }
+    public var isComplete: Bool { completedPhaseCount == phaseCount }
+    public var completionPercent: Int { completedPhaseCount * 100 / phaseCount }
 
     public func contains(_ point: GridPoint) -> Bool {
         (OriginalBuildingFootprintCatalog.footprint(
-            forBuildingID: Self.buildingID,
+            forBuildingID: buildingID,
             orientation: orientation
-        ) ?? BuildingFootprint(width: 12, height: 12))
+        ) ?? BuildingFootprint(width: 1, height: 1))
             .points(at: origin).contains(point)
     }
 
@@ -132,26 +155,21 @@ public struct LargePalaceProjectRuntime: Sendable, Hashable, Codable {
 
     func nextPhaseRequirements(project: MonumentProject) -> MonumentPhaseRequirements? {
         guard !isComplete else { return nil }
-        let nextPhaseCount = completedPhaseCount + 1
-        let requiredWork = Self.cumulativeShare(
-            total: project.requiredWork,
-            completed: nextPhaseCount,
-            count: Self.phaseCount
-        )
-        let materialPhaseCount = max(0, nextPhaseCount - 5)
-        let materialPhaseTotal = Self.phaseCount - 5
-        var requiredMaterials: [Int: Int] = [:]
-        for (commodityID, total) in project.requiredCommodityUnits {
-            requiredMaterials[commodityID] = Self.cumulativeShare(
-                total: total,
-                completed: materialPhaseCount,
-                count: materialPhaseTotal
-            )
-        }
+        let nextPhase = completedPhaseCount + 1
         return MonumentPhaseRequirements(
-            completedPhaseCount: nextPhaseCount,
-            work: requiredWork,
-            commodityUnits: requiredMaterials
+            completedPhaseCount: nextPhase,
+            work: Self.cumulativeShare(
+                total: project.requiredWork,
+                completed: nextPhase,
+                count: phaseCount
+            ),
+            commodityUnits: project.requiredCommodityUnits.mapValues {
+                Self.cumulativeShare(
+                    total: $0,
+                    completed: nextPhase,
+                    count: phaseCount
+                )
+            }
         )
     }
 
@@ -159,6 +177,12 @@ public struct LargePalaceProjectRuntime: Sendable, Hashable, Codable {
         guard completed > 0 else { return 0 }
         return (total * min(completed, count) + count - 1) / count
     }
+}
+
+struct MonumentPhaseRequirements: Sendable, Hashable {
+    let completedPhaseCount: Int
+    let work: Int
+    let commodityUnits: [Int: Int]
 }
 
 private extension NSTextCheckingResult {

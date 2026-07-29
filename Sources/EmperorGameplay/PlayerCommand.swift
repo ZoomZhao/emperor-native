@@ -31,6 +31,7 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
     case earthenGreatWallSegment
     case largePalace
     case largePalacePhase
+    case phasedMonumentPhase
     case farmland
     case lumberMill
     case quarry
@@ -72,6 +73,7 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
     case ceramistsGuild
     case tumulus
     case grandTumulus
+    case undergroundVault
     case greatTemple
     case splendidTemple
     case grandPagoda
@@ -79,7 +81,8 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
     public var buildingID: Int? {
         switch self {
         case .inspect, .demolish, .clearLand, .grandCanalSegment,
-             .earthenGreatWallSegment, .largePalacePhase: nil
+             .earthenGreatWallSegment, .largePalacePhase,
+             .phasedMonumentPhase: nil
         case .road: 1
         case .house: 2
         case .eliteHouse: 11
@@ -102,6 +105,7 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
         case .well: 72
         case .tumulus: 76
         case .grandTumulus: 77
+        case .undergroundVault: 84
         case .greatTemple: 78
         case .splendidTemple: 79
         case .grandPagoda: 93

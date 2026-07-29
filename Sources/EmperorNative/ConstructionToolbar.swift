@@ -82,6 +82,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
     case earthenGreatWallSegment
     case largePalace
     case largePalacePhase
+    case phasedMonumentPhase
     case farmland
     case lumberMill
     case quarry
@@ -124,6 +125,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
     case ceramistsGuild
     case tumulus
     case grandTumulus
+    case undergroundVault
     case greatTemple
     case splendidTemple
     case grandPagoda
@@ -180,6 +182,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .earthenGreatWallSegment: "土长城分段"
         case .largePalace: "大宫殿"
         case .largePalacePhase: "大宫殿施工"
+        case .phasedMonumentPhase: "陵墓分段施工"
         case .farmland: "农田"
         case .lumberMill: "伐木棚"
         case .quarry: "石料场"
@@ -222,6 +225,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .ceramistsGuild: "陶工行会"
         case .tumulus: "陵冢"
         case .grandTumulus: "大陵冢"
+        case .undergroundVault: "地下兵马俑坑"
         case .greatTemple: "大庙"
         case .splendidTemple: "宏伟庙宇"
         case .grandPagoda: "大佛塔"
@@ -259,6 +263,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .earthenGreatWallSegment: "hammer.circle"
         case .largePalace: "building.columns.fill"
         case .largePalacePhase: "hammer.circle.fill"
+        case .phasedMonumentPhase: "hammer.circle"
         case .farmland: "leaf.circle.fill"
         case .lumberMill: "tree.circle.fill"
         case .quarry: "mountain.2.circle.fill"
@@ -299,7 +304,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .carpentersGuild: "hammer.fill"
         case .masonsGuild: "mountain.2.fill"
         case .ceramistsGuild: "flame.fill"
-        case .tumulus, .grandTumulus: "triangle.fill"
+        case .tumulus, .grandTumulus, .undergroundVault: "triangle.fill"
         case .greatTemple, .splendidTemple: "building.columns.fill"
         case .grandPagoda: "building.fill"
         }
@@ -309,6 +314,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         switch self {
         case .inspect, .demolish, .clearLand, .road, .rally,
              .grandCanalSegment, .earthenGreatWallSegment, .largePalacePhase: nil
+        case .phasedMonumentPhase: nil
         case .house: 2
         case .eliteHouse: 11
         case .warehouse: 54
@@ -371,6 +377,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .ceramistsGuild: 236
         case .tumulus: 76
         case .grandTumulus: 77
+        case .undergroundVault: 84
         case .greatTemple: 78
         case .splendidTemple: 79
         case .grandPagoda: 93
@@ -402,7 +409,8 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
             .aesthetics
         case .laborersCamp, .carpentersGuild, .masonsGuild, .ceramistsGuild,
              .tumulus, .grandTumulus, .greatTemple, .splendidTemple, .grandPagoda,
-             .grandCanalSegment, .earthenGreatWallSegment, .largePalace, .largePalacePhase:
+             .undergroundVault, .grandCanalSegment, .earthenGreatWallSegment,
+             .largePalace, .largePalacePhase, .phasedMonumentPhase:
             .monuments
         case .inspect, .demolish, .clearLand, .road, .roadblock, .rally:
             .infrastructure
@@ -563,6 +571,8 @@ struct ConstructionToolbar: View {
             "点击 Badaling 山脊上的 4×4 土长城段推进当前施工阶段 · 右键取消"
         case .largePalacePhase:
             "点击已放置的大宫殿推进下一施工相位 · 右键取消"
+        case .phasedMonumentPhase:
+            "点击已放置的大陵冢或地下兵马俑坑推进下一施工相位 · 右键取消"
         default:
             if let buildingID = tool.buildingID,
                let footprint = OriginalBuildingFootprintCatalog.footprint(
@@ -651,6 +661,9 @@ struct ConstructionToolbar: View {
         }
         if tool == .largePalacePhase {
             return city.aesthetics.largePalaceProject?.isComplete == false
+        }
+        if tool == .phasedMonumentPhase {
+            return city.aesthetics.phasedMonumentProjects.contains { !$0.isComplete }
         }
         if tool == .rally {
             guard city.missionSettings != nil else { return true }
