@@ -338,7 +338,21 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
         var work: [Int: Int] = [:]
         var completed: [Int] = []
         for index in monuments.indices where !monuments[index].isComplete {
-            for (commodityID, required) in monuments[index].requiredCommodityUnits.sorted(by: { $0.key < $1.key }) {
+            let palaceRequirements: LargePalaceProjectRuntime.PhaseRequirements?
+            if monuments[index].buildingID == LargePalaceProjectRuntime.buildingID,
+               let palace = largePalaceProject,
+               palace.projectID == monuments[index].id {
+                palaceRequirements = palace.nextPhaseRequirements(
+                    project: monuments[index]
+                )
+            } else {
+                palaceRequirements = nil
+            }
+            let requiredCommodityUnits = palaceRequirements?.commodityUnits
+                ?? monuments[index].requiredCommodityUnits
+            let requiredWork = palaceRequirements?.work
+                ?? monuments[index].requiredWork
+            for (commodityID, required) in requiredCommodityUnits.sorted(by: { $0.key < $1.key }) {
                 let remaining = max(
                     0,
                     required - monuments[index].deliveredCommodityUnits[commodityID, default: 0]
@@ -353,7 +367,7 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
                     deliveries[monuments[index].id, default: [:]][commodityID, default: 0] += load
                 }
             }
-            let hasMaterials = monuments[index].requiredCommodityUnits.allSatisfy {
+            let hasMaterials = requiredCommodityUnits.allSatisfy {
                 monuments[index].deliveredCommodityUnits[$0.key, default: 0] >= $0.value
             }
             let crewCount = monuments[index].requiredSupportKinds
@@ -361,18 +375,20 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
                 .min() ?? 0
             if hasMaterials, crewCount > 0 {
                 let performed = min(
-                    monuments[index].requiredWork - monuments[index].completedWork,
+                    max(0, requiredWork - monuments[index].completedWork),
                     crewCount * 100
                 )
-                monuments[index].performWork(
-                    performed,
-                    allowCompletion: monuments[index].buildingID
-                        != GrandCanalProjectRuntime.buildingID
-                        && monuments[index].buildingID
-                        != LargePalaceProjectRuntime.buildingID
-                )
-                work[monuments[index].id] = performed
-                if monuments[index].isComplete { completed.append(monuments[index].id) }
+                if performed > 0 {
+                    monuments[index].performWork(
+                        performed,
+                        allowCompletion: monuments[index].buildingID
+                            != GrandCanalProjectRuntime.buildingID
+                            && monuments[index].buildingID
+                            != LargePalaceProjectRuntime.buildingID
+                    )
+                    work[monuments[index].id] = performed
+                    if monuments[index].isComplete { completed.append(monuments[index].id) }
+                }
             }
         }
         let settlement = MonumentMonthlySettlement(

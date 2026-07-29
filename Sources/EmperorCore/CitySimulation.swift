@@ -387,7 +387,7 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         models: BuildingModelTable
     ) -> [OperationalBuildingKey: Int] {
         var result: [OperationalBuildingKey: Int] = [:]
-        for building in production.buildings where building.agriculture != nil {
+        for building in production.buildings {
             let key = OperationalBuildingKey(
                 category: .production,
                 instanceID: building.id

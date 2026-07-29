@@ -76,10 +76,15 @@ final class Qin2CampaignBaselineTests: XCTestCase {
                 amount
             )
         }
-        for _ in 0..<40 { _ = city.advanceMonth(rules: rules) }
         XCTAssertFalse(city.aesthetics.completedMonumentBuildingIDs.contains(82))
 
         for phase in 1...LargePalaceProjectRuntime.phaseCount {
+            var waitedMonths = 0
+            while !city.canAdvanceLargePalacePhase(at: palaceOrigin), waitedMonths < 12 {
+                _ = city.advanceMonth(rules: rules)
+                waitedMonths += 1
+            }
+            XCTAssertLessThan(waitedMonths, 12, "phase \(phase) never reached its gate")
             XCTAssertEqual(
                 city.advanceLargePalacePhase(at: palaceOrigin),
                 phase

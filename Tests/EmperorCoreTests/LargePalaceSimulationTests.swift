@@ -61,6 +61,64 @@ final class LargePalaceSimulationTests: XCTestCase {
         )
     }
 
+    func testPalaceWorkUsesTheNextPhaseGateInsteadOfFullMonumentMaterials() throws {
+        var aesthetics = DeterministicAestheticState()
+        for (buildingID, kind) in [
+            (233, AestheticConstructionKind.laborersCamp),
+            (52, .carpentersGuild),
+            (236, .ceramistsGuild),
+            (235, .masonsGuild),
+        ] {
+            _ = aesthetics.addConstruction(
+                buildingID: buildingID,
+                kind: kind,
+                location: GridPoint(x: buildingID, y: 1)
+            )
+        }
+        let palaceOrigin = GridPoint(x: 20, y: 20)
+        let palaceID = aesthetics.addConstruction(
+            buildingID: LargePalaceProjectRuntime.buildingID,
+            kind: .monument,
+            location: palaceOrigin,
+            origin: palaceOrigin
+        )
+        var logistics = DeterministicLogisticsState()
+        var production = DeterministicProductionState()
+
+        let firstMonth = aesthetics.advanceMonuments(
+            logistics: &logistics,
+            production: &production
+        )
+        XCTAssertEqual(firstMonth.workByProjectID[palaceID], 100)
+        XCTAssertEqual(firstMonth.deliveredCommodityUnitsByProjectID[palaceID], nil)
+
+        let secondMonth = aesthetics.advanceMonuments(
+            logistics: &logistics,
+            production: &production
+        )
+        XCTAssertEqual(secondMonth.workByProjectID[palaceID], 75)
+        XCTAssertEqual(
+            aesthetics.monuments.first(where: { $0.id == palaceID })?.completedWork,
+            175
+        )
+
+        let gatedMonth = aesthetics.advanceMonuments(
+            logistics: &logistics,
+            production: &production
+        )
+        XCTAssertEqual(gatedMonth.workByProjectID[palaceID], nil)
+        XCTAssertEqual(
+            aesthetics.advanceLargePalacePhase(at: palaceOrigin),
+            1
+        )
+
+        let nextPhaseMonth = aesthetics.advanceMonuments(
+            logistics: &logistics,
+            production: &production
+        )
+        XCTAssertEqual(nextPhaseMonth.workByProjectID[palaceID], 100)
+    }
+
     private func fullyFundedProject() -> MonumentProject {
         var project = MonumentProject(
             id: 42,

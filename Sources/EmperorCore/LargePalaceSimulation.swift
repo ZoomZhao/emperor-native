@@ -110,6 +110,12 @@ public struct LargePalaceProjectRuntime: Sendable, Hashable, Codable {
     public var isComplete: Bool { completedPhaseCount == Self.phaseCount }
     public var completionPercent: Int { completedPhaseCount * 100 / Self.phaseCount }
 
+    struct PhaseRequirements: Sendable, Hashable {
+        let completedPhaseCount: Int
+        let work: Int
+        let commodityUnits: [Int: Int]
+    }
+
     public func contains(_ point: GridPoint) -> Bool {
         (OriginalBuildingFootprintCatalog.footprint(
             forBuildingID: Self.buildingID,
@@ -119,7 +125,19 @@ public struct LargePalaceProjectRuntime: Sendable, Hashable, Codable {
     }
 
     mutating func advance(project: MonumentProject) -> Bool {
-        guard !isComplete else { return false }
+        guard let requirements = nextPhaseRequirements(project: project),
+              project.completedWork >= requirements.work,
+              requirements.commodityUnits.allSatisfy({
+                  project.deliveredCommodityUnits[$0.key, default: 0] >= $0.value
+              }) else { return false }
+        completedPhaseCount = requirements.completedPhaseCount
+        completedWork = requirements.work
+        deliveredCommodityUnits = requirements.commodityUnits
+        return true
+    }
+
+    func nextPhaseRequirements(project: MonumentProject) -> PhaseRequirements? {
+        guard !isComplete else { return nil }
         let nextPhaseCount = completedPhaseCount + 1
         let requiredWork = Self.cumulativeShare(
             total: project.requiredWork,
@@ -136,14 +154,11 @@ public struct LargePalaceProjectRuntime: Sendable, Hashable, Codable {
                 count: materialPhaseTotal
             )
         }
-        guard project.completedWork >= requiredWork,
-              requiredMaterials.allSatisfy({
-                  project.deliveredCommodityUnits[$0.key, default: 0] >= $0.value
-              }) else { return false }
-        completedPhaseCount = nextPhaseCount
-        completedWork = requiredWork
-        deliveredCommodityUnits = requiredMaterials
-        return true
+        return PhaseRequirements(
+            completedPhaseCount: nextPhaseCount,
+            work: requiredWork,
+            commodityUnits: requiredMaterials
+        )
     }
 
     private static func cumulativeShare(total: Int, completed: Int, count: Int) -> Int {

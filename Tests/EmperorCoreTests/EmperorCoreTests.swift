@@ -1852,6 +1852,18 @@ final class EmperorCoreTests: XCTestCase {
             city.production.buildings.first { $0.id == producerID }?.isEnabled,
             false
         )
+        let disabledProducerPlacement = try XCTUnwrap(
+            city.placedBuildings.first {
+                $0.category == .production && $0.instanceID == producerID
+            }
+        )
+        XCTAssertEqual(
+            city.workforceAssignment(
+                for: disabledProducerPlacement,
+                models: original.buildings
+            )?.requiredWorkers,
+            0
+        )
         XCTAssertTrue(
             original.trade.commodities.allSatisfy { commodity in
                 city.logistics.warehouses.first { $0.id == warehouseID }?

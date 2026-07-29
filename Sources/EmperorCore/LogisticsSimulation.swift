@@ -1074,6 +1074,7 @@ public struct DeterministicLogisticsState: Sendable, Hashable, Codable {
     ) -> (buildingID: Int, demand: Int, path: [GridPoint])? {
         production.buildings.compactMap { building -> (Int, Int, [GridPoint])? in
             guard building.id != sourceBuildingID,
+                  building.isEnabled,
                   let destinationRoad = building.roadAccessPoint,
                   !hasIncomingDelivery(
                     destination: .productionBuilding(building.id),
