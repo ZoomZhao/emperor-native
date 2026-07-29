@@ -47,6 +47,7 @@ public enum TutorialFigureRole: String, CaseIterable, Sendable, Hashable, Codabl
     case chineseCrossbow
     case chineseCavalry
     case chineseCatapult
+    case xiongnuInfantry
 }
 
 public struct FigureSpriteReference: Sendable, Equatable, Hashable {
@@ -112,6 +113,7 @@ public struct FigureSpriteAnimation: Sendable, Equatable, Hashable {
 public enum OriginalFigureSpriteCatalog {
     public static let mainArchiveBaseName = "SprMain"
     public static let main2ArchiveBaseName = "SprMain2"
+    public static let xiongnuArchiveBaseName = "China_Xiongnu"
     public static let meatCommodityID = 4
 
     /// `Gen_Transport` stores one 16-frame, eight-direction family per cargo.
@@ -125,6 +127,16 @@ public enum OriginalFigureSpriteCatalog {
         logicalGroupID: 130,
         firstImageID: 7_908,
         framesPerDirection: 2
+    )
+
+    public static let xiongnuInfantryAnimation = FigureSpriteAnimation(
+        role: .xiongnuInfantry,
+        figureID: 6,
+        archiveBaseName: xiongnuArchiveBaseName,
+        sourceBitmapName: "Xiongnu_Infantry",
+        logicalGroupID: 0,
+        firstImageID: 1,
+        framesPerDirection: 12
     )
 
     /// Commodity mappings are deliberately limited to visually verified
@@ -255,13 +267,22 @@ public enum OriginalFigureSpriteCatalog {
         animations.first { $0.role == role }
     }
 
+    public static func animation(forEnemyTypeID enemyTypeID: Int) -> FigureSpriteAnimation? {
+        switch enemyTypeID {
+        case 6: xiongnuInfantryAnimation
+        default: nil
+        }
+    }
+
     public static func deliveryAnimation(forCommodityID commodityID: Int) -> FigureSpriteAnimation? {
         deliveryAnimationsByCommodityID[commodityID] ?? animation(for: .delivery)
     }
 
     public static var requiredImageIDsByArchive: [String: Set<Int>] {
         Dictionary(
-            grouping: animations + Array(deliveryAnimationsByCommodityID.values),
+            grouping: animations
+                + Array(deliveryAnimationsByCommodityID.values)
+                + [xiongnuInfantryAnimation],
             by: \.archiveBaseName
         ).mapValues { items in
             items.reduce(into: Set<Int>()) { $0.formUnion($1.imageIDs) }

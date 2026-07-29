@@ -28,6 +28,7 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
     case dramaSchool
     case irrigationPump
     case grandCanalSegment
+    case earthenGreatWallSegment
     case largePalace
     case largePalacePhase
     case farmland
@@ -77,7 +78,8 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
 
     public var buildingID: Int? {
         switch self {
-        case .inspect, .demolish, .clearLand, .grandCanalSegment, .largePalacePhase: nil
+        case .inspect, .demolish, .clearLand, .grandCanalSegment,
+             .earthenGreatWallSegment, .largePalacePhase: nil
         case .road: 1
         case .house: 2
         case .eliteHouse: 11
@@ -163,6 +165,11 @@ public enum PlayerCommand: Sendable, Hashable, Codable {
         policy: WarehouseCommodityPolicy
     )
     case setTradeEnabled(tradingBuildingID: Int, enabled: Bool)
+    case setTradeImporting(
+        tradingBuildingID: Int,
+        commodityID: Int,
+        enabled: Bool
+    )
     case constructTradingBuilding(
         partnerID: Int,
         at: GridPoint,

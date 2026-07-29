@@ -160,6 +160,21 @@ public final class GameSessionController: @unchecked Sendable {
             }
             city = updated
             result = .applied(enabled ? "贸易设施已恢复进出口" : "贸易设施已暂停进出口")
+        case let .setTradeImporting(tradingBuildingID, commodityID, enabled):
+            guard var updated = city,
+                  updated.trade.buildings.contains(where: {
+                      $0.id == tradingBuildingID
+                  }) else {
+                result = .rejected("trading building does not exist")
+                break
+            }
+            updated.setTradeImporting(
+                enabled,
+                commodityID: commodityID,
+                tradingBuildingID: tradingBuildingID
+            )
+            city = updated
+            result = .applied(enabled ? "商品已设为进口" : "商品进口已停止")
         case let .constructTradingBuilding(partnerID, point, orientation):
             guard var updated = city,
                   let tradingBuildingID = updated.constructTradingBuilding(
@@ -540,6 +555,8 @@ public final class GameSessionController: @unchecked Sendable {
             ) != nil
         case .grandCanalSegment:
             city.advanceGrandCanalSegment(at: point) != nil
+        case .earthenGreatWallSegment:
+            city.advanceEarthenGreatWallSegment(at: point) != nil
         case .largePalacePhase:
             city.advanceLargePalacePhase(at: point) != nil
         case .barracks, .fort, .catapultFort, .cavalryFort, .chariotFort:

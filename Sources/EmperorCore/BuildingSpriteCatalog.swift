@@ -76,6 +76,26 @@ public enum OriginalBuildingSpriteCatalog {
     /// remains blocked until the player clears the ruins.
     public static let ruinBuildingID = 161
     public static let grandCanalStageImageIDs: Set<Int> = [201, 212, 224, 229, 232, 234, 238]
+    public static let earthenGreatWallCutImageBase = 482
+
+    public static func earthenGreatWallSprites(
+        stage: Int,
+        modeImageID: Int,
+        cutVariant: Int
+    ) -> [BuildingSpriteReference] {
+        guard stage > 0 else { return [] }
+        let archive = "China_Mon_Earthen_Greatwall_\(min(stage, 10))"
+        var references = [
+            BuildingSpriteReference(archiveBaseName: archive, imageID: modeImageID),
+        ]
+        if stage < EarthenGreatWallProjectRuntime.finalStage {
+            references.append(BuildingSpriteReference(
+                archiveBaseName: tumulusArchiveBaseName,
+                imageID: earthenGreatWallCutImageBase + cutVariant
+            ))
+        }
+        return references
+    }
 
     public static func grandCanalSprite(
         stage: Int,
@@ -389,6 +409,20 @@ public enum OriginalBuildingSpriteCatalog {
             BuildingSpriteReference(
                 archiveBaseName: grandCanalArchiveBaseName,
                 imageID: $0
+            )
+        })
+        for binding in EarthenGreatWallLayout.badalingMapBindings {
+            for stage in 1...10 {
+                references.insert(BuildingSpriteReference(
+                    archiveBaseName: "China_Mon_Earthen_Greatwall_\(stage)",
+                    imageID: binding.modeImageID
+                ))
+            }
+        }
+        references.formUnion(EarthenGreatWallLayout.original.segments.map {
+            BuildingSpriteReference(
+                archiveBaseName: tumulusArchiveBaseName,
+                imageID: earthenGreatWallCutImageBase + $0.cutVariant
             )
         })
         return Dictionary(grouping: references, by: \.archiveBaseName)

@@ -31,9 +31,58 @@ public struct EarthenGreatWallPhaseRule: Sendable, Hashable, Codable {
     public let lastSubBuildingPhase: Int
 }
 
+public struct EarthenGreatWallMapBinding: Sendable, Hashable, Codable {
+    public let segmentIndex: Int
+    public let worldOrigin: GridPoint
+    public let modeImageID: Int
+    public let pathIndex: Int
+
+    public var footprint: BuildingFootprint {
+        BuildingFootprint(width: 4, height: 4)
+    }
+
+    public func contains(_ point: GridPoint) -> Bool {
+        footprint.points(at: worldOrigin).contains(point)
+    }
+}
+
 public struct EarthenGreatWallLayout: Sendable, Hashable, Codable {
     public let segments: [EarthenGreatWallSubBuilding]
     public let phaseRules: [EarthenGreatWallPhaseRule]
+
+    /// The released Badaling map does not use the sub-building layout as one
+    /// rigid transform. These anchors bind the 35 authored logical segments
+    /// onto the 46 baked 4×4 blocks along the visible mountain ridge.
+    public static let badalingMapBindings: [EarthenGreatWallMapBinding] = {
+        let origins = [
+            (71, 149), (71, 145), (71, 137), (75, 137), (79, 137),
+            (83, 133), (83, 129), (83, 125), (83, 117), (83, 113),
+            (79, 113), (71, 113), (67, 113), (63, 113), (63, 105),
+            (63, 101), (59, 101), (55, 101), (47, 101), (43, 100),
+            (43, 96), (43, 88), (43, 84), (43, 80), (43, 72),
+            (43, 68), (43, 64), (43, 56), (47, 56), (51, 56),
+            (55, 52), (55, 48), (55, 44), (55, 36), (55, 32),
+        ]
+        let modeImageIDs = [
+            225, 215, 219, 201, 206, 217, 209, 208, 216, 220,
+            202, 224, 207, 221, 216, 220, 202, 205, 207, 221,
+            211, 222, 222, 225, 226, 222, 225, 219, 201, 206,
+            217, 210, 222, 225, 222,
+        ]
+        let pathIndices = [
+            0, 1, 3, 4, 5, 7, 8, 9, 11, 12, 13, 15, 16, 17, 19,
+            20, 21, 22, 24, 25, 26, 28, 29, 30, 32, 33, 34, 36,
+            37, 38, 40, 41, 42, 44, 45,
+        ]
+        return origins.indices.map { index in
+            EarthenGreatWallMapBinding(
+                segmentIndex: index,
+                worldOrigin: GridPoint(x: origins[index].0, y: origins[index].1),
+                modeImageID: modeImageIDs[index],
+                pathIndex: pathIndices[index]
+            )
+        }
+    }()
 
     public static let original = EarthenGreatWallLayout(
         segments: [
@@ -120,6 +169,14 @@ public struct EarthenGreatWallLayout: Sendable, Hashable, Codable {
             phaseRules: phases.sorted { $0.monumentPhase < $1.monumentPhase }
         )
     }
+
+    public func badalingBinding(forSegment index: Int) -> EarthenGreatWallMapBinding? {
+        Self.badalingMapBindings.first { $0.segmentIndex == index }
+    }
+
+    public func badalingSegmentIndex(containing point: GridPoint) -> Int? {
+        Self.badalingMapBindings.first { $0.contains(point) }?.segmentIndex
+    }
 }
 
 public struct EarthenGreatWallSegmentRuntime: Sendable, Hashable, Codable {
@@ -169,6 +226,22 @@ public struct EarthenGreatWallProjectRuntime: Sendable, Hashable, Codable {
     public var completionPercent: Int {
         let progress = segments.reduce(0) { $0 + $1.stage }
         return progress * 100 / (Self.segmentCount * Self.finalStage)
+    }
+
+    public func worldOrigin(forSegment index: Int) -> GridPoint? {
+        EarthenGreatWallLayout.original.badalingBinding(forSegment: index)?.worldOrigin
+    }
+
+    public func modeImageID(forSegment index: Int) -> Int? {
+        EarthenGreatWallLayout.original.badalingBinding(forSegment: index)?.modeImageID
+    }
+
+    public func cutVariant(forSegment index: Int) -> Int? {
+        EarthenGreatWallLayout.original.segments.first { $0.index == index }?.cutVariant
+    }
+
+    public func segmentIndex(containing point: GridPoint) -> Int? {
+        EarthenGreatWallLayout.original.badalingSegmentIndex(containing: point)
     }
 
     mutating func advanceSegment(index: Int, project: MonumentProject) -> Bool {

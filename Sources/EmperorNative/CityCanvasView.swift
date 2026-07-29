@@ -1032,6 +1032,7 @@ struct CityCanvas: View {
         case .roadblock: city.canConstructRoadBlock(at: point)
         case .rally: city.canIssueMilitaryOrder(to: point)
         case .grandCanalSegment: city.canAdvanceGrandCanalSegment(at: point)
+        case .earthenGreatWallSegment: city.canAdvanceEarthenGreatWallSegment(at: point)
         case .largePalacePhase: city.canAdvanceLargePalacePhase(at: point)
         case .house: city.canConstructHouse(at: point)
         case .eliteHouse: city.canConstructHouse(at: point)
@@ -1711,6 +1712,37 @@ struct CityCanvas: View {
                 ))
             }
         }
+        if let wall = city.aesthetics.earthenGreatWallProject {
+            for segment in wall.segments where segment.stage > 0 {
+                guard let segmentOrigin = wall.worldOrigin(forSegment: segment.index),
+                      let modeImageID = wall.modeImageID(forSegment: segment.index),
+                      let cutVariant = wall.cutVariant(forSegment: segment.index) else {
+                    continue
+                }
+                let footprint = BuildingFootprint(width: 4, height: 4)
+                guard footprint.points(at: segmentOrigin).contains(where: viewport.contains) else {
+                    continue
+                }
+                let references = OriginalBuildingSpriteCatalog.earthenGreatWallSprites(
+                    stage: segment.stage,
+                    modeImageID: modeImageID,
+                    cutVariant: cutVariant
+                )
+                for (layer, reference) in references.enumerated()
+                    where buildingSprites[reference] != nil {
+                    renderItems.append(BuildingRenderItem(
+                        buildingReference: reference,
+                        figureReference: nil,
+                        mapOrigin: segmentOrigin,
+                        previousMapOrigin: nil,
+                        footprint: footprint,
+                        usesLegacyHouseAnchor: false,
+                        isFigure: false,
+                        stableOrder: 8_000 + segment.index * 10 + layer
+                    ))
+                }
+            }
+        }
         renderItems.append(contentsOf: tutorialFigureRenderItems(in: viewport))
 
         renderItems.sort { lhs, rhs in
@@ -1871,6 +1903,20 @@ struct CityCanvas: View {
                 previous: previous
             )
         }
+        for (index, force) in city.military.enemyForces.enumerated()
+            where force.status == .maneuvering || force.status == .engaged {
+            let previous = force.route.indices.contains(force.routeIndex - 1)
+                ? force.route[force.routeIndex - 1] : nil
+            append(
+                figureID: force.enemyTypeID,
+                stableID: 700_000 + index,
+                point: force.currentPoint,
+                previous: previous,
+                animation: OriginalFigureSpriteCatalog.animation(
+                    forEnemyTypeID: force.enemyTypeID
+                )
+            )
+        }
         if city.migration.lastDailyImmigrants > 0,
            let houseID = city.migration.lastAssessment?.eligibleHouseIDs.first,
            let house = city.houses.first(where: { $0.id == houseID }),
@@ -2007,6 +2053,9 @@ struct CityCanvas: View {
         }
         for force in city.military.enemyForces
             where force.status == .maneuvering || force.status == .engaged {
+            if OriginalFigureSpriteCatalog.animation(forEnemyTypeID: force.enemyTypeID) != nil {
+                continue
+            }
             guard viewport.contains(force.currentPoint) else { continue }
             let previous = force.route.indices.contains(force.routeIndex - 1)
                 ? force.route[force.routeIndex - 1] : nil

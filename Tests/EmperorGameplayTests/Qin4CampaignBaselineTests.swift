@@ -28,6 +28,12 @@ final class Qin4CampaignBaselineTests: XCTestCase {
             )
         }
         XCTAssertFalse(city.missionSettings?.allowedBuildingMenuIDs.contains(28) == true)
+        let stonePartner = try XCTUnwrap(city.trade.partner(id: 13))
+        XCTAssertTrue(stonePartner.isOpen)
+        XCTAssertNotEqual(
+            stonePartner.supplyByCommodityID[20],
+            TradeVolumeLevel.none
+        )
 
         let goals = try missionGoals(controller)
         XCTAssertEqual(goals.goals.count, 1)
@@ -52,8 +58,46 @@ final class Qin4CampaignBaselineTests: XCTestCase {
         let begin = controller.perform(.beginMapMonument(buildingID: 85))
         XCTAssertTrue(begin.wasApplied, begin.message)
         XCTAssertNotNil(controller.city?.aesthetics.earthenGreatWallProject)
+        XCTAssertTrue(
+            controller.perform(.selectConstruction(.earthenGreatWallSegment)).wasApplied
+        )
+        let firstWallPoint = try XCTUnwrap(
+            EarthenGreatWallLayout.badalingMapBindings.first?.worldOrigin
+        )
+        XCTAssertTrue(
+            controller.city?.aesthetics.earthenGreatWallProject?
+                .segmentIndex(containing: firstWallPoint) == 0
+        )
+        let earlyClick = controller.perform(.placeSelectedConstruction(
+            at: firstWallPoint,
+            orientation: .northSouth
+        ))
+        XCTAssertFalse(earlyClick.wasApplied)
         let earlySegment = controller.perform(.advanceEarthenGreatWallSegment(index: 0))
         XCTAssertFalse(earlySegment.wasApplied)
+
+        let tradingPoint = try XCTUnwrap(
+            controller.city?.nextBuildingConstructionLocation(buildingID: 58)
+        )
+        let tradeBuild = controller.perform(.constructTradingBuilding(
+            partnerID: 13,
+            at: tradingPoint,
+            orientation: .northSouth
+        ))
+        XCTAssertTrue(tradeBuild.wasApplied, tradeBuild.message)
+        let tradingBuildingID = try XCTUnwrap(
+            controller.city?.trade.buildings.first(where: { $0.partnerID == 13 })?.id
+        )
+        let importStone = controller.perform(.setTradeImporting(
+            tradingBuildingID: tradingBuildingID,
+            commodityID: 20,
+            enabled: true
+        ))
+        XCTAssertTrue(importStone.wasApplied, importStone.message)
+        XCTAssertTrue(
+            controller.city?.trade.building(id: tradingBuildingID)?
+                .importingCommodityIDs.contains(20) == true
+        )
     }
 
     private func startedController() throws -> GameSessionController {

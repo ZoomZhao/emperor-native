@@ -781,6 +781,12 @@ final class LibraryModel: ObservableObject {
                 return
             }
             saveStatus = "郑国渠第 \(segment + 1) 段施工阶段已推进"
+        case .earthenGreatWallSegment:
+            guard let segment = city.advanceEarthenGreatWallSegment(at: point) else {
+                saveStatus = "该土长城段尚不能推进：请先进口石料、交付木材并完成相应工期"
+                return
+            }
+            saveStatus = "土长城第 \(segment + 1) 段施工阶段已推进"
         case .largePalacePhase:
             guard let phase = city.advanceLargePalacePhase(at: point) else {
                 saveStatus = "大宫殿下一相位尚不能推进：请先交付材料并完成相应工期"
@@ -2142,6 +2148,7 @@ final class LibraryModel: ObservableObject {
         case .farmland: .farmland
         case .irrigationPump: .irrigationPump
         case .grandCanalSegment: .grandCanalSegment
+        case .earthenGreatWallSegment: .earthenGreatWallSegment
         case .largePalace: .largePalace
         case .largePalacePhase: .largePalacePhase
         case .lumberMill: .lumberMill

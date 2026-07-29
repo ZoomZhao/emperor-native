@@ -43,7 +43,10 @@ final class SG3FigureSpriteTests: XCTestCase {
     }
 
     func testTutorialFigureCatalogIsDeterministicAndEightDirectional() throws {
-        XCTAssertEqual(Set(OriginalFigureSpriteCatalog.animations.map(\.role)), Set(TutorialFigureRole.allCases))
+        XCTAssertEqual(
+            Set(OriginalFigureSpriteCatalog.animations.map(\.role)),
+            Set(TutorialFigureRole.allCases).subtracting([.xiongnuInfantry])
+        )
         XCTAssertEqual(
             Set(OriginalFigureSpriteCatalog.animations.map(\.figureID)),
             [11, 22, 23, 24, 27, 28, 29, 30, 31, 32, 33, 34, 35, 39, 64, 65, 66, 68]
@@ -81,6 +84,18 @@ final class SG3FigureSpriteTests: XCTestCase {
             XCTAssertEqual(animation.framesByDirection.first?.first, group.firstImageID)
             XCTAssertTrue(animation.framesByDirection.allSatisfy { $0.count == 12 })
         }
+    }
+
+    func testXiongnuInfantryUsesVerifiedEnemyArchive() throws {
+        let animation = try XCTUnwrap(
+            OriginalFigureSpriteCatalog.animation(forEnemyTypeID: 6)
+        )
+        XCTAssertEqual(animation.archiveBaseName, "China_Xiongnu")
+        XCTAssertEqual(animation.sourceBitmapName, "Xiongnu_Infantry")
+        XCTAssertEqual(animation.logicalGroupID, 0)
+        XCTAssertEqual(animation.framesByDirection.first?.first, 1)
+        XCTAssertTrue(animation.framesByDirection.allSatisfy { $0.count == 12 })
+        XCTAssertNil(OriginalFigureSpriteCatalog.animation(forEnemyTypeID: 0))
     }
 
     func testGeneratedServiceWalkersUseOriginalEightDirectionGroups() throws {

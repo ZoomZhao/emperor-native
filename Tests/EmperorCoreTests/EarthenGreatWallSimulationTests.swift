@@ -3,6 +3,57 @@ import XCTest
 @testable import EmperorCore
 
 final class EarthenGreatWallSimulationTests: XCTestCase {
+    func testBadalingBindingsMapAllLogicalSegmentsOntoDistinctBakedBlocks() throws {
+        let bindings = EarthenGreatWallLayout.badalingMapBindings
+        XCTAssertEqual(bindings.count, 35)
+        XCTAssertEqual(Set(bindings.map(\.segmentIndex)), Set(0..<35))
+        XCTAssertEqual(Set(bindings.map(\.worldOrigin)).count, 35)
+        XCTAssertEqual(bindings.first?.worldOrigin, GridPoint(x: 71, y: 149))
+        XCTAssertEqual(bindings.last?.worldOrigin, GridPoint(x: 55, y: 32))
+        XCTAssertEqual(bindings.first?.modeImageID, 225)
+        XCTAssertEqual(bindings.last?.modeImageID, 222)
+        XCTAssertEqual(
+            EarthenGreatWallLayout.original.badalingSegmentIndex(
+                containing: GridPoint(x: 72, y: 150)
+            ),
+            0
+        )
+        XCTAssertNil(
+            EarthenGreatWallLayout.original.badalingSegmentIndex(
+                containing: GridPoint(x: 71, y: 141)
+            )
+        )
+    }
+
+    func testEarthenWallStageSpritesUseStagePackAndCutUntilFinal() throws {
+        let early = OriginalBuildingSpriteCatalog.earthenGreatWallSprites(
+            stage: 3,
+            modeImageID: 225,
+            cutVariant: 25
+        )
+        XCTAssertEqual(early, [
+            BuildingSpriteReference(
+                archiveBaseName: "China_Mon_Earthen_Greatwall_3",
+                imageID: 225
+            ),
+            BuildingSpriteReference(
+                archiveBaseName: "China_Mon_Tumulus",
+                imageID: 507
+            ),
+        ])
+        XCTAssertEqual(
+            OriginalBuildingSpriteCatalog.earthenGreatWallSprites(
+                stage: 11,
+                modeImageID: 225,
+                cutVariant: 25
+            ),
+            [BuildingSpriteReference(
+                archiveBaseName: "China_Mon_Earthen_Greatwall_10",
+                imageID: 225
+            )]
+        )
+    }
+
     func testOriginalSubsFileParsesThirtyFiveIndependentSegments() throws {
         let sourceURL = GameDataSource.defaultRoot
             .appendingPathComponent("Model/Mon_Earthen_Great_Wall_subs.txt")

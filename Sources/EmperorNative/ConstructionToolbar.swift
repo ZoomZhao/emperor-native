@@ -79,6 +79,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
     // Sprint 2 — expanded building menu (20 new tools).
     case irrigationPump
     case grandCanalSegment
+    case earthenGreatWallSegment
     case largePalace
     case largePalacePhase
     case farmland
@@ -176,6 +177,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .daoistShrine: "道观"
         case .irrigationPump: "灌溉水车"
         case .grandCanalSegment: "郑国渠分段"
+        case .earthenGreatWallSegment: "土长城分段"
         case .largePalace: "大宫殿"
         case .largePalacePhase: "大宫殿施工"
         case .farmland: "农田"
@@ -254,6 +256,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .daoistShrine: "sparkles"
         case .irrigationPump: "water.waves"
         case .grandCanalSegment: "hammer.circle.fill"
+        case .earthenGreatWallSegment: "hammer.circle"
         case .largePalace: "building.columns.fill"
         case .largePalacePhase: "hammer.circle.fill"
         case .farmland: "leaf.circle.fill"
@@ -305,7 +308,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
     var buildingID: Int? {
         switch self {
         case .inspect, .demolish, .clearLand, .road, .rally,
-             .grandCanalSegment, .largePalacePhase: nil
+             .grandCanalSegment, .earthenGreatWallSegment, .largePalacePhase: nil
         case .house: 2
         case .eliteHouse: 11
         case .warehouse: 54
@@ -399,7 +402,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
             .aesthetics
         case .laborersCamp, .carpentersGuild, .masonsGuild, .ceramistsGuild,
              .tumulus, .grandTumulus, .greatTemple, .splendidTemple, .grandPagoda,
-             .grandCanalSegment, .largePalace, .largePalacePhase:
+             .grandCanalSegment, .earthenGreatWallSegment, .largePalace, .largePalacePhase:
             .monuments
         case .inspect, .demolish, .clearLand, .road, .roadblock, .rally:
             .infrastructure
@@ -556,6 +559,8 @@ struct ConstructionToolbar: View {
             "放在河岸清地，须同时邻接水面与道路 · 右键取消"
         case .grandCanalSegment:
             "点击地图中任意 4×4 郑国渠段推进当前施工阶段 · 右键取消"
+        case .earthenGreatWallSegment:
+            "点击 Badaling 山脊上的 4×4 土长城段推进当前施工阶段 · 右键取消"
         case .largePalacePhase:
             "点击已放置的大宫殿推进下一施工相位 · 右键取消"
         default:
@@ -640,6 +645,9 @@ struct ConstructionToolbar: View {
     private func isAvailable(_ tool: NativeConstructionTool) -> Bool {
         if tool == .grandCanalSegment {
             return city.aesthetics.grandCanalProject?.isComplete == false
+        }
+        if tool == .earthenGreatWallSegment {
+            return city.aesthetics.earthenGreatWallProject?.isComplete == false
         }
         if tool == .largePalacePhase {
             return city.aesthetics.largePalaceProject?.isComplete == false
