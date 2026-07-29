@@ -649,9 +649,11 @@ public struct CampaignMissionRuntimeState: Sendable, Hashable, Codable {
                 )
                 if let code = CampaignCityStatusCode(rawValue: occurrence.statusChangeCode),
                    let cityID = occurrence.cityFromID {
-                    if code == .tradeSuspended || code == .tradeShutsDown {
+                    if code == .tradeSuspended || code == .tradeShutsDown
+                        || code == .cityBecomesInactive {
                         city.setCampaignTradeOpen(false, partnerID: cityID)
-                    } else if code == .tradeResumed || code == .tradeOpensUp {
+                    } else if code == .tradeResumed || code == .tradeOpensUp
+                        || code == .cityBecomesActive {
                         city.setCampaignTradeOpen(true, partnerID: cityID)
                     }
                 }

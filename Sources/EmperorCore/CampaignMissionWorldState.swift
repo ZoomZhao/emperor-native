@@ -14,6 +14,12 @@ public struct CampaignMissionWorldState: Sendable, Hashable {
     public let playerCityName: String
     public let tradePartners: [TradePartner]
 
+    public var agriculturalClimate: AgriculturalClimate {
+        OriginalAgriculturalClimateCatalog.climate(
+            forMapFileName: mapAssignment.embeddedMap.mapURL.lastPathComponent
+        )
+    }
+
     public init(
         missionID: Int,
         missionSettings: CampaignMissionSettingsArchive,

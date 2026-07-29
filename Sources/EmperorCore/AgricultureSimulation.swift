@@ -14,6 +14,22 @@ public enum AgriculturalClimate: String, CaseIterable, Sendable, Hashable, Codab
     }
 }
 
+/// Climate assignments verified against the original campaign maps.
+///
+/// Campaign Creator mission settings do not serialize a climate field beside
+/// their resource permissions, so the original map identity is the durable
+/// source available to the native runtime.
+public enum OriginalAgriculturalClimateCatalog {
+    public static func climate(forMapFileName fileName: String) -> AgriculturalClimate {
+        switch fileName.lowercased() {
+        case "xiangjun.map":
+            return .humid
+        default:
+            return .temperate
+        }
+    }
+}
+
 public enum AgriculturalCategory: String, Sendable, Hashable, Codable {
     case field
     case hemp

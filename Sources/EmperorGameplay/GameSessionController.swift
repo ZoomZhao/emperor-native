@@ -228,6 +228,7 @@ public final class GameSessionController: @unchecked Sendable {
         let result = Self.applyConstruction(
             selectedConstruction,
             agriculturalCrop: selectedAgriculturalCrop,
+            agriculturalClimate: activeWorld?.agriculturalClimate ?? .temperate,
             at: point,
             orientation: orientation,
             city: &previewCity,
@@ -342,6 +343,7 @@ public final class GameSessionController: @unchecked Sendable {
         guard Self.applyConstruction(
             selectedConstruction,
             agriculturalCrop: selectedAgriculturalCrop,
+            agriculturalClimate: activeWorld?.agriculturalClimate ?? .temperate,
             at: point,
             orientation: orientation,
             city: &updated,
@@ -437,6 +439,7 @@ public final class GameSessionController: @unchecked Sendable {
     private static func applyConstruction(
         _ tool: PlayerConstructionTool,
         agriculturalCrop: AgriculturalCrop,
+        agriculturalClimate: AgriculturalClimate,
         at point: GridPoint,
         orientation: IsometricBuildingOrientation,
         city: inout DeterministicCityState,
@@ -518,6 +521,7 @@ public final class GameSessionController: @unchecked Sendable {
             city.constructAgriculturalPlot(
                 crop: agriculturalCrop,
                 at: point,
+                climate: agriculturalClimate,
                 rules: rules
             ) != nil
         case .irrigationPump:
