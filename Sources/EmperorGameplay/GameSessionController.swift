@@ -194,6 +194,14 @@ public final class GameSessionController: @unchecked Sendable {
             }
             city = updated
             result = .applied("地图纪念碑 #\(buildingID) 已开工")
+        case let .advanceEarthenGreatWallSegment(index):
+            guard var updated = city,
+                  updated.advanceEarthenGreatWallSegment(index: index) != nil else {
+                result = .rejected("该段土长城尚未具备下一阶段所需物资与工期")
+                break
+            }
+            city = updated
+            result = .applied("土长城第 \(index + 1) 段进入下一施工阶段")
         case let .setSpeed(requested):
             if campaignRuntime?.outcome != .running, requested > 0 {
                 result = .rejected("mission has reached a terminal outcome")

@@ -2109,6 +2109,25 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         return segment
     }
 
+    public func canAdvanceEarthenGreatWallSegment(index: Int) -> Bool {
+        guard let wall = aesthetics.earthenGreatWallProject,
+              let project = aesthetics.monuments.first(where: { $0.id == wall.projectID }) else {
+            return false
+        }
+        var preview = wall
+        return preview.advanceSegment(index: index, project: project)
+    }
+
+    @discardableResult
+    public mutating func advanceEarthenGreatWallSegment(index: Int) -> Int? {
+        var state = aestheticState ?? DeterministicAestheticState()
+        guard let segment = state.advanceEarthenGreatWallSegment(index: index) else {
+            return nil
+        }
+        aestheticState = state
+        return segment
+    }
+
     public func canAdvanceLargePalacePhase(at point: GridPoint) -> Bool {
         guard let palace = aesthetics.largePalaceProject,
               palace.contains(point),

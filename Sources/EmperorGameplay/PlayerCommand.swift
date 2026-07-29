@@ -170,6 +170,7 @@ public enum PlayerCommand: Sendable, Hashable, Codable {
     )
     case setTaxBand(Int)
     case beginMapMonument(buildingID: Int)
+    case advanceEarthenGreatWallSegment(index: Int)
     case setSpeed(Int)
     case advanceOneTick
     case replayMission

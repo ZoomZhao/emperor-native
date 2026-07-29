@@ -208,6 +208,7 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
     public private(set) var constructions: [AestheticConstruction]
     public private(set) var monuments: [MonumentProject]
     public private(set) var grandCanalProject: GrandCanalProjectRuntime?
+    public private(set) var earthenGreatWallProject: EarthenGreatWallProjectRuntime?
     public private(set) var largePalaceProject: LargePalaceProjectRuntime?
     public private(set) var lastMonumentSettlement: MonumentMonthlySettlement?
     private var nextConstructionID: Int
@@ -216,6 +217,7 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
         constructions = []
         monuments = []
         grandCanalProject = nil
+        earthenGreatWallProject = nil
         largePalaceProject = nil
         lastMonumentSettlement = nil
         nextConstructionID = 1
@@ -284,6 +286,9 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
         if buildingID == GrandCanalProjectRuntime.buildingID {
             grandCanalProject = GrandCanalProjectRuntime(projectID: id)
         }
+        if buildingID == EarthenGreatWallProjectRuntime.buildingID {
+            earthenGreatWallProject = EarthenGreatWallProjectRuntime(projectID: id)
+        }
         return id
     }
 
@@ -300,6 +305,20 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
             monuments[monumentIndex].markSegmentedConstructionComplete()
         }
         return segmentIndex
+    }
+
+    @discardableResult
+    mutating func advanceEarthenGreatWallSegment(index: Int) -> Int? {
+        guard var wall = earthenGreatWallProject,
+              let monumentIndex = monuments.firstIndex(where: { $0.id == wall.projectID }),
+              wall.advanceSegment(index: index, project: monuments[monumentIndex]) else {
+            return nil
+        }
+        earthenGreatWallProject = wall
+        if wall.isComplete {
+            monuments[monumentIndex].markSegmentedConstructionComplete()
+        }
+        return index
     }
 
     @discardableResult
@@ -322,6 +341,9 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
         monuments.removeAll { $0.id == id }
         if grandCanalProject?.projectID == id {
             grandCanalProject = nil
+        }
+        if earthenGreatWallProject?.projectID == id {
+            earthenGreatWallProject = nil
         }
         if largePalaceProject?.projectID == id {
             largePalaceProject = nil
@@ -383,6 +405,8 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
                         performed,
                         allowCompletion: monuments[index].buildingID
                             != GrandCanalProjectRuntime.buildingID
+                            && monuments[index].buildingID
+                            != EarthenGreatWallProjectRuntime.buildingID
                             && monuments[index].buildingID
                             != LargePalaceProjectRuntime.buildingID
                     )

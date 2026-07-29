@@ -42,9 +42,28 @@ public struct CampaignInvasionAlert: Identifiable, Sendable, Hashable, Codable {
     public let id: String
     public let occurrenceID: String
     public let sourceCityID: Int?
+    public let secondarySelectionID: Int?
     public let strength: Int
     public let entryPoint: GridPoint?
     public private(set) var status: CampaignInvasionStatus
+
+    public init(
+        id: String,
+        occurrenceID: String,
+        sourceCityID: Int?,
+        secondarySelectionID: Int? = nil,
+        strength: Int,
+        entryPoint: GridPoint?,
+        status: CampaignInvasionStatus
+    ) {
+        self.id = id
+        self.occurrenceID = occurrenceID
+        self.sourceCityID = sourceCityID
+        self.secondarySelectionID = secondarySelectionID
+        self.strength = strength
+        self.entryPoint = entryPoint
+        self.status = status
+    }
 
     public mutating func resolve(_ status: CampaignInvasionStatus) {
         guard self.status == .awaitingDefense else { return }
@@ -133,6 +152,7 @@ public extension DeterministicCityState {
                 id: occurrence.id,
                 occurrenceID: occurrence.id,
                 sourceCityID: occurrence.cityFromID,
+                secondarySelectionID: occurrence.secondarySelectionID,
                 strength: max(1, occurrence.amount ?? 1),
                 entryPoint: entry,
                 status: .awaitingDefense

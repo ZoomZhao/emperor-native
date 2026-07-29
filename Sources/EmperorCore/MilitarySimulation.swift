@@ -799,10 +799,11 @@ public struct DeterministicMilitaryState: Sendable, Hashable, Codable {
     }
 
     private static func enemyTypeID(for alert: CampaignInvasionAlert) -> Int {
-        // The Campaign Creator's secondary army selector is not retained in
-        // the runtime alert yet. Chinese infantry is the original table's
-        // deterministic baseline for ordinary campaign invasions.
-        0
+        // Empire city 10 is the Nomad Camps in the shipped Qin campaign.
+        // Its original enemy table uses Xiongnu Infantry (6); retaining the
+        // secondary selector keeps that identity deterministic through combat.
+        if alert.secondarySelectionID == 10 { return 6 }
+        return 0
     }
 
     private static func distance(_ lhs: GridPoint, _ rhs: GridPoint) -> Int {

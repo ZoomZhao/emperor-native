@@ -4047,6 +4047,49 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testQinNomadInvasionRetainsSecondarySelectorAndUsesXiongnuInfantry() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let rules = EconomyRulesEngine(models: original)
+        let invasionPoint = GridPoint(x: 9, y: 4)
+        let terrain = try DeterministicTerrainState(
+            width: 10,
+            height: 8,
+            terrainRawValues: [UInt32](repeating: 0, count: 80),
+            authoredPoints: EmperorMapAuthoredPoints(landInvasion: [invasionPoint])
+        )
+        var city = DeterministicCityState(year: -209, treasury: 18_000, terrain: terrain)
+        _ = city.buildRoad((0..<10).map { GridPoint(x: $0, y: 4) }, rules: rules)
+        _ = try XCTUnwrap(city.constructMilitaryFort(
+            buildingID: 221,
+            at: GridPoint(x: 0, y: 0),
+            rules: rules
+        ))
+        let occurrence = CampaignEventOccurrence(
+            eventID: 2,
+            occurrenceIndex: 0,
+            kindRawValue: CampaignEventKind.invasion.rawValue,
+            triggerMode: .oneTime,
+            relativeYear: 6,
+            month: 6,
+            amount: 9,
+            cityFromID: 0,
+            secondarySelectionID: 10,
+            timeAllowed: 6
+        )
+
+        _ = city.applyCampaignCityEvent(occurrence)
+        XCTAssertEqual(city.campaignEvents.invasions.first?.secondarySelectionID, 10)
+        XCTAssertEqual(city.campaignEvents.invasions.first?.strength, 9)
+        _ = city.advanceMilitary(maximumStepsPerUnit: 1, models: original.figures)
+        let force = try XCTUnwrap(city.military.enemyForces.first)
+        XCTAssertEqual(force.enemyTypeID, 6)
+        XCTAssertEqual(force.soldierCount, 9)
+        XCTAssertEqual(force.route.first, invasionPoint)
+    }
+
     func testVersion031WallsGateTowerSentriesAndMultiFormationOrders() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")
