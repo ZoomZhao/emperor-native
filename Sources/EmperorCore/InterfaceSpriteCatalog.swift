@@ -8,6 +8,7 @@ import Foundation
 /// offsets or silently substituting unrelated symbols.
 public enum OriginalInterfaceIcon: String, CaseIterable, Sendable, Hashable {
     case mainMenu
+    case compass
     case worldMap
     case cityView
     case objectives
@@ -49,6 +50,7 @@ public enum OriginalInterfaceSpriteCatalog {
     /// button in the original strip — not the road tool.
     private static let baseImageIDs: [OriginalInterfaceIcon: Int] = [
         .mainMenu: 1_259,
+        .compass: 1_227,
         .worldMap: 1_263,
         .cityView: 1_267,
         .objectives: 1_271,
@@ -88,6 +90,49 @@ public enum OriginalInterfaceSpriteCatalog {
                 imageID(for: icon, state: $0)
             }
         })
+    }
+}
+
+/// Original artwork used by the fixed 1024×768 city chrome.
+///
+/// These records are not buttons, so they deliberately live outside the
+/// four-state semantic icon table above.
+public enum OriginalInterfaceChromeSpriteCatalog {
+    public static let archiveBaseName = OriginalInterfaceSpriteCatalog.archiveBaseName
+    public static let cityHUDBackgroundImageID = 1_221
+    public static let cityPanelBackgroundImageID = 1_223
+    public static let treasuryImageID = 652
+    // The authored labor icon is visible in the original HUD, but its source
+    // record is not yet verified. Do not use #311: it includes a terrain tile.
+    public static let laborImageID: Int? = nil
+
+    /// `China_Interface_New_parts` stores the twelve zodiac heads in an
+    /// archive-specific order rather than calendar order.
+    private static let zodiacImageIDs: [String: Int] = [
+        "鼠": 1_364,
+        "牛": 1_372,
+        "虎": 1_370,
+        "兔": 1_363,
+        "龙": 1_365,
+        "蛇": 1_373,
+        "马": 1_374,
+        "羊": 1_368,
+        "猴": 1_367,
+        "鸡": 1_369,
+        "狗": 1_371,
+        "猪": 1_366,
+    ]
+
+    public static func zodiacImageID(for animal: String) -> Int? {
+        zodiacImageIDs[animal]
+    }
+
+    public static var requiredImageIDs: Set<Int> {
+        Set([
+            cityHUDBackgroundImageID,
+            cityPanelBackgroundImageID,
+            treasuryImageID,
+        ]).union(zodiacImageIDs.values)
     }
 }
 

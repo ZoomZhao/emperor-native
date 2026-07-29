@@ -17,6 +17,7 @@ private struct Arguments {
     let logDirectory: URL
     let timeout: TimeInterval
     let snapshotLibrary: Bool
+    let snapshotQin: Bool
 
     init() throws {
         let values = Array(CommandLine.arguments.dropFirst())
@@ -29,7 +30,8 @@ private struct Arguments {
         guard let appPath = value(after: "--app") else {
             throw SmokeFailure(
                 "usage: emperor-ui-smoke --app /path/EmperorNative.app "
-                    + "[--log-dir path] [--timeout seconds] [--snapshot-library]",
+                    + "[--log-dir path] [--timeout seconds] "
+                    + "[--snapshot-library | --snapshot-qin]",
                 code: SmokeExit.usage
             )
         }
@@ -38,6 +40,7 @@ private struct Arguments {
             .standardizedFileURL
         timeout = value(after: "--timeout").flatMap(TimeInterval.init) ?? 480
         snapshotLibrary = values.contains("--snapshot-library")
+        snapshotQin = values.contains("--snapshot-qin")
     }
 }
 
@@ -565,7 +568,7 @@ private func captureFailure(application: AXUIElement, log: EvidenceLog) {
 private func launch(
     _ appURL: URL,
     logDirectory: URL,
-    autoStartXia: Bool
+    autoStartCampaign: String?
 ) throws -> NSRunningApplication {
     guard FileManager.default.fileExists(atPath: appURL.path) else {
         throw SmokeFailure("app bundle does not exist: \(appURL.path)", code: SmokeExit.data)
@@ -579,8 +582,10 @@ private func launch(
         "--ui-smoke-log-dir", logDirectory.path,
         "--save-directory", logDirectory.appendingPathComponent("saves").path,
     ]
-    if autoStartXia {
+    if autoStartCampaign == "xia" {
         configuration.arguments.append("--ui-smoke-auto-start-xia")
+    } else if autoStartCampaign == "qin" {
+        configuration.arguments.append("--ui-smoke-auto-start-qin")
     }
     let semaphore = DispatchSemaphore(value: 0)
     var launched: NSRunningApplication?
@@ -595,6 +600,7 @@ private func launch(
     }
     if let launchError { throw SmokeFailure("app launch failed: \(launchError.localizedDescription)") }
     guard let launched else { throw SmokeFailure("workspace returned no running application") }
+    launched.unhide()
     launched.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
     return launched
 }
@@ -683,7 +689,9 @@ private func runSmoke(arguments: Arguments) throws {
     let app = try launch(
         arguments.appURL,
         logDirectory: arguments.logDirectory,
-        autoStartXia: !arguments.snapshotLibrary
+        autoStartCampaign: arguments.snapshotLibrary
+            ? nil
+            : arguments.snapshotQin ? "qin" : "xia"
     )
     let application = AXUIElementCreateApplication(app.processIdentifier)
     log.record("launched pid=\(app.processIdentifier) app=\(arguments.appURL.path)")
@@ -717,6 +725,43 @@ private func runSmoke(arguments: Arguments) throws {
                 throw SmokeFailure("could not capture the classic library window")
             }
             log.record("library screenshot=\(screenshotURL.path)")
+            return
+        }
+
+        if arguments.snapshotQin {
+            _ = try waitForElement(
+                in: application,
+                identifier: "city-canvas",
+                timeout: 45
+            )
+            let treasury = try waitForElement(
+                in: application,
+                identifier: "hud-treasury-metric",
+                timeout: 15,
+                requireEnabled: false
+            )
+            let treasuryValue = stringAttribute(
+                treasury,
+                kAXValueAttribute as CFString
+            ) ?? stringAttribute(treasury, kAXDescriptionAttribute as CFString) ?? ""
+            guard treasuryValue.contains("15000") || treasuryValue.contains("15,000") else {
+                throw SmokeFailure(
+                    "Qin M1 HUD did not expose the authored treasury: \(treasuryValue)"
+                )
+            }
+            _ = try waitForElement(
+                in: application,
+                identifier: "hud-zodiac-metric",
+                timeout: 15,
+                requireEnabled: false
+            )
+            Thread.sleep(forTimeInterval: 2)
+            let screenshotURL = arguments.logDirectory
+                .appendingPathComponent("qin-m1-native-city-baseline.png")
+            guard captureWindow(application: application, to: screenshotURL) else {
+                throw SmokeFailure("could not capture the Qin M1 city baseline")
+            }
+            log.record("Qin M1 city baseline=\(screenshotURL.path)")
             return
         }
 

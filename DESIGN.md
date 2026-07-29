@@ -1,93 +1,17 @@
 ---
-version: alpha
-name: Imperial Bronze Chronicle
-description: "Emperor Native 的经典中国古代城市营造界面系统：地图优先、铜褐器物感、金色信息层级与清晰的 macOS 原生交互。"
-colors:
-  background-app: "#0E110E"
-  surface: "#381F11"
-  surface-deep: "#1B1109"
-  surface-raised: "#4A2611"
-  surface-control: "#4D2E18"
-  primary: "#F0BA40"
-  on-primary: "#261409"
-  secondary: "#A66329"
-  tertiary: "#C72E1A"
-  on-surface: "#FFF8E8"
-  on-surface-muted: "#C8B9A3"
-  success: "#6FAF68"
-  warning: "#E58B2A"
-  error: "#C72E1A"
-  placement-valid: "rgba(85, 185, 106, 0.58)"
-  placement-invalid: "rgba(217, 65, 50, 0.62)"
-  overlay-scrim: "rgba(0, 0, 0, 0.62)"
-typography:
-  display:
-    fontFamily: "SarasaTermSCNerd-Bold"
-    fontSize: 28px
-    fontWeight: 700
-    lineHeight: 1.15
-    letterSpacing: -0.01em
-  headline-lg:
-    fontFamily: "SarasaTermSCNerd-Bold"
-    fontSize: 20px
-    fontWeight: 700
-    lineHeight: 1.2
-  headline-md:
-    fontFamily: "SarasaTermSCNerd-Bold"
-    fontSize: 17px
-    fontWeight: 700
-    lineHeight: 1.25
-  headline-sm:
-    fontFamily: "SarasaTermSCNerd-SemiBold"
-    fontSize: 14px
-    fontWeight: 600
-    lineHeight: 1.3
-  body-md:
-    fontFamily: "SarasaTermSCNerd-Regular"
-    fontSize: 13px
-    fontWeight: 400
-    lineHeight: 1.45
-  body-sm:
-    fontFamily: "SarasaTermSCNerd-Regular"
-    fontSize: 12px
-    fontWeight: 400
-    lineHeight: 1.4
-  label-md:
-    fontFamily: "SarasaTermSCNerd-SemiBold"
-    fontSize: 11px
-    fontWeight: 600
-    lineHeight: 1.25
-  label-sm:
-    fontFamily: "SarasaTermSCNerd-SemiBold"
-    fontSize: 10px
-    fontWeight: 600
-    lineHeight: 1.2
-  caption:
-    fontFamily: "SarasaTermSCNerd-Regular"
-    fontSize: 9px
-    fontWeight: 500
-    lineHeight: 1.25
-  metric:
-    fontFamily: "SarasaTermSCNerd-Bold"
-    fontSize: 12px
-    fontWeight: 700
-    lineHeight: 1.2
-rounded:
-  none: 0px
-  subtle: 2px
-  dialog: 4px
-  native-card: 12px
-  native-modal: 22px
-  full: 9999px
-spacing:
-  none: 0px
-  base: 4px
-  xs: 4px
-  sm: 8px
-  md: 12px
-  lg: 16px
-  xl: 24px
-  xxl: 32px
+version: reproduction-alpha
+name: Emperor Original Application Reproduction
+description: "Emperor Native 的玩家界面以复刻《皇帝：龙之崛起》原版应用为核心目标；原版素材、构图、尺寸、状态和交互优先于重新设计。"
+goal:
+  player-ui: "faithful-reproduction"
+  diagnostics-ui: "native-development-surface"
+reference-order:
+  - original-runtime-assets
+  - original-application-screenshots
+  - original-behavior-and-data
+  - platform-compatibility
+  - temporary-fallbacks
+geometry:
   classic-logical-width: 1024px
   classic-logical-height: 768px
   window-min-width: 1024px
@@ -95,235 +19,232 @@ spacing:
   window-default-width: 1024px
   window-default-height: 768px
   city-map-column-width: 800px
-  hud-height: 40px
-  panel-width: 224px
-  panel-header-height: 34px
+  control-panel-width: 224px
+  top-interface-height: 40px
   category-rail-width: 54px
-  command-row-height: 36px
-  population-advisor-height: 210px
-  city-navigation-height: 40px
+  panel-content-width: 170px
   minimap-width: 112px
   minimap-height: 112px
-components:
-  imperial-hud:
-    backgroundColor: "{colors.surface-raised}"
-    textColor: "{colors.primary}"
-    typography: "{typography.label-md}"
-    rounded: "{rounded.none}"
-    height: "{spacing.hud-height}"
-    padding: "{spacing.md}"
-  control-panel:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.on-surface}"
-    rounded: "{rounded.none}"
-    width: "{spacing.panel-width}"
-    padding: "{spacing.none}"
-  panel-header:
-    backgroundColor: "{colors.surface-deep}"
-    textColor: "{colors.primary}"
-    typography: "{typography.headline-sm}"
-    rounded: "{rounded.none}"
-    height: "{spacing.panel-header-height}"
-    padding: "10px"
-  button-primary:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.label-md}"
-    rounded: "{rounded.none}"
-    padding: "{spacing.sm}"
-  button-secondary:
-    backgroundColor: "{colors.surface-control}"
-    textColor: "{colors.on-surface}"
-    typography: "{typography.label-md}"
-    rounded: "{rounded.none}"
-    padding: "{spacing.sm}"
-  button-selected:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.label-md}"
-    rounded: "{rounded.none}"
-    padding: "{spacing.sm}"
-  map-hint:
-    backgroundColor: "{colors.surface-deep}"
-    textColor: "{colors.on-surface}"
-    typography: "{typography.body-sm}"
-    rounded: "{rounded.none}"
-    padding: "9px"
-  mission-dialog:
-    backgroundColor: "{colors.surface-raised}"
-    textColor: "{colors.on-surface}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.dialog}"
-    padding: "{spacing.xl}"
-    width: "620px"
-  minimap:
-    backgroundColor: "{colors.surface-deep}"
-    rounded: "{rounded.none}"
-    width: "{spacing.minimap-width}"
-    height: "{spacing.minimap-height}"
+  bottom-navigation-height: 40px
+fallback-colors:
+  background-app: "#0E110E"
+  surface: "#381F11"
+  surface-deep: "#1B1109"
+  surface-raised: "#4A2611"
+  surface-control: "#4D2E18"
+  highlight-gold: "#F0BA40"
+  border-bronze: "#A66329"
+  text-light: "#FFF8E8"
+  warning-gold: "#E58B2A"
+  danger-red: "#C72E1A"
+  placement-valid: "rgba(85, 185, 106, 0.58)"
+  placement-invalid: "rgba(217, 65, 50, 0.62)"
 ---
 
-# Emperor Native Design System
+# Emperor Native 原版应用复刻规范
 
-## Overview
+## 核心目标
 
-Emperor Native 是面向 macOS 的《皇帝：龙之崛起》原生重实现。界面应让玩家感觉自己在使用一套古代中国城市治理器具，而不是现代 SaaS 仪表盘：地图和原版运行时素材是主角，界面像包围地图的铜木框架，信息密集但秩序清楚。
+Emperor Native 的玩家界面不是受《皇帝：龙之崛起》启发的现代重设计，也不是一套可自由扩展的“古风设计系统”。它的核心目标是：在 macOS 上尽可能忠实地复刻原版应用，包括画面构图、逻辑尺寸、原版素材、控件密度、状态反馈、信息层级、交互顺序和视觉节奏。
 
-设计气质来自参考截图中的四个稳定特征：
+判断一个玩家界面改动是否正确时，首要问题不是“它是否更现代、更整洁或更符合一般 SwiftUI 习惯”，而是：
 
-- **地图优先：** 城市地图或叙事插画占据最大面积，控制面板停靠在边缘，不以浮动卡片遮挡主要内容。
-- **铜册质感：** 面板使用深褐、赭石和低对比度纹理；一像素金铜色线条组织层级。
-- **帝王金强调：** 标题、数值重点和选中态使用金色，红色只用于危险、破坏、失败或少量品牌时刻。
-- **古典框架、原生行为：** 外观向经典游戏致敬，文字、焦点、键盘操作、菜单和辅助功能仍遵循现代 macOS 习惯。
+1. 原版在同一状态下显示什么？
+2. 它位于哪里、占多大、使用哪张素材和哪种状态？
+3. 操作后是否产生与原版相同的可见反馈？
+4. 在不破坏复刻的前提下，是否保留 macOS 必需的输入、窗口和无障碍能力？
 
-界面分为两个层级：
+除非功能在原版中确实不存在且为完成原生移植所必需，否则不得自行重组玩家界面、增加常驻控件、替换信息层级或创造新的视觉语言。开发便利、个人审美和通用设计经验不能凌驾于原版证据。
 
-1. **玩家界面**包括战役选择、任务说明、城市地图、建造栏、任务结果和存档流程。它必须使用本文件的经典铜册语言，优先使用方角、边框和色块组织信息。
-2. **资料与诊断界面**包括地图/战役数据浏览、解析状态和开发诊断。它可以使用 `NavigationSplitView`、系统菜单和原生控件，也可以使用 `native-card`、`native-modal` 圆角；但色彩、排版和信息层级应与玩家界面保持亲缘关系。
+## 范围边界
 
-参考图片位于开发机的 `/Users/zoomzhao/Downloads/emperor/`，用于观察构图、色彩和交互密度。可运行的游戏素材（地图、战役、精灵、音频等）解压在仓库根目录 `GameData`，供本地开发与测试，并由打包脚本复制到应用包 Resources。
+界面分为两个明确隔离的范围：
 
-当文字规则与 YAML token 冲突时，以 token 为准。实现中的集中式主题值应引用这些 token 的等价值，避免在各个 View 中继续增加零散颜色和尺寸。
+- **玩家界面：严格复刻。** 主菜单、帐号与游戏模式、战役流程、任务说明、城市画面、右侧控制栏、世界地图、消息、目标、存档以及结果界面，都以原版应用为目标。这里不使用现代卡片式重设计。
+- **资料与诊断界面：可以原生。** 地图浏览、解析结果、开发诊断和内部工具可以使用 `NavigationSplitView`、系统表格、原生菜单和标准 macOS 控件，但不得改变玩家界面的构图或混入游戏画面。
 
-## Colors
+原版行为与 macOS 平台规则冲突时，功能正确性、可访问性和系统安全规则优先；这种偏差必须保持最小，并在代码或本文件中说明原因。
 
-配色以深铜褐为骨架，以暖金为信息高光。界面不能大面积使用纯白或系统蓝；地图本身的草地、水体、建筑和人物颜色应保持真实，不套统一棕色滤镜。
+## 证据与优先级
 
-- **Primary / Imperial Gold (`#F0BA40`)：** 标题、当前工具、当前分类、关键数字和焦点状态。一个局部区域通常只保留一个最强金色焦点。
-- **Surface Brown (`#381F11`)：** 右侧面板、工具栏和经典对话框的基础面。
-- **Deep Ink Brown (`#1B1109`)：** 地图提示、凹陷列表、迷你地图底槽和强分隔区域。
-- **Raised Bronze (`#4A2611`)：** 顶栏渐变的亮端、对话框和轻微抬升的区域。
-- **Control Brown (`#4D2E18`)：** 未选中的按钮和工具格。
-- **Border Bronze (`#A66329`)：** 1px 分隔线和控件描边；可按上下文降到约 72% 不透明度。
-- **Text Ivory (`#FFF8E8`)：** 深色表面上的主文字。辅助文字使用 `on-surface-muted`，不要仅依赖低透明度导致不可读。
-- **Imperial Red (`#C72E1A`)：** 拆除、失败、严重告警和危险态；不可作为普通按钮的第二主色。
-- **State colors：** `success` 表示达成或合法，`warning` 表示资源/条件受限，`error` 表示失败或非法。状态必须同时使用图标或文字，不能只靠颜色。
+实现和评审按以下顺序使用证据：
 
-资源图层可保留与地图语义一致的颜色：食物/水为青色、木材为绿色、石材为灰色、黏土为橙色。覆盖层应半透明，必须让地形和格子边界仍可辨认。
+1. **原版运行时素材与数据。** 仓库根目录 `GameData` 中的界面精灵、地形、建筑、人物、调色信息、文本和音频是第一手来源。
+2. **原版应用截图。** 截图用于确认组合方式、坐标、层级、裁切、状态和视觉密度。开发机参考集位于 `/Users/zoomzhao/Downloads/emperor/capcap-*.png`。
+3. **原版可观察行为与数据关系。** 当静态截图不能说明交互时，以原版运行结果、数据表和连续状态截图为依据。
+4. **macOS 兼容需求。** 窗口、键盘、文件选择、权限、辅助功能和系统错误可以采用原生机制，但玩家可见的游戏表面仍应接近原版。
+5. **临时替代。** 只有在原版证据尚未解析时才能使用占位实现，并明确标记为待替换；占位样式不能反过来成为新规范。
 
-## Typography
+禁止根据单张截图中不可见的内容自由补完。遇到证据冲突时，记录截图状态、资源 ID、游戏版本和推断，不把推断写成已确认事实。
 
-界面统一使用 `Sarasa Term SC Nerd`（[laishulu/Sarasa-Term-SC-Nerd](https://github.com/laishulu/Sarasa-Term-SC-Nerd)）。正文使用 Regular，层级标题与标签分别使用 SemiBold/Bold；数值直接利用该字体的中英文严格等宽特性。应用按字体的 PostScript 名称选择字重，字体不可用时回退到相同字号和字重的 macOS 系统字体，不能因字体缺失阻断启动或降低辅助功能可用性。
+参考截图只用于开发和比对，不得成为运行时文件依赖。打包后的可运行素材必须来自应用 Resources 中的 `GameData`。
 
-该字体采用 SIL Open Font License 1.1。当前工程不复制字体二进制；开发与运行环境需要单独安装字体。若发行包以后嵌入字体，必须同时包含上游版权声明及完整 OFL 许可证。
+## 当前城内基准截图
 
-- **Display：** 仅用于任务胜利/失败、重大章节标题和少量空状态。
-- **Headline：** 面板名称、任务名称和对话框标题；金色标题通常使用 `headline-sm` 或 `headline-md`。
-- **Body：** 任务说明、事件详情和帮助信息。连续中文正文不得低于 `body-md`。
-- **Labels：** 紧凑 HUD、工具名称、分类和次要操作。7.5–9pt 的遗留微型标签只能用于空间固定且有 tooltip/辅助标签的图标格，新界面默认不低于 `label-sm`。
-- **Metrics：** 国库、人口、日期、速度和坐标等使用 Bold；Sarasa Term SC Nerd 本身为等宽字体，因此无需叠加另一套数字字体。
+本规范所依据的城内截图包含一个 macOS 窗口：完整图片为 `2124 × 1680` 物理像素、约 `144 dpi`；去掉黑色留边和 macOS 标题栏后，游戏内容为 `2048 × 1536` 物理像素，即 Retina 2× 下精确的 `1024 × 768` 逻辑画布。
 
-标题采用简洁的中文，不使用全大写英文。正文行宽控制在约 34–48 个中文字符；长任务说明使用左对齐和 1.4–1.5 行高。省略文字时必须通过 tooltip、详情面板或辅助功能名称提供完整内容。
+截图确认了以下不可随意改变的结构：
 
-## Layout
+- 地图列宽 `800px`，右侧控制栏宽 `224px`。
+- 顶部游戏界面总高 `40px`，包含原版装饰边条和紧凑信息行。
+- 右栏左侧分类轨道宽 `54px`，右侧内容列宽 `170px`。
+- 地图从顶部界面下方一直延伸到底部，是绝对视觉主体。
+- 暂停提示是靠近地图顶部的原版横幅，而不是现代浮动 toast 或圆角卡片。
+- 顾问信息位于右栏上部；建造目录使用原版细线分隔的三列图标槽，而不是两列带文字标签的大按钮。
+- 建造目录下方是原版小图标工具行；右栏下部保留滚动内容区、迷你地图和原版底部导航。
+- 迷你地图为约 `112 × 112` 的原版逻辑尺寸，视口框直接叠加在地图上。
+- 底部导航使用原版界面精灵和原版排列，不额外加入常驻税率、资源图层、旋转或速度控制条。
 
-主城市界面采用固定框架的 **Map-first Docked Shell**：
+这些数值是复刻基线，不是响应式设计建议。若后续从原版资源或更多截图中得到更精确的边界，应修正集中式几何值和本文件，而不是在单个 View 中添加补偿常量。
 
-- 原版截图去掉 macOS 窗框后的逻辑画布固定为 `1024 × 768`；窗口默认和最小内容尺寸均以此为基线。**城内界面**更大可用空间只按整数倍缩放，采用 nearest-neighbor 插值并居中留边，禁止通过响应式拉伸改变各区域比例。**经典前台**（主菜单/帐号选择/游戏模式）放大窗口时保持 `1024 × 768` 原版插画（含龙等主体）1× 居中不放大；新增留边用从该屏安静底纹合成的大面积同色场填充（避免小块平铺接缝），并在画板边缘用原图像素外扩衔接，菜单与居中面板仍为 1×。
-- 顶部 `40px` HUD 中左侧城市栏固定 `800px`、右侧顾问标题固定 `224px`；HUD 以下地图继续占 `800px`，右侧控制面板占 `224px`。
-- HUD 从左到右依次为文件/选项/帮助、弹性空白、国库/人口、水/食物和日期。任务、城市身份及王朝徽记不占用原版没有的常驻顶栏位置，通过目标卷轴、tooltip 和辅助功能提供。
-- 右侧面板按“人口顾问（住房供给/城市行人）→ 分类轨道与建造目录 → 常驻工具条（浏览/道路/清理/拆除）→ 资源图层 → 命令/速度 → 迷你地图 → 城市/世界地图/目标导航”排列。完整任务目标由底栏卷轴按钮打开，不常驻挤占建造目录。
-- 分类轨道从 HUD 下缘开始，宽 `54px`；人口顾问和建造目录位于轨道右侧，建造目录使用紧凑网格。固定宽面板内不得再嵌套横向滚动。
-- 常驻工具条始终可见，使用原版道路图块与清除/拆除图标；不要把长城分类按钮当作修路入口。
-- 迷你地图保持 `112 × 112` 的原版逻辑尺寸，并与方向控制共同停靠在面板底部。
-- 地图上的临时提示贴近左上安全边距 `8px`，只展示当前工具和一句可执行指令。
+## 固定画布与窗口
 
-使用 4px 基线节奏。面板内部常用 8px，顶栏与较大组合使用 12px，叙事/诊断页面的大区块使用 16–24px。紧凑不等于拥挤：不同任务域之间用边框或 12px 以上空间明确分组。
+玩家界面使用固定 `1024 × 768` 逻辑画布：
 
-战役和任务选择页沿用参考图的“双册页”逻辑：左侧为可选择列表，右侧为插画/说明/目标。大幅背景图仅在有合法运行时素材时使用；否则用深色渐变和地图预览，不制造仿原版插画。
+- 默认和最小内容尺寸均为 `1024 × 768`。
+- 画布内部不得响应式重排、拉伸列宽、改变控件比例或让长文本扩大父容器。
+- 更大窗口只允许按整数倍整体缩放；地图、精灵和界面位图使用 nearest-neighbor 插值。
+- 无法达到下一整数倍时，画布保持当前倍数并居中，额外区域使用与当前原版画面相符的安静背景延展。
+- 经典前台的原版插画默认保持 1× 居中；除非原版证据表明可缩放，否则不放大背景主体。
+- 小于基线的普通可调整窗口不应出现。系统强制进入更小空间时，宁可保持完整画布并提供明确的窗口恢复方式，也不能压缩或重排右栏。
 
-城内画布不响应式重排；小于基线的窗口不允许出现，大于基线的窗口以整数倍画布或居中留边呈现。经典前台放大时插画保持 1×，留边用合成同色底纹衔接。资料与诊断页仍可以随窗口宽度在三栏、两栏之间响应式变化。
+固定宽度容器必须真正约束其子布局。SwiftUI 的 `.frame(width:)` 不等于自动裁剪内部理想尺寸；分类轨道、顾问文本、按钮行和建造网格都必须在各自的明确宽度中换行、截断或缩放，不能反向撑大 `224px` 右栏。
 
-## Elevation & Depth
+## 原版素材优先
 
-经典界面的层级主要由**色调、凹槽和边框**表达，而不是阴影：
+玩家界面的图像选择遵循以下规则：
 
-- `surface-raised` → `surface` → `surface-deep` 表示从抬升到凹陷。
-- 面板边界和按钮使用 1px `secondary` 描边；内部网格线可以降至 0.5–0.8px 或较低不透明度。
-- 铜褐纹理必须低对比、低频率，只为消除大面积纯色的塑料感；不得影响文字阅读，也不得在每个小控件中使用不同纹理。
-- 地图与控制栏之间使用明确分隔线，不使用大片投影。
-- 只有模态任务结果、系统弹窗或需要阻断地图交互的浮层可使用阴影。背景同时覆盖 `overlay-scrim`，让焦点层级明确。
+- 已解析到对应状态的原版界面精灵时，必须使用原版精灵。
+- 正常、悬停、按下、选中和禁用状态应使用原版状态帧，不用统一的金色填充重新解释。
+- 建筑、道路、地形、人物、覆盖层、光标、面板纹理、边框和图标都应优先从原版档案中运行时解析。
+- 原版位图缩放必须关闭平滑插值，不描边重绘、不加统一滤镜、不套现代阴影。
+- SF Symbols 只能作为尚未解析原版图标时的临时开发回退，不能成为玩家界面的首选图标系统。
+- 不为“更清晰”而把原版小图标改成带文字的大卡片；完整名称通过原版信息区、tooltip 或辅助功能标签提供。
 
-编织/回纹边框可以抽象为简洁的一像素双线或重复几何纹理；需要原版边框位图时，使用已打包的运行时素材，而不是额外描摹参考截图。
+若原版资产缺失，优先寻找同一界面家族中的合法状态或相邻帧；只有确认没有可用素材后才创建代码绘制的回退。
 
-## Shapes
+## 颜色、纹理与边框
 
-玩家界面的形状语言是**建筑式方正**：
+原版素材本身定义最终颜色。页首 `fallback-colors` 仅供尚无原版像素素材的临时代码绘制表面使用，不是要求覆盖原图的品牌色板。
 
-- HUD、停靠面板、按钮、工具格、列表槽、迷你地图和地图提示使用 `rounded.none`。
-- 经典任务对话框最多使用 `rounded.dialog`，边框比圆角更重要。
-- 小型状态灯、方向标记、头像和确有语义的徽章可以使用圆形；普通按钮不要随意变成胶囊。
-- 资料/诊断界面的原生卡片可以使用 `native-card`，结果模态可使用 `native-modal`。同一局部容器内不要混用方角经典控件与大圆角玻璃卡片。
-- 图标优先使用清晰的 SF Symbols 或打包游戏数据中运行时解析出的图像。图标必须服务于识别，不以龙、印章、阴阳等符号作无意义装饰。
+- 面板以原版赭褐纹理为主，保留可见但不过分强化的像素噪声和格纹。
+- 边框、分隔、回纹与凹槽优先使用原版切片；无可用切片时才以 1px 铜褐线近似。
+- 金黄用于原版已使用的标题、数值、警告和状态，不把每个选中项都改成大面积金色按钮。
+- 红色、绿色、蓝色等状态颜色以原版图标和反馈为准，不套通用产品设计语义。
+- 不使用玻璃材质、半透明毛玻璃、渐变品牌背景、大圆角卡片或大面积系统蓝。
+- 地图保持原始颜色，不添加统一棕色滤镜。
 
-选中态通过金色填充和深色前景形成实心反转；悬停态只做轻微提亮；按下态略微变暗；禁用态降低饱和度并保留可读标签。键盘焦点必须有独立、可见的焦点环，不能只复用选中态。
+## 字体与文本
 
-## Components
+文本目标是匹配原版截图中的字号、字重、对齐、像素密度和行距，而不是建立一套新的现代排版体系。
 
-### Imperial HUD
+- 优先确认原版字体资源、位图字形和实际测量结果。
+- 在原版字体尚未合法取得或解析时，使用最接近截图指标且可稳定显示中文的本地字体作为回退；回退字体不得写成永久视觉目标。
+- `Sarasa Term SC Nerd` 可以继续作为开发回退，但不再是玩家界面的规范性字体。
+- HUD、顾问栏和按钮文字保持原版的紧凑尺寸，不擅自放大并迫使其他区域重排。
+- 原版为单行的文本应保持单行；超出时按原版方式截断或缩放。原版允许多行的信息必须在固定内容列内换行，不能贡献超出父容器的理想宽度。
+- 翻译后的中文比原文长时，先调整措辞以贴近原版占位，再考虑最小幅度的字体缩放；不得扩大栏宽。
+- tooltip、VoiceOver 标签和辅助描述可以比屏幕文字更完整，但不改变可见布局。
 
-高度固定 40px，左侧宽 800px，使用由 `surface-raised` 到 `surface-deep` 的水平渐变，底部一条半透明金线。菜单保持 macOS 原生行为。指标由金色图标、弱化标签和象牙白等宽数值组成；不得添加可滚动内容或超过一行的信息。
+## 城内界面组成
 
-### Docked control panel
+### 顶部界面
 
-面板宽 224px 且占满 HUD 以下高度。顶部标题与 HUD 同高；分类轨道从标题下方直达主内容底部，人口顾问位于轨道右侧、高 210px，显示住房容量、迁入状态以及住房供给/城市行人覆盖入口。所有工具、速度、迷你地图和底栏导航都在此处闭环，避免在地图四周再堆第二套悬浮工具条。
+顶部界面复刻原版装饰边条、菜单、资源指标、生肖日期与右侧顾问标题。城市栏优先使用 `China_Interface` #1221 的蓝瓦檐和编织木纹，右侧标题使用 #1223 的顶部裁切并与左栏连续。菜单与指标必须保持单行和原版顺序：文件/选项/帮助、铜钱国库、劳工数、五行与生肖、日期；不显示原版没有的「国库/人口/水/食物/日期」文字标签。任务说明、城市身份或开发状态不得常驻插入原版没有的位置。
 
-### Category rail and construction tiles
+macOS 系统菜单栏可以提供等价命令，但不能用系统 toolbar 替换游戏画布内的原版顶部界面。
 
-分类轨道为纵向单选集合，当前分类使用 `button-selected`；非当前分类使用 `button-secondary`。建造工具为两列网格，图标在上、10–11px 标签在下。浏览、道路、清理树木与拆除另有常驻横条，避免埋在分类页里被误认成长城/纪念入口。工具必须有 tooltip、稳定的辅助功能标识和明确的选中状态。成本不足或任务禁用时使用真正的 disabled 状态，不仅降低透明度。
+### 地图画布
 
-### Buttons
+地图使用原版投影、地形、建筑和人物素材，是画面的主体。可玩区域、`offMap` 边界、层级排序、动画帧、道路连接和相机裁切都应以原版结果为基准。
 
-经典按钮使用方角、铜色 1px 描边和紧凑内边距：
+放置预览优先显示对应原版建筑精灵、占地和光标反馈。若为了可访问性增加合法/非法说明，应尽量放入 tooltip、VoiceOver 或与原版提示区一致的位置，不增加永久悬浮卡片。
 
-- 主要/选中：金底深字。
-- 次要：控制褐底象牙白字。
-- 危险：红色图标或描边并带明确动词，如“拆除”“删除存档”；不要让整页充满红色。
-- 图标按钮在固定面板中视觉尺寸可为 22–26px，但交互命中区应尽量达到 28px，并提供 tooltip。
+地图上的暂停、警告、教程和操作提示应复刻原版横幅或消息样式。只有系统级错误和权限问题可以使用原生 macOS 对话框。
 
-同一组按钮的高度和标签基线必须一致。速度控制是单选分段组，暂停、1×、2×、3× 的选中态必须一眼可见。
+### 右侧分类轨道
 
-### Mission guide and narrative panels
+分类轨道固定 `54px`，从顶部界面下缘延伸至底部导航上缘。分类顺序、图标、状态帧和间距以原版截图与界面档案为准。
 
-任务目标始终先显示“要达成什么”，再显示“下一步做什么”。固定右栏只保留卷轴入口，完整目标与下一步提示进入铜册对话框。完成态使用绿色勾选，未完成态使用金色方向提示；不要把完整教程正文塞进右栏。
+轨道按钮以图标为主，不添加常驻文字标签。可访问名称通过 tooltip 和 accessibility label 提供。选中效果使用原版选中状态，不创造新的大面积高亮规则。
 
-战役说明、任务导语和目标页可以使用较大的铜册面板，内部正文槽采用 `surface-deep`。标题和正文都应保持高对比，不仿照原版截图中偏低对比的细小黄字。
+### 顾问与建造内容
 
-### Map canvas, placement and overlays
+右侧内容列固定 `170px`。上部顾问区复刻原版按钮、人口/容量、迁入意愿和限制原因的分区与居中方式。
 
-地图必须是视觉重心。建筑、道路、人物和地形使用原版运行时精灵或确定性的原生渲染，不在其上加统一色调蒙版。原地图的 `offMap` 存储边界不显示为可玩的菱形格；可玩陆地缺少直接图像记录时使用原版草地底图补绘，不能暴露纯色解析占位。建筑放置预览应显示对应原版精灵的半透明落点形态，并完整覆盖 footprint：合法为 `placement-valid`，非法为 `placement-invalid`，并在提示中说明原因；只有没有可用精灵的道路、清理或调试工具可以仅使用格子反馈。拖拽、点击、旋转和相机移动必须共享同一套命中测试与视觉反馈。
+建造目录按原版使用三列图标槽。图标槽的边界、空槽、选中状态、禁用状态和滚动行为都要与原版一致：
 
-地图提示使用 `map-hint`，只保留工具名和一条动作指令。浏览模式悬停住宅时显示当前等级、下一等级以及实时升级缺口；点击后进入完整建筑详情。需要长期阅读的信息进入右栏或对话框。
+- 不改为两列大按钮。
+- 不在每个槽中常驻显示工具名称。
+- 不因某条说明、建筑名称或数字改变列宽。
+- 不把原版下方工具行拆成多个现代功能分组。
+- 暂未实现的原版功能保留正确位置和禁用状态，不用新功能填补空位。
 
-### Minimap
+### 迷你地图与底部导航
 
-迷你地图固定在右栏底部，显示地图全貌、当前视口边框和可点击跳转。颜色来自地图语义而不是面板装饰色。方向按钮与迷你地图靠近，但不得遮挡地图内容。其下 40px 底栏使用原版四态接口精灵提供城市、世界地图与任务目标导航；缺少帝国数据时世界地图必须显示 disabled 态。
+迷你地图、滚动槽、视口框和周围空白按原版位置复刻。地图内容来自真实世界状态，不使用装饰性色块替代。
 
-### Dialogs and mission outcomes
+底部导航保持原版五枚图标的数量、顺序和状态：成/消息入口、视角罗盘、城市、世界地图、目标卷轴。按钮直接使用对应四态原版精灵，不在外侧增加方格底和描边；没有原版常驻位置的命令通过键盘、系统菜单、上下文界面或相应原版窗口提供。
 
-玩家流程中的对话框使用铜册表面、细金铜边框和明确标题。结果模态在 62% 黑色遮罩上居中，最大宽 620px。胜利和失败分别使用成功绿与帝王红，但正文仍为象牙白；主操作放在最前，重玩、读取和返回保持清楚的次级层级。
+## 前台、对话框与其他玩家页面
 
-系统级文件选择、错误恢复和权限提示保留原生 macOS 控件，不伪装成游戏内面板。
+主菜单、帐号选择、游戏模式、战役选择、任务说明、世界地图、消息、目标、存档和结果页面都采用同一复刻方法：
 
-### Loading, empty and error states
+- 先收集同状态原版截图和资源。
+- 建立原版逻辑坐标与层级。
+- 使用原版切片、插画、按钮状态和文字区域。
+- 对照截图实现，不先设计新的 SwiftUI 信息架构。
 
-加载状态说明正在索引、解析或初始化的具体对象。错误状态提供原因与可执行恢复动作。空状态使用一个图标、短标题和一句说明即可，不为填满空间增加装饰图。
+原版使用整屏插画或册页时，保持其构图和交互热点。原版使用模态窗口时，复刻其尺寸、边框、遮罩和按钮顺序。系统文件选择器、权限弹窗和崩溃恢复仍使用 macOS 原生界面。
 
-### Accessibility and input
+## 交互、键盘与无障碍
 
-所有图标按钮、地图工具、速度项、任务和结果操作都需要稳定的 accessibility label/identifier。保留已有自动化依赖的标识。键盘快捷键至少覆盖保存、载入和旋转；菜单项与按钮应呈现相同命令状态。正常正文保持 WCAG AA 级对比，颜色状态同时用文字/图标表达，并尊重 Reduce Motion 与系统字体可读性需求。
+复刻视觉不意味着复制原版的技术限制：
 
-## Do's and Don'ts
+- 保留原版鼠标行为、快捷键和操作顺序。
+- 可以补充 macOS 菜单命令，但画布内状态必须与原版同步。
+- 所有可点击图标保留稳定的 accessibility label 和 identifier。
+- VoiceOver、tooltip 和测试标识不得迫使可见控件扩大或重排。
+- 焦点环若原版没有对应视觉，应使用最小、清楚且不破坏构图的辅助呈现。
+- 尊重 Reduce Motion；需要减少动画时保持最终帧和状态信息不变。
+- 颜色状态同时提供可访问名称或文本，不必把说明永久显示在画布上。
 
-- Do 让地图、原版运行时精灵和任务内容占据主要视觉面积。
-- Do 从集中式主题/Token 取色和尺寸；新增共享 UI 时先复用现有组件。
-- Do 使用金色表示当前焦点和关键层级，使用一像素铜色边框建立结构。
-- Do 让固定右栏中的每个区块回答一个明确问题：目标、工具、图层、命令或导航。
-- Do 为紧凑图标提供 tooltip、键盘焦点和辅助功能名称。
-- Do 在实现有意改变视觉系统时，同一变更中更新本文件。
-- Don't 把玩家界面改成一串半透明、大圆角、悬浮的通用 SwiftUI 卡片。
-- Don't 用系统蓝作为品牌主色，也不要大面积使用纯白背景、玻璃材质或重投影。
-- Don't 同时高亮多个主要动作；红色不得用于普通导航或装饰。
-- Don't 为“古风”牺牲中文正文可读性，或引入来源不明的书法/像素字体；Sarasa Term SC Nerd 的正文最小字号仍必须遵循本规范。
-- Don't 把参考截图目录当作运行时数据源；可运行素材应来自仓库根目录 `GameData` 或应用包内的同名 Resources。
-- Don't 让装饰图案盖过数据、地图反馈、任务目标或错误原因。
+## 实现规则
+
+- 共享几何、资源映射和回退值集中管理，不在单个 View 中堆叠补偿常量。
+- 原版界面资源应建立语义目录，记录档案、图像 ID、状态帧、切片边距和验证截图。
+- 玩家画布中的布局优先使用明确坐标或严格固定的区域组合；不要让 SwiftUI 的 intrinsic size 决定原版栏宽。
+- 分隔线尽量以 overlay 绘制，避免在固定总宽中意外多占 1px。
+- 固定面板内禁止横向滚动。
+- 不把开发诊断、模拟参数、调试图层或测试按钮放入发行版玩家界面。
+- 如果实现必须偏离原版，需在同一变更中记录：原版证据、偏离原因、影响范围和未来替换条件。
+
+## 视觉验证与完成标准
+
+玩家界面的实质性改动必须进行同状态、同尺寸验证：
+
+1. 构建 macOS target。
+2. 在 `1024 × 768` 逻辑内容尺寸下生成截图。
+3. 与原版相同状态的参考截图并排比较；条件允许时生成像素差分或透明叠图。
+4. 检查外轮廓、主要分区、资源选择、裁切、文字基线、状态帧和交互反馈。
+5. 运行受影响流程对应的 UI smoke；辅助功能环境不可用时，明确记录未验证项。
+
+一个玩家界面功能只有在以下条件同时成立时才算完成：
+
+- 几何结构与原版一致，固定区域没有被文本或 intrinsic size 撑开。
+- 使用了现有可用的原版素材和正确状态帧。
+- 没有新增原版不存在的常驻视觉元素。
+- 核心操作、键盘和辅助功能可用。
+- 同尺寸截图没有明显的比例、层级或密度偏差。
+
+## 禁止事项
+
+- 不把原版玩家界面“现代化”为卡片、仪表盘、侧边栏或响应式工具面板。
+- 不以“更清晰”“更整洁”为理由改变原版分区、图标密度或控件顺序。
+- 不用 SF Symbols、emoji 或通用图标替换已经存在的原版素材。
+- 不把建造目录改成两列带标签的大按钮。
+- 不在右栏常驻加入原版没有的资源图层、税率、速度、旋转或调试控制条。
+- 不让长文本、翻译文本或辅助功能文本改变固定画布尺寸。
+- 不用程序生成的铜褐渐变冒充已经可以从 `GameData` 取得的原版纹理。
+- 不让参考截图目录成为运行时依赖。
+- 不在未经证据支持时发明原版未显示的界面。

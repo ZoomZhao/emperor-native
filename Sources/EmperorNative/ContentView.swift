@@ -371,8 +371,8 @@ private struct ClassicCityGameView: View {
                         .frame(width: EmperorTheme.cityMapColumnWidth)
 
                         ClassicPanelHeader(
+                            library: library,
                             title: selectedCategory.advisorTitle,
-                            value: selectedCategory.advisorMetric(in: city),
                             onOpenSummary: { showsCitySummary = true }
                         )
                         .frame(width: EmperorTheme.panelWidth)
@@ -407,20 +407,20 @@ private struct ClassicCityGameView: View {
                         .frame(maxHeight: .infinity)
                         .background(Color.black)
                         .overlay(alignment: .topLeading) {
-                            ClassicMapHint(
-                                library: library,
-                                tool: library.constructionTool,
-                                instruction: library.saveStatus
-                                    ?? constructionInstruction(
-                                        library.constructionTool,
-                                        orientation: library.constructionOrientation
-                                    )
-                            )
-                            .padding(8)
-                            .allowsHitTesting(false)
+                            if library.constructionTool != .inspect {
+                                ClassicMapHint(
+                                    library: library,
+                                    tool: library.constructionTool,
+                                    instruction: library.saveStatus
+                                        ?? constructionInstruction(
+                                            library.constructionTool,
+                                            orientation: library.constructionOrientation
+                                        )
+                                )
+                                .padding(8)
+                                .allowsHitTesting(false)
+                            }
                         }
-
-                        Divider().overlay(EmperorTheme.border)
 
                         ClassicControlPanel(
                             library: library,
@@ -431,6 +431,11 @@ private struct ClassicCityGameView: View {
                             cameraOffsetY: $cameraOffsetY
                         )
                         .frame(width: EmperorTheme.panelWidth)
+                        .overlay(alignment: .leading) {
+                            Rectangle()
+                                .fill(EmperorTheme.border)
+                                .frame(width: 1)
+                        }
                     }
                     .frame(
                         height: EmperorTheme.classicViewportSize.height
@@ -469,37 +474,48 @@ private struct ClassicCityGameView: View {
 }
 
 private struct ClassicPanelHeader: View {
+    @ObservedObject var library: LibraryModel
     let title: String
-    let value: String
     let onOpenSummary: () -> Void
 
     var body: some View {
         Button(action: onOpenSummary) {
-            HStack(spacing: 8) {
+            HStack(spacing: 0) {
+                Spacer()
+                    .frame(width: EmperorTheme.categoryRailWidth)
                 Text(title)
                     .font(EmperorTheme.headlineSmall)
-                Spacer(minLength: 4)
-                Text(value)
-                    .font(EmperorTheme.metric)
+                    .frame(maxWidth: .infinity)
             }
             .foregroundStyle(ClassicPalette.gold)
-            .padding(.horizontal, 10)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .background(ClassicPalette.panelHeader)
-        .overlay(alignment: .leading) {
-            Rectangle()
-                .fill(ClassicPalette.border)
-                .frame(width: 1)
-        }
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(ClassicPalette.gold.opacity(0.48))
-                .frame(height: 1)
+        .background(alignment: .top) {
+            if let sprite = library.interfaceSprites[
+                OriginalInterfaceChromeSpriteCatalog.cityPanelBackgroundImageID
+            ] {
+                Image(decorative: sprite.image, scale: 1)
+                    .resizable()
+                    .interpolation(.none)
+                    .frame(
+                        width: EmperorTheme.panelWidth,
+                        height: 454,
+                        alignment: .top
+                    )
+                    .frame(
+                        width: EmperorTheme.panelWidth,
+                        height: EmperorTheme.hudHeight,
+                        alignment: .top
+                    )
+                    .clipped()
+            } else {
+                ClassicPalette.panelHeader
+            }
         }
         .help("打开城市状况总览")
+        .accessibilityLabel("\(title)顾问")
         .accessibilityIdentifier("city-summary-open")
     }
 }
@@ -510,7 +526,78 @@ private struct ClassicImperialHUD: View {
     let models: OriginalEconomyModels
 
     var body: some View {
-        HStack(spacing: 9) {
+        HStack(spacing: 0) {
+            menuBar
+                .frame(width: 142, alignment: .leading)
+
+            Spacer(minLength: 42)
+
+            ClassicHUDSpriteMetric(
+                library: library,
+                imageID: OriginalInterfaceChromeSpriteCatalog.treasuryImageID,
+                fallbackSymbol: "banknote.fill",
+                label: "国库",
+                value: "\(city.economy.treasury)"
+            )
+            .frame(width: 91)
+            .accessibilityIdentifier("hud-treasury-metric")
+
+            ClassicHUDSpriteMetric(
+                library: library,
+                imageID: OriginalInterfaceChromeSpriteCatalog.laborImageID,
+                fallbackSymbol: "person.fill",
+                label: "可用劳工",
+                value: "\(city.workforceSnapshot(models: models.buildings).unemployedWorkers)"
+            )
+            .frame(width: 70)
+            .accessibilityIdentifier("hud-population-metric")
+
+            ClassicHUDZodiac(
+                library: library,
+                element: calendarElement,
+                animal: calendarAnimal
+            )
+            .frame(width: 105)
+
+            Spacer(minLength: 24)
+
+            Text(imperialDate)
+                .font(EmperorTheme.metric)
+                .foregroundStyle(EmperorTheme.onSurface)
+                .frame(width: 145, alignment: .trailing)
+                .accessibilityLabel("日期 \(imperialDate)")
+                .accessibilityIdentifier("hud-date-metric")
+        }
+        .padding(.horizontal, 8)
+        .frame(height: EmperorTheme.hudHeight)
+        .fixedSize(horizontal: false, vertical: true)
+        .background {
+            if let sprite = library.interfaceSprites[
+                OriginalInterfaceChromeSpriteCatalog.cityHUDBackgroundImageID
+            ] {
+                Image(decorative: sprite.image, scale: 1)
+                    .resizable()
+                    .interpolation(.none)
+                    .frame(
+                        width: EmperorTheme.cityMapColumnWidth,
+                        height: EmperorTheme.hudHeight
+                    )
+            } else {
+                LinearGradient(
+                    colors: [
+                        ClassicPalette.warmBrown,
+                        ClassicPalette.deepBrown,
+                    ],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            }
+        }
+        .help(missionAccessibilityLabel)
+    }
+
+    private var menuBar: some View {
+        HStack(spacing: 17) {
             Menu {
                 Button("保存城市", action: library.saveCity)
                     .keyboardShortcut("s", modifiers: .command)
@@ -524,7 +611,8 @@ private struct ClassicImperialHUD: View {
             }
             .menuStyle(.borderlessButton)
             .fixedSize()
-            .foregroundStyle(ClassicPalette.gold)
+            .foregroundStyle(EmperorTheme.onSurface)
+            .tint(EmperorTheme.onSurface)
             .accessibilityIdentifier("classic-city-game")
 
             Menu {
@@ -541,7 +629,8 @@ private struct ClassicImperialHUD: View {
             }
             .menuStyle(.borderlessButton)
             .fixedSize()
-            .foregroundStyle(ClassicPalette.gold)
+            .foregroundStyle(EmperorTheme.onSurface)
+            .tint(EmperorTheme.onSurface)
 
             Button("帮助") {
                 library.saveStatus = library.constructionTool == .inspect
@@ -553,52 +642,8 @@ private struct ClassicImperialHUD: View {
             }
             .buttonStyle(.plain)
             .font(EmperorTheme.labelMedium)
-            .foregroundStyle(ClassicPalette.gold)
-
-            Rectangle()
-                .fill(ClassicPalette.border.opacity(0.72))
-                .frame(width: 1, height: 22)
-
-            Spacer(minLength: 6)
-
-            ClassicHUDMetric(
-                symbol: "banknote.fill",
-                title: "国库",
-                value: city.economy.treasury.formatted()
-            )
-            ClassicHUDMetric(
-                symbol: "person.2.fill",
-                title: "人口",
-                value: "\(city.population)"
-            )
-            .accessibilityIdentifier("hud-population-metric")
-            ClassicHUDResource(symbol: "drop.fill", title: "水")
-            ClassicHUDResource(symbol: "takeoutbag.and.cup.and.straw.fill", title: "食物")
-            ClassicHUDMetric(
-                symbol: "calendar",
-                title: "日期",
-                value: imperialDate
-            )
+            .foregroundStyle(EmperorTheme.onSurface)
         }
-        .padding(.horizontal, 9)
-        .frame(height: EmperorTheme.hudHeight)
-        .fixedSize(horizontal: false, vertical: true)
-        .background(
-            LinearGradient(
-                colors: [
-                    ClassicPalette.warmBrown,
-                    ClassicPalette.deepBrown,
-                ],
-                startPoint: .leading,
-                endPoint: .trailing
-            )
-        )
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(ClassicPalette.gold.opacity(0.48))
-                .frame(height: 1)
-        }
-        .help(missionAccessibilityLabel)
     }
 
     private var activeMission: CampaignMission? {
@@ -642,52 +687,95 @@ private struct ClassicImperialHUD: View {
         return "\(month) \(city.calendar.year) 年"
     }
 
-    private func placedBuildingCount(in buildingIDs: Set<Int>) -> Int {
-        city.placedBuildings.count { buildingIDs.contains($0.buildingID) }
+    private var calendarAnimal: String {
+        let animals = ["鼠", "牛", "虎", "兔", "龙", "蛇", "马", "羊", "猴", "鸡", "狗", "猪"]
+        let astronomicalYear = city.calendar.year < 0
+            ? city.calendar.year + 1
+            : city.calendar.year
+        return animals[positiveModulo(astronomicalYear - 4, divisor: animals.count)]
+    }
+
+    private var calendarElement: String {
+        let elements = ["木", "木", "火", "火", "土", "土", "金", "金", "水", "水"]
+        let astronomicalYear = city.calendar.year < 0
+            ? city.calendar.year + 1
+            : city.calendar.year
+        return elements[positiveModulo(astronomicalYear - 4, divisor: elements.count)]
+    }
+
+    private func positiveModulo(_ value: Int, divisor: Int) -> Int {
+        let result = value % divisor
+        return result >= 0 ? result : result + divisor
     }
 }
 
-private struct ClassicHUDMetric: View {
-    let symbol: String
-    let title: String
+private struct ClassicHUDSpriteMetric: View {
+    @ObservedObject var library: LibraryModel
+    let imageID: Int?
+    let fallbackSymbol: String
+    let label: String
     let value: String
 
     var body: some View {
         HStack(spacing: 4) {
-            Image(systemName: symbol)
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(ClassicPalette.gold)
-            Text(title)
-                .font(EmperorTheme.labelSmall)
-                .foregroundStyle(EmperorTheme.onSurfaceMuted)
+            Group {
+                if let imageID, let sprite = library.interfaceSprites[imageID] {
+                    Image(decorative: sprite.image, scale: 1)
+                        .resizable()
+                        .interpolation(.none)
+                        .scaledToFit()
+                } else {
+                    Image(systemName: fallbackSymbol)
+                        .foregroundStyle(ClassicPalette.gold)
+                }
+            }
+            .frame(width: 18, height: 18)
             Text(value)
                 .font(EmperorTheme.metric)
                 .foregroundStyle(EmperorTheme.onSurface)
         }
-        .padding(.horizontal, 3)
         .frame(height: 24)
         .fixedSize()
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(label) \(value)")
+        .accessibilityValue(value)
     }
 }
 
-private struct ClassicHUDResource: View {
-    let symbol: String
-    let title: String
+private struct ClassicHUDZodiac: View {
+    @ObservedObject var library: LibraryModel
+    let element: String
+    let animal: String
 
     var body: some View {
-        HStack(spacing: 3) {
-            Image(systemName: symbol)
-                .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(ClassicPalette.gold)
-            Text(title)
-                .font(EmperorTheme.labelSmall)
+        HStack(spacing: 7) {
+            Text(element)
+                .font(EmperorTheme.metric)
+                .foregroundStyle(EmperorTheme.onSurface)
+            Group {
+                if let imageID = OriginalInterfaceChromeSpriteCatalog.zodiacImageID(
+                    for: animal
+                ),
+                   let sprite = library.interfaceSprites[imageID] {
+                    Image(decorative: sprite.image, scale: 1)
+                        .resizable()
+                        .interpolation(.none)
+                        .scaledToFit()
+                } else {
+                    Text(animal)
+                        .font(EmperorTheme.metric)
+                }
+            }
+            .frame(width: 22, height: 22)
+            Text(animal)
+                .font(EmperorTheme.metric)
                 .foregroundStyle(EmperorTheme.onSurface)
         }
-        .padding(.horizontal, 2)
         .frame(height: 24)
         .fixedSize()
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(element)\(animal)年")
+        .accessibilityIdentifier("hud-zodiac-metric")
     }
 }
 
@@ -772,7 +860,6 @@ private struct ClassicControlPanel: View {
         VStack(spacing: 0) {
             HStack(alignment: .top, spacing: 0) {
                 categoryRail
-                Divider().overlay(ClassicPalette.border)
                 VStack(spacing: 0) {
                     ClassicCategoryAdvisorPanel(
                         library: library,
@@ -784,7 +871,17 @@ private struct ClassicControlPanel: View {
                     Divider().overlay(ClassicPalette.border)
                     constructionCatalog
                 }
+                .frame(
+                    width: EmperorTheme.panelWidth
+                        - EmperorTheme.categoryRailWidth
+                )
+                .overlay(alignment: .leading) {
+                    Rectangle()
+                        .fill(ClassicPalette.border)
+                        .frame(width: 1)
+                }
             }
+            .frame(width: EmperorTheme.panelWidth)
             .frame(maxHeight: .infinity)
 
             Divider().overlay(ClassicPalette.border)
@@ -802,6 +899,10 @@ private struct ClassicControlPanel: View {
             Divider().overlay(ClassicPalette.border)
             ClassicCityNavigationBar(
                 library: library,
+                onCenterView: {
+                    cameraOffsetX = 0
+                    cameraOffsetY = 0
+                },
                 onOpenWorldMap: { showsWorldMap = true },
                 onOpenObjectives: { showsObjectives = true },
                 onOpenMessages: { showsMessages = true }
@@ -817,6 +918,8 @@ private struct ClassicControlPanel: View {
         .sheet(isPresented: $showsMessages) {
             ClassicCityMessagesView(library: library, city: city, models: models)
         }
+        .frame(width: EmperorTheme.panelWidth, alignment: .leading)
+        .clipped()
     }
 
     private var categoryRail: some View {
@@ -833,15 +936,6 @@ private struct ClassicControlPanel: View {
                             height: 37
                         )
                         .frame(width: 48, height: 39)
-                        .background(ClassicPalette.tileBrown)
-                        .overlay(
-                            Rectangle().strokeBorder(
-                                selectedCategory == category
-                                    ? ClassicPalette.gold
-                                    : ClassicPalette.border,
-                                lineWidth: selectedCategory == category ? 1.4 : 0.7
-                            )
-                        )
                     }
                     .buttonStyle(.plain)
                     .accessibilityIdentifier(
@@ -1674,13 +1768,28 @@ private struct ClassicCategoryAdvisorPanel: View {
 
 private struct ClassicCityNavigationBar: View {
     @ObservedObject var library: LibraryModel
+    let onCenterView: () -> Void
     let onOpenWorldMap: () -> Void
     let onOpenObjectives: () -> Void
     let onOpenMessages: () -> Void
 
     var body: some View {
-        HStack(spacing: 9) {
+        HStack(spacing: 2) {
             Spacer(minLength: 0)
+            navigationButton(
+                icon: .mainMenu,
+                fallback: "envelope.fill",
+                label: "消息",
+                identifier: "city-button-messages",
+                action: onOpenMessages
+            )
+            navigationButton(
+                icon: .compass,
+                fallback: "scope",
+                label: "视角复位",
+                identifier: "city-button-center-view",
+                action: onCenterView
+            )
             navigationButton(
                 icon: .cityView,
                 fallback: "building.2.fill",
@@ -1703,13 +1812,6 @@ private struct ClassicCityNavigationBar: View {
                 label: "任务目标",
                 identifier: "city-button-objectives",
                 action: onOpenObjectives
-            )
-            navigationButton(
-                icon: .messages,
-                fallback: "envelope.fill",
-                label: "消息",
-                identifier: "city-button-messages",
-                action: onOpenMessages
             )
             Spacer(minLength: 0)
         }
@@ -1749,8 +1851,6 @@ private struct ClassicCityNavigationBar: View {
                 }
             }
             .frame(width: 42, height: 28)
-            .background(ClassicPalette.tileBrown)
-            .overlay(Rectangle().strokeBorder(ClassicPalette.border, lineWidth: 0.7))
         }
         .buttonStyle(.plain)
         .disabled(disabled)

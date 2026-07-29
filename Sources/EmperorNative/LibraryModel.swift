@@ -398,8 +398,13 @@ final class LibraryModel: ObservableObject {
                     contentsOf: source.root.appendingPathComponent("EmperorText.eng")
                 )
                 let campaigns = try CampaignCatalog.load(source)
+                let requestedCampaignFileName = ProcessInfo.processInfo.arguments.contains(
+                    "--ui-smoke-auto-start-qin"
+                )
+                    ? "4 Qin Dynasty.pak"
+                    : "1 Xia Dynasty - Tutorials.pak"
                 let defaultCampaign = campaigns.first {
-                    $0.url.lastPathComponent == "1 Xia Dynasty - Tutorials.pak"
+                    $0.url.lastPathComponent == requestedCampaignFileName
                 } ?? campaigns.first
                 let gameplayController = try GameSessionController(source: source)
                 let probes = try catalog.maps.prefix(24).map { try MapProbe(url: $0.url) }
@@ -424,7 +429,12 @@ final class LibraryModel: ObservableObject {
                         self.loadCampaignGoals(defaultCampaign)
                         self.loadCampaignEvents(defaultCampaign)
                         self.loadCampaignEmpire(defaultCampaign)
-                        if ProcessInfo.processInfo.arguments.contains("--ui-smoke-auto-start-xia"),
+                        if (
+                            ProcessInfo.processInfo.arguments.contains("--ui-smoke-auto-start-xia")
+                                || ProcessInfo.processInfo.arguments.contains(
+                                    "--ui-smoke-auto-start-qin"
+                                )
+                        ),
                            let firstMission = defaultCampaign.missions.first {
                             self.startMission(firstMission)
                         }
@@ -2088,6 +2098,7 @@ final class LibraryModel: ObservableObject {
                 var decoded: [Int: DecodedSprite] = [:]
                 let requiredImageIDs = OriginalInterfaceSpriteCatalog.requiredImageIDs
                     .union(OriginalInterfaceUtilitySpriteCatalog.requiredImageIDs)
+                    .union(OriginalInterfaceChromeSpriteCatalog.requiredImageIDs)
                 for imageID in requiredImageIDs.sorted()
                     where archive.images.indices.contains(imageID) {
                     let record = archive.images[imageID]

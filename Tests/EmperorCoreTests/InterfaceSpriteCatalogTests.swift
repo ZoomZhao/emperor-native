@@ -35,6 +35,7 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
 
         let requiredImageIDs = OriginalInterfaceSpriteCatalog.requiredImageIDs
             .union(OriginalInterfaceUtilitySpriteCatalog.requiredImageIDs)
+            .union(OriginalInterfaceChromeSpriteCatalog.requiredImageIDs)
         for imageID in requiredImageIDs.sorted() {
             let record = archive.images[imageID]
             XCTAssertFalse(record.isExternal, "interface image #\(imageID) is external")
@@ -43,6 +44,26 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
             XCTAssertGreaterThan(sprite.height, 0)
             XCTAssertNotNil(sprite.makeCGImage())
         }
+    }
+
+    func testClassicCityChromeUsesVerifiedOriginalArtwork() {
+        XCTAssertEqual(
+            OriginalInterfaceChromeSpriteCatalog.cityHUDBackgroundImageID,
+            1_221
+        )
+        XCTAssertEqual(
+            OriginalInterfaceChromeSpriteCatalog.cityPanelBackgroundImageID,
+            1_223
+        )
+        XCTAssertEqual(OriginalInterfaceChromeSpriteCatalog.treasuryImageID, 652)
+        XCTAssertNil(
+            OriginalInterfaceChromeSpriteCatalog.laborImageID,
+            "#311 includes terrain and must not stand in for the HUD labor icon"
+        )
+        XCTAssertEqual(
+            OriginalInterfaceChromeSpriteCatalog.zodiacImageID(for: "牛"),
+            1_372
+        )
     }
 
     func testClearUsesOriginalShovelAndDemolishAvoidsUndoArtwork() throws {
