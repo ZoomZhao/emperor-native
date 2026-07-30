@@ -323,6 +323,24 @@ private struct ClassicBronzeTexture: View {
     }
 }
 
+private struct ClassicOriginalPanelTexture: View {
+    let sprite: RenderedTerrainSprite?
+
+    @ViewBuilder
+    var body: some View {
+        if let sprite {
+            Image(decorative: sprite.image, scale: 1)
+                .resizable(
+                    capInsets: EdgeInsets(),
+                    resizingMode: .tile
+                )
+                .interpolation(.none)
+        } else {
+            ClassicBronzeTexture()
+        }
+    }
+}
+
 private struct ClassicCityGameView: View {
     @ObservedObject var library: LibraryModel
     let models: OriginalEconomyModels
@@ -906,7 +924,13 @@ private struct ClassicControlPanel: View {
                 onOpenMessages: { showsMessages = true }
             )
         }
-        .background(ClassicBronzeTexture())
+        .background(
+            ClassicOriginalPanelTexture(
+                sprite: library.interfaceSprites[
+                    OriginalInterfaceChromeSpriteCatalog.cityPanelBackgroundImageID
+                ]
+            )
+        )
         .sheet(isPresented: $showsObjectives) {
             ClassicMissionObjectivesView(library: library, city: city, models: models)
         }
@@ -1416,51 +1440,7 @@ private struct ClassicControlPanel: View {
             max(0, focus.y - rows / 2),
             max(0, city.roadNetwork.height - rows)
         )
-        return HStack(spacing: 8) {
-            VStack(spacing: 3) {
-                panelPanButton(
-                    "arrow.up",
-                    originalIcon: .panUp,
-                    x: 0,
-                    y: -8,
-                    label: "视野向北",
-                    identifier: "city-pan-north"
-                )
-                HStack(spacing: 3) {
-                    panelPanButton(
-                        "arrow.left",
-                        originalIcon: .panLeft,
-                        x: -8,
-                        y: 0,
-                        label: "视野向西",
-                        identifier: "city-pan-west"
-                    )
-                    panelPanButton(
-                        "circle.fill",
-                        originalIcon: nil,
-                        x: 0,
-                        y: 0,
-                        label: "保持当前视野",
-                        identifier: "city-pan-reset"
-                    )
-                    panelPanButton(
-                        "arrow.right",
-                        originalIcon: .panRight,
-                        x: 8,
-                        y: 0,
-                        label: "视野向东",
-                        identifier: "city-pan-east"
-                    )
-                }
-                panelPanButton(
-                    "arrow.down",
-                    originalIcon: .panDown,
-                    x: 0,
-                    y: 8,
-                    label: "视野向南",
-                    identifier: "city-pan-south"
-                )
-            }
+        return HStack(spacing: 6) {
             MinimapView(
                 city: city,
                 mapWidth: city.roadNetwork.width,
@@ -1474,10 +1454,53 @@ private struct ClassicControlPanel: View {
                 cameraOffsetX = target.x - base.x
                 cameraOffsetY = target.y - base.y
             }
+            VStack(spacing: 2) {
+                panelPanButton(
+                    "arrow.up",
+                    originalIcon: .panUp,
+                    x: 0,
+                    y: -8,
+                    label: "视野向北",
+                    identifier: "city-pan-north"
+                )
+                panelPanButton(
+                    "arrow.left",
+                    originalIcon: .panLeft,
+                    x: -8,
+                    y: 0,
+                    label: "视野向西",
+                    identifier: "city-pan-west"
+                )
+                panelPanButton(
+                    "circle.fill",
+                    originalIcon: nil,
+                    x: 0,
+                    y: 0,
+                    label: "保持当前视野",
+                    identifier: "city-pan-reset"
+                )
+                panelPanButton(
+                    "arrow.right",
+                    originalIcon: .panRight,
+                    x: 8,
+                    y: 0,
+                    label: "视野向东",
+                    identifier: "city-pan-east"
+                )
+                panelPanButton(
+                    "arrow.down",
+                    originalIcon: .panDown,
+                    x: 0,
+                    y: 8,
+                    label: "视野向南",
+                    identifier: "city-pan-south"
+                )
+            }
+            Spacer(minLength: 0)
         }
-        .padding(.horizontal, 8)
-        .frame(height: 126)
-        .background(ClassicPalette.deepBrown.opacity(0.84))
+        .padding(.leading, 40)
+        .frame(height: 154)
+        .background(Color.black.opacity(0.12))
     }
 
     private func panelPanButton(
@@ -1559,7 +1582,7 @@ private struct ClassicCategoryAdvisorPanel: View {
     let category: ConstructionToolCategory
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .center, spacing: 5) {
             ForEach(advisorActions, id: \.identifier) { action in
                 advisorButton(
                     title: action.title,
@@ -1629,24 +1652,19 @@ private struct ClassicCategoryAdvisorPanel: View {
                 }
             }
 
-            ForEach(Array(advisorSummary.enumerated()), id: \.offset) { _, line in
-                Text(line)
-                    .font(EmperorTheme.bodySmall)
-                    .foregroundStyle(
-                        category == .residential
-                            && city.migration.lastAssessment?.blockReason != nil
-                            && line == migrationStatus
-                            ? EmperorTheme.warning
-                            : EmperorTheme.onSurface
-                    )
-                    .lineLimit(2)
-                    .fixedSize(horizontal: false, vertical: true)
+            Rectangle()
+                .fill(EmperorTheme.secondary.opacity(0.68))
+                .frame(height: 1)
+                .padding(.vertical, 1)
+
+            ForEach(Array(advisorSummary.enumerated()), id: \.offset) { index, line in
+                advisorSummaryRow(index: index, line: line)
             }
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 7)
         .frame(minHeight: EmperorTheme.populationAdvisorHeight, alignment: .top)
-        .background(ClassicPalette.panelHeader)
+        .background(Color.black.opacity(0.18))
         .accessibilityElement(children: .contain)
         .accessibilityLabel(category.advisorTitle)
         .accessibilityIdentifier(
@@ -1756,14 +1774,10 @@ private struct ClassicCategoryAdvisorPanel: View {
         return Button {
             library.toggleResourceOverlay(kind)
         } label: {
-            HStack(spacing: 7) {
-                Image(systemName: kind.symbol)
-                    .frame(width: 16)
+            HStack(spacing: 0) {
+                Spacer(minLength: 0)
                 Text(title)
-                Spacer()
-                if isActive {
-                    Image(systemName: "checkmark")
-                }
+                Spacer(minLength: 0)
             }
             .font(EmperorTheme.bodySmall)
             .foregroundStyle(isActive ? ClassicPalette.ink : EmperorTheme.onSurface)
@@ -1776,6 +1790,60 @@ private struct ClassicCategoryAdvisorPanel: View {
         .buttonStyle(.plain)
         .accessibilityIdentifier(identifier)
         .accessibilityValue(isActive ? "已开启" : "已关闭")
+    }
+
+    @ViewBuilder
+    private func advisorSummaryRow(index: Int, line: String) -> some View {
+        if category == .residential, index == 0 {
+            VStack(spacing: 0) {
+                Text("目前住宅还可容纳")
+                    .foregroundStyle(EmperorTheme.onSurface)
+                Text("\(availableHousingCapacity)")
+                    .font(EmperorTheme.metric)
+                    .foregroundStyle(ClassicPalette.gold)
+                Text("人居住")
+                    .foregroundStyle(EmperorTheme.onSurface)
+            }
+            .font(EmperorTheme.bodySmall)
+            .multilineTextAlignment(.center)
+        } else if category == .residential,
+                  index == 1,
+                  let status = migrationStatusParts {
+            VStack(spacing: 1) {
+                Text(status.lead)
+                    .foregroundStyle(EmperorTheme.onSurface)
+                Text(status.emphasis)
+                    .foregroundStyle(EmperorTheme.warning)
+            }
+            .font(EmperorTheme.bodySmall)
+            .multilineTextAlignment(.center)
+        } else {
+            highlightedAdvisorText(line)
+                .font(EmperorTheme.bodySmall)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func highlightedAdvisorText(_ line: String) -> Text {
+        let metric = category.advisorMetric(in: city)
+        guard let range = line.range(of: metric) else {
+            return Text(line).foregroundColor(EmperorTheme.onSurface)
+        }
+        return Text(String(line[..<range.lowerBound]))
+            .foregroundColor(EmperorTheme.onSurface)
+            + Text(metric).foregroundColor(ClassicPalette.gold)
+            + Text(String(line[range.upperBound...]))
+                .foregroundColor(EmperorTheme.onSurface)
+    }
+
+    private var migrationStatusParts: (lead: String, emphasis: String)? {
+        let separator = "原因是："
+        guard let range = migrationStatus.range(of: separator) else { return nil }
+        return (
+            String(migrationStatus[..<range.upperBound]),
+            String(migrationStatus[range.upperBound...])
+        )
     }
 
     private var availableHousingCapacity: Int {
@@ -1812,8 +1880,7 @@ private struct ClassicCityNavigationBar: View {
     let onOpenMessages: () -> Void
 
     var body: some View {
-        HStack(spacing: 2) {
-            Spacer(minLength: 0)
+        HStack(spacing: 4) {
             navigationButton(
                 icon: .mainMenu,
                 fallback: "envelope.fill",
@@ -1851,10 +1918,10 @@ private struct ClassicCityNavigationBar: View {
                 identifier: "city-button-objectives",
                 action: onOpenObjectives
             )
-            Spacer(minLength: 0)
         }
+        .padding(.horizontal, 14)
         .frame(height: EmperorTheme.cityNavigationHeight)
-        .background(ClassicPalette.deepBrown.opacity(0.84))
+        .background(Color.black.opacity(0.12))
     }
 
     private func navigationButton(
@@ -1888,7 +1955,7 @@ private struct ClassicCityNavigationBar: View {
                         )
                 }
             }
-            .frame(width: 42, height: 28)
+            .frame(width: 36, height: 28)
         }
         .buttonStyle(.plain)
         .disabled(disabled)

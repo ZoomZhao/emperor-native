@@ -2448,36 +2448,39 @@ struct CityCanvas: View {
 
 // MARK: - Minimap
 
-/// Consistent dot colours for the minimap: terrain green, roads gray, water
-/// blue, rock gray, and buildings coloured by placement category.
+/// Quantized colors matched to the original `China_Radar.BMP` family. The
+/// authored radar stores tiny 2×1 terrain bars rather than a complete map
+/// image, so the native renderer uses the same compact palette and footprint.
 private enum MinimapColors {
-    static let terrain = Color(red: 0.48, green: 0.57, blue: 0.20)
-    static let shallowWater = Color(red: 0.16, green: 0.43, blue: 0.46)
-    static let deepWater = Color(red: 0.08, green: 0.27, blue: 0.34)
-    static let shoreline = Color(red: 0.48, green: 0.43, blue: 0.25)
-    static let offMap = Color(red: 0.09, green: 0.08, blue: 0.06)
-    static let rock = Color(red: 0.51, green: 0.40, blue: 0.28)
-    static let road = Color(red: 0.76, green: 0.67, blue: 0.43)
-    static let house = Color(red: 0.94, green: 0.58, blue: 0.16)
+    static let terrain = Color(red: 0.45, green: 0.55, blue: 0.12)
+    static let shallowWater = Color(red: 0.03, green: 0.62, blue: 0.67)
+    static let deepWater = Color(red: 0.01, green: 0.35, blue: 0.41)
+    static let shoreline = Color(red: 0.67, green: 0.57, blue: 0.21)
+    static let offMap = Color(red: 0.13, green: 0.09, blue: 0.04)
+    static let rock = Color(red: 0.48, green: 0.30, blue: 0.18)
+    static let road = Color(red: 0.82, green: 0.70, blue: 0.35)
+    static let house = Color(red: 0.95, green: 0.66, blue: 0.10)
+    static let plannedMonument = Color(red: 0.68, green: 0.16, blue: 0.73)
+    static let activeMonument = Color(red: 0.93, green: 0.45, blue: 0.12)
 
     static func category(_ category: PlacedBuildingCategory) -> Color {
         switch category {
-        case .production: .brown
-        case .warehouse: .indigo
-        case .mill: .yellow
-        case .market: .green
-        case .trading: .teal
-        case .residentialService: .pink
-        case .military: .red
-        case .aesthetic: .purple
+        case .production: Color(red: 0.55, green: 0.22, blue: 0.10)
+        case .warehouse: Color(red: 0.24, green: 0.18, blue: 0.53)
+        case .mill: Color(red: 0.91, green: 0.76, blue: 0.18)
+        case .market: Color(red: 0.16, green: 0.62, blue: 0.19)
+        case .trading: Color(red: 0.03, green: 0.55, blue: 0.50)
+        case .residentialService: Color(red: 0.78, green: 0.29, blue: 0.43)
+        case .military: Color(red: 0.78, green: 0.10, blue: 0.08)
+        case .aesthetic: Color(red: 0.56, green: 0.18, blue: 0.65)
         }
     }
 }
 
-/// Bottom-right minimap (160×120pt). Renders the whole map as coloured dots and
-/// overlays a white rectangle for the current camera viewport. Clicking or
-/// dragging invokes `onJump` with the chosen map tile so the main camera can
-/// recenter on it.
+/// Bottom-right radar. Map tiles use the original isometric 2×1 projection,
+/// mission monument paths are rendered over the terrain, and the current
+/// viewport is outlined in white/red. Clicking or dragging inverses the same
+/// projection to recenter the main camera.
 struct MinimapView: View {
     let city: DeterministicCityState
     let mapWidth: Int
@@ -2514,24 +2517,22 @@ struct MinimapView: View {
     var body: some View {
         Canvas { context, size in
             guard mapWidth > 0, mapHeight > 0 else { return }
-            let scaleX = size.width / CGFloat(mapWidth)
-            let scaleY = size.height / CGFloat(mapHeight)
 
             context.fill(
                 Path(CGRect(origin: .zero, size: size)),
-                with: .color(Color.black.opacity(0.55))
+                with: .color(MinimapColors.offMap)
             )
 
             let buildingColors = buildingColorByPoint()
             for y in 0..<mapHeight {
                 for x in 0..<mapWidth {
                     let mapPoint = GridPoint(x: x, y: y)
-                    // +0.5 overlap hides seams between tiny per-tile dots.
+                    let radarPoint = radarPoint(for: mapPoint, in: size)
                     let rect = CGRect(
-                        x: CGFloat(x) * scaleX,
-                        y: CGFloat(y) * scaleY,
-                        width: scaleX + 0.5,
-                        height: scaleY + 0.5
+                        x: radarPoint.x - 1,
+                        y: radarPoint.y,
+                        width: 2,
+                        height: 1
                     )
                     context.fill(
                         Path(rect),
@@ -2540,19 +2541,16 @@ struct MinimapView: View {
                 }
             }
 
-            let viewportRect = CGRect(
-                x: CGFloat(viewportStartX) * scaleX,
-                y: CGFloat(viewportStartY) * scaleY,
-                width: CGFloat(viewportColumns) * scaleX,
-                height: CGFloat(viewportRows) * scaleY
-            )
-            context.fill(Path(viewportRect), with: .color(Color.white.opacity(0.10)))
+            drawMonumentMarkers(context: &context, size: size)
+
+            let viewportPath = radarViewportPath(in: size)
+            context.fill(viewportPath, with: .color(Color.white.opacity(0.10)))
             context.stroke(
-                Path(viewportRect.insetBy(dx: -1.5, dy: -1.5)),
+                viewportPath,
                 with: .color(Color(red: 0.82, green: 0.13, blue: 0.08)),
-                lineWidth: 3
+                lineWidth: 3.2
             )
-            context.stroke(Path(viewportRect), with: .color(.white), lineWidth: 1.2)
+            context.stroke(viewportPath, with: .color(.white), lineWidth: 1)
         }
         .frame(width: minimapSize.width, height: minimapSize.height)
         .clipShape(Rectangle())
@@ -2575,15 +2573,105 @@ struct MinimapView: View {
 
     private func jump(to location: CGPoint) {
         guard mapWidth > 0, mapHeight > 0 else { return }
+        let span = CGFloat(mapWidth + mapHeight)
+        let difference = location.x / minimapSize.width * span - CGFloat(mapHeight)
+        let sum = location.y / minimapSize.height * span
         let mapX = min(
-            max(0, Int(location.x / minimapSize.width * CGFloat(mapWidth))),
+            max(0, Int(((difference + sum) / 2).rounded())),
             mapWidth - 1
         )
         let mapY = min(
-            max(0, Int(location.y / minimapSize.height * CGFloat(mapHeight))),
+            max(0, Int(((sum - difference) / 2).rounded())),
             mapHeight - 1
         )
         onJump(GridPoint(x: mapX, y: mapY))
+    }
+
+    private func radarPoint(for point: GridPoint, in size: CGSize) -> CGPoint {
+        let span = CGFloat(max(1, mapWidth + mapHeight))
+        return CGPoint(
+            x: (CGFloat(point.x - point.y + mapHeight) / span) * size.width,
+            y: (CGFloat(point.x + point.y) / span) * size.height
+        )
+    }
+
+    private func radarViewportPath(in size: CGSize) -> Path {
+        let minimum = GridPoint(x: viewportStartX, y: viewportStartY)
+        let maximumX = GridPoint(
+            x: viewportStartX + viewportColumns,
+            y: viewportStartY
+        )
+        let maximum = GridPoint(
+            x: viewportStartX + viewportColumns,
+            y: viewportStartY + viewportRows
+        )
+        let maximumY = GridPoint(
+            x: viewportStartX,
+            y: viewportStartY + viewportRows
+        )
+        var path = Path()
+        path.move(to: radarPoint(for: minimum, in: size))
+        path.addLine(to: radarPoint(for: maximumX, in: size))
+        path.addLine(to: radarPoint(for: maximum, in: size))
+        path.addLine(to: radarPoint(for: maximumY, in: size))
+        path.closeSubpath()
+        return path
+    }
+
+    private func drawMonumentMarkers(
+        context: inout GraphicsContext,
+        size: CGSize
+    ) {
+        if let canal = city.aesthetics.grandCanalProject {
+            for segment in canal.segments {
+                guard let origin = canal.worldOrigin(forSegment: segment.index) else {
+                    continue
+                }
+                drawMonumentMarker(
+                    at: origin,
+                    color: segment.stage > 0
+                        ? MinimapColors.activeMonument
+                        : MinimapColors.plannedMonument,
+                    context: &context,
+                    size: size
+                )
+            }
+        }
+        if let wall = city.aesthetics.earthenGreatWallProject {
+            for segment in wall.segments {
+                guard let origin = wall.worldOrigin(forSegment: segment.index) else {
+                    continue
+                }
+                drawMonumentMarker(
+                    at: origin,
+                    color: segment.stage > 0
+                        ? MinimapColors.activeMonument
+                        : MinimapColors.plannedMonument,
+                    context: &context,
+                    size: size
+                )
+            }
+        }
+    }
+
+    private func drawMonumentMarker(
+        at point: GridPoint,
+        color: Color,
+        context: inout GraphicsContext,
+        size: CGSize
+    ) {
+        let radarPoint = radarPoint(for: point, in: size)
+        context.fill(
+            Path(
+                CGRect(
+                    x: radarPoint.x - 2.5,
+                    y: radarPoint.y - 1,
+                    width: 5,
+                    height: 3
+                )
+            ),
+            with: .color(color)
+        )
     }
 
     private func buildingColorByPoint() -> [GridPoint: Color] {
