@@ -5,48 +5,58 @@ import Combine
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// The six labeled groups used by the categorized construction toolbar.
-/// Order here drives the display order of the accordion sections.
+/// Original city-panel categories in their authored top-to-bottom order.
 enum ConstructionToolCategory: String, CaseIterable, Identifiable {
     case residential = "住宅"
-    case production = "生产"
-    case military = "军事"
-    case civic = "市政"
+    case agriculture = "农业"
+    case industry = "工业"
+    case commerce = "商业"
+    case safety = "安全"
+    case government = "行政"
+    case entertainment = "娱乐"
     case religious = "宗教"
+    case military = "军事"
     case aesthetics = "美化"
     case monuments = "纪念"
-    case infrastructure = "基础设施"
 
     var id: Self { self }
 
     var symbol: String {
         switch self {
         case .residential: "house.fill"
-        case .production: "gearshape.2.fill"
-        case .military: "shield.fill"
-        case .civic: "building.columns.fill"
+        case .agriculture: "leaf.fill"
+        case .industry: "gearshape.2.fill"
+        case .commerce: "shippingbox.fill"
+        case .safety: "drop.fill"
+        case .government: "building.columns.fill"
+        case .entertainment: "theatermasks.fill"
         case .religious: "sparkles"
+        case .military: "shield.fill"
         case .aesthetics: "leaf.fill"
         case .monuments: "building.columns.fill"
-        case .infrastructure: "point.topleft.down.to.point.bottomright.curvepath"
         }
     }
 
     /// Original city-panel family used when `China_Interface` is available.
     ///
-    /// The Great Wall strip button (`.infrastructure`) is the monument /
-    /// defense category in the original UI — roads use a dirt-road tile icon
+    /// The Great Wall strip button (`.infrastructure`) is the monument
+    /// category in the original UI — roads use a dirt-road tile icon
     /// instead (see `OriginalInterfaceUtilitySpriteCatalog.roadTerrainLocalID`).
-    var originalInterfaceIcon: OriginalInterfaceIcon? {
+    var originalInterfaceIcon: OriginalInterfaceIcon {
         switch self {
         case .residential: .residential
-        case .production: .agriculture
-        case .military: .military
-        case .civic: .government
+        case .agriculture: .agriculture
+        case .industry: .industry
+        case .commerce: .commerce
+        // The archive's historical semantic names are misleading: #1339 is
+        // the well/safety family, while #1347 is the fan/entertainment family.
+        case .safety: .entertainment
+        case .government: .government
+        case .entertainment: .culture
         case .religious: .religion
+        case .military: .military
         case .aesthetics: .aesthetics
         case .monuments: .infrastructure
-        case .infrastructure: nil
         }
     }
 }
@@ -388,22 +398,29 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
     /// Toolbar accordion section this tool belongs to.
     var category: ConstructionToolCategory {
         switch self {
-        case .house, .eliteHouse, .well, .herbalist, .acupuncture,
-             .musicSchool, .acrobatSchool, .dramaSchool:
+        case .house, .eliteHouse:
             .residential
-        case .warehouse, .mill, .market, .grandMarket, .clayPit, .kiln,
-             .irrigationPump, .farmland, .lumberMill, .quarry, .granary, .fishingWharf,
-             .huntingCamp, .ironMine, .bronzeWorks, .jadeWorkshop,
+        case .farmland, .irrigationPump, .fishingWharf, .huntingCamp,
+             .mill, .granary:
+            .agriculture
+        case .clayPit, .kiln, .lumberMill, .quarry, .ironMine, .bronzeWorks,
+             .jadeWorkshop,
              .lacquerGuild, .lacquerwareWorkshop, .silkWeaver, .weaver, .teaHouse:
-            .production
-        case .barracks, .cityWall, .gatehouse, .tower, .fort, .catapultFort,
-             .cavalryFort, .chariotFort, .watchtower:
-            .military
-        case .inspectorTower, .taxOffice, .administrativeCity,
-             .palace, .magistrate, .bathhouse:
-            .civic
+            .industry
+        case .warehouse, .market, .grandMarket:
+            .commerce
+        case .well, .herbalist, .acupuncture, .bathhouse, .watchtower,
+             .inspect, .demolish, .clearLand, .road, .roadblock:
+            .safety
+        case .inspectorTower, .taxOffice, .administrativeCity, .palace, .magistrate:
+            .government
+        case .musicSchool, .acrobatSchool, .dramaSchool:
+            .entertainment
         case .ancestralShrine, .confucianAcademy, .daoistShrine:
             .religious
+        case .barracks, .cityWall, .gatehouse, .tower, .fort, .catapultFort,
+             .cavalryFort, .chariotFort, .rally:
+            .military
         case .garden, .decorativeSculpture, .ornateSculpture, .floweringTree,
              .waysidePavilion, .pond, .taiChiPark, .privateGarden:
             .aesthetics
@@ -412,8 +429,6 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
              .undergroundVault, .grandCanalSegment, .earthenGreatWallSegment,
              .largePalace, .largePalacePhase, .phasedMonumentPhase:
             .monuments
-        case .inspect, .demolish, .clearLand, .road, .roadblock, .rally:
-            .infrastructure
         }
     }
 }
@@ -592,16 +607,9 @@ struct ConstructionToolbar: View {
 
     @ViewBuilder
     private func categoryIcon(_ category: ConstructionToolCategory) -> some View {
-        if category == .infrastructure,
-           let sprite = library.renderedMap?.roadToolIconSprite() {
-            Image(decorative: sprite.image, scale: 1)
-                .resizable()
-                .interpolation(.none)
-                .scaledToFit()
-                .frame(width: 24, height: 20)
-                .accessibilityHidden(true)
-        } else if let icon = category.originalInterfaceIcon,
-           let imageID = OriginalInterfaceSpriteCatalog.imageID(for: icon),
+        if let imageID = OriginalInterfaceSpriteCatalog.imageID(
+            for: category.originalInterfaceIcon
+           ),
            let sprite = library.interfaceSprites[imageID] {
             Image(decorative: sprite.image, scale: 1)
                 .resizable()
@@ -677,26 +685,32 @@ extension ConstructionToolCategory {
     var accessibilitySlug: String {
         switch self {
         case .residential: "residential"
-        case .production: "production"
-        case .military: "military"
-        case .civic: "civic"
+        case .agriculture: "agriculture"
+        case .industry: "industry"
+        case .commerce: "commerce"
+        case .safety: "safety"
+        case .government: "government"
+        case .entertainment: "entertainment"
         case .religious: "religious"
+        case .military: "military"
         case .aesthetics: "aesthetics"
         case .monuments: "monuments"
-        case .infrastructure: "infrastructure"
         }
     }
 
     var advisorTitle: String {
         switch self {
         case .residential: "人口"
-        case .production: "生产"
-        case .civic: "市政"
+        case .agriculture: "农业"
+        case .industry: "工业"
+        case .commerce: "商业"
+        case .safety: "安全"
+        case .government: "行政"
+        case .entertainment: "娱乐"
         case .religious: "宗教"
         case .military: "军事"
         case .aesthetics: "美化"
         case .monuments: "纪念碑"
-        case .infrastructure: "基础设施"
         }
     }
 
@@ -708,13 +722,16 @@ extension ConstructionToolCategory {
     func advisorSummary(in city: DeterministicCityState) -> String {
         let count = matchingPlacements(in: city).count
         return switch self {
-        case .production: "全城有 \(count) 座生产、仓储或交易建筑"
-        case .civic: "全城有 \(count) 座市政与民生服务建筑"
-        case .religious: "全城有 \(count) 座宗教与文化建筑"
+        case .agriculture: "全城有 \(count) 座农业与粮食设施"
+        case .industry: "全城有 \(count) 座工业生产设施"
+        case .commerce: "全城有 \(count) 座仓储、市场或贸易设施"
+        case .safety: "全城有 \(count) 座供水、医药或安全设施"
+        case .government: "全城有 \(count) 座行政与税务设施"
+        case .entertainment: "全城有 \(count) 座娱乐设施"
+        case .religious: "全城有 \(count) 座宗教设施"
         case .military: "全城有 \(count) 处城防与军事设施"
         case .aesthetics: "全城有 \(count) 处园林与美化设施"
         case .monuments: "全城有 \(count) 处纪念碑及营造设施"
-        case .infrastructure: "当前道路共有 \(city.roadNetwork.points.count) 格"
         case .residential: "当前人口 \(city.population) 人"
         }
     }
@@ -722,13 +739,16 @@ extension ConstructionToolCategory {
     var advisorHint: String {
         switch self {
         case .residential: "住房与移民状况"
-        case .production: "选择资源覆盖层可查看适宜的生产位置"
-        case .civic: "巡察、税务与供水覆盖会影响住宅发展"
+        case .agriculture: "农田、渔猎与磨坊维持城市粮食供应"
+        case .industry: "原料与工坊共同构成城市生产链"
+        case .commerce: "仓储、市场与贸易负责商品分配"
+        case .safety: "供水、医药与巡防覆盖影响住宅发展"
+        case .government: "巡察与税务维持城市行政运转"
+        case .entertainment: "音乐、杂技与戏剧满足居民娱乐需求"
         case .religious: "宗教覆盖可满足居民的精神需求"
         case .military: "城墙、哨塔和要塞共同构成城市防务"
         case .aesthetics: "园林与雕塑可改善周边住宅吸引力"
         case .monuments: "大型工程需要劳工营和专业公会支持"
-        case .infrastructure: "道路负责连接住宅、服务与生产设施"
         }
     }
 
@@ -737,23 +757,31 @@ extension ConstructionToolCategory {
             switch self {
             case .residential:
                 false
-            case .production:
-                [.production, .warehouse, .mill, .market, .trading].contains(placement.category)
-            case .civic:
-                placement.category == .residentialService
-                    && (72...213).contains(placement.buildingID)
+            case .agriculture:
+                [26, 27, 28, 31, 33, 53, 193, 194, 195, 196, 197, 198, 199]
+                    .contains(placement.buildingID)
+            case .industry:
+                (35...48).contains(placement.buildingID)
+                    || [237, 238, 239].contains(placement.buildingID)
+            case .commerce:
+                [.warehouse, .market, .trading].contains(placement.category)
+            case .safety:
+                [72, 124, 127, 207, 208, 216].contains(placement.buildingID)
+            case .government:
+                [110, 125, 209, 218].contains(placement.buildingID)
+            case .entertainment:
+                (211...213).contains(placement.buildingID)
             case .religious:
                 (214...219).contains(placement.buildingID)
             case .military:
                 placement.category == .military
+                    || [126, 129, 130, 131].contains(placement.buildingID)
             case .aesthetics:
                 (115...122).contains(placement.buildingID)
                     || (243...252).contains(placement.buildingID)
             case .monuments:
                 [52, 76, 77, 78, 79, 80, 81, 82, 84, 92, 93, 233, 235, 236]
                     .contains(placement.buildingID)
-            case .infrastructure:
-                [126, 129, 130, 131].contains(placement.buildingID)
             }
         }
     }

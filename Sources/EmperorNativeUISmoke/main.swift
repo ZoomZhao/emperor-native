@@ -662,16 +662,20 @@ private func commandTable() throws -> [MapClick] {
 
 private func constructionCategoryIdentifier(for toolIdentifier: String) -> String {
     switch toolIdentifier {
-    case "house", "well":
+    case "house":
         "residential"
-    case "huntingCamp", "mill", "market":
-        "production"
+    case "huntingCamp", "mill":
+        "agriculture"
+    case "market":
+        "commerce"
+    case "well":
+        "safety"
     case "inspectorTower":
-        "civic"
+        "government"
     case "ancestralShrine":
         "religious"
     default:
-        "infrastructure"
+        "monuments"
     }
 }
 
@@ -755,6 +759,19 @@ private func runSmoke(arguments: Arguments) throws {
                 timeout: 15,
                 requireEnabled: false
             )
+            let originalCategoryOrder = [
+                "residential", "agriculture", "industry", "commerce",
+                "safety", "government", "entertainment", "religious",
+                "military", "aesthetics", "monuments",
+            ]
+            for category in originalCategoryOrder {
+                _ = try waitForElement(
+                    in: application,
+                    identifier: "construction-category-\(category)",
+                    timeout: 15,
+                    requireEnabled: false
+                )
+            }
             let taxRateMenu = try waitForElement(
                 in: application,
                 identifier: "tax-rate-menu",

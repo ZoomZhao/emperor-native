@@ -66,6 +66,34 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
         )
     }
 
+    func testClassicCategoryRailUsesOriginalOrderAndFourStateFamilies() throws {
+        let expectedBases: [(OriginalInterfaceIcon, Int)] = [
+            (.residential, 1_323),
+            (.agriculture, 1_327),
+            (.industry, 1_331),
+            (.commerce, 1_335),
+            // Historical catalog names: this is the well/safety artwork.
+            (.entertainment, 1_339),
+            (.government, 1_343),
+            // Historical catalog names: this is the fan/entertainment artwork.
+            (.culture, 1_347),
+            (.religion, 1_351),
+            (.military, 1_355),
+            (.aesthetics, 1_359),
+            (.infrastructure, 1_319),
+        ]
+        for (icon, base) in expectedBases {
+            let ids = try OriginalInterfaceIconState.allCases.map {
+                try XCTUnwrap(OriginalInterfaceSpriteCatalog.imageID(for: icon, state: $0))
+            }
+            XCTAssertEqual(ids, [base, base + 1, base + 2, base + 3])
+        }
+        XCTAssertEqual(
+            OriginalInterfaceSpriteCatalog.imageID(for: .residential, state: .selected),
+            1_325
+        )
+    }
+
     func testClearUsesOriginalShovelAndDemolishAvoidsUndoArtwork() throws {
         XCTAssertEqual(
             OriginalInterfaceUtilitySpriteCatalog.imageID(for: .clearLand),

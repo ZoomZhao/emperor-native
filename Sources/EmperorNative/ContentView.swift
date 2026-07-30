@@ -850,11 +850,9 @@ private struct ClassicControlPanel: View {
     @State private var showsObjectives = false
     @State private var showsWorldMap = false
     @State private var showsMessages = false
+    @State private var hoveredCategory: ConstructionToolCategory?
 
-    private let categoryOrder: [ConstructionToolCategory] = [
-        .residential, .production, .civic, .religious,
-        .military, .aesthetics, .monuments, .infrastructure,
-    ]
+    private let categoryOrder = ConstructionToolCategory.allCases
 
     var body: some View {
         VStack(spacing: 0) {
@@ -926,18 +924,26 @@ private struct ClassicControlPanel: View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: 2) {
                 ForEach(categoryOrder) { category in
+                    let available = categoryIsAvailable(category)
                     Button {
                         selectedCategory = category
                     } label: {
                         categoryIcon(
                             category,
-                            selected: selectedCategory == category,
+                            state: categoryIconState(
+                                for: category,
+                                available: available
+                            ),
                             width: 46,
                             height: 37
                         )
                         .frame(width: 48, height: 39)
                     }
                     .buttonStyle(.plain)
+                    .disabled(!available)
+                    .onHover { hovering in
+                        hoveredCategory = hovering ? category : nil
+                    }
                     .accessibilityIdentifier(
                         "construction-category-\(categoryAccessibilitySlug(category))"
                     )
@@ -954,7 +960,7 @@ private struct ClassicControlPanel: View {
         // Keep always-visible utility tools out of the category grid so the
         // infrastructure page is not mistaken for a Great-Wall / monument menu.
         let utilityTools: Set<NativeConstructionTool> = [
-            .inspect, .road, .clearLand, .demolish,
+            .inspect, .road, .clearLand, .demolish, .roadblock,
         ]
         let agriculturalProducerTools: Set<NativeConstructionTool> = [
             .farmland, .teaHouse, .lacquerGuild, .silkWeaver,
@@ -974,7 +980,7 @@ private struct ClassicControlPanel: View {
         let unavailableCrops = cropOrder.filter { !isCropAvailable($0) }
         return VStack(alignment: .leading, spacing: 7) {
             HStack(spacing: 5) {
-                categoryIcon(selectedCategory, selected: true, width: 20, height: 17)
+                categoryIcon(selectedCategory, state: .selected, width: 20, height: 17)
                 Text(selectedCategory.rawValue)
                     .font(EmperorTheme.bold(size: 12))
             }
@@ -984,7 +990,7 @@ private struct ClassicControlPanel: View {
 
             ScrollView(.vertical, showsIndicators: true) {
                 VStack(alignment: .leading, spacing: 7) {
-                    if selectedCategory == .production {
+                    if selectedCategory == .agriculture {
                         if !availableCrops.isEmpty {
                             cropCatalog(availableCrops, title: "作物田")
                         }
@@ -1092,14 +1098,11 @@ private struct ClassicControlPanel: View {
     /// city panel tool row above the minimap.
     private var constructionUtilityStrip: some View {
         let tools: [NativeConstructionTool] = [
-            .inspect, .road, .clearLand, .demolish,
+            .inspect, .road, .clearLand, .demolish, .roadblock,
         ]
         return HStack(spacing: 5) {
             ForEach(tools) { tool in
                 Button {
-                    if tool == .road || tool == .clearLand || tool == .demolish {
-                        selectedCategory = .infrastructure
-                    }
                     library.selectConstructionTool(tool)
                 } label: {
                     VStack(spacing: 2) {
@@ -1263,22 +1266,13 @@ private struct ClassicControlPanel: View {
     @ViewBuilder
     private func categoryIcon(
         _ category: ConstructionToolCategory,
-        selected: Bool,
+        state: OriginalInterfaceIconState,
         width: CGFloat,
         height: CGFloat
     ) -> some View {
-        if category == .infrastructure,
-           let sprite = library.renderedMap?.roadToolIconSprite() {
-            Image(decorative: sprite.image, scale: 1)
-                .resizable()
-                .interpolation(.none)
-                .scaledToFit()
-                .frame(width: width, height: height)
-                .accessibilityHidden(true)
-        } else if let icon = category.originalInterfaceIcon,
-           let imageID = OriginalInterfaceSpriteCatalog.imageID(
-            for: icon,
-            state: selected ? .selected : .normal
+        if let imageID = OriginalInterfaceSpriteCatalog.imageID(
+            for: category.originalInterfaceIcon,
+            state: state
            ),
            let sprite = library.interfaceSprites[imageID] {
             Image(decorative: sprite.image, scale: 1)
@@ -1292,9 +1286,39 @@ private struct ClassicControlPanel: View {
                 .font(.system(size: min(width, height) * 0.55, weight: .semibold))
                 .frame(width: width, height: height)
                 .foregroundStyle(
-                    selected ? ClassicPalette.gold : Color.white.opacity(0.82)
+                    state == .selected
+                        ? ClassicPalette.gold
+                        : Color.white.opacity(state == .disabled ? 0.38 : 0.82)
                 )
                 .accessibilityHidden(true)
+        }
+    }
+
+    private func categoryIconState(
+        for category: ConstructionToolCategory,
+        available: Bool
+    ) -> OriginalInterfaceIconState {
+        if !available { return .disabled }
+        if selectedCategory == category { return .selected }
+        if hoveredCategory == category { return .hover }
+        return .normal
+    }
+
+    private func categoryIsAvailable(_ category: ConstructionToolCategory) -> Bool {
+        if category == .agriculture {
+            let crops: [AgriculturalCrop] = [
+                .wheat, .soybeans, .rice, .millet, .cabbage,
+                .hemp, .tea, .mulberry, .lacquer,
+            ]
+            if crops.contains(where: isCropAvailable) { return true }
+        }
+        let utilityTools: Set<NativeConstructionTool> = [
+            .inspect, .road, .clearLand, .demolish, .roadblock,
+        ]
+        return NativeConstructionTool.allCases.contains {
+            $0.category == category
+                && !utilityTools.contains($0)
+                && isAvailable($0)
         }
     }
 
@@ -1639,15 +1663,34 @@ private struct ClassicCategoryAdvisorPanel: View {
                 ("查看住房供给", .housingSupply, "advisor-housing-supply"),
                 ("查看城市行人", .walkers, "advisor-city-walkers"),
             ]
-        case .production:
+        case .agriculture:
             [
                 ("查看农业生产", .food, "advisor-production-food"),
-                ("查看工业资源", .clay, "advisor-production-industry"),
+                ("查看居民用水", .water, "advisor-agriculture-water"),
             ]
-        case .civic:
+        case .industry:
+            [
+                ("查看工业资源", .clay, "advisor-industry-resources"),
+                ("查看城市行人", .walkers, "advisor-industry-walkers"),
+            ]
+        case .commerce:
+            [
+                ("查看商品分配", .walkers, "advisor-commerce-distribution"),
+                ("查看税收征缴", .tax, "advisor-commerce-tax"),
+            ]
+        case .safety:
+            [
+                ("查看居民用水", .water, "advisor-safety-water"),
+                ("查看巡察覆盖", .inspection, "advisor-safety-inspection"),
+            ]
+        case .government:
             [
                 ("查看巡察覆盖", .inspection, "advisor-civic-inspection"),
                 ("查看税收征缴", .tax, "advisor-civic-tax"),
+            ]
+        case .entertainment:
+            [
+                ("查看全部娱乐", .walkers, "advisor-entertainment-coverage"),
             ]
         case .religious:
             [
@@ -1667,11 +1710,6 @@ private struct ClassicCategoryAdvisorPanel: View {
         case .monuments:
             [
                 ("查看城市行人", .walkers, "advisor-monuments-walkers"),
-            ]
-        case .infrastructure:
-            [
-                ("查看居民用水", .water, "advisor-infrastructure-water"),
-                ("查看城市行人", .walkers, "advisor-infrastructure-walkers"),
             ]
         }
     }
@@ -2675,13 +2713,16 @@ private func constructionInstruction(
 private func categoryAccessibilitySlug(_ category: ConstructionToolCategory) -> String {
     switch category {
     case .residential: "residential"
-    case .production: "production"
-    case .military: "military"
-    case .civic: "civic"
+    case .agriculture: "agriculture"
+    case .industry: "industry"
+    case .commerce: "commerce"
+    case .safety: "safety"
+    case .government: "government"
+    case .entertainment: "entertainment"
     case .religious: "religious"
+    case .military: "military"
     case .aesthetics: "aesthetics"
     case .monuments: "monuments"
-    case .infrastructure: "infrastructure"
     }
 }
 

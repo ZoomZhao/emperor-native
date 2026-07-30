@@ -8,6 +8,7 @@ TEMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/emperor-qin1-ui-smoke.XXXXXX")
 APP_BUNDLE="$TEMP_ROOT/EmperorNative.app"
 CONTENTS="$APP_BUNDLE/Contents"
 EXECUTABLE_NAME="EmperorNativeQinSmoke"
+BUNDLE_IDENTIFIER="com.openai.EmperorNative.QinSmoke.$PPID.$$"
 
 cleanup() {
     rm -rf "$TEMP_ROOT"
@@ -26,7 +27,7 @@ cp "$BIN_DIR/EmperorNative" "$CONTENTS/MacOS/$EXECUTABLE_NAME"
 cp "$PROJECT_ROOT/Packaging/Info.plist" "$CONTENTS/Info.plist"
 cp "$PROJECT_ROOT/Packaging/AppIcon.icns" "$CONTENTS/Resources/AppIcon.icns"
 /usr/libexec/PlistBuddy \
-    -c "Set :CFBundleIdentifier com.openai.EmperorNative.QinSmoke" \
+    -c "Set :CFBundleIdentifier $BUNDLE_IDENTIFIER" \
     -c "Set :CFBundleExecutable $EXECUTABLE_NAME" \
     -c "Set :CFBundleName EmperorNative Qin Smoke" \
     -c "Set :CFBundleDisplayName EmperorNative Qin Smoke" \
