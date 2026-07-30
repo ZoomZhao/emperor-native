@@ -2533,18 +2533,33 @@ private struct ClassicPanelCommandDock: View {
     let models: OriginalEconomyModels
 
     var body: some View {
-        HStack(spacing: 5) {
-            Picker("税率", selection: Binding(
-                get: { library.cityState?.taxBandID ?? 2 },
-                set: { library.setTaxBand($0) }
-            )) {
+        HStack(spacing: 2) {
+            Menu {
                 ForEach(models.taxSentiment.bands) { band in
-                    Text("税 \(band.taxRatePercent)%").tag(band.id)
+                    Button("税率 \(band.taxRatePercent)%") {
+                        library.setTaxBand(band.id)
+                    }
                 }
+            } label: {
+                Text("税\(selectedTaxRatePercent)%")
+                    .font(EmperorTheme.bold(size: 9))
+                    .foregroundStyle(ClassicPalette.gold)
+                    .frame(width: 40, height: 22)
+                    .background(ClassicPalette.tileBrown)
+                    .overlay(
+                        Rectangle().strokeBorder(
+                            ClassicPalette.border,
+                            lineWidth: 0.7
+                        )
+                    )
             }
-            .labelsHidden()
-            .frame(width: 62)
-            .controlSize(.small)
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .help("调整税率")
+            .accessibilityLabel("税率")
+            .accessibilityValue("\(selectedTaxRatePercent)%")
+            .accessibilityIdentifier("tax-rate-menu")
 
             commandButton(
                 library.musicIsPlaying ? "speaker.wave.2.fill" : "speaker.slash.fill",
@@ -2555,8 +2570,6 @@ private struct ClassicPanelCommandDock: View {
                 .keyboardShortcut("o", modifiers: .command)
             commandButton("square.and.arrow.down", help: "保存", action: library.saveCity)
                 .keyboardShortcut("s", modifiers: .command)
-
-            Spacer(minLength: 1)
 
             ForEach(Array(0...3), id: \.self) { speed in
                 Button {
@@ -2579,10 +2592,18 @@ private struct ClassicPanelCommandDock: View {
                 .accessibilityIdentifier("game-speed-\(speed)")
             }
         }
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 4)
+        .frame(width: EmperorTheme.panelWidth)
         .frame(height: 36)
         .foregroundStyle(ClassicPalette.gold)
         .background(ClassicPalette.panelBrown)
+    }
+
+    private var selectedTaxRatePercent: Int {
+        let selectedBandID = library.cityState?.taxBandID ?? 2
+        return models.taxSentiment.bands.first {
+            $0.id == selectedBandID
+        }?.taxRatePercent ?? models.taxSentiment.bands.first?.taxRatePercent ?? 0
     }
 
     private func commandButton(

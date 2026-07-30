@@ -755,6 +755,29 @@ private func runSmoke(arguments: Arguments) throws {
                 timeout: 15,
                 requireEnabled: false
             )
+            let taxRateMenu = try waitForElement(
+                in: application,
+                identifier: "tax-rate-menu",
+                timeout: 15
+            )
+            let fastestSpeed = try waitForElement(
+                in: application,
+                identifier: "game-speed-3",
+                timeout: 15
+            )
+            guard let taxRateFrame = axFrame(of: taxRateMenu)?.rect,
+                  let fastestSpeedFrame = axFrame(of: fastestSpeed)?.rect else {
+                throw SmokeFailure("could not measure the compact command dock")
+            }
+            let commandDockSpan = fastestSpeedFrame.maxX - taxRateFrame.minX
+            guard taxRateFrame.maxX <= fastestSpeedFrame.minX,
+                  commandDockSpan <= 216 else {
+                throw SmokeFailure(
+                    "tax and speed controls overflow the 224px panel: "
+                        + "span=\(commandDockSpan), tax=\(taxRateFrame), "
+                        + "speed3=\(fastestSpeedFrame)"
+                )
+            }
             Thread.sleep(forTimeInterval: 2)
             let screenshotURL = arguments.logDirectory
                 .appendingPathComponent("qin-m1-native-city-baseline.png")
