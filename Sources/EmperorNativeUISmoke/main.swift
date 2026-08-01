@@ -602,6 +602,10 @@ private func launch(
     guard let launched else { throw SmokeFailure("workspace returned no running application") }
     launched.unhide()
     launched.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+    // Fresh SwiftUI instances can register with LaunchServices before their
+    // initial WindowGroup scene is opened on macOS 15. A normal reopen event
+    // creates that first window while preserving the launch arguments above.
+    _ = NSWorkspace.shared.open(appURL)
     return launched
 }
 

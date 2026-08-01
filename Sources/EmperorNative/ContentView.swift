@@ -439,6 +439,13 @@ private struct ClassicCityGameView: View {
                                 .allowsHitTesting(false)
                             }
                         }
+                        .overlay(alignment: .top) {
+                            if library.gameSpeed == 0 {
+                                ClassicPauseBanner()
+                                    .padding(.top, 7)
+                                    .allowsHitTesting(false)
+                            }
+                        }
 
                         ClassicControlPanel(
                             library: library,
@@ -488,6 +495,23 @@ private struct ClassicCityGameView: View {
     private var activeMission: CampaignMission? {
         guard let missionID = library.selectedMissionID else { return nil }
         return library.selectedCampaign?.missions.first { $0.id == missionID }
+    }
+}
+
+private struct ClassicPauseBanner: View {
+    var body: some View {
+        Text("游戏暂停（按 P 键继续）")
+            .font(EmperorTheme.bold(size: 15))
+            .foregroundStyle(ClassicPalette.gold)
+            .frame(width: 448, height: 38)
+            .background(ClassicPalette.deepBrown.opacity(0.94))
+            .overlay {
+                Rectangle()
+                    .strokeBorder(ClassicPalette.gold.opacity(0.85), lineWidth: 2)
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("游戏暂停，按 P 键继续")
+            .accessibilityIdentifier("city-pause-banner")
     }
 }
 
@@ -1582,7 +1606,7 @@ private struct ClassicCategoryAdvisorPanel: View {
     let category: ConstructionToolCategory
 
     var body: some View {
-        VStack(alignment: .center, spacing: 5) {
+        VStack(alignment: .center, spacing: 3) {
             ForEach(advisorActions, id: \.identifier) { action in
                 advisorButton(
                     title: action.title,
@@ -1602,7 +1626,7 @@ private struct ClassicCategoryAdvisorPanel: View {
                     }
                     .font(EmperorTheme.bodySmall)
                     .padding(.horizontal, 8)
-                    .frame(maxWidth: .infinity, minHeight: 26)
+                    .frame(maxWidth: .infinity, minHeight: 20)
                     .background(EmperorTheme.surfaceControl)
                     .overlay(Rectangle().strokeBorder(EmperorTheme.secondary, lineWidth: 1))
                 }
@@ -1623,7 +1647,7 @@ private struct ClassicCategoryAdvisorPanel: View {
                         }
                         .font(EmperorTheme.bodySmall)
                         .padding(.horizontal, 8)
-                        .frame(maxWidth: .infinity, minHeight: 26)
+                        .frame(maxWidth: .infinity, minHeight: 20)
                         .background(EmperorTheme.surfaceControl)
                         .overlay(Rectangle().strokeBorder(EmperorTheme.secondary, lineWidth: 1))
                     }
@@ -1643,7 +1667,7 @@ private struct ClassicCategoryAdvisorPanel: View {
                         }
                         .font(EmperorTheme.bodySmall)
                         .padding(.horizontal, 8)
-                        .frame(maxWidth: .infinity, minHeight: 26)
+                        .frame(maxWidth: .infinity, minHeight: 20)
                         .background(EmperorTheme.surfaceControl)
                         .overlay(Rectangle().strokeBorder(EmperorTheme.secondary, lineWidth: 1))
                     }
@@ -1782,7 +1806,7 @@ private struct ClassicCategoryAdvisorPanel: View {
             .font(EmperorTheme.bodySmall)
             .foregroundStyle(isActive ? ClassicPalette.ink : EmperorTheme.onSurface)
             .padding(.horizontal, 8)
-            .frame(maxWidth: .infinity, minHeight: 26)
+            .frame(maxWidth: .infinity, minHeight: 20)
             .background(isActive ? ClassicPalette.gold : EmperorTheme.surfaceControl)
             .overlay(Rectangle().strokeBorder(EmperorTheme.secondary, lineWidth: 1))
             .contentShape(Rectangle())
@@ -1900,7 +1924,6 @@ private struct ClassicCityNavigationBar: View {
                 fallback: "building.2.fill",
                 label: "城市",
                 identifier: "city-button-city-view",
-                selected: true,
                 action: {}
             )
             navigationButton(

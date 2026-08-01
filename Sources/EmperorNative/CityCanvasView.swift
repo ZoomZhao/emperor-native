@@ -2477,10 +2477,10 @@ private enum MinimapColors {
     }
 }
 
-/// Bottom-right radar. Map tiles use the original isometric 2×1 projection,
-/// mission monument paths are rendered over the terrain, and the current
-/// viewport is outlined in white/red. Clicking or dragging inverses the same
-/// projection to recenter the main camera.
+/// Bottom-right radar. The authored `China_Radar` sprites are tiny palette
+/// bars, not a complete minimap image, so active map tiles are quantized and
+/// expanded to fill the radar panel. Mission monument paths are rendered over
+/// the terrain and the current viewport is outlined in white/red.
 struct MinimapView: View {
     let city: DeterministicCityState
     let mapWidth: Int
@@ -2523,17 +2523,12 @@ struct MinimapView: View {
                 with: .color(MinimapColors.offMap)
             )
 
+            let bounds = activeMapBounds
             let buildingColors = buildingColorByPoint()
-            for y in 0..<mapHeight {
-                for x in 0..<mapWidth {
+            for y in bounds.minY...bounds.maxY {
+                for x in bounds.minX...bounds.maxX {
                     let mapPoint = GridPoint(x: x, y: y)
-                    let radarPoint = radarPoint(for: mapPoint, in: size)
-                    let rect = CGRect(
-                        x: radarPoint.x - 1,
-                        y: radarPoint.y,
-                        width: 2,
-                        height: 1
-                    )
+                    let rect = radarTileRect(for: mapPoint, bounds: bounds, in: size)
                     context.fill(
                         Path(rect),
                         with: .color(tileColor(mapPoint, buildingColors: buildingColors))
@@ -2541,9 +2536,9 @@ struct MinimapView: View {
                 }
             }
 
-            drawMonumentMarkers(context: &context, size: size)
+            drawMonumentMarkers(context: &context, bounds: bounds, size: size)
 
-            let viewportPath = radarViewportPath(in: size)
+            let viewportPath = radarViewportPath(bounds: bounds, in: size)
             context.fill(viewportPath, with: .color(Color.white.opacity(0.10)))
             context.stroke(
                 viewportPath,
@@ -2573,53 +2568,85 @@ struct MinimapView: View {
 
     private func jump(to location: CGPoint) {
         guard mapWidth > 0, mapHeight > 0 else { return }
-        let span = CGFloat(mapWidth + mapHeight)
-        let difference = location.x / minimapSize.width * span - CGFloat(mapHeight)
-        let sum = location.y / minimapSize.height * span
+        let bounds = activeMapBounds
         let mapX = min(
-            max(0, Int(((difference + sum) / 2).rounded())),
-            mapWidth - 1
+            max(
+                bounds.minX,
+                bounds.minX + Int(
+                    (location.x / minimapSize.width * CGFloat(bounds.width)).rounded()
+                )
+            ),
+            bounds.maxX
         )
         let mapY = min(
-            max(0, Int(((sum - difference) / 2).rounded())),
-            mapHeight - 1
+            max(
+                bounds.minY,
+                bounds.minY + Int(
+                    (location.y / minimapSize.height * CGFloat(bounds.height)).rounded()
+                )
+            ),
+            bounds.maxY
         )
         onJump(GridPoint(x: mapX, y: mapY))
     }
 
-    private func radarPoint(for point: GridPoint, in size: CGSize) -> CGPoint {
-        let span = CGFloat(max(1, mapWidth + mapHeight))
+    private func radarPoint(
+        for point: GridPoint,
+        bounds: RadarBounds,
+        in size: CGSize
+    ) -> CGPoint {
         return CGPoint(
-            x: (CGFloat(point.x - point.y + mapHeight) / span) * size.width,
-            y: (CGFloat(point.x + point.y) / span) * size.height
+            x: CGFloat(point.x - bounds.minX) / CGFloat(bounds.width) * size.width,
+            y: CGFloat(point.y - bounds.minY) / CGFloat(bounds.height) * size.height
         )
     }
 
-    private func radarViewportPath(in size: CGSize) -> Path {
-        let minimum = GridPoint(x: viewportStartX, y: viewportStartY)
-        let maximumX = GridPoint(
-            x: viewportStartX + viewportColumns,
-            y: viewportStartY
+    private func radarTileRect(
+        for point: GridPoint,
+        bounds: RadarBounds,
+        in size: CGSize
+    ) -> CGRect {
+        let start = radarPoint(for: point, bounds: bounds, in: size)
+        let end = radarPoint(
+            for: GridPoint(x: point.x + 1, y: point.y + 1),
+            bounds: bounds,
+            in: size
         )
-        let maximum = GridPoint(
-            x: viewportStartX + viewportColumns,
-            y: viewportStartY + viewportRows
+        return CGRect(
+            x: floor(start.x),
+            y: floor(start.y),
+            width: max(1, ceil(end.x) - floor(start.x)),
+            height: max(1, ceil(end.y) - floor(start.y))
         )
-        let maximumY = GridPoint(
-            x: viewportStartX,
-            y: viewportStartY + viewportRows
+    }
+
+    private func radarViewportPath(bounds: RadarBounds, in size: CGSize) -> Path {
+        let origin = radarPoint(
+            for: GridPoint(x: viewportStartX, y: viewportStartY),
+            bounds: bounds,
+            in: size
         )
-        var path = Path()
-        path.move(to: radarPoint(for: minimum, in: size))
-        path.addLine(to: radarPoint(for: maximumX, in: size))
-        path.addLine(to: radarPoint(for: maximum, in: size))
-        path.addLine(to: radarPoint(for: maximumY, in: size))
-        path.closeSubpath()
-        return path
+        let maximum = radarPoint(
+            for: GridPoint(
+                x: viewportStartX + viewportColumns,
+                y: viewportStartY + viewportRows
+            ),
+            bounds: bounds,
+            in: size
+        )
+        return Path(
+            CGRect(
+                x: min(origin.x, maximum.x),
+                y: min(origin.y, maximum.y),
+                width: abs(maximum.x - origin.x),
+                height: abs(maximum.y - origin.y)
+            )
+        )
     }
 
     private func drawMonumentMarkers(
         context: inout GraphicsContext,
+        bounds: RadarBounds,
         size: CGSize
     ) {
         if let canal = city.aesthetics.grandCanalProject {
@@ -2633,6 +2660,7 @@ struct MinimapView: View {
                         ? MinimapColors.activeMonument
                         : MinimapColors.plannedMonument,
                     context: &context,
+                    bounds: bounds,
                     size: size
                 )
             }
@@ -2648,6 +2676,7 @@ struct MinimapView: View {
                         ? MinimapColors.activeMonument
                         : MinimapColors.plannedMonument,
                     context: &context,
+                    bounds: bounds,
                     size: size
                 )
             }
@@ -2658,9 +2687,10 @@ struct MinimapView: View {
         at point: GridPoint,
         color: Color,
         context: inout GraphicsContext,
+        bounds: RadarBounds,
         size: CGSize
     ) {
-        let radarPoint = radarPoint(for: point, in: size)
+        let radarPoint = radarPoint(for: point, bounds: bounds, in: size)
         context.fill(
             Path(
                 CGRect(
@@ -2671,6 +2701,47 @@ struct MinimapView: View {
                 )
             ),
             with: .color(color)
+        )
+    }
+
+    private struct RadarBounds {
+        let minX: Int
+        let minY: Int
+        let maxX: Int
+        let maxY: Int
+
+        var width: Int { max(1, maxX - minX + 1) }
+        var height: Int { max(1, maxY - minY + 1) }
+    }
+
+    private var activeMapBounds: RadarBounds {
+        var minimumX = mapWidth
+        var minimumY = mapHeight
+        var maximumX = -1
+        var maximumY = -1
+        for y in 0..<mapHeight {
+            for x in 0..<mapWidth {
+                let flags = city.terrain?.terrain(at: GridPoint(x: x, y: y))
+                guard flags?.contains(.offMap) != true else { continue }
+                minimumX = min(minimumX, x)
+                minimumY = min(minimumY, y)
+                maximumX = max(maximumX, x)
+                maximumY = max(maximumY, y)
+            }
+        }
+        guard maximumX >= minimumX, maximumY >= minimumY else {
+            return RadarBounds(
+                minX: 0,
+                minY: 0,
+                maxX: max(0, mapWidth - 1),
+                maxY: max(0, mapHeight - 1)
+            )
+        }
+        return RadarBounds(
+            minX: minimumX,
+            minY: minimumY,
+            maxX: maximumX,
+            maxY: maximumY
         )
     }
 
