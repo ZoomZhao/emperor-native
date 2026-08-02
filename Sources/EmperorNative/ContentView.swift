@@ -328,16 +328,28 @@ private struct ClassicOriginalPanelTexture: View {
 
     @ViewBuilder
     var body: some View {
-        if let sprite {
-            Image(decorative: sprite.image, scale: 1)
-                .resizable(
-                    capInsets: EdgeInsets(),
-                    resizingMode: .tile
-                )
+        if let sprite, let bodyImage = panelBodyImage(sprite) {
+            Image(decorative: bodyImage, scale: 1)
+                .resizable(resizingMode: .stretch)
                 .interpolation(.none)
         } else {
             ClassicBronzeTexture()
         }
+    }
+
+    /// `#1223` is a complete panel slice whose first 40 pixels contain the
+    /// blue roof edge. The control panel begins below that edge, so repeating
+    /// the whole image makes the roof reappear halfway down the sidebar.
+    private func panelBodyImage(_ sprite: RenderedTerrainSprite) -> CGImage? {
+        let topInset = min(Int(EmperorTheme.hudHeight), sprite.image.height - 1)
+        return sprite.image.cropping(
+            to: CGRect(
+                x: 0,
+                y: topInset,
+                width: sprite.image.width,
+                height: sprite.image.height - topInset
+            )
+        )
     }
 }
 
@@ -529,6 +541,7 @@ private struct ClassicPanelHeader: View {
                     .font(EmperorTheme.headlineSmall)
                     .frame(maxWidth: .infinity)
             }
+            .offset(y: 2)
             .foregroundStyle(ClassicPalette.gold)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .contentShape(Rectangle())
@@ -572,7 +585,8 @@ private struct ClassicImperialHUD: View {
             menuBar
                 .frame(width: 142, alignment: .leading)
 
-            Spacer(minLength: 42)
+            Spacer()
+                .frame(width: 24)
 
             ClassicHUDSpriteMetric(
                 library: library,
@@ -594,6 +608,9 @@ private struct ClassicImperialHUD: View {
             .frame(width: 70)
             .accessibilityIdentifier("hud-population-metric")
 
+            Spacer()
+                .frame(width: 10)
+
             ClassicHUDZodiac(
                 library: library,
                 element: calendarElement,
@@ -610,6 +627,7 @@ private struct ClassicImperialHUD: View {
                 .accessibilityLabel("日期 \(imperialDate)")
                 .accessibilityIdentifier("hud-date-metric")
         }
+        .offset(y: 2)
         .padding(.horizontal, 8)
         .frame(height: EmperorTheme.hudHeight)
         .fixedSize(horizontal: false, vertical: true)
@@ -639,7 +657,7 @@ private struct ClassicImperialHUD: View {
     }
 
     private var menuBar: some View {
-        HStack(spacing: 17) {
+        HStack(spacing: 13) {
             Menu {
                 Button("保存城市", action: library.saveCity)
                     .keyboardShortcut("s", modifiers: .command)
@@ -652,6 +670,7 @@ private struct ClassicImperialHUD: View {
                     .font(EmperorTheme.labelMedium)
             }
             .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
             .fixedSize()
             .foregroundStyle(EmperorTheme.onSurface)
             .tint(EmperorTheme.onSurface)
@@ -670,6 +689,7 @@ private struct ClassicImperialHUD: View {
                     .font(EmperorTheme.labelMedium)
             }
             .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
             .fixedSize()
             .foregroundStyle(EmperorTheme.onSurface)
             .tint(EmperorTheme.onSurface)
