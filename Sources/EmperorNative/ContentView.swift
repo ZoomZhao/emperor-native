@@ -326,14 +326,26 @@ private struct ClassicBronzeTexture: View {
 private struct ClassicOriginalPanelTexture: View {
     let sprite: RenderedTerrainSprite?
 
-    @ViewBuilder
     var body: some View {
-        if let sprite, let bodyImage = panelBodyImage(sprite) {
-            Image(decorative: bodyImage, scale: 1)
-                .resizable(resizingMode: .stretch)
-                .interpolation(.none)
-        } else {
+        ZStack(alignment: .topLeading) {
             ClassicBronzeTexture()
+
+            if let sprite, let woodTileImage = panelWoodTileImage(sprite) {
+                Image(decorative: woodTileImage, scale: 1)
+                    .resizable(resizingMode: .tile)
+                    .interpolation(.none)
+            }
+
+            if let sprite, let bodyImage = panelBodyImage(sprite) {
+                Image(decorative: bodyImage, scale: 1)
+                    .interpolation(.none)
+                    .frame(
+                        width: EmperorTheme.panelWidth,
+                        height: CGFloat(bodyImage.height),
+                        alignment: .topLeading
+                    )
+                    .clipped()
+            }
         }
     }
 
@@ -349,6 +361,22 @@ private struct ClassicOriginalPanelTexture: View {
                 width: sprite.image.width,
                 height: sprite.image.height - topInset
             )
+        )
+    }
+
+    /// The original `#1223` slice is only 458 px tall. Keep its authored
+    /// category rail and panel grid at 1:1 scale, then continue the lower
+    /// minimap area with a plain wood sample instead of stretching those
+    /// structural details across the full 728 px sidebar.
+    private func panelWoodTileImage(_ sprite: RenderedTerrainSprite) -> CGImage? {
+        let sampleOrigin = CGPoint(x: 64, y: 80)
+        let sampleSize = CGSize(width: 128, height: 128)
+        guard Int(sampleOrigin.x + sampleSize.width) <= sprite.image.width,
+              Int(sampleOrigin.y + sampleSize.height) <= sprite.image.height else {
+            return nil
+        }
+        return sprite.image.cropping(
+            to: CGRect(origin: sampleOrigin, size: sampleSize)
         )
     }
 }
