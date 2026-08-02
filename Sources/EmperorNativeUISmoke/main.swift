@@ -213,6 +213,21 @@ private func press(_ identifiedElement: AXUIElement, identifier: String) throws 
     throw SmokeFailure("accessibility element \(identifier) does not support AXPress")
 }
 
+private func revealAdvancedCityControls(in application: AXUIElement) throws {
+    if findElement(in: application, identifier: "game-speed-3") != nil { return }
+    let toggle = try waitForElement(
+        in: application,
+        identifier: "city-advanced-controls-toggle",
+        timeout: 15
+    )
+    try press(toggle, identifier: "city-advanced-controls-toggle")
+    _ = try waitForElement(
+        in: application,
+        identifier: "game-speed-3",
+        timeout: 15
+    )
+}
+
 private func axFrame(of element: AXUIElement) -> AXFrame? {
     guard let positionValue = copyAttribute(element, kAXPositionAttribute as CFString),
           let sizeValue = copyAttribute(element, kAXSizeAttribute as CFString),
@@ -776,6 +791,27 @@ private func runSmoke(arguments: Arguments) throws {
                     requireEnabled: false
                 )
             }
+            let advancedControlsToggle = try waitForElement(
+                in: application,
+                identifier: "city-advanced-controls-toggle",
+                timeout: 15
+            )
+            guard findElement(in: application, identifier: "tax-rate-menu") == nil,
+                  findElement(in: application, identifier: "game-speed-3") == nil else {
+                throw SmokeFailure("advanced city controls should be hidden by default")
+            }
+            Thread.sleep(forTimeInterval: 2)
+            let screenshotURL = arguments.logDirectory
+                .appendingPathComponent("qin-m1-native-city-baseline.png")
+            guard captureWindow(application: application, to: screenshotURL) else {
+                throw SmokeFailure("could not capture the Qin M1 city baseline")
+            }
+            log.record("Qin M1 city baseline=\(screenshotURL.path)")
+
+            try press(
+                advancedControlsToggle,
+                identifier: "city-advanced-controls-toggle"
+            )
             let taxRateMenu = try waitForElement(
                 in: application,
                 identifier: "tax-rate-menu",
@@ -799,13 +835,6 @@ private func runSmoke(arguments: Arguments) throws {
                         + "speed3=\(fastestSpeedFrame)"
                 )
             }
-            Thread.sleep(forTimeInterval: 2)
-            let screenshotURL = arguments.logDirectory
-                .appendingPathComponent("qin-m1-native-city-baseline.png")
-            guard captureWindow(application: application, to: screenshotURL) else {
-                throw SmokeFailure("could not capture the Qin M1 city baseline")
-            }
-            log.record("Qin M1 city baseline=\(screenshotURL.path)")
             return
         }
 
@@ -1036,6 +1065,7 @@ private func runSmoke(arguments: Arguments) throws {
         if let canvas = findElement(in: application, identifier: "city-canvas") {
             _ = setVerticalScroll(containing: canvas, value: 1)
         }
+        try revealAdvancedCityControls(in: application)
         let speed = try waitForElement(in: application, identifier: "game-speed-3", timeout: 15)
         try press(speed, identifier: "game-speed-3")
         log.record("pressed game-speed-3")

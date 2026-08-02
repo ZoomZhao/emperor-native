@@ -541,7 +541,7 @@ private struct ClassicPanelHeader: View {
                     .font(EmperorTheme.headlineSmall)
                     .frame(maxWidth: .infinity)
             }
-            .offset(y: 2)
+            .offset(y: EmperorTheme.hudRoofHeight / 2)
             .foregroundStyle(ClassicPalette.gold)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .contentShape(Rectangle())
@@ -627,7 +627,7 @@ private struct ClassicImperialHUD: View {
                 .accessibilityLabel("日期 \(imperialDate)")
                 .accessibilityIdentifier("hud-date-metric")
         }
-        .offset(y: 2)
+        .offset(y: EmperorTheme.hudRoofHeight / 2)
         .padding(.horizontal, 8)
         .frame(height: EmperorTheme.hudHeight)
         .fixedSize(horizontal: false, vertical: true)
@@ -912,6 +912,7 @@ private struct ClassicControlPanel: View {
     @State private var showsObjectives = false
     @State private var showsWorldMap = false
     @State private var showsMessages = false
+    @State private var showsAdvancedControls = false
     @State private var hoveredCategory: ConstructionToolCategory?
 
     private let categoryOrder = ConstructionToolCategory.allCases
@@ -948,10 +949,15 @@ private struct ClassicControlPanel: View {
             constructionUtilityStrip
 
             Divider().overlay(ClassicPalette.border)
-            resourceOverlays
+            advancedControlsToggle
 
-            Divider().overlay(ClassicPalette.border)
-            ClassicPanelCommandDock(library: library, models: models)
+            if showsAdvancedControls {
+                Divider().overlay(ClassicPalette.border)
+                resourceOverlays
+
+                Divider().overlay(ClassicPalette.border)
+                ClassicPanelCommandDock(library: library, models: models)
+            }
 
             Divider().overlay(ClassicPalette.border)
             classicMinimap
@@ -986,6 +992,32 @@ private struct ClassicControlPanel: View {
         }
         .frame(width: EmperorTheme.panelWidth, alignment: .leading)
         .clipped()
+    }
+
+    private var advancedControlsToggle: some View {
+        Button {
+            showsAdvancedControls.toggle()
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "slider.horizontal.3")
+                    .font(EmperorTheme.bold(size: 9))
+                Text("图层与城市控制")
+                    .font(EmperorTheme.bold(size: 10))
+                Spacer(minLength: 0)
+                Image(systemName: showsAdvancedControls ? "chevron.down" : "chevron.right")
+                    .font(EmperorTheme.bold(size: 8))
+            }
+            .foregroundStyle(ClassicPalette.gold)
+            .padding(.horizontal, 10)
+            .frame(width: EmperorTheme.panelWidth, height: 26)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .background(ClassicPalette.deepBrown.opacity(0.58))
+        .accessibilityLabel("图层与城市控制")
+        .accessibilityValue(showsAdvancedControls ? "已展开" : "已隐藏")
+        .accessibilityIdentifier("city-advanced-controls-toggle")
+        .help(showsAdvancedControls ? "隐藏图层、税率与速度控制" : "显示图层、税率与速度控制")
     }
 
     private var categoryRail: some View {
@@ -1544,7 +1576,6 @@ private struct ClassicControlPanel: View {
         }
         .padding(.leading, 40)
         .frame(height: 154)
-        .background(Color.black.opacity(0.12))
     }
 
     private func panelPanButton(
@@ -1964,7 +1995,6 @@ private struct ClassicCityNavigationBar: View {
         }
         .padding(.horizontal, 14)
         .frame(height: EmperorTheme.cityNavigationHeight)
-        .background(Color.black.opacity(0.12))
     }
 
     private func navigationButton(

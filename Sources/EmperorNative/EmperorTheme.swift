@@ -48,6 +48,9 @@ enum EmperorTheme {
     static let classicViewportSize = CGSize(width: 1_024, height: 768)
     static let cityMapColumnWidth: CGFloat = 800
     static let hudHeight: CGFloat = 40
+    /// Height occupied by the blue roof edge in the original HUD artwork.
+    /// Status text is centered in the timber band below it, not in all 40 px.
+    static let hudRoofHeight: CGFloat = 12
     static let panelWidth: CGFloat = 224
     static let panelHeaderHeight: CGFloat = 34
     static let categoryRailWidth: CGFloat = 54
