@@ -1050,7 +1050,7 @@ private struct ClassicControlPanel: View {
 
     private var categoryRail: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            VStack(spacing: 2) {
+            VStack(spacing: 1) {
                 ForEach(categoryOrder) { category in
                     let available = categoryIsAvailable(category)
                     Button {
@@ -1065,7 +1065,7 @@ private struct ClassicControlPanel: View {
                             width: 46,
                             height: 37
                         )
-                        .frame(width: 48, height: 39)
+                        .frame(width: 48, height: 37)
                     }
                     .buttonStyle(.plain)
                     .disabled(!available)
@@ -1078,7 +1078,8 @@ private struct ClassicControlPanel: View {
                     .help(category.rawValue)
                 }
             }
-            .padding(4)
+            .padding(.horizontal, 3)
+            .offset(y: -2)
         }
         .frame(width: 54)
         .frame(maxHeight: .infinity, alignment: .top)
@@ -1106,63 +1107,27 @@ private struct ClassicControlPanel: View {
         ]
         let availableCrops = cropOrder.filter(isCropAvailable)
         let unavailableCrops = cropOrder.filter { !isCropAvailable($0) }
-        return VStack(alignment: .leading, spacing: 7) {
-            HStack(spacing: 5) {
-                categoryIcon(selectedCategory, state: .selected, width: 20, height: 17)
-                Text(selectedCategory.rawValue)
-                    .font(EmperorTheme.bold(size: 12))
-            }
-            .foregroundStyle(ClassicPalette.gold)
-            .padding(.horizontal, 9)
-            .padding(.top, 8)
-
-            ScrollView(.vertical, showsIndicators: true) {
-                VStack(alignment: .leading, spacing: 7) {
-                    if selectedCategory == .agriculture {
-                        if !availableCrops.isEmpty {
-                            cropCatalog(availableCrops, title: "作物田")
-                        }
-                        constructionToolGrid(availableTools)
-                        if !unavailableCrops.isEmpty || !unavailableTools.isEmpty {
-                            Text("本关未开放")
-                                .font(EmperorTheme.bold(size: 10))
-                                .foregroundStyle(Color.white.opacity(0.48))
-                                .padding(.top, 3)
-                        }
-                        if !unavailableCrops.isEmpty {
-                            cropCatalog(unavailableCrops, title: nil)
-                        }
-                        constructionToolGrid(unavailableTools)
-                    } else {
-                        constructionToolGrid(availableTools + unavailableTools)
-                    }
+        return ScrollView(.vertical, showsIndicators: true) {
+            VStack(alignment: .leading, spacing: 0) {
+                if selectedCategory == .agriculture {
+                    cropCatalog(availableCrops + unavailableCrops)
+                    constructionToolGrid(availableTools + unavailableTools)
+                } else {
+                    constructionToolGrid(availableTools + unavailableTools)
                 }
-                .padding(.horizontal, 8)
-                .padding(.bottom, 8)
             }
+            .padding(.horizontal, 5)
         }
     }
 
-    private func cropCatalog(
-        _ crops: [AgriculturalCrop],
-        title: String?
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
-            if let title {
-                Text(title)
-                    .font(EmperorTheme.bold(size: 10))
-                    .foregroundStyle(Color.white.opacity(0.66))
-            }
-            LazyVGrid(
-                columns: [
-                    GridItem(.flexible(), spacing: 5),
-                    GridItem(.flexible(), spacing: 5),
-                ],
-                spacing: 5
-            ) {
-                ForEach(crops, id: \.self) { crop in
-                    cropButton(crop)
-                }
+    private func cropCatalog(_ crops: [AgriculturalCrop]) -> some View {
+        LazyVGrid(
+            columns: classicConstructionGridColumns,
+            alignment: .leading,
+            spacing: 0
+        ) {
+            ForEach(crops, id: \.self) { crop in
+                cropButton(crop)
             }
         }
     }
@@ -1171,16 +1136,22 @@ private struct ClassicControlPanel: View {
         _ tools: [NativeConstructionTool]
     ) -> some View {
         LazyVGrid(
-            columns: [
-                GridItem(.flexible(), spacing: 5),
-                GridItem(.flexible(), spacing: 5),
-            ],
-            spacing: 5
+            columns: classicConstructionGridColumns,
+            alignment: .leading,
+            spacing: 0
         ) {
             ForEach(tools) { tool in
                 constructionButton(tool)
             }
         }
+    }
+
+    private var classicConstructionGridColumns: [GridItem] {
+        [
+            GridItem(.fixed(52), spacing: 2),
+            GridItem(.fixed(52), spacing: 2),
+            GridItem(.fixed(52), spacing: 0),
+        ]
     }
 
     private func cropButton(_ crop: AgriculturalCrop) -> some View {
@@ -1189,28 +1160,30 @@ private struct ClassicControlPanel: View {
         return Button {
             library.selectAgriculturalCrop(crop)
         } label: {
-            VStack(spacing: 3) {
+            Group {
                 if let sprite = agriculturalSprite(for: crop) {
                     Image(decorative: sprite.image, scale: 1)
                         .resizable()
                         .interpolation(.none)
                         .scaledToFit()
-                        .frame(maxWidth: 48, maxHeight: 27)
+                        .frame(maxWidth: 48, maxHeight: 34)
                         .accessibilityHidden(true)
                 } else {
                     Image(systemName: crop.category == .orchard ? "tree.fill" : "leaf.fill")
                         .font(.system(size: 15, weight: .semibold))
-                        .frame(height: 27)
+                        .frame(height: 34)
                         .accessibilityHidden(true)
                 }
-                Text(crop.fieldTitle)
-                    .font(EmperorTheme.labelSmall)
-                    .lineLimit(1)
             }
-            .frame(maxWidth: .infinity, minHeight: 48)
+            .frame(width: 52, height: 52)
             .foregroundStyle(selected ? ClassicPalette.ink : Color.white.opacity(0.9))
-            .background(selected ? ClassicPalette.gold : ClassicPalette.tileBrown)
-            .overlay(Rectangle().strokeBorder(ClassicPalette.border, lineWidth: 0.8))
+            .background(selected ? ClassicPalette.gold.opacity(0.72) : Color.clear)
+            .overlay(
+                Rectangle().strokeBorder(
+                    selected ? ClassicPalette.gold : Color.clear,
+                    lineWidth: 1
+                )
+            )
         }
         .buttonStyle(.plain)
         .disabled(!isCropAvailable(crop))
@@ -1282,22 +1255,22 @@ private struct ClassicControlPanel: View {
         Button {
             library.selectConstructionTool(tool)
         } label: {
-            VStack(spacing: 3) {
-                constructionToolIcon(tool)
-                Text(tool.title)
-                    .font(EmperorTheme.labelSmall)
-                    .lineLimit(1)
-            }
-            .frame(maxWidth: .infinity, minHeight: 48)
+            constructionToolIcon(tool)
+            .frame(width: 52, height: 52)
             .foregroundStyle(library.constructionTool == tool ? ClassicPalette.ink : Color.white.opacity(0.9))
             .background(
                 library.constructionTool == tool
-                    ? ClassicPalette.gold
-                    : ClassicPalette.tileBrown
+                    ? ClassicPalette.gold.opacity(0.72)
+                    : Color.clear
             )
             .overlay(
                 Rectangle()
-                    .strokeBorder(ClassicPalette.border, lineWidth: 0.8)
+                    .strokeBorder(
+                        library.constructionTool == tool
+                            ? ClassicPalette.gold
+                            : Color.clear,
+                        lineWidth: 1
+                    )
             )
         }
         .buttonStyle(.plain)
@@ -1766,8 +1739,9 @@ private struct ClassicCategoryAdvisorPanel: View {
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 7)
-        .frame(minHeight: EmperorTheme.populationAdvisorHeight, alignment: .top)
-        .background(Color.black.opacity(0.18))
+        .frame(height: EmperorTheme.populationAdvisorHeight, alignment: .top)
+        .clipped()
+        .background(Color.black.opacity(0.06))
         .accessibilityElement(children: .contain)
         .accessibilityLabel(category.advisorTitle)
         .accessibilityIdentifier(

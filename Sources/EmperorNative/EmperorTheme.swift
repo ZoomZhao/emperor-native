@@ -55,7 +55,9 @@ enum EmperorTheme {
     static let panelHeaderHeight: CGFloat = 34
     static let categoryRailWidth: CGFloat = 54
     static let commandRowHeight: CGFloat = 36
-    static let populationAdvisorHeight: CGFloat = 210
+    /// `#1223` changes from the woven advisor field to its construction grid
+    /// at logical y=321 (281 px below the city-panel origin).
+    static let populationAdvisorHeight: CGFloat = 280
     static let cityNavigationHeight: CGFloat = 40
     static let minimapSize = CGSize(width: 138, height: 138)
     static let nativeCardRadius: CGFloat = 12
