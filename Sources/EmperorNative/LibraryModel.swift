@@ -1048,6 +1048,17 @@ final class LibraryModel: ObservableObject {
             }
             return "无法建造路障：道路格已被其他建筑占用"
         }
+        if tool == .road {
+            if city.roadNetwork.contains(point) { return "目标格已经是道路" }
+            if city.occupiedBuildingPoints.contains(point) { return "目标格已有建筑" }
+            if city.terrain?.isClearLand(point) == false {
+                return "原版地形（含运河预留格）阻挡了铺路"
+            }
+            if city.canConstructRoad(at: point) {
+                return "无法铺路：国库不足"
+            }
+            return "该格无法铺路"
+        }
         if let buildingID = tool.buildingID,
            OriginalMilitaryDefenseConfiguration.configuration(buildingID: buildingID) != nil {
             if city.canConstructMilitaryDefense(

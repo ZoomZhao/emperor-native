@@ -1307,42 +1307,48 @@ struct CityCanvas: View {
                 // The original renderer paints the terrain bed first; without
                 // it, black one-pixel seams and empty diamonds show through.
                 context.fill(diamond, with: .color(baseColor))
-                let drewOriginalTerrain = drawOriginalTerrain(
-                    at: mapPoint,
-                    center: center,
-                    tileWidth: tileWidth,
-                    tileHeight: tileHeight,
-                    context: &context
-                )
+                let isPlayerBuiltRoad = city.roadNetwork.contains(mapPoint)
+                    && originalMap?.map.terrain(at: mapPoint)?.contains(.road) != true
+                let playerRoadSprite = isPlayerBuiltRoad
+                    ? originalMap?.roadSprite(connectionMask: roadConnectionMask(at: mapPoint))
+                    : nil
+                let drewOriginalTerrain: Bool
+                if let playerRoadSprite {
+                    // A road tile replaces the land image for this grid cell.
+                    // Drawing it after the authored grass sprite made the two
+                    // opaque beds overlap and left newly built roads dirty.
+                    drawOriginalSprite(
+                        playerRoadSprite,
+                        center: center,
+                        tileWidth: tileWidth,
+                        tileHeight: tileHeight,
+                        context: &context
+                    )
+                    drewOriginalTerrain = true
+                } else {
+                    drewOriginalTerrain = drawOriginalTerrain(
+                        at: mapPoint,
+                        center: center,
+                        tileWidth: tileWidth,
+                        tileHeight: tileHeight,
+                        context: &context
+                    )
+                }
                 if !drewOriginalTerrain {
                     context.stroke(diamond, with: .color(.black.opacity(0.16)), lineWidth: 0.5)
                 }
-                if drewOriginalTerrain,
-                   city.roadNetwork.contains(mapPoint),
-                   originalMap?.map.terrain(at: mapPoint)?.contains(.road) != true {
-                    if let roadSprite = originalMap?.roadSprite(
-                        connectionMask: roadConnectionMask(at: mapPoint)
-                    ) {
-                        drawOriginalSprite(
-                            roadSprite,
-                            center: center,
-                            tileWidth: tileWidth,
-                            tileHeight: tileHeight,
-                            context: &context
+                if isPlayerBuiltRoad, playerRoadSprite == nil {
+                    context.fill(
+                        diamond,
+                        with: .color(
+                            Color(red: 0.46, green: 0.34, blue: 0.20).opacity(0.82)
                         )
-                    } else {
-                        context.fill(
-                            diamond,
-                            with: .color(
-                                Color(red: 0.46, green: 0.34, blue: 0.20).opacity(0.82)
-                            )
-                        )
-                        context.stroke(
-                            diamond,
-                            with: .color(.black.opacity(0.38)),
-                            lineWidth: 0.8
-                        )
-                    }
+                    )
+                    context.stroke(
+                        diamond,
+                        with: .color(.black.opacity(0.38)),
+                        lineWidth: 0.8
+                    )
                 }
             }
         }

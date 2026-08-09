@@ -613,6 +613,17 @@ public final class GameSessionController: @unchecked Sendable {
             }
             return "crop plot needs clear land beside a road, sufficient funds, and valid models"
         }
+        if selectedConstruction == .road {
+            if city.roadNetwork.contains(point) { return "tile already contains a road" }
+            if city.occupiedBuildingPoints.contains(point) { return "tile is occupied" }
+            if city.terrain?.isClearLand(point) == false {
+                return "original terrain, including canal reserve tiles, blocks road construction"
+            }
+            if city.canConstructRoad(at: point) {
+                return "treasury blocks road construction"
+            }
+            return "tile cannot accept a road"
+        }
         if let buildingID = selectedConstruction.buildingID,
            let restriction = city.campaignConstructionRestriction(forBuildingID: buildingID) {
             return "campaign restriction: \(restriction)"

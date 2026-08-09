@@ -258,7 +258,7 @@ public enum OriginalBuildingSpriteCatalog {
         case 27: imageID = agriculturalPlotImageID(for: .lacquer)
         case 28: imageID = agriculturalPlotImageID(for: .mulberry)
         case 31: imageID = 721   // Fishing quay
-        case 33: imageID = 825   // Hunting camp, China_Husbandry logical group 173
+        case 33: imageID = 825   // Hunter's tent, China_Husbandry SG3 group 1791
         case 35: imageID = 2_789 // Clay pit
         case 36: imageID = 2_741 // Stoneworks
         case 38: imageID = 2_726 // Logging shed
@@ -311,6 +311,26 @@ public enum OriginalBuildingSpriteCatalog {
             archiveBaseName: generalArchiveBaseName,
             imageID: imageID
         )
+    }
+
+    /// Representative sprite shown in the construction catalog. Composite
+    /// buildings normally use their first authored component, except markets:
+    /// their component list starts with one-tile paving, which is not a useful
+    /// or recognizable menu icon. Use the original food-shop centerpiece.
+    public static func constructionCatalogSprite(
+        forBuildingID buildingID: Int,
+        orientation: IsometricBuildingOrientation = .northSouth
+    ) -> BuildingSpriteReference? {
+        if buildingID == 59 || buildingID == 60 {
+            return BuildingSpriteReference(
+                archiveBaseName: generalArchiveBaseName,
+                imageID: foodShopImageID
+            )
+        }
+        return buildingComponents(
+            forBuildingID: buildingID,
+            orientation: orientation
+        ).first?.sprite
     }
 
     public static func buildingComponents(

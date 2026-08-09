@@ -3,6 +3,27 @@ import XCTest
 @testable import EmperorGameplay
 
 final class Qin1PlayerPlaythroughTests: XCTestCase {
+    func testCanalReserveBlocksRoadWhileNearbyClearTerrainAllowsIt() throws {
+        let controller = try startedController()
+        let city = try XCTUnwrap(controller.city)
+        let terrain = try XCTUnwrap(city.terrain)
+        let canalReserve = GridPoint(x: 4, y: 68)
+        let clearLand = GridPoint(x: 70, y: 50)
+
+        XCTAssertTrue(terrain.terrain(at: canalReserve)?.contains(.monument) == true)
+        XCTAssertFalse(terrain.isClearLand(canalReserve))
+        XCTAssertFalse(city.canConstructRoad(at: canalReserve))
+
+        XCTAssertTrue(terrain.isClearLand(clearLand))
+        XCTAssertTrue(city.canConstructRoad(at: clearLand))
+        XCTAssertTrue(controller.perform(.selectConstruction(.road)).wasApplied)
+        XCTAssertEqual(
+            controller.constructionPreview(at: canalReserve).reason,
+            "original terrain, including canal reserve tiles, blocks road construction"
+        )
+        XCTAssertTrue(controller.constructionPreview(at: clearLand).isValid)
+    }
+
     func testPlayerCommandsCompleteZhengGuoCanalMission() throws {
         let controller = try startedController()
 

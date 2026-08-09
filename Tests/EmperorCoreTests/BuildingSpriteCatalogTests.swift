@@ -37,6 +37,20 @@ final class BuildingSpriteCatalogTests: XCTestCase {
         XCTAssertEqual(OriginalBuildingSpriteCatalog.buildingSprite(forBuildingID: 126)?.imageID, 2_046)
     }
 
+    func testConstructionCatalogUsesRecognizableMarketAndHunterSprites() {
+        XCTAssertEqual(
+            OriginalBuildingSpriteCatalog.constructionCatalogSprite(forBuildingID: 59),
+            BuildingSpriteReference(
+                archiveBaseName: OriginalBuildingSpriteCatalog.generalArchiveBaseName,
+                imageID: OriginalBuildingSpriteCatalog.foodShopImageID
+            )
+        )
+        XCTAssertEqual(
+            OriginalBuildingSpriteCatalog.constructionCatalogSprite(forBuildingID: 33)?.imageID,
+            825
+        )
+    }
+
     func testEverySupportedPlacedBuildingHasOriginalComponents() {
         for buildingID in OriginalBuildingSpriteCatalog.supportedPlacedBuildingIDs {
             XCTAssertFalse(

@@ -1405,10 +1405,10 @@ private struct ClassicControlPanel: View {
                 for: library.selectedAgriculturalCrop
             )
         } else if let buildingID = tool.buildingID {
-            reference = OriginalBuildingSpriteCatalog.buildingComponents(
+            reference = OriginalBuildingSpriteCatalog.constructionCatalogSprite(
                 forBuildingID: buildingID,
                 orientation: library.constructionOrientation
-            ).first?.sprite
+            )
         } else {
             reference = nil
         }

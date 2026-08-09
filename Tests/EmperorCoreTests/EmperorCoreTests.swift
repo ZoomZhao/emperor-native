@@ -2766,10 +2766,13 @@ final class EmperorCoreTests: XCTestCase {
         var purchasedCommodityIDs: Set<Int> = []
         var foodDeliveries: [HouseholdCommodityDelivery] = []
         var completionTick: UInt64?
+        var sawMeatDeliveryWalker = false
         for _ in 0..<90 where completionTick == nil {
             let tick = city.advanceTick(rules: rules)
             purchasedCommodityIDs.formUnion(tick.movement.market.purchasedLoads.map(\.commodityID))
             foodDeliveries.append(contentsOf: tick.movement.market.householdDeliveries)
+            sawMeatDeliveryWalker = sawMeatDeliveryWalker
+                || city.logistics.deliveryWalkers.contains { $0.cargo.commodityID == 4 }
             if city.houses[0].foodSupplyAmount > 0 {
                 completionTick = tick.tickSequence
             }
@@ -2778,6 +2781,7 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(city.logistics.mills.count, 1)
         XCTAssertEqual(city.logistics.mills[0].foodQuality, .plain)
         XCTAssertEqual(purchasedCommodityIDs, [2, 4])
+        XCTAssertTrue(sawMeatDeliveryWalker)
         XCTAssertLessThanOrEqual(try XCTUnwrap(completionTick), 53)
         XCTAssertEqual(foodDeliveries, [
             HouseholdCommodityDelivery(houseID: 1, commodityID: -1, amount: 44)
