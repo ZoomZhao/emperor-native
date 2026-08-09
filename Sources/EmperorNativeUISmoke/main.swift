@@ -149,6 +149,32 @@ private func findElement(in application: AXUIElement, identifier: String) -> AXU
     return nil
 }
 
+private func findElement(
+    in application: AXUIElement,
+    role: String,
+    title: String
+) -> AXUIElement? {
+    let windows = copyAttribute(
+        application,
+        kAXWindowsAttribute as CFString
+    ) as? [AXUIElement] ?? []
+    var queue = windows + children(of: application)
+    var index = 0
+    var visited: Set<CFHashCode> = []
+    while index < queue.count, index < 12_000 {
+        let element = queue[index]
+        index += 1
+        guard visited.insert(CFHash(element)).inserted else { continue }
+        if stringAttribute(element, kAXRoleAttribute as CFString) == role,
+           (stringAttribute(element, kAXTitleAttribute as CFString)
+                ?? stringAttribute(element, kAXDescriptionAttribute as CFString)) == title {
+            return element
+        }
+        queue.append(contentsOf: children(of: element))
+    }
+    return nil
+}
+
 private func accessibilityIdentifierSnapshot(in application: AXUIElement) -> String {
     let windows = copyAttribute(
         application,
@@ -645,11 +671,22 @@ private func commandTable() throws -> [MapClick] {
             guard let city = controller.city else {
                 throw SmokeFailure("shadow city disappeared while planning \(tool.rawValue)")
             }
-            let point = tool == .house
-                ? city.nextHouseConstructionLocation()
-                : tool.buildingID.flatMap {
+            let point: GridPoint?
+            if tool == .house {
+                point = city.nextHouseConstructionLocation()
+            } else if OriginalMarketCatalog.supports(shopBuildingID: tool.buildingID ?? -1) {
+                point = city.placedBuildings.first(where: {
+                    $0.category == .market
+                        && city.canConstructMarketShop(
+                            shopBuildingID: tool.buildingID ?? -1,
+                            at: $0.origin
+                        )
+                })?.origin
+            } else {
+                point = tool.buildingID.flatMap {
                     city.nextBuildingConstructionLocation(buildingID: $0)
                 }
+            }
             guard let point else {
                 throw SmokeFailure("no valid UI smoke site for \(tool.rawValue)")
             }
@@ -672,6 +709,7 @@ private func commandTable() throws -> [MapClick] {
     try place(.huntingCamp)
     try place(.mill)
     try place(.market)
+    try place(.foodShop)
     try place(.well, count: 8)
     try place(.inspectorTower)
     try place(.ancestralShrine, count: 6)
@@ -685,7 +723,8 @@ private func constructionCategoryIdentifier(for toolIdentifier: String) -> Strin
         "residential"
     case "huntingCamp", "mill":
         "agriculture"
-    case "market":
+    case "market", "foodShop", "hempShop", "ceramicsShop", "teaShop",
+         "silkShop", "lacquerwareShop", "bronzewareShop":
         "commerce"
     case "well":
         "safety"
@@ -990,11 +1029,13 @@ private func runSmoke(arguments: Arguments) throws {
             timeout: 15,
             requireEnabled: false
         )
-        let closeObjectives = try waitForElement(
+        let closeObjectives = findElement(
             in: application,
-            identifier: "city-objectives-close",
-            timeout: 15
-        )
+            identifier: "city-objectives-close"
+        ) ?? findElement(in: application, role: kAXButtonRole as String, title: "关闭")
+        guard let closeObjectives else {
+            throw SmokeFailure("could not find the objectives close button")
+        }
         try press(closeObjectives, identifier: "city-objectives-close")
 
         let worldMap = try waitForElement(
@@ -1011,11 +1052,13 @@ private func runSmoke(arguments: Arguments) throws {
                 timeout: 15,
                 requireEnabled: false
             )
-            let closeWorldMap = try waitForElement(
+            let closeWorldMap = findElement(
                 in: application,
-                identifier: "city-world-map-close",
-                timeout: 15
-            )
+                identifier: "city-world-map-close"
+            ) ?? findElement(in: application, role: kAXButtonRole as String, title: "关闭")
+            guard let closeWorldMap else {
+                throw SmokeFailure("could not find the world-map close button")
+            }
             try press(closeWorldMap, identifier: "city-world-map-close")
         }
         log.record("verified classic population advisor and city navigation")

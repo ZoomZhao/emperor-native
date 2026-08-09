@@ -39,6 +39,7 @@ final class Xia2PlayerPlaythroughTests: XCTestCase {
         for _ in 0..<2 { try placeNext(.farmland, with: controller) }
         for index in [7, 15] {
             try placeClosest(.market, to: houseLocations[index], with: controller)
+            try placeClosest(.foodShop, to: houseLocations[index], with: controller)
         }
         for index in stride(from: 1, through: 25, by: 3) {
             try placeClosest(.garden, to: houseLocations[index], with: controller)
@@ -124,6 +125,7 @@ final class Xia2PlayerPlaythroughTests: XCTestCase {
         try placeNext(.huntingCamp, with: controller)
         try placeNext(.mill, with: controller)
         try placeNext(.market, with: controller)
+        try placeNext(.foodShop, with: controller)
         for _ in 0..<8 { try placeNext(.well, with: controller) }
         try placeNext(.inspectorTower, with: controller)
         for _ in 0..<6 { try placeNext(.ancestralShrine, with: controller) }
@@ -154,6 +156,15 @@ final class Xia2PlayerPlaythroughTests: XCTestCase {
             point = city.nextBuildingConstructionLocation(
                 buildingID: AgriculturalCrop.millet.plotBuildingID
             )
+        } else if let buildingID = tool.buildingID,
+                  OriginalMarketCatalog.supports(shopBuildingID: buildingID) {
+            point = city.placedBuildings.first {
+                $0.category == .market
+                    && city.canConstructMarketShop(
+                        shopBuildingID: buildingID,
+                        at: $0.origin
+                    )
+            }?.origin
         } else if let buildingID = tool.buildingID {
             point = city.nextBuildingConstructionLocation(buildingID: buildingID)
         } else {

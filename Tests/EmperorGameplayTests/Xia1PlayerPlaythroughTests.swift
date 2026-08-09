@@ -106,6 +106,7 @@ final class Xia1PlayerPlaythroughTests: XCTestCase {
         try placeNext(.mill, with: controller)
         if includeMarket {
             try placeNext(.market, with: controller)
+            try placeNext(.foodShop, with: controller)
         }
         for _ in 0..<8 { try placeNext(.well, with: controller) }
         try placeNext(.inspectorTower, with: controller)
@@ -121,6 +122,15 @@ final class Xia1PlayerPlaythroughTests: XCTestCase {
         let point: GridPoint?
         if tool == .house {
             point = city.nextHouseConstructionLocation()
+        } else if let buildingID = tool.buildingID,
+                  OriginalMarketCatalog.supports(shopBuildingID: buildingID) {
+            point = city.placedBuildings.first(where: {
+                $0.category == .market
+                    && city.canConstructMarketShop(
+                        shopBuildingID: buildingID,
+                        at: $0.origin
+                    )
+            })?.origin
         } else if let buildingID = tool.buildingID {
             point = city.nextBuildingConstructionLocation(buildingID: buildingID)
         } else {

@@ -3423,6 +3423,57 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertFalse(serviceCity.walkers.walkers.contains { $0.id == walkerID })
     }
 
+    func testMarketShopsAreBuiltIntoExistingMarketUpToAuthoredCapacity() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let rules = EconomyRulesEngine(models: original)
+        var city = DeterministicCityState(
+            year: 1600,
+            treasury: 10_000,
+            mapWidth: 18,
+            mapHeight: 12
+        )
+        XCTAssertEqual(
+            city.buildRoad((0..<18).map { GridPoint(x: $0, y: 1) }, rules: rules),
+            18
+        )
+        let origin = GridPoint(x: 1, y: 2)
+        let marketID = try XCTUnwrap(city.constructMarket(
+            at: origin,
+            shopBuildingIDs: [],
+            rules: rules
+        ))
+        XCTAssertEqual(city.markets.markets.first?.remainingShopCapacity, 4)
+
+        for shopBuildingID in [66, 67, 65, 70] {
+            XCTAssertTrue(city.canConstructMarketShop(
+                shopBuildingID: shopBuildingID,
+                at: origin
+            ))
+            XCTAssertEqual(
+                city.constructMarketShop(
+                    shopBuildingID: shopBuildingID,
+                    at: origin,
+                    rules: rules
+                ),
+                marketID
+            )
+        }
+        XCTAssertEqual(
+            city.markets.markets.first?.shopBuildingIDs,
+            [66, 67, 65, 70]
+        )
+        XCTAssertEqual(city.markets.markets.first?.remainingShopCapacity, 0)
+        XCTAssertFalse(city.canConstructMarketShop(shopBuildingID: 69, at: origin))
+        XCTAssertNil(city.constructMarketShop(
+            shopBuildingID: 69,
+            at: origin,
+            rules: rules
+        ))
+    }
+
     func testDemolishCancelsInFlightDeliveryAndReleasesItsSource() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")

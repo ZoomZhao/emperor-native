@@ -517,7 +517,7 @@ public final class GameSessionController: @unchecked Sendable {
             city.constructMarket(
                 at: point,
                 orientation: orientation,
-                shopBuildingIDs: [OriginalFoodCatalog.foodShopBuildingID],
+                shopBuildingIDs: [],
                 rules: rules
             ) != nil
         case .grandMarket:
@@ -525,9 +525,14 @@ public final class GameSessionController: @unchecked Sendable {
                 at: point,
                 orientation: orientation,
                 marketBuildingID: OriginalMarketCatalog.grandMarketBuildingID,
-                shopBuildingIDs: [
-                    OriginalFoodCatalog.foodShopBuildingID, 65, 67, 68, 69, 70,
-                ],
+                shopBuildingIDs: [],
+                rules: rules
+            ) != nil
+        case .foodShop, .hempShop, .ceramicsShop, .teaShop, .silkShop,
+             .lacquerwareShop, .bronzewareShop:
+            city.constructMarketShop(
+                shopBuildingID: tool.buildingID ?? 0,
+                at: point,
                 rules: rules
             ) != nil
         case .taxOffice:
@@ -624,6 +629,12 @@ public final class GameSessionController: @unchecked Sendable {
             }
             return "tile cannot accept a road"
         }
+        if let shopBuildingID = selectedConstruction.marketShopBuildingID {
+            if city.canConstructMarketShop(shopBuildingID: shopBuildingID, at: point) {
+                return "treasury or building model blocks market shop construction"
+            }
+            return "select a market square with an empty shop bay"
+        }
         if let buildingID = selectedConstruction.buildingID,
            let restriction = city.campaignConstructionRestriction(forBuildingID: buildingID) {
             return "campaign restriction: \(restriction)"
@@ -651,5 +662,17 @@ public final class GameSessionController: @unchecked Sendable {
             mix(UInt64(point.y))
         }
         return hash
+    }
+}
+
+private extension PlayerConstructionTool {
+    var marketShopBuildingID: Int? {
+        switch self {
+        case .foodShop, .hempShop, .ceramicsShop, .teaShop, .silkShop,
+             .lacquerwareShop, .bronzewareShop:
+            buildingID
+        default:
+            nil
+        }
     }
 }

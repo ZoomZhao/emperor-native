@@ -711,7 +711,7 @@ final class LibraryModel: ObservableObject {
             guard city.constructMarket(
                 at: point,
                 orientation: constructionOrientation,
-                shopBuildingIDs: [OriginalFoodCatalog.foodShopBuildingID],
+                shopBuildingIDs: [],
                 rules: rules
             ) != nil else {
                 saveStatus = constructionFailure(at: point, city: city, tool: constructionTool)
@@ -723,15 +723,25 @@ final class LibraryModel: ObservableObject {
                 at: point,
                 orientation: constructionOrientation,
                 marketBuildingID: OriginalMarketCatalog.grandMarketBuildingID,
-                shopBuildingIDs: [
-                    OriginalFoodCatalog.foodShopBuildingID, 65, 67, 68, 69, 70,
-                ],
+                shopBuildingIDs: [],
                 rules: rules
             ) != nil else {
                 saveStatus = constructionFailure(at: point, city: city, tool: constructionTool)
                 return
             }
             saveStatus = constructionSuccess(at: point, city: city, tool: constructionTool)
+        case .foodShop, .hempShop, .ceramicsShop, .teaShop, .silkShop,
+             .lacquerwareShop, .bronzewareShop:
+            guard let shopBuildingID = constructionTool.marketShopBuildingID,
+                  city.constructMarketShop(
+                    shopBuildingID: shopBuildingID,
+                    at: point,
+                    rules: rules
+                  ) != nil else {
+                saveStatus = constructionFailure(at: point, city: city, tool: constructionTool)
+                return
+            }
+            saveStatus = "已在市场内建造\(constructionTool.title) · 国库 \(city.economy.treasury)"
         case .clayPit, .kiln, .fishingWharf, .huntingCamp, .quarry, .lumberMill,
              .ironMine, .bronzeWorks, .jadeWorkshop, .lacquerGuild, .silkWeaver, .teaHouse,
              .lacquerwareWorkshop, .weaver:
@@ -1058,6 +1068,12 @@ final class LibraryModel: ObservableObject {
                 return "无法铺路：国库不足"
             }
             return "该格无法铺路"
+        }
+        if let shopBuildingID = tool.marketShopBuildingID {
+            if city.canConstructMarketShop(shopBuildingID: shopBuildingID, at: point) {
+                return "无法建造\(tool.title)：国库不足或建筑模型配置不可用"
+            }
+            return "请点击仍有空铺位的普通市场或大市场"
         }
         if let buildingID = tool.buildingID,
            OriginalMilitaryDefenseConfiguration.configuration(buildingID: buildingID) != nil {
@@ -2169,6 +2185,13 @@ final class LibraryModel: ObservableObject {
         case .mill: .mill
         case .market: .market
         case .grandMarket: .grandMarket
+        case .foodShop: .foodShop
+        case .hempShop: .hempShop
+        case .ceramicsShop: .ceramicsShop
+        case .teaShop: .teaShop
+        case .silkShop: .silkShop
+        case .lacquerwareShop: .lacquerwareShop
+        case .bronzewareShop: .bronzewareShop
         case .clayPit: .clayPit
         case .kiln: .kiln
         case .well: .well

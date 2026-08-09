@@ -970,6 +970,84 @@ private struct ClassicMapHint: View {
     }
 }
 
+/// Fits the complete original isometric assembly into a classic construction
+/// slot. Composite buildings such as warehouses and markets otherwise show
+/// only one small bay, which makes adjacent catalog choices indistinguishable.
+private struct ClassicBuildingCatalogThumbnail: View {
+    struct Item: Identifiable {
+        let id: Int
+        let sprite: RenderedTerrainSprite
+        let rectangle: CGRect
+    }
+
+    let components: [BuildingSpriteComponent]
+    let sprites: [BuildingSpriteReference: RenderedTerrainSprite]
+
+    var body: some View {
+        GeometryReader { geometry in
+            let items = layoutItems
+            let bounds = items.reduce(CGRect.null) { $0.union($1.rectangle) }
+            let scale = min(
+                max(0, geometry.size.width - 2) / max(1, bounds.width),
+                max(0, geometry.size.height - 2) / max(1, bounds.height)
+            )
+            ZStack {
+                ForEach(items) { item in
+                    Image(decorative: item.sprite.image, scale: 1)
+                        .resizable()
+                        .interpolation(.none)
+                        .frame(
+                            width: item.rectangle.width * scale,
+                            height: item.rectangle.height * scale
+                        )
+                        .position(
+                            x: geometry.size.width * 0.5
+                                + (item.rectangle.midX - bounds.midX) * scale,
+                            y: geometry.size.height * 0.5
+                                + (item.rectangle.midY - bounds.midY) * scale
+                        )
+                }
+            }
+            .frame(width: geometry.size.width, height: geometry.size.height)
+        }
+        .accessibilityHidden(true)
+    }
+
+    private var layoutItems: [Item] {
+        components.sorted { lhs, rhs in
+            let lhsDepth = lhs.tileOffsetX + lhs.tileOffsetY
+                + lhs.footprint.width + lhs.footprint.height
+            let rhsDepth = rhs.tileOffsetX + rhs.tileOffsetY
+                + rhs.footprint.width + rhs.footprint.height
+            return lhsDepth < rhsDepth
+        }.enumerated().compactMap { index, component in
+            guard let sprite = sprites[component.sprite] else { return nil }
+            let tileWidth: CGFloat = 80
+            let tileHeight: CGFloat = 40
+            let centerX = CGFloat(component.tileOffsetX - component.tileOffsetY)
+                * tileWidth * 0.5
+            let centerY = CGFloat(component.tileOffsetX + component.tileOffsetY)
+                * tileHeight * 0.5
+            let imageCenterX = centerX
+                + CGFloat(component.footprint.width - component.footprint.height)
+                * tileWidth * 0.25
+            let imageBottomY = centerY
+                + CGFloat(component.footprint.width + component.footprint.height - 1)
+                * tileHeight * 0.5
+            return Item(
+                id: index,
+                sprite: sprite,
+                rectangle: CGRect(
+                    x: imageCenterX - CGFloat(sprite.width) * 0.5,
+                    y: imageBottomY - CGFloat(sprite.height),
+                    width: CGFloat(sprite.width),
+                    height: CGFloat(sprite.height)
+                )
+            )
+        }
+    }
+}
+
 private struct ClassicControlPanel: View {
     @ObservedObject var library: LibraryModel
     let city: DeterministicCityState
@@ -1226,7 +1304,7 @@ private struct ClassicControlPanel: View {
                         .resizable()
                         .interpolation(.none)
                         .scaledToFit()
-                        .frame(maxWidth: 48, maxHeight: 34)
+                        .frame(maxWidth: 49, maxHeight: 46)
                         .accessibilityHidden(true)
                 } else {
                     Image(systemName: crop.category == .orchard ? "tree.fill" : "leaf.fill")
@@ -1236,8 +1314,8 @@ private struct ClassicControlPanel: View {
                 }
             }
             .frame(width: 52, height: 52)
-            .foregroundStyle(selected ? ClassicPalette.ink : Color.white.opacity(0.9))
-            .background(selected ? ClassicPalette.gold.opacity(0.72) : Color.clear)
+            .foregroundStyle(Color.white.opacity(0.92))
+            .background(selected ? ClassicPalette.gold.opacity(0.20) : Color.clear)
             .overlay(
                 Rectangle().strokeBorder(
                     selected ? ClassicPalette.gold : ClassicPalette.border.opacity(0.7),
@@ -1317,10 +1395,10 @@ private struct ClassicControlPanel: View {
         } label: {
             constructionToolIcon(tool)
             .frame(width: 52, height: 52)
-            .foregroundStyle(library.constructionTool == tool ? ClassicPalette.ink : Color.white.opacity(0.9))
+            .foregroundStyle(Color.white.opacity(0.92))
             .background(
                 library.constructionTool == tool
-                    ? ClassicPalette.gold.opacity(0.72)
+                    ? ClassicPalette.gold.opacity(0.20)
                     : Color.clear
             )
             .overlay(
@@ -1355,12 +1433,21 @@ private struct ClassicControlPanel: View {
                 .scaledToFit()
                 .frame(maxWidth: 48, maxHeight: 27)
                 .accessibilityHidden(true)
+        } else if !constructionCatalogComponents(for: tool).isEmpty,
+                  constructionCatalogComponents(for: tool).contains(where: {
+                      library.buildingSprites[$0.sprite] != nil
+                  }) {
+            ClassicBuildingCatalogThumbnail(
+                components: constructionCatalogComponents(for: tool),
+                sprites: library.buildingSprites
+            )
+            .frame(width: 50, height: 48)
         } else if let sprite = originalConstructionSprite(for: tool) {
             Image(decorative: sprite.image, scale: 1)
                 .resizable()
                 .interpolation(.none)
                 .scaledToFit()
-                .frame(maxWidth: 48, maxHeight: 27)
+                .frame(maxWidth: 49, maxHeight: 46)
                 .accessibilityHidden(true)
         } else {
             Image(systemName: tool.symbol)
@@ -1368,6 +1455,31 @@ private struct ClassicControlPanel: View {
                 .frame(height: 27)
                 .accessibilityHidden(true)
         }
+    }
+
+    private func constructionCatalogComponents(
+        for tool: NativeConstructionTool
+    ) -> [BuildingSpriteComponent] {
+        if tool == .house,
+           let footprint = OriginalBuildingFootprintCatalog.footprint(forBuildingID: 2),
+           let reference = OriginalBuildingSpriteCatalog.housingSprite(
+            forHouseLevelID: 0,
+            orientation: library.constructionOrientation
+           ) {
+            return [BuildingSpriteComponent(
+                sprite: reference,
+                tileOffsetX: 0,
+                tileOffsetY: 0,
+                footprint: footprint
+            )]
+        }
+        guard tool.marketShopBuildingID == nil, let buildingID = tool.buildingID else {
+            return []
+        }
+        return OriginalBuildingSpriteCatalog.buildingComponents(
+            forBuildingID: buildingID,
+            orientation: library.constructionOrientation
+        )
     }
 
     private func utilityToolSprite(
@@ -2886,6 +2998,13 @@ private func constructionInstruction(
         return "贵族住宅：2×2 占地，从空置贵族宅独立演化；须供应高品质食物、丝绸和奢侈品"
     case .farmland:
         return "作物田：先在农业分类选择具体作物，再点击或拖动清地种植；右键取消"
+    case .market:
+        return "普通市场：占地 7×4，可容纳 4 间商铺；放置市场后选择具体商铺，再点击市场内部的任意格"
+    case .grandMarket:
+        return "大市场：占地 7×6，可容纳 6 间商铺；适合供应贵族住宅所需的多种商品"
+    case .foodShop, .hempShop, .ceramicsShop, .teaShop, .silkShop,
+         .lacquerwareShop, .bronzewareShop:
+        return "\(tool.title)：选择后点击仍有空铺位的市场；同类商铺可以重复建造；右键取消"
     case .irrigationPump:
         return "灌溉水车：放在河岸清地，须同时邻接水面与道路；右键取消"
     case .grandCanalSegment:

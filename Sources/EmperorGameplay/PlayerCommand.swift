@@ -13,6 +13,13 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
     case mill
     case market
     case grandMarket
+    case foodShop
+    case hempShop
+    case ceramicsShop
+    case teaShop
+    case silkShop
+    case lacquerwareShop
+    case bronzewareShop
     case clayPit
     case kiln
     case well
@@ -102,6 +109,13 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
         case .warehouse, .granary: 54
         case .market: 59
         case .grandMarket: 60
+        case .bronzewareShop: 64
+        case .ceramicsShop: 65
+        case .foodShop: 66
+        case .hempShop: 67
+        case .lacquerwareShop: 68
+        case .silkShop: 69
+        case .teaShop: 70
         case .well: 72
         case .tumulus: 76
         case .grandTumulus: 77

@@ -5,6 +5,7 @@ public enum OriginalMarketCatalog {
     public static let grandMarketBuildingID = 60
     public static let buyerFigureID = 24
     public static let peddlerFigureID = 23
+    public static let shopBuildingIDs = [66, 67, 65, 70, 69, 68, 64]
 
     public static func shopCapacity(forMarketBuildingID buildingID: Int) -> Int? {
         switch buildingID {
@@ -48,7 +49,7 @@ public struct MarketSquare: Identifiable, Sendable, Hashable, Codable {
     public let id: Int
     public let buildingID: Int
     public let roadAccessPoint: GridPoint
-    public let shopBuildingIDs: [Int]
+    public private(set) var shopBuildingIDs: [Int]
     public var inventoryByCommodityID: [Int: Int]
     public var activeBuyerByCommodityID: [Int: Int]
 
@@ -78,6 +79,24 @@ public struct MarketSquare: Identifiable, Sendable, Hashable, Codable {
 
     public var hasFoodShop: Bool {
         shopBuildingIDs.contains(OriginalFoodCatalog.foodShopBuildingID)
+    }
+
+    public var remainingShopCapacity: Int {
+        max(
+            0,
+            (OriginalMarketCatalog.shopCapacity(forMarketBuildingID: buildingID) ?? 0)
+                - shopBuildingIDs.count
+        )
+    }
+
+    @discardableResult
+    mutating func addShop(buildingID: Int) -> Bool {
+        guard remainingShopCapacity > 0,
+              OriginalMarketCatalog.supports(shopBuildingID: buildingID) else {
+            return false
+        }
+        shopBuildingIDs.append(buildingID)
+        return true
     }
 }
 
@@ -303,7 +322,6 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
     ) -> Int? {
         guard roadNetwork.contains(roadAccessPoint),
               let capacity = OriginalMarketCatalog.shopCapacity(forMarketBuildingID: buildingID),
-              !shopBuildingIDs.isEmpty,
               shopBuildingIDs.count <= capacity,
               shopBuildingIDs.allSatisfy(OriginalMarketCatalog.supports(shopBuildingID:)) else {
             return nil
@@ -317,6 +335,17 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
             shopBuildingIDs: shopBuildingIDs
         ))
         return id
+    }
+
+    /// Adds one independently staffed shop to an existing market square.
+    /// Duplicate shop types are intentional: the original game allows players
+    /// to trade variety for additional capacity of a high-demand commodity.
+    @discardableResult
+    public mutating func addShop(marketID: Int, shopBuildingID: Int) -> Bool {
+        guard let index = markets.firstIndex(where: { $0.id == marketID }) else {
+            return false
+        }
+        return markets[index].addShop(buildingID: shopBuildingID)
     }
 
     /// Removes a market and every buyer/peddler owned by it. Their carried

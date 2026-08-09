@@ -254,7 +254,8 @@ struct CityCanvas: View {
     }
 
     private var activeConstructionBuildingID: Int? {
-        constructionTool == .farmland
+        if constructionTool.marketShopBuildingID != nil { return nil }
+        return constructionTool == .farmland
             ? agriculturalCrop.plotBuildingID
             : constructionTool.buildingID
     }
@@ -910,6 +911,11 @@ struct CityCanvas: View {
             let highlightedPoints: [GridPoint]
             if constructionTool == .demolish {
                 highlightedPoints = demolitionHighlightPoints(at: origin)
+            } else if constructionTool.marketShopBuildingID != nil,
+                      let marketPlacement = city.placedBuildings.first(where: {
+                          $0.category == .market && $0.occupiedPoints.contains(origin)
+                      }) {
+                highlightedPoints = marketPlacement.occupiedPoints
             } else if let buildingID = activeConstructionBuildingID,
                let footprint = OriginalBuildingFootprintCatalog.footprint(
                 forBuildingID: buildingID,
@@ -1039,6 +1045,11 @@ struct CityCanvas: View {
         case .eliteHouse: city.canConstructHouse(at: point)
         case .farmland:
             city.canConstructAgriculturalPlot(crop: agriculturalCrop, at: point)
+        case .foodShop, .hempShop, .ceramicsShop, .teaShop, .silkShop,
+             .lacquerwareShop, .bronzewareShop:
+            constructionTool.marketShopBuildingID.map {
+                city.canConstructMarketShop(shopBuildingID: $0, at: point)
+            } ?? false
         case .garden, .decorativeSculpture, .ornateSculpture, .floweringTree,
              .waysidePavilion, .pond, .taiChiPark, .privateGarden,
              .laborersCamp, .carpentersGuild, .masonsGuild, .ceramistsGuild,
@@ -3225,6 +3236,25 @@ struct BuildingInfoPopup: View {
             }
         case .market:
             rows.append(InfoRow(label: "职能", value: "向住宅配送食物与商品"))
+            if let market = city.markets.markets.first(where: {
+                $0.id == placement.instanceID
+            }) {
+                let capacity = OriginalMarketCatalog.shopCapacity(
+                    forMarketBuildingID: market.buildingID
+                ) ?? 0
+                rows.append(InfoRow(
+                    label: "商铺",
+                    value: "\(market.shopBuildingIDs.count)/\(capacity)"
+                ))
+                if !market.shopBuildingIDs.isEmpty {
+                    rows.append(InfoRow(
+                        label: "铺面",
+                        value: market.shopBuildingIDs
+                            .map(chineseBuildingName)
+                            .joined(separator: "、")
+                    ))
+                }
+            }
         case .trading:
             rows.append(InfoRow(label: "职能", value: "陆海贸易集散"))
             if let trading = city.trade.buildings.first(where: {

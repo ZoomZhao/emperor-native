@@ -1564,7 +1564,6 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         guard isBuildingAvailableInCampaign(marketBuildingID),
               roadNetwork.contains(serviceRoadStart),
               let capacity = OriginalMarketCatalog.shopCapacity(forMarketBuildingID: marketBuildingID),
-              !shopBuildingIDs.isEmpty,
               shopBuildingIDs.count <= capacity,
               rules.models.buildings[buildingID: marketBuildingID] != nil,
               shopBuildingIDs.allSatisfy({ shopID in
@@ -1597,6 +1596,49 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         economy = updatedEconomy
         marketState = state
         return id
+    }
+
+    public func canConstructMarketShop(shopBuildingID: Int, at point: GridPoint) -> Bool {
+        guard OriginalMarketCatalog.supports(shopBuildingID: shopBuildingID),
+              let placement = placedBuildings.first(where: {
+                  $0.category == .market && $0.occupiedPoints.contains(point)
+              }),
+              let market = markets.markets.first(where: { $0.id == placement.instanceID }) else {
+            return false
+        }
+        return market.remainingShopCapacity > 0
+    }
+
+    /// Builds a shop into the market square occupying `point`. The shop cost
+    /// and market mutation are committed atomically, matching whole-building
+    /// construction and preventing a charged-but-missing shop.
+    @discardableResult
+    public mutating func constructMarketShop(
+        shopBuildingID: Int,
+        at point: GridPoint,
+        rules: EconomyRulesEngine
+    ) -> Int? {
+        guard canConstructMarketShop(shopBuildingID: shopBuildingID, at: point),
+              rules.models.buildings[buildingID: shopBuildingID] != nil,
+              let placement = placedBuildings.first(where: {
+                  $0.category == .market && $0.occupiedPoints.contains(point)
+              }) else {
+            return nil
+        }
+        var updatedEconomy = economy
+        guard updatedEconomy.spendOnConstruction(
+            buildingID: shopBuildingID,
+            rules: rules,
+            difficulty: difficulty
+        ) else { return nil }
+        var state = marketState ?? DeterministicMarketState()
+        guard state.addShop(
+            marketID: placement.instanceID,
+            shopBuildingID: shopBuildingID
+        ) else { return nil }
+        economy = updatedEconomy
+        marketState = state
+        return placement.instanceID
     }
 
     @discardableResult

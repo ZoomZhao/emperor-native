@@ -73,6 +73,13 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
     case mill
     case market
     case grandMarket
+    case foodShop
+    case hempShop
+    case ceramicsShop
+    case teaShop
+    case silkShop
+    case lacquerwareShop
+    case bronzewareShop
     case clayPit
     case kiln
     case well
@@ -174,6 +181,13 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .mill: "磨坊"
         case .market: "市场"
         case .grandMarket: "大市场"
+        case .foodShop: "食物铺"
+        case .hempShop: "麻布铺"
+        case .ceramicsShop: "陶器铺"
+        case .teaShop: "茶铺"
+        case .silkShop: "丝绸铺"
+        case .lacquerwareShop: "漆器铺"
+        case .bronzewareShop: "青铜器铺"
         case .clayPit: "粘土坑"
         case .kiln: "窑炉"
         case .well: "水井"
@@ -255,6 +269,13 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .mill: "gearshape.2.fill"
         case .market: "storefront.fill"
         case .grandMarket: "storefront.circle.fill"
+        case .foodShop: "takeoutbag.and.cup.and.straw.fill"
+        case .hempShop: "tshirt.fill"
+        case .ceramicsShop: "cup.and.saucer.fill"
+        case .teaShop: "leaf.fill"
+        case .silkShop: "scissors"
+        case .lacquerwareShop: "paintbrush.fill"
+        case .bronzewareShop: "seal.fill"
         case .clayPit: "mountain.2.fill"
         case .kiln: "flame.fill"
         case .well: "drop.fill"
@@ -331,6 +352,13 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .mill: 53
         case .market: 59
         case .grandMarket: 60
+        case .bronzewareShop: 64
+        case .ceramicsShop: 65
+        case .foodShop: 66
+        case .hempShop: 67
+        case .lacquerwareShop: 68
+        case .silkShop: 69
+        case .teaShop: 70
         case .clayPit: 35
         case .kiln: 43
         case .well: 72
@@ -407,7 +435,9 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
              .jadeWorkshop,
              .lacquerGuild, .lacquerwareWorkshop, .silkWeaver, .weaver, .teaHouse:
             .industry
-        case .warehouse, .market, .grandMarket:
+        case .warehouse, .market, .grandMarket, .foodShop, .hempShop,
+             .ceramicsShop, .teaShop, .silkShop, .lacquerwareShop,
+             .bronzewareShop:
             .commerce
         case .well, .herbalist, .acupuncture, .bathhouse, .watchtower,
              .inspect, .demolish, .clearLand, .road, .roadblock:
@@ -429,6 +459,18 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
              .undergroundVault, .grandCanalSegment, .earthenGreatWallSegment,
              .largePalace, .largePalacePhase, .phasedMonumentPhase:
             .monuments
+        }
+    }
+}
+
+extension NativeConstructionTool {
+    var marketShopBuildingID: Int? {
+        switch self {
+        case .foodShop, .hempShop, .ceramicsShop, .teaShop, .silkShop,
+             .lacquerwareShop, .bronzewareShop:
+            buildingID
+        default:
+            nil
         }
     }
 }
@@ -578,6 +620,13 @@ struct ConstructionToolbar: View {
             "点击或拖动建造 2×2 住宅 · \(library.constructionOrientation.localizedTitle) · R 旋转 · 右键取消"
         case .farmland:
             "点击或拖动种植\(library.selectedAgriculturalCrop.fieldTitle) · 须邻接道路 · 右键取消"
+        case .market:
+            "先放置 7×4 普通市场（4 个铺位），再选择具体商铺并点击市场内部"
+        case .grandMarket:
+            "先放置 7×6 大市场（6 个铺位），再选择具体商铺并点击市场内部"
+        case .foodShop, .hempShop, .ceramicsShop, .teaShop, .silkShop,
+             .lacquerwareShop, .bronzewareShop:
+            "点击仍有空铺位的市场；同类商铺可以重复建造 · 右键取消"
         case .irrigationPump:
             "放在河岸清地，须同时邻接水面与道路 · 右键取消"
         case .grandCanalSegment:
@@ -741,7 +790,7 @@ extension ConstructionToolCategory {
         case .residential: "住房与移民状况"
         case .agriculture: "农田、渔猎与磨坊维持城市粮食供应"
         case .industry: "原料与工坊共同构成城市生产链"
-        case .commerce: "仓储、市场与贸易负责商品分配"
+        case .commerce: "先建市场，再选择食物、麻布、陶器、茶或奢侈品铺并点击市场内部"
         case .safety: "供水、医药与巡防覆盖影响住宅发展"
         case .government: "巡察与税务维持城市行政运转"
         case .entertainment: "音乐、杂技与戏剧满足居民娱乐需求"

@@ -66,6 +66,15 @@ public enum OriginalBuildingSpriteCatalog {
         .north: 640, .east: 641, .south: 642, .west: 643,
     ]
     public static let foodShopImageID = 611
+    public static let shopImageIDByBuildingID: [Int: Int] = [
+        64: 627, // Bronzeware
+        65: 617, // Ceramics
+        66: foodShopImageID,
+        67: 619, // Hemp
+        68: 621, // Lacquerware
+        69: 623, // Silk
+        70: 625, // Tea
+    ]
     public static let marketEntertainmentAreaImageID = 629
     public static let marketTileImageIDs = [632, 633, 634, 635]
     /// Logical group 82: the original small fire effect drawn over a failed
@@ -327,6 +336,12 @@ public enum OriginalBuildingSpriteCatalog {
                 imageID: foodShopImageID
             )
         }
+        if let shopImageID = shopImageIDByBuildingID[buildingID] {
+            return BuildingSpriteReference(
+                archiveBaseName: generalArchiveBaseName,
+                imageID: shopImageID
+            )
+        }
         return buildingComponents(
             forBuildingID: buildingID,
             orientation: orientation
@@ -460,6 +475,9 @@ public enum OriginalBuildingSpriteCatalog {
             archiveBaseName: generalArchiveBaseName,
             imageID: operationsFireImageID
         ))
+        references.formUnion(shopImageIDByBuildingID.values.map {
+            BuildingSpriteReference(archiveBaseName: generalArchiveBaseName, imageID: $0)
+        })
         references.formUnion(grandCanalStageImageIDs.map {
             BuildingSpriteReference(
                 archiveBaseName: grandCanalArchiveBaseName,

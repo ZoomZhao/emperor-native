@@ -104,6 +104,29 @@ final class GameSessionControllerTests: XCTestCase {
         XCTAssertEqual(controller.city?.roadNetwork.contains(roadPoint), true)
     }
 
+    func testMarketShopCommandTargetsAnExistingMarket() throws {
+        let controller = try controllerWithXiaOne()
+        let city = try XCTUnwrap(controller.city)
+        let origin = try XCTUnwrap(
+            city.nextBuildingConstructionLocation(
+                buildingID: OriginalMarketCatalog.commonMarketBuildingID
+            )
+        )
+
+        XCTAssertTrue(controller.perform(.selectConstruction(.market)).wasApplied)
+        XCTAssertTrue(controller.perform(
+            .placeSelectedConstruction(at: origin, orientation: .northSouth)
+        ).wasApplied)
+        XCTAssertEqual(controller.city?.markets.markets.first?.shopBuildingIDs, [])
+
+        XCTAssertTrue(controller.perform(.selectConstruction(.foodShop)).wasApplied)
+        XCTAssertTrue(controller.constructionPreview(at: origin).isValid)
+        XCTAssertTrue(controller.perform(
+            .placeSelectedConstruction(at: origin, orientation: .northSouth)
+        ).wasApplied)
+        XCTAssertEqual(controller.city?.markets.markets.first?.shopBuildingIDs, [66])
+    }
+
     private func controllerWithXiaOne() throws -> GameSessionController {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")

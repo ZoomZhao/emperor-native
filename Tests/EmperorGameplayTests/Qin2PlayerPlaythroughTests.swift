@@ -10,7 +10,8 @@ final class Qin2PlayerPlaythroughTests: XCTestCase {
         var eliteOrigins: [GridPoint] = []
         try placeNext(.fishingWharf, with: controller)
         try placeNext(.mill, with: controller)
-        try placeNext(.market, with: controller)
+        let marketOrigin = try XCTUnwrap(try placeNext(.market, with: controller).first)
+        try placeClosest(.foodShop, to: marketOrigin, with: controller)
         for _ in 0..<2 { try placeNext(.well, with: controller) }
         for _ in 0..<2 { try placeNext(.inspectorTower, with: controller) }
         for _ in 0..<2 { try placeNext(.taxOffice, with: controller) }
@@ -136,11 +137,21 @@ final class Qin2PlayerPlaythroughTests: XCTestCase {
         for _ in 0..<36 {
             try extendRoad(near: distributionCenter, with: controller)
         }
-        _ = try placeClosest(
+        let grandMarketOrigin = try placeClosest(
             .grandMarket,
             to: distributionCenter,
             with: controller
         )
+        for shop in [
+            PlayerConstructionTool.foodShop,
+            .ceramicsShop,
+            .hempShop,
+            .lacquerwareShop,
+            .silkShop,
+            .teaShop,
+        ] {
+            try placeClosest(shop, to: grandMarketOrigin, with: controller)
+        }
         let distributionCity = try XCTUnwrap(controller.city)
         let grandMarketPlacement = try XCTUnwrap(
             distributionCity.placedBuildings

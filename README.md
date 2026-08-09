@@ -123,9 +123,9 @@ The engine can:
 - move industrial goods physically between located producers, processors and 32-load warehouses using
   original deliveryman ID 22 and its 24-tile range, including 100-unit loads, warehouse accept/get limits,
   multi-month round trips and production stalls while a deliveryman has not returned;
-- operate common/grand markets with original shop capacities, marketplace buyers (figure ID 24, range 50)
-  and peddlers (figure ID 23, range 60): buyers collect stocked goods from warehouses, peddlers patrol roads,
-  and adjacent houses retain and consume hemp, ceramics, tea, silk and luxury wares by resident count;
+- operate common/grand markets with original four/six-shop capacities; place food, hemp, ceramics, tea, silk,
+  lacquerware or bronzeware shops into an existing market (including duplicate shops), then dispatch marketplace
+  buyers (figure ID 24, range 50) and peddlers (figure ID 23, range 60) to collect and distribute goods;
 - route fish, meat and other food commodities into original 32-load mills, calculate Bland/Plain/Appetizing/
   Tasty/Delicious quality from the exact food-type, salt and spices table, then preserve that quality through
   food-buyer bundles, peddler deliveries and per-resident household consumption;
