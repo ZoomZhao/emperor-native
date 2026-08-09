@@ -791,6 +791,68 @@ private func runSmoke(arguments: Arguments) throws {
                     requireEnabled: false
                 )
             }
+
+            let agricultureCategory = try waitForElement(
+                in: application,
+                identifier: "construction-category-agriculture",
+                timeout: 15
+            )
+            try press(
+                agricultureCategory,
+                identifier: "construction-category-agriculture"
+            )
+            let cropElements = try AgriculturalCrop.allCases.map { crop in
+                try waitForElement(
+                    in: application,
+                    identifier: "construction-crop-\(crop.rawValue)",
+                    timeout: 15,
+                    requireEnabled: false
+                )
+            }
+            let availableCropFrames = cropElements.compactMap { element -> CGRect? in
+                guard boolAttribute(element, kAXEnabledAttribute as CFString) != false else {
+                    return nil
+                }
+                return axFrame(of: element)?.rect
+            }
+            let unavailableCropFrames = cropElements.compactMap { element -> CGRect? in
+                guard boolAttribute(element, kAXEnabledAttribute as CFString) == false else {
+                    return nil
+                }
+                return axFrame(of: element)?.rect
+            }
+            if let lastAvailableY = availableCropFrames.map(\.minY).max(),
+               let firstUnavailableY = unavailableCropFrames.map(\.minY).min(),
+               lastAvailableY > firstUnavailableY {
+                throw SmokeFailure(
+                    "available construction choices must precede unavailable choices"
+                )
+            }
+            guard let firstCrop = cropElements.first,
+                  setVerticalScroll(containing: firstCrop, value: 1) else {
+                throw SmokeFailure("construction catalog did not expose a working scroll bar")
+            }
+            Thread.sleep(forTimeInterval: 0.3)
+            let scrolledCatalogScreenshotURL = arguments.logDirectory
+                .appendingPathComponent("qin-m1-construction-catalog-scrolled.png")
+            guard captureWindow(
+                application: application,
+                to: scrolledCatalogScreenshotURL
+            ) else {
+                throw SmokeFailure("could not capture the scrolled construction catalog")
+            }
+            log.record("scrolled construction catalog=\(scrolledCatalogScreenshotURL.path)")
+            _ = setVerticalScroll(containing: firstCrop, value: 0)
+
+            let residentialCategory = try waitForElement(
+                in: application,
+                identifier: "construction-category-residential",
+                timeout: 15
+            )
+            try press(
+                residentialCategory,
+                identifier: "construction-category-residential"
+            )
             let advancedControlsToggle = try waitForElement(
                 in: application,
                 identifier: "city-advanced-controls-toggle",

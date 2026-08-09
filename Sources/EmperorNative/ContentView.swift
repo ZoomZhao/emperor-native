@@ -336,37 +336,65 @@ private struct ClassicOriginalPanelTexture: View {
                     .interpolation(.none)
             }
 
-            if let sprite, let bodyImage = panelBodyImage(sprite) {
-                Image(decorative: bodyImage, scale: 1)
+            if let sprite, let railImage = panelCategoryRailImage(sprite) {
+                Image(decorative: railImage, scale: 1)
                     .interpolation(.none)
                     .frame(
-                        width: EmperorTheme.panelWidth,
-                        height: CGFloat(bodyImage.height),
+                        width: EmperorTheme.categoryRailWidth,
+                        height: CGFloat(railImage.height),
                         alignment: .topLeading
                     )
                     .clipped()
             }
+
+            if let sprite, let advisorImage = panelAdvisorImage(sprite) {
+                Image(decorative: advisorImage, scale: 1)
+                    .interpolation(.none)
+                    .frame(
+                        width: EmperorTheme.panelWidth - EmperorTheme.categoryRailWidth,
+                        height: CGFloat(advisorImage.height),
+                        alignment: .topLeading
+                    )
+                    .clipped()
+                    .offset(x: EmperorTheme.categoryRailWidth)
+            }
         }
     }
 
-    /// `#1223` is a complete panel slice whose first 40 pixels contain the
-    /// blue roof edge. The control panel begins below that edge, so repeating
-    /// the whole image makes the roof reappear halfway down the sidebar.
-    private func panelBodyImage(_ sprite: RenderedTerrainSprite) -> CGImage? {
+    /// Keep the authored category slots, which remain fixed while the
+    /// construction catalog scrolls independently.
+    private func panelCategoryRailImage(_ sprite: RenderedTerrainSprite) -> CGImage? {
         let topInset = min(Int(EmperorTheme.hudHeight), sprite.image.height - 1)
         return sprite.image.cropping(
             to: CGRect(
                 x: 0,
                 y: topInset,
-                width: sprite.image.width,
+                width: Int(EmperorTheme.categoryRailWidth),
                 height: sprite.image.height - topInset
             )
         )
     }
 
-    /// The original `#1223` slice is only 458 px tall. Keep its authored
-    /// category rail and panel grid at 1:1 scale, then continue the lower
-    /// minimap area with a plain wood sample instead of stretching those
+    /// Preserve only the fixed woven advisor field from `#1223`. Its original
+    /// construction lines are deliberately excluded: grid borders belong to
+    /// the catalog cells so they move with those cells when scrolled.
+    private func panelAdvisorImage(_ sprite: RenderedTerrainSprite) -> CGImage? {
+        let topInset = min(Int(EmperorTheme.hudHeight), sprite.image.height - 1)
+        let railWidth = min(Int(EmperorTheme.categoryRailWidth), sprite.image.width - 1)
+        let availableHeight = sprite.image.height - topInset
+        let advisorHeight = min(Int(EmperorTheme.populationAdvisorHeight), availableHeight)
+        return sprite.image.cropping(
+            to: CGRect(
+                x: railWidth,
+                y: topInset,
+                width: sprite.image.width - railWidth,
+                height: advisorHeight
+            )
+        )
+    }
+
+    /// The original `#1223` slice is only 458 px tall. Continue the area below
+    /// its fixed advisor chrome with a plain wood sample instead of stretching
     /// structural details across the full 728 px sidebar.
     private func panelWoodTileImage(_ sprite: RenderedTerrainSprite) -> CGImage? {
         let sampleOrigin = CGPoint(x: 64, y: 80)
@@ -378,6 +406,18 @@ private struct ClassicOriginalPanelTexture: View {
         return sprite.image.cropping(
             to: CGRect(origin: sampleOrigin, size: sampleSize)
         )
+    }
+}
+
+private enum ClassicConstructionCatalogItem: Identifiable {
+    case crop(AgriculturalCrop)
+    case tool(NativeConstructionTool)
+
+    var id: String {
+        switch self {
+        case let .crop(crop): "crop-\(crop.rawValue)"
+        case let .tool(tool): "tool-\(tool.rawValue)"
+        }
     }
 }
 
@@ -1107,42 +1147,62 @@ private struct ClassicControlPanel: View {
         ]
         let availableCrops = cropOrder.filter(isCropAvailable)
         let unavailableCrops = cropOrder.filter { !isCropAvailable($0) }
+        let availableItems: [ClassicConstructionCatalogItem]
+        let unavailableItems: [ClassicConstructionCatalogItem]
+        if selectedCategory == .agriculture {
+            availableItems = availableCrops.map(ClassicConstructionCatalogItem.crop)
+                + availableTools.map(ClassicConstructionCatalogItem.tool)
+            unavailableItems = unavailableCrops.map(ClassicConstructionCatalogItem.crop)
+                + unavailableTools.map(ClassicConstructionCatalogItem.tool)
+        } else {
+            availableItems = availableTools.map(ClassicConstructionCatalogItem.tool)
+            unavailableItems = unavailableTools.map(ClassicConstructionCatalogItem.tool)
+        }
+        let items = availableItems + unavailableItems
         return ScrollView(.vertical, showsIndicators: true) {
-            VStack(alignment: .leading, spacing: 0) {
-                if selectedCategory == .agriculture {
-                    cropCatalog(availableCrops + unavailableCrops)
-                    constructionToolGrid(availableTools + unavailableTools)
-                } else {
-                    constructionToolGrid(availableTools + unavailableTools)
-                }
-            }
+            constructionCatalogGrid(items)
             .padding(.horizontal, 5)
         }
     }
 
-    private func cropCatalog(_ crops: [AgriculturalCrop]) -> some View {
-        LazyVGrid(
+    private func constructionCatalogGrid(
+        _ items: [ClassicConstructionCatalogItem]
+    ) -> some View {
+        let remainder = items.count % classicConstructionGridColumns.count
+        let placeholderCount = remainder == 0
+            ? 0
+            : classicConstructionGridColumns.count - remainder
+        return LazyVGrid(
             columns: classicConstructionGridColumns,
             alignment: .leading,
             spacing: 0
         ) {
-            ForEach(crops, id: \.self) { crop in
-                cropButton(crop)
+            ForEach(items) { item in
+                constructionCatalogButton(item)
+            }
+            ForEach(0..<placeholderCount, id: \.self) { _ in
+                Rectangle()
+                    .fill(Color.clear)
+                    .frame(width: 52, height: 52)
+                    .overlay(
+                        Rectangle().strokeBorder(
+                            ClassicPalette.border.opacity(0.7),
+                            lineWidth: 1
+                        )
+                    )
             }
         }
     }
 
-    private func constructionToolGrid(
-        _ tools: [NativeConstructionTool]
+    @ViewBuilder
+    private func constructionCatalogButton(
+        _ item: ClassicConstructionCatalogItem
     ) -> some View {
-        LazyVGrid(
-            columns: classicConstructionGridColumns,
-            alignment: .leading,
-            spacing: 0
-        ) {
-            ForEach(tools) { tool in
-                constructionButton(tool)
-            }
+        switch item {
+        case let .crop(crop):
+            cropButton(crop)
+        case let .tool(tool):
+            constructionButton(tool)
         }
     }
 
@@ -1180,7 +1240,7 @@ private struct ClassicControlPanel: View {
             .background(selected ? ClassicPalette.gold.opacity(0.72) : Color.clear)
             .overlay(
                 Rectangle().strokeBorder(
-                    selected ? ClassicPalette.gold : Color.clear,
+                    selected ? ClassicPalette.gold : ClassicPalette.border.opacity(0.7),
                     lineWidth: 1
                 )
             )
@@ -1268,7 +1328,7 @@ private struct ClassicControlPanel: View {
                     .strokeBorder(
                         library.constructionTool == tool
                             ? ClassicPalette.gold
-                            : Color.clear,
+                            : ClassicPalette.border.opacity(0.7),
                         lineWidth: 1
                     )
             )
