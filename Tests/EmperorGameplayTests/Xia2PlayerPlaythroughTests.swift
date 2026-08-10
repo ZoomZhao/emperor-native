@@ -36,7 +36,8 @@ final class Xia2PlayerPlaythroughTests: XCTestCase {
         let houseLocations = continuedCity.houses.compactMap(\.location)
         try placeNext(.warehouse, with: controller)
         XCTAssertTrue(controller.perform(.selectAgriculturalCrop(.millet)).wasApplied)
-        for _ in 0..<2 { try placeNext(.farmland, with: controller) }
+        for _ in 0..<2 { try placeNext(.cropFarm, with: controller) }
+        for _ in 0..<16 { try placeNext(.farmland, with: controller) }
         for index in [7, 15] {
             try placeClosest(.market, to: houseLocations[index], with: controller)
             try placeClosest(.foodShop, to: houseLocations[index], with: controller)
@@ -152,10 +153,15 @@ final class Xia2PlayerPlaythroughTests: XCTestCase {
         let point: GridPoint?
         if tool == .house {
             point = city.nextHouseConstructionLocation()
-        } else if tool == .farmland {
+        } else if tool == .cropFarm {
             point = city.nextBuildingConstructionLocation(
-                buildingID: AgriculturalCrop.millet.plotBuildingID
+                buildingID: AgriculturalCrop.millet.producerBuildingID
             )
+        } else if tool == .farmland {
+            XCTAssertTrue(controller.perform(.selectConstruction(.farmland)).wasApplied)
+            point = (0..<city.roadNetwork.height).lazy.flatMap { y in
+                (0..<city.roadNetwork.width).lazy.map { GridPoint(x: $0, y: y) }
+            }.first { controller.constructionPreview(at: $0).isValid }
         } else if let buildingID = tool.buildingID,
                   OriginalMarketCatalog.supports(shopBuildingID: buildingID) {
             point = city.placedBuildings.first {

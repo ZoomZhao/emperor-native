@@ -508,7 +508,9 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
 
 public extension DeterministicCityState {
     func fengShuiSummary(models: BuildingModelTable) -> FengShuiCitySummary {
-        let evaluations = placedBuildings.map { placement in
+        let evaluations = placedBuildings.filter {
+            $0.category != .agriculturalPlot
+        }.map { placement in
             let model = models[buildingID: placement.buildingID]
             let element = model.flatMap { FengShuiElement(rawValue: $0.fengShuiValue) }
             let quality: FengShuiPlacementQuality

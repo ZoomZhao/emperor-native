@@ -118,7 +118,7 @@ public enum OriginalBuildingFootprintCatalog {
             BuildingFootprint(width: 1, height: 1)
 
         // Extraction and light industry.
-        case 31, 33, 35, 36, 38, 42...47, 192, 226, 237...239:
+        case 31, 33, 35, 36, 38, 42...47, 192, 193, 226, 237...239:
             BuildingFootprint(width: 2, height: 2)
         case 37, 39...41:
             BuildingFootprint(width: 3, height: 3)
@@ -208,6 +208,7 @@ public enum OriginalBuildingFootprintCatalog {
 
 public enum PlacedBuildingCategory: String, Sendable, Hashable, Codable {
     case production
+    case agriculturalPlot
     case warehouse
     case mill
     case market
@@ -229,7 +230,11 @@ public struct PlacedBuilding: Identifiable, Sendable, Hashable, Codable {
     public let footprint: BuildingFootprint
     public let roadAccessPoint: GridPoint
 
-    public var id: String { "\(category.rawValue)-\(instanceID)" }
+    public var id: String {
+        category == .agriculturalPlot
+            ? "\(category.rawValue)-\(instanceID)-\(origin.x)-\(origin.y)"
+            : "\(category.rawValue)-\(instanceID)"
+    }
 
     public var occupiedPoints: [GridPoint] { footprint.points(at: origin) }
 

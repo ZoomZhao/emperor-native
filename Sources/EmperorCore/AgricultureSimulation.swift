@@ -153,7 +153,7 @@ public enum AgriculturalCrop: String, CaseIterable, Sendable, Hashable, Codable 
 
 public struct AgriculturalConfiguration: Sendable, Hashable, Codable {
     public let crop: AgriculturalCrop
-    public let fieldCount: Int
+    public var fieldCount: Int
     public let fertilityPercent: Int
     public let climate: AgriculturalClimate
 
@@ -164,7 +164,7 @@ public struct AgriculturalConfiguration: Sendable, Hashable, Codable {
         climate: AgriculturalClimate
     ) {
         self.crop = crop
-        self.fieldCount = max(1, fieldCount)
+        self.fieldCount = max(0, fieldCount)
         self.fertilityPercent = min(100, max(0, fertilityPercent))
         self.climate = climate
     }

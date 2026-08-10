@@ -571,6 +571,14 @@ public final class GameSessionController: @unchecked Sendable {
             ) != nil
         case .roadblock:
             city.constructRoadBlock(at: point, rules: rules) != nil
+        case .cropFarm:
+            city.constructAgriculturalProducer(
+                crop: agriculturalCrop,
+                at: point,
+                orientation: orientation,
+                climate: agriculturalClimate,
+                rules: rules
+            ) != nil
         case .farmland:
             city.constructAgriculturalPlot(
                 crop: agriculturalCrop,
@@ -633,7 +641,13 @@ public final class GameSessionController: @unchecked Sendable {
             guard city.isAgriculturalCropAvailable(selectedAgriculturalCrop) else {
                 return "crop is unavailable in this mission"
             }
-            return "crop plot needs clear land beside a road, sufficient funds, and valid models"
+            return "crop plot needs clear land within an available matching farm's tending range"
+        }
+        if selectedConstruction == .cropFarm {
+            guard city.isAgriculturalCropAvailable(selectedAgriculturalCrop) else {
+                return "crop is unavailable in this mission"
+            }
+            return "farm needs a clear authored footprint beside a road and sufficient funds"
         }
         if selectedConstruction == .road {
             if city.roadNetwork.contains(point) { return "tile already contains a road" }

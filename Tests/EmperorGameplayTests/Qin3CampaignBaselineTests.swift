@@ -65,9 +65,11 @@ final class Qin3CampaignBaselineTests: XCTestCase {
     func testPlayerPlacedLacquerOrchardUsesXiangjunHumidClimate() throws {
         let controller = try startedController()
         XCTAssertTrue(controller.perform(.selectAgriculturalCrop(.lacquer)).wasApplied)
-        XCTAssertTrue(controller.perform(.selectConstruction(.farmland)).wasApplied)
+        XCTAssertTrue(controller.perform(.selectConstruction(.cropFarm)).wasApplied)
         let point = try XCTUnwrap(
-            controller.city?.nextBuildingConstructionLocation(buildingID: 27)
+            controller.city?.nextBuildingConstructionLocation(
+                buildingID: AgriculturalCrop.lacquer.producerBuildingID
+            )
         )
         let preview = controller.constructionPreview(at: point)
         XCTAssertTrue(preview.isValid, preview.reason ?? "invalid lacquer orchard")

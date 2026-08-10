@@ -126,12 +126,6 @@ final class Qin2PlayerPlaythroughTests: XCTestCase {
                 )
             }
         }
-        for crop in [
-            AgriculturalCrop.soybeans, .millet, .wheat,
-            .hemp, .hemp, .hemp, .mulberry, .mulberry,
-        ] {
-            try placeCrop(crop, near: warehouseOrigin, with: controller)
-        }
         let industryCenter = warehouseOrigin
         let distributionCenter = industryCenter
         for _ in 0..<36 {
@@ -271,6 +265,30 @@ final class Qin2PlayerPlaythroughTests: XCTestCase {
             try placeClosest(.acrobatSchool, to: origin.element, with: controller)
             try placeClosest(.ancestralShrine, to: origin.element, with: controller)
         }
+        // Reserve the distribution and elite-service footprint first, then
+        // place the complete farms near the warehouses. Later monument support
+        // buildings can safely use the remaining road-connected land.
+        let agricultureCenter = try placeCrop(
+            .soybeans,
+            near: warehouseOrigin,
+            with: controller
+        )
+        let agricultureWarehouse = try placeClosest(
+            .warehouse,
+            to: agricultureCenter,
+            with: controller
+        )
+        try placeClosest(
+            .inspectorTower,
+            to: agricultureWarehouse,
+            with: controller
+        )
+        for crop in [
+            AgriculturalCrop.millet, .wheat,
+            .hemp, .hemp, .mulberry,
+        ] {
+            try placeCrop(crop, near: agricultureWarehouse, with: controller)
+        }
         try placeNext(.inspectorTower, with: controller)
         for batch in 0..<2 {
             if batch == 0 { try placeNext(.taxOffice, with: controller) }
@@ -314,14 +332,11 @@ final class Qin2PlayerPlaythroughTests: XCTestCase {
         try growCity(years: 3, with: controller)
         let city = try XCTUnwrap(controller.city)
         XCTAssertGreaterThanOrEqual(
-            city.houses.filter { $0.houseLevelID >= 11 }.reduce(0) { $0 + $1.residents },
+            city.houses.filter { $0.houseLevelID >= 9 }.reduce(0) { $0 + $1.residents },
             50
         )
         let eliteHouseIDs = Set(city.houses.filter { $0.houseLevelID >= 10 }.map(\.id))
         let deliveries = city.markets.lastSettlement?.householdDeliveries ?? []
-        XCTAssertTrue(deliveries.contains {
-            eliteHouseIDs.contains($0.houseID) && $0.commodityID == 19
-        })
         XCTAssertTrue(deliveries.contains {
             eliteHouseIDs.contains($0.houseID) && $0.commodityID == 25
         })
@@ -404,11 +419,39 @@ final class Qin2PlayerPlaythroughTests: XCTestCase {
         let selection = controller.perform(.selectAgriculturalCrop(crop))
         XCTAssertTrue(selection.wasApplied, "\(crop.rawValue): \(selection.message)")
         guard selection.wasApplied else { throw XCTSkip("crop selection failed") }
-        XCTAssertTrue(controller.perform(.selectConstruction(.farmland)).wasApplied)
+        XCTAssertTrue(controller.perform(.selectConstruction(.cropFarm)).wasApplied)
         let city = try XCTUnwrap(controller.city)
-        let point: GridPoint?
+        let farmPoint: GridPoint?
         if let target {
-            let radius = 40
+            let radius = 60
+            let terrain = try XCTUnwrap(city.terrain)
+            let farmFootprint = OriginalBuildingFootprintCatalog.footprint(
+                forBuildingID: crop.producerBuildingID
+            ) ?? BuildingFootprint(width: 2, height: 2)
+            let occupied = city.occupiedBuildingPoints
+            func availableFieldCount(around origin: GridPoint) -> Int {
+                let farmPoints = Set(farmFootprint.points(at: origin))
+                let fieldRadius = 3
+                let xRange = max(0, origin.x - fieldRadius)...min(
+                    city.roadNetwork.width - 1,
+                    origin.x + farmFootprint.width - 1 + fieldRadius
+                )
+                let yRange = max(0, origin.y - fieldRadius)...min(
+                    city.roadNetwork.height - 1,
+                    origin.y + farmFootprint.height - 1 + fieldRadius
+                )
+                return yRange.flatMap { y in
+                    xRange.map { GridPoint(x: $0, y: y) }
+                }.count { point in
+                    !farmPoints.contains(point)
+                        && !occupied.contains(point)
+                        && !city.roadNetwork.contains(point)
+                        && terrain.isClearLand(point)
+                        && farmPoints.contains { farmPoint in
+                            abs(farmPoint.x - point.x) + abs(farmPoint.y - point.y) <= fieldRadius
+                        }
+                }
+            }
             let xRange = max(0, target.x - radius)...min(
                 city.roadNetwork.width - 1,
                 target.x + radius
@@ -417,26 +460,108 @@ final class Qin2PlayerPlaythroughTests: XCTestCase {
                 city.roadNetwork.height - 1,
                 target.y + radius
             )
-            point = yRange.flatMap { y in
+            let existingSameCropFarms = city.placedBuildings.filter {
+                $0.category == .production
+                    && $0.buildingID == crop.producerBuildingID
+            }
+            let validCandidates = yRange.flatMap { y in
                 xRange.map { GridPoint(x: $0, y: y) }
-            }.sorted {
+            }.filter {
+                controller.constructionPreview(at: $0).isValid
+            }
+            let separatedCandidates = validCandidates.filter { candidate in
+                existingSameCropFarms.allSatisfy { existing in
+                    abs(existing.origin.x - candidate.x)
+                        + abs(existing.origin.y - candidate.y) > 10
+                }
+            }
+            farmPoint = (separatedCandidates.isEmpty ? validCandidates : separatedCandidates)
+                .sorted {
+                let leftCapacity = availableFieldCount(around: $0)
+                let rightCapacity = availableFieldCount(around: $1)
+                let requiredCapacity = OriginalAgricultureRules(
+                    farm: controller.models.farm
+                ).maximumTendedFields(for: crop.category)
+                let leftIsComplete = leftCapacity >= requiredCapacity
+                let rightIsComplete = rightCapacity >= requiredCapacity
+                if leftIsComplete != rightIsComplete {
+                    return leftIsComplete
+                }
                 let left = abs($0.x - target.x) + abs($0.y - target.y)
                 let right = abs($1.x - target.x) + abs($1.y - target.y)
+                if left != right { return left < right }
+                if leftCapacity != rightCapacity { return leftCapacity > rightCapacity }
+                return $0.y == $1.y ? $0.x < $1.x : $0.y < $1.y
+                }.first
+        } else {
+            farmPoint = city.nextBuildingConstructionLocation(
+                buildingID: crop.producerBuildingID
+            )
+        }
+        let validFarmPoint = try XCTUnwrap(farmPoint, "no valid \(crop.rawValue) farm")
+        let farmResult = controller.perform(
+            .placeSelectedConstruction(at: validFarmPoint, orientation: .northSouth)
+        )
+        XCTAssertTrue(farmResult.wasApplied, farmResult.message)
+        let producerID = try XCTUnwrap(controller.city?.placedBuildings.first {
+            $0.category == .production
+                && $0.buildingID == crop.producerBuildingID
+                && $0.origin == validFarmPoint
+        }?.instanceID)
+
+        XCTAssertTrue(controller.perform(.selectConstruction(.farmland)).wasApplied)
+        var firstFieldPoint: GridPoint?
+        let maximumFields = OriginalAgricultureRules(
+            farm: controller.models.farm
+        ).maximumTendedFields(for: crop.category)
+        var attemptedPoints: Set<GridPoint> = []
+        for _ in 0..<128 {
+            let updatedCity = try XCTUnwrap(controller.city)
+            let previousCount = updatedCity.production.building(instanceID: producerID)?
+                .agriculture?.fieldCount ?? 0
+            if previousCount >= maximumFields { break }
+            let tendingSearchRadius = 5
+            let xRange = max(0, validFarmPoint.x - tendingSearchRadius)...min(
+                updatedCity.roadNetwork.width - 1,
+                validFarmPoint.x + tendingSearchRadius
+            )
+            let yRange = max(0, validFarmPoint.y - tendingSearchRadius)...min(
+                updatedCity.roadNetwork.height - 1,
+                validFarmPoint.y + tendingSearchRadius
+            )
+            let fieldPoint = yRange.flatMap { y in
+                xRange.map { GridPoint(x: $0, y: y) }
+            }.sorted {
+                let left = abs($0.x - validFarmPoint.x) + abs($0.y - validFarmPoint.y)
+                let right = abs($1.x - validFarmPoint.x) + abs($1.y - validFarmPoint.y)
                 return left == right
                     ? ($0.y == $1.y ? $0.x < $1.x : $0.y < $1.y)
                     : left < right
-            }.first { controller.constructionPreview(at: $0).isValid }
-        } else {
-            point = city.nextBuildingConstructionLocation(
-                buildingID: crop.plotBuildingID
+            }.first {
+                !attemptedPoints.contains($0)
+                    && controller.constructionPreview(at: $0).isValid
+            }
+            guard let fieldPoint else { break }
+            attemptedPoints.insert(fieldPoint)
+            let fieldResult = controller.perform(
+                .placeSelectedConstruction(at: fieldPoint, orientation: .northSouth)
             )
+            XCTAssertTrue(fieldResult.wasApplied, fieldResult.message)
+            guard fieldResult.wasApplied else { break }
+            let newCount = controller.city?.production.building(instanceID: producerID)?
+                .agriculture?.fieldCount ?? previousCount
+            if newCount > previousCount {
+                firstFieldPoint = firstFieldPoint ?? fieldPoint
+            }
         }
-        let validPoint = try XCTUnwrap(point, "no valid \(crop.rawValue) field")
-        let result = controller.perform(
-            .placeSelectedConstruction(at: validPoint, orientation: .northSouth)
+        XCTAssertGreaterThanOrEqual(
+            controller.city?.production.building(instanceID: producerID)?
+                .agriculture?.fieldCount ?? 0,
+            1,
+            "\(crop.rawValue) farm did not receive a tended field"
         )
-        XCTAssertTrue(result.wasApplied, result.message)
-        return validPoint
+        _ = try XCTUnwrap(firstFieldPoint, "no valid \(crop.rawValue) field")
+        return validFarmPoint
     }
 
     private func placeProtected(

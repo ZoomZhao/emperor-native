@@ -486,7 +486,7 @@ final class LibraryModel: ObservableObject {
         }
         constructionTool = tool
         if let playerTool = playerConstructionTool(for: tool) {
-            if tool == .farmland {
+            if tool == .farmland || tool == .cropFarm {
                 _ = gameplayController?.perform(
                     .selectAgriculturalCrop(selectedAgriculturalCrop)
                 )
@@ -505,8 +505,10 @@ final class LibraryModel: ObservableObject {
             saveStatus = "部队集结：点击军队标记选择编队，再点击可通行地面下令；右键取消"
         } else if tool == .house {
             saveStatus = "住宅工具：点击建造 2×2 住宅，或拖动区域连续建造；右键取消"
+        } else if tool == .cropFarm {
+            saveStatus = "\(selectedAgriculturalCrop.localizedTitle)农场：在临路清地放置农场主体；建成后再选择农田"
         } else if tool == .farmland {
-            saveStatus = "\(selectedAgriculturalCrop.fieldTitle)：点击清地种植 1 格，须邻接道路；右键取消"
+            saveStatus = "\(selectedAgriculturalCrop.fieldTitle)：在同类农场耕作范围内点击或拖动种植；右键取消"
         } else if tool == .cityWall {
             saveStatus = "城墙：逐格建造；可跨过既有道路以便改建城门；右键取消"
         } else if tool == .gatehouse {
@@ -528,10 +530,10 @@ final class LibraryModel: ObservableObject {
             return
         }
         selectedAgriculturalCrop = crop
-        constructionTool = .farmland
+        constructionTool = .cropFarm
         _ = gameplayController?.perform(.selectAgriculturalCrop(crop))
-        _ = gameplayController?.perform(.selectConstruction(.farmland))
-        saveStatus = "\(crop.fieldTitle)：点击清地种植 1 格，须邻接道路；右键取消"
+        _ = gameplayController?.perform(.selectConstruction(.cropFarm))
+        saveStatus = "\(crop.localizedTitle)农场：先在临路清地放置农场主体，再选择农田铺设田块"
     }
 
     func cancelCurrentInteraction() {
@@ -615,7 +617,7 @@ final class LibraryModel: ObservableObject {
            controller.selectedCampaignID != nil,
            controller.selectedMissionID == selectedMissionID,
            let playerTool = playerConstructionTool(for: constructionTool) {
-            if playerTool == .farmland {
+            if playerTool == .farmland || playerTool == .cropFarm {
                 _ = controller.perform(
                     .selectAgriculturalCrop(selectedAgriculturalCrop)
                 )
@@ -633,8 +635,11 @@ final class LibraryModel: ObservableObject {
                 tool: constructionTool,
                 at: point
             )
-            if result.wasApplied, let buildingID = playerTool.buildingID {
-                playOriginalBuildingSound(buildingID)
+            if result.wasApplied {
+                let soundBuildingID = playerTool == .cropFarm
+                    ? selectedAgriculturalCrop.producerBuildingID
+                    : playerTool.buildingID
+                if let soundBuildingID { playOriginalBuildingSound(soundBuildingID) }
             }
             return
         }
@@ -813,6 +818,17 @@ final class LibraryModel: ObservableObject {
                 return
             }
             saveStatus = constructionSuccess(at: point, city: city, tool: constructionTool)
+        case .cropFarm:
+            guard city.constructAgriculturalProducer(
+                crop: selectedAgriculturalCrop,
+                at: point,
+                orientation: constructionOrientation,
+                rules: rules
+            ) != nil else {
+                saveStatus = constructionFailure(at: point, city: city, tool: constructionTool)
+                return
+            }
+            saveStatus = "已在 \(point.x),\(point.y) 建造\(selectedAgriculturalCrop.localizedTitle)农场"
         case .farmland:
             guard city.constructAgriculturalPlot(
                 crop: selectedAgriculturalCrop,
@@ -1060,6 +1076,19 @@ final class LibraryModel: ObservableObject {
         tool: NativeConstructionTool
     ) -> String {
         guard city.roadNetwork.isInside(point) else { return "目标格超出可玩地图" }
+        if tool == .cropFarm {
+            guard city.isAgriculturalCropAvailable(selectedAgriculturalCrop) else {
+                return "\(selectedAgriculturalCrop.localizedTitle)农场在本关暂未开放"
+            }
+            if city.canConstructAgriculturalProducer(
+                crop: selectedAgriculturalCrop,
+                at: point,
+                orientation: constructionOrientation
+            ) {
+                return "无法建造\(selectedAgriculturalCrop.localizedTitle)农场：国库不足或农业模型不可用"
+            }
+            return "无法建造\(selectedAgriculturalCrop.localizedTitle)农场：完整占地须为临路清地"
+        }
         if tool == .farmland {
             guard city.isAgriculturalCropAvailable(selectedAgriculturalCrop) else {
                 return "\(selectedAgriculturalCrop.fieldTitle)在本关暂未开放"
@@ -1070,7 +1099,7 @@ final class LibraryModel: ObservableObject {
             ) {
                 return "无法种植\(selectedAgriculturalCrop.fieldTitle)：国库不足或农业模型不可用"
             }
-            return "无法种植\(selectedAgriculturalCrop.fieldTitle)：目标格须为邻接道路的无碰撞清地"
+            return "无法种植\(selectedAgriculturalCrop.fieldTitle)：须为同类农场耕作范围内的无碰撞清地，且农场仍有余量"
         }
         if tool == .irrigationPump {
             if city.canConstructIrrigationPump(
@@ -1171,6 +1200,8 @@ final class LibraryModel: ObservableObject {
                 "已清理 \(point.x), \(point.y) 的树木与灌木"
             case .road:
                 "已在 \(point.x), \(point.y) 铺设道路"
+            case .cropFarm:
+                "已在 \(point.x), \(point.y) 建造\(selectedAgriculturalCrop.localizedTitle)农场"
             case .farmland:
                 "已在 \(point.x), \(point.y) 种植\(selectedAgriculturalCrop.fieldTitle)"
             default:
@@ -2265,6 +2296,7 @@ final class LibraryModel: ObservableObject {
         case .acrobatSchool: .acrobatSchool
         case .dramaSchool: .dramaSchool
         case .farmland: .farmland
+        case .cropFarm: .cropFarm
         case .irrigationPump: .irrigationPump
         case .grandCanalSegment: .grandCanalSegment
         case .earthenGreatWallSegment: .earthenGreatWallSegment

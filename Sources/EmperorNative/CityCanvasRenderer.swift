@@ -52,6 +52,7 @@ extension CityCanvas {
             viewport: viewport,
             movementProgress: movementProgress
         )
+        drawFengShuiBuildingOverlay(context: &context, metrics: metrics)
         drawPlacementHighlight(
             context: &context,
             metrics: metrics
@@ -380,8 +381,18 @@ extension CityCanvas {
         case .phasedMonumentPhase: city.canAdvancePhasedMonument(at: point)
         case .house: city.canConstructHouse(at: point)
         case .eliteHouse: city.canConstructHouse(at: point)
+        case .cropFarm:
+            city.canConstructAgriculturalProducer(
+                crop: agriculturalCrop,
+                at: point,
+                orientation: constructionOrientation
+            )
         case .farmland:
-            city.canConstructAgriculturalPlot(crop: agriculturalCrop, at: point)
+            city.canConstructAgriculturalPlot(
+                crop: agriculturalCrop,
+                at: point,
+                rules: EconomyRulesEngine(models: models)
+            )
         case .foodShop, .hempShop, .ceramicsShop, .teaShop, .silkShop,
              .lacquerwareShop, .bronzewareShop:
             constructionTool.marketShopBuildingID.map {
@@ -421,6 +432,7 @@ extension CityCanvas {
             }
             let color: Color = switch placement.category {
             case .production: .brown
+            case .agriculturalPlot: .yellow
             case .warehouse: .indigo
             case .mill: .yellow
             case .market: .green

@@ -22,6 +22,7 @@ enum ResourceOverlayKind: String, CaseIterable, Identifiable {
     case tax = "税务"
     case housingSupply = "住房供给"
     case walkers = "城市行人"
+    case fengShui = "风水"
 
     var id: Self { self }
 
@@ -31,6 +32,7 @@ enum ResourceOverlayKind: String, CaseIterable, Identifiable {
         .housingSupply,
     ]
     static let peopleCases: [Self] = [.walkers]
+    static let buildingCases: [Self] = [.fengShui]
 
     var symbol: String {
         switch self {
@@ -46,6 +48,7 @@ enum ResourceOverlayKind: String, CaseIterable, Identifiable {
         case .tax: "banknote.fill"
         case .housingSupply: "house.and.flag.fill"
         case .walkers: "figure.walk"
+        case .fengShui: "yinyang"
         }
     }
 
@@ -64,6 +67,7 @@ enum ResourceOverlayKind: String, CaseIterable, Identifiable {
         case .tax: .green
         case .housingSupply: .cyan
         case .walkers: .yellow
+        case .fengShui: .red
         }
     }
 
@@ -77,7 +81,7 @@ enum ResourceOverlayKind: String, CaseIterable, Identifiable {
         case .stone: flags.contains(.rock)
         case .clay: flags.contains(.scrub)
         case .water, .inspection, .medical, .entertainment, .religion, .tax,
-             .housingSupply, .walkers:
+             .housingSupply, .walkers, .fengShui:
             false
         }
     }
@@ -103,7 +107,7 @@ enum ResourceOverlayKind: String, CaseIterable, Identifiable {
             house.hasTaxCoverage
         case .housingSupply:
             house.residents < house.capacity(using: models)
-        case .food, .wood, .stone, .clay, .walkers:
+        case .food, .wood, .stone, .clay, .walkers, .fengShui:
             false
         }
     }

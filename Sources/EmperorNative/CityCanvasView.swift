@@ -97,9 +97,9 @@ struct CityCanvas: View {
 
     var activeConstructionBuildingID: Int? {
         if constructionTool.marketShopBuildingID != nil { return nil }
-        return constructionTool == .farmland
-            ? agriculturalCrop.plotBuildingID
-            : constructionTool.buildingID
+        if constructionTool == .cropFarm { return agriculturalCrop.producerBuildingID }
+        if constructionTool == .farmland { return agriculturalCrop.plotBuildingID }
+        return constructionTool.buildingID
     }
 
     var body: some View {
@@ -314,7 +314,7 @@ struct CityCanvas: View {
                     .padding(10)
                 }
             }
-            .overlay(alignment: .topTrailing) {
+            .overlay(alignment: .topLeading) {
                 if let inspectedTarget {
                     BuildingInfoPopup(
                         target: inspectedTarget,
@@ -324,22 +324,9 @@ struct CityCanvas: View {
                         onClose: { self.inspectedTarget = nil }
                     )
                     .padding(10)
-                    .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .topTrailing)))
-                } else if constructionTool == .inspect,
-                          let hoveredMapPoint,
-                          let hoveredTarget = inspectedTarget(at: hoveredMapPoint) {
-                    BuildingHoverStatusCard(
-                        target: hoveredTarget,
-                        city: city,
-                        models: models
-                    )
-                    .padding(10)
-                    .allowsHitTesting(false)
                     .transition(.opacity)
                 }
             }
-            .animation(.easeOut(duration: 0.12), value: inspectedTarget)
-            .animation(.easeOut(duration: 0.08), value: hoveredMapPoint)
             .onAppear {
                 synchronizeCameraPositionFromBindings()
             }

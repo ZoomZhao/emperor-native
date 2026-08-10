@@ -1328,9 +1328,10 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         return id
     }
 
-    /// Constructs one original seasonal farm/orchard unit and its tended plots
-    /// as a single transaction. Plot positions are deliberately kept out of the
-    /// deterministic rules layer; the native map editor can bind them later.
+    /// Constructs one original seasonal farm/orchard unit and, for legacy
+    /// headless callers, an optional initial number of tended plots as a single
+    /// transaction. Map-facing play places the producer first with zero fields,
+    /// then adds visible plots through `constructAgriculturalPlot`.
     @discardableResult
     public mutating func constructAgriculturalProducer(
         crop: AgriculturalCrop,
@@ -1341,7 +1342,7 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         assignedWorkers: Int? = nil,
         rules: EconomyRulesEngine
     ) -> Int? {
-        guard fieldCount > 0,
+        guard fieldCount >= 0,
               missionSettingsState?.allowedResourceCommodityIDs.contains(
                 crop.outputCommodityID
               ) ?? true,
@@ -1355,12 +1356,16 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             buildingID: crop.producerBuildingID,
             rules: rules,
             difficulty: difficulty
-        ), updatedEconomy.spendOnConstruction(
+        ) else { return nil }
+        if fieldCount > 0,
+           !updatedEconomy.spendOnConstruction(
             buildingID: crop.plotBuildingID,
             quantity: fieldCount,
             rules: rules,
             difficulty: difficulty
-        ) else { return nil }
+           ) {
+            return nil
+        }
 
         let configuration = AgriculturalConfiguration(
             crop: crop,
@@ -1380,6 +1385,52 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         return id
     }
 
+    public func canConstructAgriculturalProducer(
+        crop: AgriculturalCrop,
+        at origin: GridPoint,
+        orientation: IsometricBuildingOrientation = .northSouth
+    ) -> Bool {
+        isAgriculturalCropAvailable(crop)
+            && constructionFootprint(
+                buildingID: crop.producerBuildingID,
+                at: origin,
+                orientation: orientation
+            ) != nil
+    }
+
+    /// Places the physical farm/orchard before any fields are assigned to it.
+    /// This is the two-stage interaction shown by the original application.
+    @discardableResult
+    public mutating func constructAgriculturalProducer(
+        crop: AgriculturalCrop,
+        at origin: GridPoint,
+        orientation: IsometricBuildingOrientation = .northSouth,
+        fertilityPercent: Int = 100,
+        climate: AgriculturalClimate = .temperate,
+        assignedWorkers: Int? = nil,
+        rules: EconomyRulesEngine
+    ) -> Int? {
+        guard let placement = preparedPlacement(
+            category: .production,
+            buildingID: crop.producerBuildingID,
+            at: origin,
+            orientation: orientation
+        ), isAgriculturalCropAvailable(crop) else { return nil }
+        var updated = self
+        guard let id = updated.constructAgriculturalProducer(
+            crop: crop,
+            fieldCount: 0,
+            fertilityPercent: fertilityPercent,
+            climate: climate,
+            serviceRoadStart: placement.roadAccessPoint,
+            assignedWorkers: assignedWorkers,
+            rules: rules
+        ) else { return nil }
+        updated.recordPlacement(placement, instanceID: id)
+        self = updated
+        return id
+    }
+
     /// Whether a crop is offered by the active mission's resource rules.
     public func isAgriculturalCropAvailable(_ crop: AgriculturalCrop) -> Bool {
         missionSettingsState?.allowedResourceCommodityIDs.contains(
@@ -1387,12 +1438,13 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         ) ?? true
     }
 
-    /// Validates the visible one-tile plot used by the native construction
-    /// surface. Agricultural producers remain deterministic simulation
-    /// instances, while this geometry preserves the selected crop on the map.
+    /// Validates one visible plot against a matching farm/orchard's authored
+    /// tending range and capacity. Fields do not need direct road access; the
+    /// producer building does.
     public func canConstructAgriculturalPlot(
         crop: AgriculturalCrop,
-        at origin: GridPoint
+        at origin: GridPoint,
+        rules: EconomyRulesEngine? = nil
     ) -> Bool {
         guard isAgriculturalCropAvailable(crop),
               let footprint = OriginalBuildingFootprintCatalog.footprint(
@@ -1405,7 +1457,11 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             && points.allSatisfy {
                 terrainAllowsConstruction(buildingID: crop.plotBuildingID, at: $0)
             }
-            && adjacentRoadPoints(to: points).first != nil
+            && agriculturalProducerCandidate(
+                crop: crop,
+                plotOrigin: origin,
+                rules: rules
+            ) != nil
     }
 
     /// Constructs a crop-specific plot and binds its original artwork to the
@@ -1418,44 +1474,79 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         climate: AgriculturalClimate = .temperate,
         rules: EconomyRulesEngine
     ) -> Int? {
-        guard canConstructAgriculturalPlot(crop: crop, at: origin),
+        guard canConstructAgriculturalPlot(crop: crop, at: origin, rules: rules),
               let footprint = OriginalBuildingFootprintCatalog.footprint(
                 forBuildingID: crop.plotBuildingID
-              ),
-              let roadAccessPoint = adjacentRoadPoints(
-                to: footprint.points(at: origin)
-              ).first else { return nil }
+              ), let producer = agriculturalProducerCandidate(
+                crop: crop,
+                plotOrigin: origin,
+                rules: rules
+              ) else { return nil }
         var updated = self
-        let agricultureRules = OriginalAgricultureRules(farm: rules.models.farm)
-        guard let id = updated.constructAgriculturalProducer(
-            crop: crop,
-            // The native tool represents one complete farm/orchard unit, not
-            // one isolated tended square. Bind it to the authored maximum plot
-            // count so its annual yield can support the households staffed by
-            // that farm, matching the original farm-plus-fields abstraction.
-            fieldCount: max(
-                1,
-                agricultureRules.maximumTendedFields(for: crop.category)
-            ),
-            fertilityPercent: fertilityPercent,
-            climate: climate,
-            serviceRoadStart: roadAccessPoint,
-            rules: rules
+        guard updated.economy.spendOnConstruction(
+            buildingID: crop.plotBuildingID,
+            rules: rules,
+            difficulty: difficulty
         ) else { return nil }
+        updated.production.setAgriculturalFieldCount(
+            producer.configuration.fieldCount + 1,
+            buildingInstanceID: producer.id
+        )
         updated.recordPlacement(
             PlacedBuilding(
-                category: .production,
-                instanceID: 0,
+                category: .agriculturalPlot,
+                instanceID: producer.id,
                 buildingID: crop.plotBuildingID,
                 origin: origin,
                 orientation: .northSouth,
                 footprint: footprint,
-                roadAccessPoint: roadAccessPoint
-            ),
-            instanceID: id
+                roadAccessPoint: producer.roadAccessPoint
+            ), instanceID: producer.id
         )
         self = updated
-        return id
+        return producer.id
+    }
+
+    private func agriculturalProducerCandidate(
+        crop: AgriculturalCrop,
+        plotOrigin: GridPoint,
+        rules: EconomyRulesEngine?
+    ) -> (id: Int, roadAccessPoint: GridPoint, configuration: AgriculturalConfiguration)? {
+        let agricultureRules = rules.map { OriginalAgricultureRules(farm: $0.models.farm) }
+        let tendingRange = agricultureRules?.tendingRange(for: crop.category) ?? 3
+        let maximumFields = agricultureRules?.maximumTendedFields(for: crop.category) ?? 9
+        let candidates: [(
+            id: Int,
+            roadAccessPoint: GridPoint,
+            configuration: AgriculturalConfiguration,
+            distance: Int
+        )] = production.buildings.compactMap { building in
+            guard let configuration = building.agriculture,
+                  configuration.crop == crop,
+                  configuration.fieldCount < maximumFields,
+                  let roadAccessPoint = building.roadAccessPoint else { return nil }
+            let producerPlacement = placement(category: .production, instanceID: building.id)
+            let distance: Int
+            if let producerPlacement {
+                distance = producerPlacement.occupiedPoints.map {
+                    abs($0.x - plotOrigin.x) + abs($0.y - plotOrigin.y)
+                }.min() ?? .max
+            } else {
+                // Save compatibility for older headless cities whose farm has
+                // a road endpoint but no authored map placement.
+                distance = abs(roadAccessPoint.x - plotOrigin.x)
+                    + abs(roadAccessPoint.y - plotOrigin.y)
+            }
+            guard distance <= tendingRange else { return nil }
+            return (building.id, roadAccessPoint, configuration, distance)
+        }
+        return candidates.sorted {
+            if $0.distance != $1.distance { return $0.distance < $1.distance }
+            // When two farms are equally close, prefer the one the player most
+            // recently placed. This makes the natural "place farm, then add
+            // its fields" flow deterministic even in a dense same-crop row.
+            return $0.id > $1.id
+        }.first.map { ($0.id, $0.roadAccessPoint, $0.configuration) }
     }
 
     @discardableResult
@@ -2581,9 +2672,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         rules: EconomyRulesEngine
     ) -> DemolishOutcome? {
         guard var placements = buildingPlacementState,
-              let index = placements.firstIndex(where: { $0.occupiedPoints.contains(point) })
+              let placement = placements.first(where: { $0.occupiedPoints.contains(point) })
         else { return nil }
-        let placement = placements[index]
         let refund = buildingDemolitionRefund(placement: placement, rules: rules)
 
         // Apply every linked-state mutation to a copy. A placed building is
@@ -2591,7 +2681,15 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         // market, trade, service, or walker state survives invisibly.
         var updated = self
         updated.removeSimulationInstance(for: placement)
-        placements.remove(at: index)
+        let removesLinkedFields = placement.category == .production
+            && updated.production.building(instanceID: placement.instanceID) == nil
+            && production.building(instanceID: placement.instanceID)?.agriculture != nil
+        placements.removeAll {
+            $0.id == placement.id
+                || (removesLinkedFields
+                    && $0.category == .agriculturalPlot
+                    && $0.instanceID == placement.instanceID)
+        }
         updated.buildingPlacementState = placements
         updated.economy.credit(refund)
         self = updated
@@ -2611,6 +2709,15 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
                 trade: &trade
             )
             _ = production.removeBuilding(instanceID: placement.instanceID)
+
+        case .agriculturalPlot:
+            if let producer = production.building(instanceID: placement.instanceID),
+               let configuration = producer.agriculture {
+                production.setAgriculturalFieldCount(
+                    configuration.fieldCount - 1,
+                    buildingInstanceID: placement.instanceID
+                )
+            }
 
         case .warehouse:
             _ = logistics.cancelDeliveries(
@@ -2865,7 +2972,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
                     tradingBuildingID: assignment.key.instanceID,
                     models: models
                 )
-            case .warehouse, .mill, .market, .residentialService, .military, .aesthetic:
+            case .agriculturalPlot, .warehouse, .mill, .market, .residentialService,
+                 .military, .aesthetic:
                 break
             }
         }

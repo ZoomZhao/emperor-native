@@ -3,122 +3,7 @@ import SwiftUI
 
 // MARK: - Building info popup
 
-/// Compact, non-interactive status shown while the pointer rests on a
-/// building in browse mode. Houses surface the exact next-month upgrade
-/// blockers; clicking still opens the complete inspector.
-struct BuildingHoverStatusCard: View {
-    let target: InspectedTarget
-    let city: DeterministicCityState
-    let models: OriginalEconomyModels
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 7) {
-                Image(systemName: target.isHouse ? "house.fill" : "building.2.fill")
-                    .foregroundStyle(EmperorTheme.primary)
-                Text(title)
-                    .font(EmperorTheme.headlineSmall)
-                    .foregroundStyle(EmperorTheme.onSurface)
-            }
-            Text(summary)
-                .font(EmperorTheme.bodySmall)
-                .foregroundStyle(summaryColor)
-                .fixedSize(horizontal: false, vertical: true)
-            if !details.isEmpty {
-                Divider().overlay(EmperorTheme.border.opacity(0.55))
-                ForEach(Array(details.enumerated()), id: \.offset) { _, detail in
-                    Label(detail, systemImage: "xmark.circle.fill")
-                        .font(EmperorTheme.labelMedium)
-                        .foregroundStyle(EmperorTheme.warning)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-            Text("左键或右键查看详情")
-                .font(EmperorTheme.caption)
-                .foregroundStyle(EmperorTheme.onSurfaceMuted)
-        }
-        .padding(10)
-        .frame(width: 272, alignment: .leading)
-        .background(EmperorTheme.surfaceDeep.opacity(0.94))
-        .overlay(Rectangle().strokeBorder(EmperorTheme.border, lineWidth: 1))
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("building-hover-status")
-        .accessibilityLabel(title)
-        .accessibilityValue(([summary] + details).joined(separator: "；"))
-    }
-
-    private var title: String {
-        switch target {
-        case let .placed(placement):
-            NativeConstructionTool.allCases.first {
-                $0.buildingID == placement.buildingID
-            }?.title ?? models.buildings[buildingID: placement.buildingID]
-                .map { ClassicTextLocalization.authoredName($0.name) }
-                ?? "建筑 #\(placement.buildingID)"
-        case let .house(house):
-            models.buildings[houseLevelID: house.houseLevelID]
-                .map { ClassicTextLocalization.houseName($0.name) }
-                ?? "住宅"
-        }
-    }
-
-    private var summary: String {
-        switch target {
-        case .placed:
-            return "右键可调整建筑设置"
-        case let .house(house):
-            guard house.residents > 0 else {
-                return "尚未入住；有居民后才会在月末评估升级"
-            }
-            guard let evaluation = evaluation(for: house) else {
-                return "当前住宅资料不足，暂时无法评估升级"
-            }
-            guard let nextLevelID = evaluation.nextLevelID else {
-                return "已达到当前住宅序列的最高等级"
-            }
-            let nextName = models.buildings[houseLevelID: nextLevelID]
-                .map { ClassicTextLocalization.houseName($0.name) }
-                ?? "等级 #\(nextLevelID)"
-            if evaluation.missingEvolutionRequirements.isEmpty {
-                return "条件已满足，将在下次月结升级为 \(nextName)"
-            }
-            return "暂时不能升级为 \(nextName)"
-        }
-    }
-
-    private var summaryColor: Color {
-        switch target {
-        case .placed:
-            return EmperorTheme.onSurfaceMuted
-        case let .house(house):
-            guard let evaluation = evaluation(for: house),
-                  evaluation.nextLevelID != nil else {
-                return EmperorTheme.onSurfaceMuted
-            }
-            return evaluation.missingEvolutionRequirements.isEmpty
-                ? EmperorTheme.success
-                : EmperorTheme.warning
-        }
-    }
-
-    private var details: [String] {
-        guard case let .house(house) = target,
-              let evaluation = evaluation(for: house) else { return [] }
-        return evaluation.missingEvolutionRequirements.map {
-            houseEvolutionRequirementDescription($0, models: models)
-        }
-    }
-
-    private func evaluation(for house: ResidentialUnit) -> HouseEvolutionEvaluation? {
-        DeterministicHousingEvolution.evaluate(
-            house: house,
-            models: models.buildings,
-            difficulty: city.difficulty
-        )
-    }
-}
-
-/// Floating inspector panel shown when a building or house is clicked in
+/// Original-style inspector panel shown when a building or house is clicked in
 /// inspect mode. Resolves category-specific detail: production buildings show
 /// their recipe output, warehouses show storage, service buildings show their
 /// service type, and houses show level/residents.
@@ -135,41 +20,80 @@ struct BuildingInfoPopup: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(EmperorTheme.headlineSmall)
-                        .foregroundStyle(EmperorTheme.primary)
-                    Text(subtitle)
+        VStack(alignment: .leading, spacing: 0) {
+            Text(title)
+                .font(EmperorTheme.headlineSmall)
+                .foregroundStyle(EmperorTheme.gold)
+                .frame(maxWidth: .infinity)
+                .frame(height: 28)
+                .background(EmperorTheme.tileBrown.opacity(0.88))
+
+            Text(subtitle)
+                .font(EmperorTheme.bodySmall)
+                .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 10)
+                .frame(height: 25)
+                .overlay(alignment: .bottom) {
+                    Rectangle().fill(EmperorTheme.border.opacity(0.7)).frame(height: 1)
+                }
+
+            ScrollView(.vertical, showsIndicators: true) {
+                VStack(spacing: 0) {
+                    ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                        HStack(alignment: .firstTextBaseline, spacing: 10) {
+                            Text(row.label)
+                                .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                                .frame(width: 86, alignment: .leading)
+                            Text(row.value)
+                                .foregroundStyle(EmperorTheme.onSurface)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                         .font(EmperorTheme.bodySmall)
-                        .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .overlay(alignment: .bottom) {
+                            Rectangle()
+                                .fill(EmperorTheme.border.opacity(0.28))
+                                .frame(height: 1)
+                        }
+                    }
                 }
-                Spacer(minLength: 0)
-                Button(action: onClose) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title3)
-                        .foregroundStyle(EmperorTheme.onSurfaceMuted)
-                }
-                .buttonStyle(.plain)
-                .help("关闭")
             }
-            Divider().overlay(EmperorTheme.border)
-            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-                LabeledContent(row.label, value: row.value)
-                    .font(EmperorTheme.bodySmall)
+            .frame(maxHeight: 230)
+
+            VStack(alignment: .leading, spacing: 7) {
+                operationControls
             }
-            operationControls
+            .padding(.horizontal, 10)
+            .padding(.top, 7)
+
+            HStack {
+                Button("?", action: {})
+                    .buttonStyle(ClassicInspectorGlyphButtonStyle())
+                    .help("建筑信息帮助")
+                Spacer()
+                Button("确定", action: onClose)
+                    .buttonStyle(EmperorClassicButtonStyle(.primary))
+            }
+            .padding(10)
         }
-        .padding(14)
-        .frame(width: 272, alignment: .leading)
+        .frame(width: 310, alignment: .leading)
+        .frame(maxHeight: 410, alignment: .top)
         .foregroundStyle(EmperorTheme.onSurface)
-        .background(EmperorTheme.surface)
+        .background(EmperorTheme.panelBrown.opacity(0.98))
         .overlay(
             Rectangle()
-                .strokeBorder(EmperorTheme.border, lineWidth: 1)
+                .strokeBorder(EmperorTheme.border, lineWidth: 2)
         )
-        .shadow(color: .black.opacity(0.35), radius: 8, y: 3)
+        .overlay(
+            Rectangle()
+                .inset(by: 4)
+                .strokeBorder(EmperorTheme.primary.opacity(0.22), lineWidth: 1)
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("building-info-panel")
     }
 
     private var title: String {
@@ -411,6 +335,19 @@ struct BuildingInfoPopup: View {
             } else {
                 rows.append(InfoRow(label: "劳工", value: "未投产"))
             }
+        case .agriculturalPlot:
+            if let producer = city.production.buildings.first(where: {
+                $0.id == placement.instanceID
+            }), let agriculture = producer.agriculture {
+                rows.append(InfoRow(
+                    label: "所属农场",
+                    value: "#\(producer.id) · \(agriculture.crop.rawValue)"
+                ))
+                rows.append(InfoRow(
+                    label: "已辖田块",
+                    value: "\(agriculture.fieldCount) 块"
+                ))
+            }
         case .warehouse:
             if let warehouse = city.logistics.warehouses.first(where: { $0.id == placement.instanceID }) {
                 rows.append(
@@ -621,6 +558,7 @@ struct BuildingInfoPopup: View {
     private func categoryLabel(_ category: PlacedBuildingCategory) -> String {
         switch category {
         case .production: "生产建筑"
+        case .agriculturalPlot: "农田"
         case .warehouse: "仓库"
         case .mill: "磨坊"
         case .market: "市场"
@@ -632,10 +570,18 @@ struct BuildingInfoPopup: View {
     }
 }
 
-private extension InspectedTarget {
-    var isHouse: Bool {
-        if case .house = self { return true }
-        return false
+private struct ClassicInspectorGlyphButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(EmperorTheme.bold(size: 11))
+            .foregroundStyle(EmperorTheme.gold)
+            .frame(width: 24, height: 22)
+            .background(
+                configuration.isPressed
+                    ? EmperorTheme.tileBrown.opacity(0.65)
+                    : EmperorTheme.deepBrown
+            )
+            .overlay(Rectangle().strokeBorder(EmperorTheme.border, lineWidth: 1))
     }
 }
 

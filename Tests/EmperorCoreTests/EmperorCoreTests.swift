@@ -2387,18 +2387,33 @@ final class EmperorCoreTests: XCTestCase {
         _ = city.buildRoad((0...6).map { GridPoint(x: $0, y: 2) }, rules: rules)
         let plotPoint = GridPoint(x: 3, y: 1)
 
-        XCTAssertTrue(city.canConstructAgriculturalPlot(crop: .rice, at: plotPoint))
-        let producerID = try XCTUnwrap(city.constructAgriculturalPlot(
+        XCTAssertFalse(city.canConstructAgriculturalPlot(crop: .rice, at: plotPoint))
+        let producerID = try XCTUnwrap(city.constructAgriculturalProducer(
+            crop: .rice,
+            at: GridPoint(x: 1, y: 0),
+            rules: rules
+        ))
+        XCTAssertTrue(city.canConstructAgriculturalPlot(
             crop: .rice,
             at: plotPoint,
             rules: rules
         ))
-        let placement = try XCTUnwrap(city.placement(
+        XCTAssertEqual(producerID, city.constructAgriculturalPlot(
+            crop: .rice,
+            at: plotPoint,
+            rules: rules
+        ))
+        let producerPlacement = try XCTUnwrap(city.placement(
             category: .production,
             instanceID: producerID
         ))
-        XCTAssertEqual(placement.buildingID, AgriculturalCrop.rice.plotBuildingID)
-        XCTAssertEqual(placement.origin, plotPoint)
+        XCTAssertEqual(producerPlacement.buildingID, AgriculturalCrop.rice.producerBuildingID)
+        XCTAssertEqual(producerPlacement.origin, GridPoint(x: 1, y: 0))
+        let plotPlacement = try XCTUnwrap(city.placedBuildings.first {
+            $0.category == .agriculturalPlot && $0.origin == plotPoint
+        })
+        XCTAssertEqual(plotPlacement.instanceID, producerID)
+        XCTAssertEqual(plotPlacement.buildingID, AgriculturalCrop.rice.plotBuildingID)
         XCTAssertEqual(
             city.production.buildings.first(where: { $0.id == producerID })?.agriculture?.crop,
             .rice
@@ -2406,10 +2421,29 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(
             city.production.buildings.first(where: { $0.id == producerID })?
                 .agriculture?.fieldCount,
-            OriginalAgricultureRules(farm: original.farm)
-                .maximumTendedFields(for: AgriculturalCrop.rice.category)
+            1
         )
         XCTAssertFalse(city.canConstructAgriculturalPlot(crop: .wheat, at: plotPoint))
+
+        _ = city.demolish(at: plotPoint, rules: rules)
+        XCTAssertFalse(city.placedBuildings.contains {
+            $0.category == .agriculturalPlot && $0.origin == plotPoint
+        })
+        XCTAssertEqual(
+            city.production.building(instanceID: producerID)?.agriculture?.fieldCount,
+            0
+        )
+
+        XCTAssertEqual(producerID, city.constructAgriculturalPlot(
+            crop: .rice,
+            at: plotPoint,
+            rules: rules
+        ))
+        _ = city.demolish(at: GridPoint(x: 1, y: 0), rules: rules)
+        XCTAssertNil(city.production.building(instanceID: producerID))
+        XCTAssertFalse(city.placedBuildings.contains {
+            $0.category == .agriculturalPlot && $0.instanceID == producerID
+        })
     }
 
     func testAgriculturalPlotWorkforceUsesProducerModelInsteadOfVisualFieldModel() throws {
@@ -2433,7 +2467,12 @@ final class EmperorCoreTests: XCTestCase {
                 models: original.buildings
             ))
         }
-        let producerID = try XCTUnwrap(city.constructAgriculturalPlot(
+        let producerID = try XCTUnwrap(city.constructAgriculturalProducer(
+            crop: .millet,
+            at: GridPoint(x: 1, y: 0),
+            rules: rules
+        ))
+        XCTAssertNotNil(city.constructAgriculturalPlot(
             crop: .millet,
             at: GridPoint(x: 3, y: 1),
             rules: rules
@@ -2443,7 +2482,7 @@ final class EmperorCoreTests: XCTestCase {
             category: .production,
             instanceID: producerID
         ))
-        XCTAssertEqual(placement.buildingID, AgriculturalCrop.millet.plotBuildingID)
+        XCTAssertEqual(placement.buildingID, AgriculturalCrop.millet.producerBuildingID)
         let assignment = try XCTUnwrap(city.workforceAssignment(
             for: placement,
             models: original.buildings
@@ -2453,6 +2492,38 @@ final class EmperorCoreTests: XCTestCase {
             original.buildings[buildingID: AgriculturalCrop.millet.producerBuildingID]?.employees
         )
         XCTAssertGreaterThan(assignment.requiredWorkers, 0)
+    }
+
+    func testEquidistantAgriculturalPlotPrefersTheMostRecentlyPlacedFarm() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let rules = EconomyRulesEngine(models: try OriginalEconomyModels(source: .openDefault()))
+        var city = DeterministicCityState(
+            year: 1600,
+            treasury: 10_000,
+            mapWidth: 10,
+            mapHeight: 6
+        )
+        _ = city.buildRoad((0..<10).map { GridPoint(x: $0, y: 4) }, rules: rules)
+        let olderFarmID = try XCTUnwrap(city.constructAgriculturalProducer(
+            crop: .rice,
+            at: GridPoint(x: 1, y: 2),
+            rules: rules
+        ))
+        let newerFarmID = try XCTUnwrap(city.constructAgriculturalProducer(
+            crop: .rice,
+            at: GridPoint(x: 6, y: 2),
+            rules: rules
+        ))
+
+        XCTAssertEqual(newerFarmID, city.constructAgriculturalPlot(
+            crop: .rice,
+            at: GridPoint(x: 4, y: 2),
+            rules: rules
+        ))
+        XCTAssertEqual(city.production.building(instanceID: olderFarmID)?.agriculture?.fieldCount, 0)
+        XCTAssertEqual(city.production.building(instanceID: newerFarmID)?.agriculture?.fieldCount, 1)
     }
 
     func testLandTradeUsesOriginalQuotaCapacityPricesAndPhysicalRoadDelivery() throws {

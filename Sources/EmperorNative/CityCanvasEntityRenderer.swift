@@ -3,6 +3,74 @@ import AppKit
 import SwiftUI
 
 extension CityCanvas {
+    func drawFengShuiBuildingOverlay(
+        context: inout GraphicsContext,
+        metrics: RenderMetrics
+    ) {
+        guard activeResourceOverlays.contains(.fengShui) else { return }
+        let evaluations = Dictionary(uniqueKeysWithValues: city.fengShuiSummary(
+            models: models.buildings
+        ).evaluations.filter {
+            $0.buildingKey.category != .agriculturalPlot
+        }.map { ($0.buildingKey, $0.quality) })
+
+        for placement in city.placedBuildings where placement.category != .agriculturalPlot {
+            let key = OperationalBuildingKey(
+                category: placement.category,
+                instanceID: placement.instanceID
+            )
+            guard let quality = evaluations[key] else { continue }
+            let tint: Color = switch quality {
+            case .harmonious: Color(red: 0.42, green: 1.0, blue: 0.38)
+            case .inauspicious: Color(red: 1.0, green: 0.08, blue: 0.08)
+            case .neutral: Color(red: 1.0, green: 0.77, blue: 0.18)
+            }
+            let renderOrientation = placement.buildingID == 129
+                ? connectedWallOrientation(for: placement)
+                : placement.orientation
+            let components = OriginalBuildingSpriteCatalog.buildingComponents(
+                forBuildingID: placement.buildingID,
+                orientation: renderOrientation,
+                quayWaterEdge: city.quayWaterEdge(for: placement)
+            )
+            var overlayContext = context
+            overlayContext.opacity = 0.82
+            overlayContext.addFilter(.colorMultiply(tint))
+            for component in components {
+                guard let sprite = buildingSprites[component.sprite] else { continue }
+                let componentOrigin = component.origin(relativeTo: placement.origin)
+                guard component.footprint.points(at: componentOrigin).contains(where: metrics.viewport.contains) else {
+                    continue
+                }
+                let center = point(
+                    at: componentOrigin,
+                    tileWidth: metrics.tileWidth,
+                    tileHeight: metrics.tileHeight,
+                    origin: metrics.origin,
+                    viewport: metrics.viewport
+                )
+                let scale = metrics.tileWidth / 80
+                let drawWidth = CGFloat(sprite.width) * scale
+                let drawHeight = CGFloat(sprite.height) * scale
+                let imageCenterX = center.x
+                    + CGFloat(component.footprint.width - component.footprint.height)
+                    * metrics.tileWidth * 0.25
+                let imageBottomY = center.y
+                    + CGFloat(component.footprint.width + component.footprint.height - 1)
+                    * metrics.tileHeight * 0.5
+                overlayContext.draw(
+                    Image(decorative: sprite.image, scale: 1),
+                    in: CGRect(
+                        x: imageCenterX - drawWidth * 0.5,
+                        y: imageBottomY - drawHeight,
+                        width: drawWidth,
+                        height: drawHeight
+                    )
+                )
+            }
+        }
+    }
+
     func drawRenderableBuildings(
         context: inout GraphicsContext,
         tileWidth: CGFloat,

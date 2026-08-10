@@ -237,6 +237,15 @@ public struct DeterministicProductionState: Sendable, Hashable, Codable {
         buildings[index].isEnabled = enabled
     }
 
+    public mutating func setAgriculturalFieldCount(
+        _ count: Int,
+        buildingInstanceID: Int
+    ) {
+        guard let index = buildings.firstIndex(where: { $0.id == buildingInstanceID }),
+              buildings[index].agriculture != nil else { return }
+        buildings[index].agriculture?.fieldCount = max(0, count)
+    }
+
     public mutating func addInventory(commodityID: Int, amount: Int) {
         guard amount != 0 else { return }
         inventoryByCommodityID[commodityID, default: 0] = max(

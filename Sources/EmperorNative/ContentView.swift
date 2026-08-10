@@ -1255,7 +1255,7 @@ private struct ClassicControlPanel: View {
             .inspect, .road, .clearLand, .demolish,
         ]
         let agriculturalProducerTools: Set<NativeConstructionTool> = [
-            .farmland, .teaHouse, .lacquerGuild, .silkWeaver,
+            .cropFarm, .teaHouse, .lacquerGuild, .silkWeaver,
         ]
         let categoryTools = NativeConstructionTool.allCases.filter {
             $0.category == selectedCategory
@@ -1333,7 +1333,7 @@ private struct ClassicControlPanel: View {
     }
 
     private func cropButton(_ crop: AgriculturalCrop) -> some View {
-        let selected = library.constructionTool == .farmland
+        let selected = library.constructionTool == .cropFarm
             && library.selectedAgriculturalCrop == crop
         return Button {
             library.selectAgriculturalCrop(crop)
@@ -1375,9 +1375,9 @@ private struct ClassicControlPanel: View {
             hoveredCrop = hovering ? crop : nil
         }
         .accessibilityIdentifier("construction-crop-\(crop.rawValue)")
-        .accessibilityLabel(crop.fieldTitle)
+        .accessibilityLabel("\(crop.localizedTitle)农场")
         .accessibilityRepresentation {
-            Button(crop.fieldTitle) {
+            Button("\(crop.localizedTitle)农场") {
                 library.selectAgriculturalCrop(crop)
             }
             .disabled(!isCropAvailable(crop))
@@ -1385,8 +1385,8 @@ private struct ClassicControlPanel: View {
         }
         .help(
             isCropAvailable(crop)
-                ? "\(crop.fieldTitle)：点击清地种植 1 格，须邻接道路"
-                : "\(crop.fieldTitle)：本关暂未开放"
+                ? "\(crop.localizedTitle)农场：先放置临路农场，再选择\(crop.fieldTitle)铺田"
+                : "\(crop.localizedTitle)农场：本关暂未开放"
         )
     }
 
@@ -1956,7 +1956,7 @@ private struct ClassicCategoryAdvisorPanel: View {
         case .aesthetics:
             [
                 ("查看地区吸引力", .housingSupply, "advisor-aesthetics-appeal"),
-                ("查看居民用水", .water, "advisor-aesthetics-water"),
+                ("查看风水", .fengShui, "advisor-aesthetics-feng-shui"),
             ]
         case .monuments:
             [
@@ -1990,6 +1990,14 @@ private struct ClassicCategoryAdvisorPanel: View {
             return [
                 "目前住宅还可容纳 \(availableHousingCapacity) 人居住",
                 migrationStatus,
+            ]
+        }
+        if category == .aesthetics {
+            let summary = city.fengShuiSummary(models: models.buildings)
+            let total = max(1, summary.evaluations.count)
+            return [
+                "风水和谐 \(summary.harmoniousCount * 100 / total)%",
+                "吉祥 \(summary.harmoniousCount) · 不祥 \(summary.inauspiciousCount) · 中性 \(summary.neutralCount)",
             ]
         }
         return [
@@ -2898,8 +2906,10 @@ private func constructionInstruction(
         return "住宅：2×2 占地，当前\(orientation.localizedTitle)；点击或拖动连续建造；R 旋转；右键取消"
     case .eliteHouse:
         return "贵族住宅：2×2 占地，从空置贵族宅独立演化；须供应高品质食物、丝绸和奢侈品"
+    case .cropFarm:
+        return "农场：先在临路清地放置所选作物的农场主体，再选择农田铺设田块；右键取消"
     case .farmland:
-        return "作物田：先在农业分类选择具体作物，再点击或拖动清地种植；右键取消"
+        return "作物田：点击或拖动清地种植，须在同类农场耕作范围内且农场仍有余量；右键取消"
     case .market:
         return "普通市场：占地 7×4，可容纳 4 间商铺；放置市场后选择具体商铺，再点击市场内部的任意格"
     case .grandMarket:
@@ -3181,52 +3191,71 @@ private struct MissionOutcomeOverlay: View {
 
     var body: some View {
         ZStack {
-            EmperorTheme.overlayScrim.ignoresSafeArea()
-            VStack(spacing: 16) {
+            Color.black.opacity(0.08).ignoresSafeArea()
+            VStack(spacing: 0) {
+                Text(missionTitle)
+                    .font(EmperorTheme.headlineSmall)
+                    .foregroundStyle(ClassicPalette.gold)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 30)
+                    .background(EmperorTheme.tileBrown.opacity(0.92))
+                    .overlay(alignment: .bottom) {
+                        Rectangle().fill(EmperorTheme.border).frame(height: 1)
+                    }
                 switch outcome {
                 case .running:
                     EmptyView()
                 case let .victory(record):
-                    Image(systemName: "checkmark.seal.fill")
-                        .font(.system(size: 48))
-                        .foregroundStyle(EmperorTheme.success)
-                    Text("任务胜利")
-                        .font(EmperorTheme.display)
-                        .foregroundStyle(EmperorTheme.success)
-                        .accessibilityIdentifier("mission-outcome-victory")
-                    Text(missionTitle)
-                        .font(EmperorTheme.headlineMedium)
-                        .foregroundStyle(EmperorTheme.onSurface)
-                    Text("达成于 \(record.settlementYear) 年 \(record.month) 月")
-                        .font(EmperorTheme.bodyMedium)
-                        .foregroundStyle(EmperorTheme.onSurfaceMuted)
-                    Divider().overlay(EmperorTheme.border)
-                    HStack(spacing: 8) {
-                        Button("进入下一任务", action: onNextMission)
-                            .buttonStyle(EmperorClassicButtonStyle(.primary))
-                            .accessibilityIdentifier("mission-outcome-next")
-                        Button("重玩本任务", action: onReplay)
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("任务结果")
+                            Spacer()
+                            Text("胜利")
+                                .foregroundStyle(EmperorTheme.success)
+                                .accessibilityIdentifier("mission-outcome-victory")
+                        }
+                        .font(EmperorTheme.headlineSmall)
+                        Rectangle().fill(EmperorTheme.border.opacity(0.65)).frame(height: 1)
+                        HStack(spacing: 8) {
+                            Text("✓")
+                                .foregroundStyle(EmperorTheme.success)
+                            Text("所有任务目标已经达成")
+                            Spacer()
+                            Text("\(record.settlementYear) 年 \(record.month) 月")
+                                .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                        }
+                        .font(EmperorTheme.bodySmall)
+                        Text("祝贺你！这座城市已经满足皇帝交付的目标，可以继续下一项使命。")
+                            .font(EmperorTheme.bodySmall)
+                            .foregroundStyle(EmperorTheme.onSurface)
+                            .frame(maxWidth: .infinity, minHeight: 118, alignment: .topLeading)
+                    }
+                    .padding(14)
+                    HStack(spacing: 7) {
+                        Button("重玩", action: onReplay)
                             .buttonStyle(EmperorClassicButtonStyle())
                             .accessibilityIdentifier("mission-outcome-replay")
-                        Button("返回战役列表", action: onReturn)
+                        Button("返回战役", action: onReturn)
                             .buttonStyle(EmperorClassicButtonStyle())
                             .accessibilityIdentifier("mission-outcome-return")
+                        Spacer()
+                        Button("继续", action: onNextMission)
+                            .buttonStyle(EmperorClassicButtonStyle(.primary))
+                            .accessibilityIdentifier("mission-outcome-next")
                     }
+                    .padding(12)
                 case let .defeat(record):
-                    Image(systemName: "exclamationmark.octagon.fill")
-                        .font(.system(size: 48))
-                        .foregroundStyle(EmperorTheme.error)
-                    Text("任务失败")
-                        .font(EmperorTheme.display)
-                        .foregroundStyle(EmperorTheme.error)
-                        .accessibilityIdentifier("mission-outcome-defeat")
-                    Text(missionTitle)
-                        .font(EmperorTheme.headlineMedium)
-                        .foregroundStyle(EmperorTheme.onSurface)
-                    Text(defeatDescription(record))
-                        .font(EmperorTheme.bodyMedium)
-                        .foregroundStyle(EmperorTheme.onSurfaceMuted)
-                    Divider().overlay(EmperorTheme.border)
+                    VStack(spacing: 12) {
+                        Text("任务失败")
+                            .font(EmperorTheme.headlineMedium)
+                            .foregroundStyle(EmperorTheme.error)
+                            .accessibilityIdentifier("mission-outcome-defeat")
+                        Text(defeatDescription(record))
+                            .font(EmperorTheme.bodySmall)
+                            .foregroundStyle(EmperorTheme.onSurface)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 180)
+                    .padding(14)
                     HStack(spacing: 8) {
                         Button("从最近存档读取", action: onLoadRecent)
                             .buttonStyle(EmperorClassicButtonStyle(.primary))
@@ -3238,22 +3267,18 @@ private struct MissionOutcomeOverlay: View {
                             .buttonStyle(EmperorClassicButtonStyle())
                             .accessibilityIdentifier("mission-outcome-return")
                     }
+                    .padding(12)
                 }
             }
-            .padding(24)
-            .frame(minWidth: 480, maxWidth: 620)
-            .background(EmperorTheme.surfaceRaised)
+            .frame(width: 430)
+            .background(EmperorTheme.panelBrown.opacity(0.98))
             .overlay {
-                RoundedRectangle(cornerRadius: 4)
-                    .strokeBorder(EmperorTheme.secondary, lineWidth: 1)
+                Rectangle().strokeBorder(EmperorTheme.border, lineWidth: 2)
             }
             .overlay {
-                RoundedRectangle(cornerRadius: 2)
-                    .inset(by: 4)
+                Rectangle().inset(by: 4)
                     .strokeBorder(EmperorTheme.primary.opacity(0.28), lineWidth: 1)
             }
-            .clipShape(RoundedRectangle(cornerRadius: 4))
-            .shadow(color: .black.opacity(0.55), radius: 24, y: 10)
         }
     }
 

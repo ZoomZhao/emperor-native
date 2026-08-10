@@ -100,6 +100,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
     case largePalace
     case largePalacePhase
     case phasedMonumentPhase
+    case cropFarm
     case farmland
     case lumberMill
     case quarry
@@ -207,6 +208,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .largePalace: "大宫殿"
         case .largePalacePhase: "大宫殿施工"
         case .phasedMonumentPhase: "陵墓分段施工"
+        case .cropFarm: "农场"
         case .farmland: "农田"
         case .lumberMill: "伐木棚"
         case .quarry: "石料场"
@@ -295,6 +297,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .largePalace: "building.columns.fill"
         case .largePalacePhase: "hammer.circle.fill"
         case .phasedMonumentPhase: "hammer.circle"
+        case .cropFarm: "building.2.crop.circle.fill"
         case .farmland: "leaf.circle.fill"
         case .lumberMill: "tree.circle.fill"
         case .quarry: "mountain.2.circle.fill"
@@ -343,7 +346,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
 
     var buildingID: Int? {
         switch self {
-        case .inspect, .demolish, .clearLand, .road, .rally,
+        case .inspect, .demolish, .clearLand, .road, .rally, .cropFarm,
              .grandCanalSegment, .earthenGreatWallSegment, .largePalacePhase: nil
         case .phasedMonumentPhase: nil
         case .house: 2
@@ -428,7 +431,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         switch self {
         case .house, .eliteHouse:
             .residential
-        case .farmland, .irrigationPump, .fishingWharf, .huntingCamp,
+        case .cropFarm, .farmland, .irrigationPump, .fishingWharf, .huntingCamp,
              .mill, .granary:
             .agriculture
         case .clayPit, .kiln, .lumberMill, .quarry, .ironMine, .bronzeWorks,
@@ -619,8 +622,10 @@ struct ConstructionToolbar: View {
         case .rally: "先点军队标记多选，再点地面下令；右键取消"
         case .house:
             "点击或拖动建造 2×2 住宅 · \(library.constructionOrientation.localizedTitle) · R 旋转 · 右键取消"
+        case .cropFarm:
+            "先在临路清地放置\(library.selectedAgriculturalCrop.localizedTitle)农场，再选择农田铺设田块"
         case .farmland:
-            "点击或拖动种植\(library.selectedAgriculturalCrop.fieldTitle) · 须邻接道路 · 右键取消"
+            "点击或拖动种植\(library.selectedAgriculturalCrop.fieldTitle) · 须在同类农场耕作范围内 · 右键取消"
         case .market:
             "先放置 7×4 普通市场（4 个铺位），再选择具体商铺并点击市场内部"
         case .grandMarket:

@@ -79,7 +79,7 @@ public struct DeterministicCityOperationsState: Sendable, Hashable, Codable {
     ) -> WorkforceMonthlySettlement {
         var remaining = max(0, population)
         var assignments: [WorkforceAssignment] = []
-        let ordered = placements.sorted {
+        let ordered = placements.filter { $0.category != .agriculturalPlot }.sorted {
             let lhsRank = Self.workforcePriority($0.category)
             let rhsRank = Self.workforcePriority($1.category)
             if lhsRank != rhsRank { return lhsRank < rhsRank }
@@ -123,11 +123,12 @@ public struct DeterministicCityOperationsState: Sendable, Hashable, Codable {
         maintenanceRiskReduction: Int,
         models: BuildingModelTable
     ) -> CityOperationsMonthlySettlement {
-        let placementKeys = Set(placements.map {
+        let operationalPlacements = placements.filter { $0.category != .agriculturalPlot }
+        let placementKeys = Set(operationalPlacements.map {
             OperationalBuildingKey(category: $0.category, instanceID: $0.instanceID)
         })
         risks.removeAll { !placementKeys.contains($0.key) }
-        for placement in placements where !risks.contains(where: {
+        for placement in operationalPlacements where !risks.contains(where: {
             $0.key == OperationalBuildingKey(category: placement.category, instanceID: placement.instanceID)
         }) {
             risks.append(BuildingRiskRecord(
@@ -212,6 +213,7 @@ public struct DeterministicCityOperationsState: Sendable, Hashable, Codable {
         case .production: 5
         case .military: 6
         case .aesthetic: 7
+        case .agriculturalPlot: 8
         }
     }
 }

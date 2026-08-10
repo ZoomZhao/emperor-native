@@ -39,6 +39,7 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
     case largePalace
     case largePalacePhase
     case phasedMonumentPhase
+    case cropFarm
     case farmland
     case lumberMill
     case quarry
@@ -87,7 +88,7 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
 
     public var buildingID: Int? {
         switch self {
-        case .inspect, .demolish, .clearLand, .grandCanalSegment,
+        case .inspect, .demolish, .clearLand, .cropFarm, .grandCanalSegment,
              .earthenGreatWallSegment, .largePalacePhase,
              .phasedMonumentPhase: nil
         case .road: 1
