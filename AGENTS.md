@@ -23,7 +23,25 @@ The extended playthrough `local/BV1W4411971F_p2.mp4` supplements that evidence w
 
 When evidence is incomplete or conflicts, record the source, state, timestamp or screenshot name, asset archive and image ID, and the remaining inference. Never present a guess as confirmed original behavior.
 
-For simulation rules, video is supporting evidence only. Read the relevant files under `GameData/Model`, the shipping `EmperorManual.pdf`/`Emperor.chm`, event text, audio tables, figure models, and sprite archives before implementing a mechanic. Numeric thresholds, difficulty scaling, exemptions, random frequencies, damage, and resource IDs must come from those authored sources when available. When those sources expose constants but not control flow, reproduce the behavior in a legal local installation and, if still ambiguous, perform read-only static inspection of the hash-identified original executable recorded in `DESIGN.md`; never add that proprietary executable to the repository, bundle, or tests. Do not infer a numeric rule from elapsed video time or add a deterministic shortcut merely because it resembles one edited playthrough. If the exact algorithm remains unknown, preserve the parsed constants, state the deterministic approximation in code and tests, and keep unsupported behavior unimplemented instead of presenting it as fidelity work.
+For simulation rules, video is supporting evidence only. Read the relevant files under `GameData/Model`, the shipping `EmperorManual.pdf`/`Emperor.chm`, event text, audio tables, figure models, and sprite archives before implementing a mechanic. Numeric thresholds, difficulty scaling, exemptions, random frequencies, damage, and resource IDs must come from those authored sources when available. When those sources expose constants but not control flow, reproduce the behavior in a legal local installation and, if still ambiguous, perform read-only static inspection of the hash-identified original executable recorded in `DESIGN.md`; never add that proprietary executable to the repository, bundle, or tests. Do not infer a numeric rule from elapsed video time or add a deterministic shortcut merely because it resembles one edited playthrough. If the exact algorithm remains unknown, preserve any parsed constants as research evidence, document the missing control flow, and keep the behavior unimplemented instead of presenting an approximation as fidelity work.
+
+## Source-first development gate
+
+The project goal is reproduction, not invention. Research is a required part of implementation, not an optional preliminary step. Do not write or modify player-visible behavior until the corresponding original evidence has been located and recorded.
+
+For every gameplay, simulation, UI, input, rendering, audio, campaign, save, or data-parsing change, complete this sequence in order:
+
+1. **Define the exact original state.** Name the original screen, mechanic, building, figure, campaign event, input sequence, or save state being reproduced. Do not begin from a proposed native design.
+2. **Search authored data first.** Use `rg` and the repository inspection tools across `GameData/Model`, text tables, campaign/event files, maps, sprite archives, audio tables, the manual, and existing semantic catalogs. Record exact filenames, sections, row IDs, field indices, image groups, dimensions, and constants.
+3. **Recover control flow when data is insufficient.** Observe a legal local installation in the same state. If constants are known but their sequencing, branching, random selection, or state transition is not, inspect the hash-identified original executable read-only and record relevant addresses or call relationships.
+4. **Classify every conclusion.** Mark it as `confirmed` (directly supported), `inferred` (supported by multiple observations but not recovered exactly), or `unknown`. A video impression, genre convention, developer intuition, or behavior from another city-builder is never `confirmed` evidence.
+5. **Write the implementation contract before code.** State the original inputs, state transition, output/visual feedback, constants, resource IDs, timing, exemptions, and save/replay consequences. Update `DESIGN.md` when this changes a player-visible or cross-system contract.
+6. **Implement only the supported contract.** Parse and consume original data instead of copying magic numbers where practical. Preserve original ordering and causality. Determinism required by native save replay may replace the original random-number source, but it must preserve the recovered range, frequency, selection structure, and distribution.
+7. **Verify against the source, not against the new code.** Tests must assert original constants and invariants independently of the implementation. For visible behavior, compare the same pre-action, interaction, and post-action states with original evidence.
+
+If the necessary data or control flow cannot be found, stop implementation of that behavior. Document what was searched and what remains unknown, then leave the feature unsupported or behind an explicitly named research scaffold. Do not fill the gap with a plausible threshold, timer, probability, resource mapping, UI pattern, batch effect, or “temporary” gameplay rule. A temporary fallback is acceptable only for platform plumbing or presentation that cannot affect gameplay truth, and it must be labeled with its replacement condition.
+
+Every fidelity commit or pull-request description must identify the primary original sources used and list any remaining `inferred` or `unknown` behavior. “Looks like the video” is not completion evidence.
 
 ## Player UI contract
 
@@ -45,7 +63,7 @@ For simulation rules, video is supporting evidence only. Read the relevant files
 - Reference screenshots and video are development evidence only; packaged code must never depend on `local/`, `/Users/.../Downloads`, or another machine-specific path.
 - If a UI task intentionally changes the design system, update `DESIGN.md` and centralized theme/catalog values in the same change, and explain the evidence and deviation. Accessibility, platform security, and functional correctness take priority when they genuinely conflict with a visual rule.
 
-## Required workflow for player-visible changes
+## Additional workflow for player-visible changes
 
 Before implementation:
 
