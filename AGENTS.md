@@ -11,16 +11,19 @@ The repository-root `DESIGN.md` is the normative visual and interaction specific
 Use evidence in this order:
 
 1. Runtime assets and authored data under repository-root `GameData`.
-2. Undistorted original screenshots and measured original-resource geometry.
-3. Observable original behavior, including the local reference video described in `DESIGN.md`.
-4. macOS compatibility and accessibility requirements.
-5. Explicitly marked temporary fallbacks.
+2. Read-only behavior of the hash-identified original program recorded in `DESIGN.md`.
+3. Undistorted original screenshots and measured original-resource geometry.
+4. Observable original behavior, including the local reference video described in `DESIGN.md`.
+5. macOS compatibility and accessibility requirements.
+6. Explicitly marked temporary fallbacks.
 
 The local video `local/BV1uau26gEVV.mp4` is a behavioral reference, not a runtime dependency. It shows a `1920 × 1076` HD/widescreen distribution: the city view expands the visible map while pinning the classic control panel to the far right, and fixed-art front-end screens may be rescaled or cropped. It also includes a Bilibili watermark. Use it to verify screen order, tool selection, placement previews, map movement, transient messages, and simulation feedback; do not replace this repository's verified `1024 × 768` geometry or derive canonical typography, colors, or assets from the patched/compressed capture. Do not reproduce overlays, watermarks, capture artifacts, or uploader-added material. Do not commit extracted frames unless the user explicitly requests a checked-in reference set.
 
 The extended playthrough `local/BV1W4411971F_p2.mp4` supplements that evidence with a complete mission run. Use it specifically for the two-stage farm-then-fields workflow, field tending range/capacity feedback, the distinct feng shui overlay, the upper-left rectangular building inspector, and the centered rectangular victory result. Its source, hash, duration, limitations, and timestamp index are normative in `DESIGN.md`; it remains local evidence only and must not become an application or test dependency.
 
 When evidence is incomplete or conflicts, record the source, state, timestamp or screenshot name, asset archive and image ID, and the remaining inference. Never present a guess as confirmed original behavior.
+
+For simulation rules, video is supporting evidence only. Read the relevant files under `GameData/Model`, the shipping `EmperorManual.pdf`/`Emperor.chm`, event text, audio tables, figure models, and sprite archives before implementing a mechanic. Numeric thresholds, difficulty scaling, exemptions, random frequencies, damage, and resource IDs must come from those authored sources when available. When those sources expose constants but not control flow, reproduce the behavior in a legal local installation and, if still ambiguous, perform read-only static inspection of the hash-identified original executable recorded in `DESIGN.md`; never add that proprietary executable to the repository, bundle, or tests. Do not infer a numeric rule from elapsed video time or add a deterministic shortcut merely because it resembles one edited playthrough. If the exact algorithm remains unknown, preserve the parsed constants, state the deterministic approximation in code and tests, and keep unsupported behavior unimplemented instead of presenting it as fidelity work.
 
 ## Player UI contract
 

@@ -174,54 +174,94 @@ extension CityCanvas {
         origin: CGPoint
     ) {
         let activeServiceLayers = ResourceOverlayKind.serviceCases.filter {
-            activeResourceOverlays.contains($0)
+            $0 != .inspection && activeResourceOverlays.contains($0)
         }
-        guard !activeServiceLayers.isEmpty else { return }
+        let showsHazards = activeResourceOverlays.contains(.inspection)
+        guard !activeServiceLayers.isEmpty || showsHazards else { return }
         let footprint = OriginalBuildingFootprintCatalog.footprint(forBuildingID: 2)
             ?? BuildingFootprint(width: 2, height: 2)
 
-        for house in city.houses {
-            guard let location = house.location else { continue }
-            let matching = activeServiceLayers.filter {
-                $0.covers(house, models: models.buildings)
-            }
-            for mapPoint in footprint.points(at: location) where viewport.contains(mapPoint) {
-                let center = point(
-                    at: mapPoint,
-                    tileWidth: tileWidth,
-                    tileHeight: tileHeight,
-                    origin: origin,
-                    viewport: viewport
-                )
-                let diamond = tileDiamond(
-                    center: center,
-                    tileWidth: tileWidth,
-                    tileHeight: tileHeight
-                )
-                if matching.isEmpty {
-                    context.fill(
-                        diamond,
-                        with: .color(EmperorTheme.error.opacity(0.24))
+        if !activeServiceLayers.isEmpty {
+            for house in city.houses {
+                guard let location = house.location else { continue }
+                let matching = activeServiceLayers.filter {
+                    $0.covers(house, models: models.buildings)
+                }
+                for mapPoint in footprint.points(at: location) where viewport.contains(mapPoint) {
+                    let center = point(
+                        at: mapPoint,
+                        tileWidth: tileWidth,
+                        tileHeight: tileHeight,
+                        origin: origin,
+                        viewport: viewport
                     )
-                    context.stroke(
-                        diamond,
-                        with: .color(EmperorTheme.error.opacity(0.82)),
-                        lineWidth: 1
+                    let diamond = tileDiamond(
+                        center: center,
+                        tileWidth: tileWidth,
+                        tileHeight: tileHeight
                     )
-                } else {
-                    for kind in matching {
+                    if matching.isEmpty {
                         context.fill(
                             diamond,
-                            with: .color(kind.color.opacity(0.28))
+                            with: .color(EmperorTheme.error.opacity(0.24))
+                        )
+                        context.stroke(
+                            diamond,
+                            with: .color(EmperorTheme.error.opacity(0.82)),
+                            lineWidth: 1
+                        )
+                    } else {
+                        for kind in matching {
+                            context.fill(
+                                diamond,
+                                with: .color(kind.color.opacity(0.28))
+                            )
+                        }
+                        context.stroke(
+                            diamond,
+                            with: .color(matching[0].color.opacity(0.9)),
+                            lineWidth: 1
                         )
                     }
-                    context.stroke(
-                        diamond,
-                        with: .color(matching[0].color.opacity(0.9)),
-                        lineWidth: 1
-                    )
                 }
             }
+        }
+
+        guard showsHazards else { return }
+        let rules = OriginalBuildingHazardRules(configuration: models.generalBuilding)
+        for risk in city.operations.risks where viewport.contains(risk.location) {
+            let fireRatio = min(1, CGFloat(risk.fireRisk) / CGFloat(rules.fireRiskLimit))
+            let collapseRatio = min(
+                1,
+                CGFloat(risk.damageRisk) / CGFloat(rules.collapseRiskLimit)
+            )
+            let danger = max(fireRatio, collapseRatio)
+            let center = point(
+                at: risk.location,
+                tileWidth: tileWidth,
+                tileHeight: tileHeight,
+                origin: origin,
+                viewport: viewport
+            )
+            // The original Hazards overlay uses taller, redder pillars as a
+            // building approaches fire or collapse, rather than binary route
+            // coverage. Keep a small baseline so maintained buildings remain
+            // discoverable in the overlay.
+            let height = tileHeight * (0.35 + danger * 2.6)
+            let width = max(3, tileWidth * 0.09)
+            let pillar = CGRect(
+                x: center.x - width * 0.5,
+                y: center.y - height,
+                width: width,
+                height: height
+            )
+            let color = Color(
+                red: 0.95,
+                green: 0.78 * (1 - danger),
+                blue: 0.12 * (1 - danger)
+            )
+            context.fill(Path(pillar), with: .color(color.opacity(0.9)))
+            context.stroke(Path(pillar), with: .color(Color.black.opacity(0.75)), lineWidth: 1)
         }
     }
 

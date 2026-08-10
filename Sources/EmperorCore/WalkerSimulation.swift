@@ -89,6 +89,7 @@ public struct WalkerMovementSummary: Sendable, Equatable, Codable {
     public let movedRoadSteps: Int
     public let completedTrips: Int
     public let visitedRoadPoints: Set<GridPoint>
+    public let visitedRoadPointsByService: [WalkerServiceKind: Set<GridPoint>]
     public let servicedHouseIDs: Set<Int>
     public let servicedHouseIDsByService: [WalkerServiceKind: Set<Int>]
 
@@ -97,6 +98,7 @@ public struct WalkerMovementSummary: Sendable, Equatable, Codable {
         movedRoadSteps: Int,
         completedTrips: Int,
         visitedRoadPoints: Set<GridPoint>,
+        visitedRoadPointsByService: [WalkerServiceKind: Set<GridPoint>] = [:],
         servicedHouseIDs: Set<Int>,
         servicedHouseIDsByService: [WalkerServiceKind: Set<Int>] = [:]
     ) {
@@ -104,13 +106,15 @@ public struct WalkerMovementSummary: Sendable, Equatable, Codable {
         self.movedRoadSteps = movedRoadSteps
         self.completedTrips = completedTrips
         self.visitedRoadPoints = visitedRoadPoints
+        self.visitedRoadPointsByService = visitedRoadPointsByService
         self.servicedHouseIDs = servicedHouseIDs
         self.servicedHouseIDsByService = servicedHouseIDsByService
     }
 
     private enum CodingKeys: String, CodingKey {
         case requestedRoadSteps, movedRoadSteps, completedTrips
-        case visitedRoadPoints, servicedHouseIDs, servicedHouseIDsByService
+        case visitedRoadPoints, visitedRoadPointsByService
+        case servicedHouseIDs, servicedHouseIDsByService
     }
 
     public init(from decoder: Decoder) throws {
@@ -119,6 +123,10 @@ public struct WalkerMovementSummary: Sendable, Equatable, Codable {
         movedRoadSteps = try container.decode(Int.self, forKey: .movedRoadSteps)
         completedTrips = try container.decode(Int.self, forKey: .completedTrips)
         visitedRoadPoints = try container.decode(Set<GridPoint>.self, forKey: .visitedRoadPoints)
+        visitedRoadPointsByService = try container.decodeIfPresent(
+            [WalkerServiceKind: Set<GridPoint>].self,
+            forKey: .visitedRoadPointsByService
+        ) ?? [:]
         servicedHouseIDs = try container.decode(Set<Int>.self, forKey: .servicedHouseIDs)
         servicedHouseIDsByService = try container.decodeIfPresent(
             [WalkerServiceKind: Set<Int>].self,
@@ -188,6 +196,7 @@ public struct DeterministicWalkerState: Sendable, Equatable, Codable {
         var moved = 0
         var completedTrips = 0
         var visited: Set<GridPoint> = []
+        var visitedByService: [WalkerServiceKind: Set<GridPoint>] = [:]
         var servicedHouseIDs: Set<Int> = []
         var servicedByService: [WalkerServiceKind: Set<Int>] = [:]
 
@@ -199,6 +208,7 @@ public struct DeterministicWalkerState: Sendable, Equatable, Codable {
                 service: walkers[index].service,
                 houses: houses,
                 visited: &visited,
+                visitedByService: &visitedByService,
                 servicedHouseIDs: &servicedHouseIDs,
                 servicedByService: &servicedByService
             )
@@ -211,6 +221,7 @@ public struct DeterministicWalkerState: Sendable, Equatable, Codable {
                     service: walkers[index].service,
                     houses: houses,
                     visited: &visited,
+                    visitedByService: &visitedByService,
                     servicedHouseIDs: &servicedHouseIDs,
                     servicedByService: &servicedByService
                 )
@@ -223,6 +234,7 @@ public struct DeterministicWalkerState: Sendable, Equatable, Codable {
             movedRoadSteps: moved,
             completedTrips: completedTrips,
             visitedRoadPoints: visited,
+            visitedRoadPointsByService: visitedByService,
             servicedHouseIDs: servicedHouseIDs,
             servicedHouseIDsByService: servicedByService
         )
@@ -240,6 +252,7 @@ public struct DeterministicWalkerState: Sendable, Equatable, Codable {
         var moved = 0
         var completedTrips = 0
         var visited: Set<GridPoint> = []
+        var visitedByService: [WalkerServiceKind: Set<GridPoint>] = [:]
         var servicedHouseIDs: Set<Int> = []
         var servicedByService: [WalkerServiceKind: Set<Int>] = [:]
 
@@ -253,6 +266,7 @@ public struct DeterministicWalkerState: Sendable, Equatable, Codable {
                 service: walkers[index].service,
                 houses: houses,
                 visited: &visited,
+                visitedByService: &visitedByService,
                 servicedHouseIDs: &servicedHouseIDs,
                 servicedByService: &servicedByService
             )
@@ -265,6 +279,7 @@ public struct DeterministicWalkerState: Sendable, Equatable, Codable {
                     service: walkers[index].service,
                     houses: houses,
                     visited: &visited,
+                    visitedByService: &visitedByService,
                     servicedHouseIDs: &servicedHouseIDs,
                     servicedByService: &servicedByService
                 )
@@ -277,6 +292,7 @@ public struct DeterministicWalkerState: Sendable, Equatable, Codable {
             movedRoadSteps: moved,
             completedTrips: completedTrips,
             visitedRoadPoints: visited,
+            visitedRoadPointsByService: visitedByService,
             servicedHouseIDs: servicedHouseIDs,
             servicedHouseIDsByService: servicedByService
         )
@@ -289,10 +305,12 @@ public struct DeterministicWalkerState: Sendable, Equatable, Codable {
         service: WalkerServiceKind,
         houses: [ResidentialUnit],
         visited: inout Set<GridPoint>,
+        visitedByService: inout [WalkerServiceKind: Set<GridPoint>],
         servicedHouseIDs: inout Set<Int>,
         servicedByService: inout [WalkerServiceKind: Set<Int>]
     ) {
         visited.insert(roadPoint)
+        visitedByService[service, default: []].insert(roadPoint)
         for house in houses {
             guard let location = house.location,
                   RoadServiceCoverage.orthogonalNeighbors(of: location).contains(roadPoint) else { continue }

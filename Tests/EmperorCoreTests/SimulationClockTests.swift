@@ -134,6 +134,11 @@ final class SimulationClockTests: XCTestCase {
 
         XCTAssertEqual(result.movement.walkers.movedRoadSteps, 1)
         XCTAssertEqual(abs(after.x - before.x) + abs(after.y - before.y), 1)
+        XCTAssertEqual(
+            result.movement.walkers.visitedRoadPointsByService[.water],
+            [before, after]
+        )
+        XCTAssertNil(result.movement.walkers.visitedRoadPointsByService[.inspection])
         XCTAssertNil(result.monthlySettlement)
     }
 

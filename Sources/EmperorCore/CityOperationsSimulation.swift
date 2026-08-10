@@ -46,6 +46,9 @@ public enum BuildingFailureKind: String, Sendable, Hashable, Codable {
 
 public enum BuildingFailureCause: String, Sendable, Hashable, Codable {
     case maintenance
+    case disaster
+    /// Save compatibility for the removed breach-level batch-fire prototype.
+    /// New combat code must create failures from a concrete unit attack.
     case invasion
 }
 
@@ -80,6 +83,48 @@ public struct CityOperationsMonthlySettlement: Sendable, Hashable, Codable {
     public let inspectedBuildingKeys: Set<OperationalBuildingKey>
     public let repairedRiskByBuildingKey: [OperationalBuildingKey: Int]
     public let failures: [BuildingFailure]
+}
+
+/// Building-hazard constants read from the shipping
+/// `Model/GeneralBuildingConfig.txt` file.
+///
+/// The original model separates routine risk from structural integrity:
+/// `BurnLimit` and `DamageLimit` trigger maintenance failures, while a
+/// building's structural-integrity field is reserved for physical damage.
+public struct OriginalBuildingHazardRules: Sendable, Hashable {
+    public let fireRiskMultiplier: Int
+    public let fireCheckFrequency: Int
+    public let fireRiskLimit: Int
+    public let burnDamage: Int
+    public let fireDamageMultiplier: Int
+    public let collapseRiskLimit: Int
+
+    public init(configuration: LegacyINI) {
+        fireRiskMultiplier = max(
+            1,
+            configuration.integer(section: "Fire", key: "Multiplier") ?? 5
+        )
+        fireCheckFrequency = max(
+            1,
+            configuration.integer(section: "Fire", key: "Frequency") ?? 4
+        )
+        fireRiskLimit = max(
+            1,
+            configuration.integer(section: "Fire", key: "BurnLimit") ?? 1_000
+        )
+        burnDamage = max(
+            1,
+            configuration.integer(section: "Fire", key: "BurnDamage") ?? 100
+        )
+        fireDamageMultiplier = max(
+            1,
+            configuration.integer(section: "Fire", key: "FireDamageMult") ?? 10
+        )
+        collapseRiskLimit = max(
+            1,
+            configuration.integer(section: "Damage", key: "DamageLimit") ?? 1_000
+        )
+    }
 }
 
 /// Deterministic labor and building-maintenance state backed by the original
@@ -147,11 +192,20 @@ public struct DeterministicCityOperationsState: Sendable, Hashable, Codable {
         placements: [PlacedBuilding],
         inspectedBuildingKeys: Set<OperationalBuildingKey>,
         maintenanceRiskReduction: Int,
-        models: BuildingModelTable
+        models: BuildingModelTable,
+        difficulty: GameDifficulty,
+        hazardRules: OriginalBuildingHazardRules
     ) -> CityOperationsMonthlySettlement {
-        let operationalPlacements = placements.filter {
-            $0.category != .agriculturalPlot
-                && $0.buildingID != OriginalBuildingSpriteCatalog.ruinBuildingID
+        let operationalPlacements = placements.filter { placement in
+            guard placement.category != .agriculturalPlot,
+                  placement.buildingID != OriginalBuildingSpriteCatalog.ruinBuildingID,
+                  let model = models[buildingID: placement.buildingID]
+            else { return false }
+            // The original manual lists whole ministries as inspection-proof.
+            // Their shipping model rows carry zero fire and damage increments;
+            // the Fishing Quay and Weaponsmith are the documented exceptions
+            // and both have non-zero increments.
+            return model.fireRiskIncrement > 0 || model.damageRiskIncrement > 0
         }
         let placementKeys = Set(operationalPlacements.map {
             OperationalBuildingKey(category: $0.category, instanceID: $0.instanceID)
@@ -169,7 +223,6 @@ public struct DeterministicCityOperationsState: Sendable, Hashable, Codable {
             ))
         }
 
-        let assignmentByKey = Dictionary(uniqueKeysWithValues: workforce.assignments.map { ($0.key, $0) })
         var repairs: [OperationalBuildingKey: Int] = [:]
         var failures: [BuildingFailure] = []
         for index in risks.indices.sorted(by: { lhs, rhs in
@@ -180,11 +233,40 @@ public struct DeterministicCityOperationsState: Sendable, Hashable, Codable {
             return left.instanceID < right.instanceID
         }) {
             guard let model = models[buildingID: risks[index].buildingID] else { continue }
-            let assignment = assignmentByKey[risks[index].key]
-            let understaffed = (assignment?.requiredWorkers ?? 0) > (assignment?.assignedWorkers ?? 0)
-            let staffingMultiplier = understaffed ? 2 : 1
-            risks[index].fireRisk += max(0, model.fireRiskIncrement) * staffingMultiplier
-            risks[index].damageRisk += max(0, model.damageRiskIncrement) * staffingMultiplier
+            let fireDelta = Self.difficultyAdjustedRisk(
+                max(0, model.fireRiskIncrement),
+                fieldIndex: 6,
+                difficulty: difficulty,
+                models: models
+            )
+            let collapseDelta = Self.difficultyAdjustedRisk(
+                max(0, model.damageRiskIncrement),
+                fieldIndex: 7,
+                difficulty: difficulty,
+                models: models
+            )
+            // Emperor[EN].exe (0x42d9a0/0x42a3f9) first chooses one global
+            // slot modulo Frequency. A building is updated only when its stable
+            // map/instance slot matches, then adds a random factor in 1...Multiplier.
+            // Native uses a replay-stable mixer instead of the original global
+            // C RNG so save replays remain deterministic.
+            if fireDelta == 0 {
+                risks[index].fireRisk = 0
+            } else if Self.fireCheckSlot(
+                for: risks[index],
+                frequency: hazardRules.fireCheckFrequency
+            ) == Self.selectedFireCheckSlot(
+                calendar: calendar,
+                frequency: hazardRules.fireCheckFrequency
+            ) {
+                let multiplier = Self.fireRiskMultiplier(
+                    for: risks[index],
+                    calendar: calendar,
+                    upperBound: hazardRules.fireRiskMultiplier
+                )
+                risks[index].fireRisk += fireDelta * multiplier
+            }
+            risks[index].damageRisk += collapseDelta
 
             if inspectedBuildingKeys.contains(risks[index].key) {
                 let before = risks[index].fireRisk + risks[index].damageRisk
@@ -195,19 +277,13 @@ public struct DeterministicCityOperationsState: Sendable, Hashable, Codable {
                 risks[index].lastInspectedMonth = calendar.month
             }
 
-            let fireThreshold = Self.fireThreshold(
-                model: model,
-                category: risks[index].key.category
-            )
-            let collapseThreshold = Self.collapseThreshold(
-                model: model,
-                category: risks[index].key.category
-            )
             let failureKind: BuildingFailureKind?
-            if risks[index].fireRisk >= fireThreshold {
-                failureKind = .fire
-            } else if risks[index].damageRisk >= collapseThreshold {
+            // The executable checks structural damage first and branches when
+            // risk is no longer below the configured limit (that is, >=).
+            if risks[index].damageRisk >= hazardRules.collapseRiskLimit {
                 failureKind = .collapse
+            } else if risks[index].fireRisk >= hazardRules.fireRiskLimit {
+                failureKind = .fire
             } else {
                 failureKind = nil
             }
@@ -234,6 +310,65 @@ public struct DeterministicCityOperationsState: Sendable, Hashable, Codable {
         return settlement
     }
 
+    private static func difficultyAdjustedRisk(
+        _ risk: Int,
+        fieldIndex: Int,
+        difficulty: GameDifficulty,
+        models: BuildingModelTable
+    ) -> Int {
+        let modifier = models.difficultyModifiers.first {
+            $0.id == difficulty.rawValue
+        }
+        let percentage = modifier.map {
+            $0.values.indices.contains(fieldIndex) ? $0.values[fieldIndex] : 100
+        } ?? 100
+        return risk * percentage / 100
+    }
+
+    private static func fireCheckSlot(
+        for record: BuildingRiskRecord,
+        frequency: Int
+    ) -> Int {
+        guard frequency > 1 else { return 0 }
+        var seed = UInt64(bitPattern: Int64(record.buildingID))
+        seed ^= UInt64(bitPattern: Int64(record.key.instanceID)) &* 0x9E37_79B9_7F4A_7C15
+        seed ^= UInt64(bitPattern: Int64(record.location.x)) &* 0xBF58_476D_1CE4_E5B9
+        seed ^= UInt64(bitPattern: Int64(record.location.y)) &* 0x94D0_49BB_1331_11EB
+        return Int(mix(seed) % UInt64(frequency))
+    }
+
+    private static func selectedFireCheckSlot(
+        calendar: SimulationCalendar,
+        frequency: Int
+    ) -> Int {
+        guard frequency > 1 else { return 0 }
+        var seed = UInt64(bitPattern: Int64(calendar.year))
+        seed ^= UInt64(bitPattern: Int64(calendar.month)) &* 0xD6E8_FEB8_6659_FD93
+        return Int(mix(seed ^ 0xA076_1D64_78BD_642F) % UInt64(frequency))
+    }
+
+    private static func fireRiskMultiplier(
+        for record: BuildingRiskRecord,
+        calendar: SimulationCalendar,
+        upperBound: Int
+    ) -> Int {
+        guard upperBound > 1 else { return 1 }
+        var seed = UInt64(bitPattern: Int64(record.key.instanceID))
+        seed ^= UInt64(bitPattern: Int64(record.buildingID)) &* 0xE703_7ED1_A0B4_28DB
+        seed ^= UInt64(bitPattern: Int64(calendar.year)) &* 0x8EBC_6AF0_9C88_C6E3
+        seed ^= UInt64(bitPattern: Int64(calendar.month)) &* 0x5899_65CC_7537_4CC3
+        return Int(mix(seed ^ 0x1D8E_4E27_C47D_124F) % UInt64(upperBound)) + 1
+    }
+
+    private static func mix(_ input: UInt64) -> UInt64 {
+        var value = input
+        value ^= value >> 30
+        value &*= 0xBF58_476D_1CE4_E5B9
+        value ^= value >> 27
+        value &*= 0x94D0_49BB_1331_11EB
+        return value ^ (value >> 31)
+    }
+
     private static func workforcePriority(_ category: PlacedBuildingCategory) -> Int {
         switch category {
         case .residential, .residentialService: 0
@@ -252,30 +387,8 @@ public struct DeterministicCityOperationsState: Sendable, Hashable, Codable {
         }
     }
 
-    /// Residential failure is a long-horizon city-planning consequence in the
-    /// reference playthrough rather than an early tutorial tax. Its lower
-    /// damage threshold also lets long-neglected homes collapse before their
-    /// ordinary fire counter wins; invasion fire bypasses both thresholds.
-    public static func fireThreshold(
-        model: BuildingModel,
-        category: PlacedBuildingCategory
-    ) -> Int {
-        category == .residential
-            ? max(100, model.structuralIntegrity * 15)
-            : max(100, model.structuralIntegrity / 2)
-    }
-
-    public static func collapseThreshold(
-        model: BuildingModel,
-        category: PlacedBuildingCategory
-    ) -> Int {
-        category == .residential
-            ? max(100, model.structuralIntegrity * 8)
-            : max(100, model.structuralIntegrity)
-    }
-
-    /// Adds failures caused outside the monthly maintenance loop, such as a
-    /// breached invasion force setting buildings alight.
+    /// Records a failure produced by a concrete external system (for example,
+    /// a future per-unit building attack or an authored natural disaster).
     public mutating func recordExternalFailures(
         calendar: SimulationCalendar,
         failures newFailures: [BuildingFailure]

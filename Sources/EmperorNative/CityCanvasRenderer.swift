@@ -6,7 +6,8 @@ extension CityCanvas {
     func drawCity(
         context: inout GraphicsContext,
         size: CGSize,
-        movementProgress: CGFloat
+        movementProgress: CGFloat,
+        fireAnimationFrame: Int
     ) {
         if originalMap != nil {
             context.fill(
@@ -84,7 +85,8 @@ extension CityCanvas {
             tileWidth: tileWidth,
             tileHeight: tileHeight,
             origin: origin,
-            viewport: viewport
+            viewport: viewport,
+            animationFrame: fireAnimationFrame
         )
     }
 

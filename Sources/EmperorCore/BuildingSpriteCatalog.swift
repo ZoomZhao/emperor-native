@@ -77,10 +77,17 @@ public enum OriginalBuildingSpriteCatalog {
     ]
     public static let marketEntertainmentAreaImageID = 629
     public static let marketTileImageIDs = [632, 633, 634, 635]
-    /// Logical group 82: the original small fire effect drawn over a failed
-    /// building. Collapse retains model #161 and uses a procedural rubble bed
-    /// until the generic ruin building's authored image family is verified.
-    public static let operationsFireImageID = 2_231
+    /// The shipping destruction archive contains five 50-frame fire families.
+    /// These are the burning-ruin effects used per occupied tile; the previous
+    /// `China_General` #2231 mapping was a frame from `China_Banners.bmp`.
+    public static let destructionArchiveBaseName = "destruction"
+    public static let operationsFireAnimationImageIDs: [[Int]] = [
+        Array(201...250),
+        Array(251...300),
+        Array(301...350),
+        Array(351...400),
+        Array(401...450),
+    ]
     /// Original model-table ID retained after a collapse so the footprint
     /// remains blocked until the player clears the ruins.
     public static let ruinBuildingID = 161
@@ -471,10 +478,12 @@ public enum OriginalBuildingSpriteCatalog {
         references.formUnion(quayDeckImageIDs.values.map {
             BuildingSpriteReference(archiveBaseName: generalArchiveBaseName, imageID: $0)
         })
-        references.insert(BuildingSpriteReference(
-            archiveBaseName: generalArchiveBaseName,
-            imageID: operationsFireImageID
-        ))
+        references.formUnion(operationsFireAnimationImageIDs.joined().map {
+            BuildingSpriteReference(
+                archiveBaseName: destructionArchiveBaseName,
+                imageID: $0
+            )
+        })
         references.formUnion(shopImageIDByBuildingID.values.map {
             BuildingSpriteReference(archiveBaseName: generalArchiveBaseName, imageID: $0)
         })

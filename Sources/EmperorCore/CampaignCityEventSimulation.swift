@@ -166,19 +166,44 @@ public extension DeterministicCityState {
                 ? GridPoint(x: roadNetwork.width / 2, y: roadNetwork.height / 2)
                 : authoredPoints[abs(occurrence.eventID) % authoredPoints.count]
             let requested = min(8, max(1, occurrence.amount ?? 1))
-            let ordered = placedBuildings.sorted { lhs, rhs in
+            let ordered = buildingFailureCandidatePlacements.filter {
+                $0.buildingID != OriginalBuildingSpriteCatalog.ruinBuildingID
+            }.sorted { lhs, rhs in
                 let left = abs(lhs.markerPoint.x - epicenter.x) + abs(lhs.markerPoint.y - epicenter.y)
                 let right = abs(rhs.markerPoint.x - epicenter.x) + abs(rhs.markerPoint.y - epicenter.y)
                 if left != right { return left < right }
                 return lhs.id < rhs.id
             }
+            var failures: [BuildingFailure] = []
             for placement in ordered.prefix(requested) {
                 let key = OperationalBuildingKey(
                     category: placement.category,
                     instanceID: placement.instanceID
                 )
-                if destroyPlacedBuildingWithoutRefund(key) { destroyed.append(key) }
+                let failureKind: BuildingFailureKind
+                if occurrence.kind == .earthquake {
+                    // The manual confirms that earthquake damage can produce
+                    // either collapse or fire. The native replay chooses the
+                    // branch from authored event/building coordinates until
+                    // the original executable's probability is recovered.
+                    let selector = occurrence.eventID
+                        &+ placement.instanceID
+                        &+ placement.markerPoint.x
+                        &+ placement.markerPoint.y
+                    failureKind = selector.isMultiple(of: 4) ? .fire : .collapse
+                } else {
+                    failureKind = .collapse
+                }
+                failures.append(BuildingFailure(
+                    key: key,
+                    buildingID: placement.buildingID,
+                    location: placement.markerPoint,
+                    kind: failureKind,
+                    cause: .disaster
+                ))
+                destroyed.append(key)
             }
+            applyExternalBuildingFailures(failures)
             if occurrence.kind == .flood {
                 eventState.conditions.apply(.flood, months: Self.eventDuration(occurrence.amount))
                 condition = .flood

@@ -419,7 +419,7 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
     /// table gives every visible residential tier normal fire, damage, and
     /// structural-integrity values. Project them into placement geometry for
     /// inspection and maintenance without duplicating housing state.
-    private var maintenanceRiskPlacements: [PlacedBuilding] {
+    var buildingFailureCandidatePlacements: [PlacedBuilding] {
         let houseFootprint = OriginalBuildingFootprintCatalog.footprint(forBuildingID: 2)
             ?? BuildingFootprint(width: 2, height: 2)
         let residential = houses.compactMap { house -> PlacedBuilding? in
@@ -2505,60 +2505,7 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         )
         militaryState = state
         campaignEventState = events
-        let breachFailures = movement.reports
-            .filter { $0.outcome == .cityBreached }
-            .flatMap { invasionBreachFailures(for: $0, military: state) }
-        if !breachFailures.isEmpty {
-            var operations = operationsState ?? DeterministicCityOperationsState()
-            operations.recordExternalFailures(
-                calendar: calendar,
-                failures: breachFailures
-            )
-            operationsState = operations
-            applyOperationsFailures(breachFailures)
-        }
         return movement
-    }
-
-    /// A force that reaches an undefended city scorches a deterministic cluster
-    /// around its final position. This is intentionally separate from ordinary
-    /// inspector-controlled fire risk: siege fire is an outcome of combat, not
-    /// a random maintenance accident.
-    private func invasionBreachFailures(
-        for report: MilitaryCombatReport,
-        military: DeterministicMilitaryState
-    ) -> [BuildingFailure] {
-        let impact = military.enemyForces.first {
-            $0.invasionID == report.invasionID
-        }?.currentPoint ?? GridPoint(x: roadNetwork.width / 2, y: roadNetwork.height / 2)
-        let candidates = maintenanceRiskPlacements.filter {
-            $0.category != .agriculturalPlot
-                && $0.buildingID != OriginalBuildingSpriteCatalog.ruinBuildingID
-        }.sorted { lhs, rhs in
-            let left = abs(lhs.markerPoint.x - impact.x) + abs(lhs.markerPoint.y - impact.y)
-            let right = abs(rhs.markerPoint.x - impact.x) + abs(rhs.markerPoint.y - impact.y)
-            if left != right { return left < right }
-            if lhs.category.rawValue != rhs.category.rawValue {
-                return lhs.category.rawValue < rhs.category.rawValue
-            }
-            return lhs.instanceID < rhs.instanceID
-        }
-        let requested = min(
-            candidates.count,
-            max(2, report.enemySoldiersBefore / 8 + (report.enemySiegeEngineCount ?? 0) * 2)
-        )
-        return candidates.prefix(requested).map { placement in
-            BuildingFailure(
-                key: OperationalBuildingKey(
-                    category: placement.category,
-                    instanceID: placement.instanceID
-                ),
-                buildingID: placement.buildingID,
-                location: placement.markerPoint,
-                kind: .fire,
-                cause: .invasion
-            )
-        }
     }
 
     public func canIssueMilitaryOrder(to destination: GridPoint) -> Bool {
@@ -3072,26 +3019,17 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
     }
 
     private func inspectionCoverage(
-        workforce: WorkforceMonthlySettlement,
         placements: [PlacedBuilding],
+        visitedPatrolPoints: Set<GridPoint>,
         models: BuildingModelTable
     ) -> (keys: Set<OperationalBuildingKey>, reduction: Int) {
-        let fullyStaffedInspectorKeys = Set(workforce.assignments.compactMap { assignment in
-            assignment.buildingID == 124 && assignment.isFullyStaffed ? assignment.key : nil
-        })
-        guard !fullyStaffedInspectorKeys.isEmpty else { return ([], 0) }
-        var patrolPoints: Set<GridPoint> = []
-        for serviceBuilding in residentialServiceBuildings where serviceBuilding.service == .inspection {
-            let key = OperationalBuildingKey(category: .residentialService, instanceID: serviceBuilding.id)
-            guard fullyStaffedInspectorKeys.contains(key),
-                  let walker = walkers.walkers.first(where: { $0.id == serviceBuilding.walkerID }) else { continue }
-            patrolPoints.formUnion(walker.route)
-            patrolPoints.insert(walker.currentPoint)
-        }
+        guard !visitedPatrolPoints.isEmpty else { return ([], 0) }
         let covered = Set(placements.compactMap { placement -> OperationalBuildingKey? in
-            let touchesPatrol = patrolPoints.contains(placement.roadAccessPoint)
+            let touchesPatrol = visitedPatrolPoints.contains(placement.roadAccessPoint)
                 || placement.occupiedPoints.contains { point in
-                    RoadServiceCoverage.orthogonalNeighbors(of: point).contains(where: patrolPoints.contains)
+                    RoadServiceCoverage.orthogonalNeighbors(of: point).contains(
+                        where: visitedPatrolPoints.contains
+                    )
                 }
             return touchesPatrol
                 ? OperationalBuildingKey(category: placement.category, instanceID: placement.instanceID)
@@ -3193,16 +3131,14 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         buildingPlacementState = placements
     }
 
-    @discardableResult
-    mutating func destroyPlacedBuildingWithoutRefund(_ key: OperationalBuildingKey) -> Bool {
-        guard var placements = buildingPlacementState,
-              let index = placements.firstIndex(where: {
-                  $0.category == key.category && $0.instanceID == key.instanceID
-              }) else { return false }
-        removeSimulationInstance(for: placements[index])
-        placements.remove(at: index)
-        buildingPlacementState = placements
-        return true
+    /// Converts a concrete external hit into the same persistent ruin state as
+    /// routine maintenance failures while retaining its authored cause.
+    mutating func applyExternalBuildingFailures(_ failures: [BuildingFailure]) {
+        guard !failures.isEmpty else { return }
+        var operations = operationsState ?? DeterministicCityOperationsState()
+        operations.recordExternalFailures(calendar: calendar, failures: failures)
+        operationsState = operations
+        applyOperationsFailures(failures)
     }
 
     /// Advances one deterministic game day. Movement and migration happen on
@@ -3511,10 +3447,11 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         )
         productionAccountingState = accounting
         if let operationsWorkforce {
-            let riskPlacements = maintenanceRiskPlacements
+            let riskPlacements = buildingFailureCandidatePlacements
             let coverage = inspectionCoverage(
-                workforce: operationsWorkforce,
                 placements: riskPlacements,
+                visitedPatrolPoints: monthlyServiceCoverageState?
+                    .visitedRoadPointsByService[.inspection] ?? [],
                 models: rules.models.buildings
             )
             var operations = operationsState ?? DeterministicCityOperationsState()
@@ -3524,7 +3461,11 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
                 placements: riskPlacements,
                 inspectedBuildingKeys: coverage.keys,
                 maintenanceRiskReduction: coverage.reduction,
-                models: rules.models.buildings
+                models: rules.models.buildings,
+                difficulty: difficulty,
+                hazardRules: OriginalBuildingHazardRules(
+                    configuration: rules.models.generalBuilding
+                )
             )
             operationsState = operations
             applyOperationsFailures(operationsSettlement.failures)

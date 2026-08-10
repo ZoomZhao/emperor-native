@@ -1782,6 +1782,21 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(models.figures[figureID: 27]?.behaviorRange, 40)
         XCTAssertEqual(models.buildings[buildingID: 125]?.name, "Tax Office")
         XCTAssertEqual(models.buildings[buildingID: 125]?.employees, 8)
+        let hazards = OriginalBuildingHazardRules(configuration: models.generalBuilding)
+        XCTAssertEqual(hazards.fireRiskMultiplier, 5)
+        XCTAssertEqual(hazards.fireCheckFrequency, 4)
+        XCTAssertEqual(hazards.fireRiskLimit, 1_000)
+        XCTAssertEqual(hazards.burnDamage, 100)
+        XCTAssertEqual(hazards.fireDamageMultiplier, 10)
+        XCTAssertEqual(hazards.collapseRiskLimit, 1_000)
+        XCTAssertEqual(
+            models.buildings.difficultyModifiers.map { $0.values[6] },
+            [50, 80, 100, 120, 150]
+        )
+        XCTAssertEqual(
+            models.buildings.difficultyModifiers.map { $0.values[7] },
+            [50, 80, 100, 120, 150]
+        )
         XCTAssertEqual(rules.constructionCost(buildingID: 125, difficulty: .veryEasy), 20)
         XCTAssertEqual(rules.constructionCost(buildingID: 125, difficulty: .normal), 40)
         XCTAssertEqual(rules.constructionCost(buildingID: 125, difficulty: .veryHard), 60)
@@ -3822,7 +3837,7 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertFalse(city.trade.lastSettlement?.transactions.isEmpty ?? true)
     }
 
-    func testWorkforceShortageCausesOriginalFireAndCollapseRisks() throws {
+    func testUninspectedBuildingsUseOriginalFireAndCollapseLimits() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")
         }
@@ -3845,21 +3860,21 @@ final class EmperorCoreTests: XCTestCase {
             rules: rules
         ))
         var failures: [BuildingFailure] = []
-        for _ in 0..<14 {
+        for _ in 0..<100 {
             _ = city.advanceMonth(rules: rules)
             failures.append(contentsOf: city.operations.lastSettlement?.failures ?? [])
         }
         XCTAssertTrue(failures.contains {
-            $0.key.instanceID == kilnID && $0.kind == .fire
+            $0.key.instanceID == kilnID
         })
         XCTAssertTrue(failures.contains {
             $0.key.instanceID == clayID && $0.kind == .collapse
         })
         XCTAssertFalse(city.production.buildings.contains { $0.id == kilnID || $0.id == clayID })
-        let fireRuin = try XCTUnwrap(city.placedBuildings.first {
+        let kilnRuin = try XCTUnwrap(city.placedBuildings.first {
             $0.category == .production && $0.instanceID == kilnID
         })
-        XCTAssertEqual(fireRuin.buildingID, OriginalBuildingSpriteCatalog.ruinBuildingID)
+        XCTAssertEqual(kilnRuin.buildingID, OriginalBuildingSpriteCatalog.ruinBuildingID)
         let collapseRuin = try XCTUnwrap(city.placedBuildings.first {
             $0.category == .production && $0.instanceID == clayID
         })
@@ -3868,7 +3883,123 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(city.operations.lastSettlement?.workforce.availableWorkers, 0)
     }
 
-    func testLongUninspectedHouseCollapsesAndLeavesPersistentRuin() throws {
+    func testOriginalMaintenanceUsesSlottedVariableFireChecksAndInclusiveCollapsePriority() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let model = try XCTUnwrap(original.buildings[buildingID: 43])
+        XCTAssertGreaterThan(model.fireRiskIncrement, 0)
+        XCTAssertGreaterThan(model.damageRiskIncrement, 0)
+        let placement = PlacedBuilding(
+            category: .production,
+            instanceID: 17,
+            buildingID: model.id,
+            origin: GridPoint(x: 3, y: 4),
+            orientation: .northSouth,
+            footprint: BuildingFootprint(width: 2, height: 2),
+            roadAccessPoint: GridPoint(x: 3, y: 6)
+        )
+        let workforce = DeterministicCityOperationsState().workforce(
+            population: 0,
+            placements: [placement],
+            models: original.buildings
+        )
+        let highLimits = OriginalBuildingHazardRules(configuration: LegacyINI(text: """
+            [Fire]
+            Multiplier=5
+            Frequency=4
+            BurnLimit=1000000
+            BurnDamage=100
+            FireDamageMult=10
+            [Damage]
+            DamageLimit=1000000
+            """))
+        var first = DeterministicCityOperationsState()
+        var second = DeterministicCityOperationsState()
+        var observedFireMultipliers: [Int] = []
+        for offset in 0..<64 {
+            let calendar = SimulationCalendar(year: 1600 + offset / 12, month: offset % 12 + 1)
+            let before = first.risks.first?.fireRisk ?? 0
+            _ = first.advanceMonth(
+                calendar: calendar,
+                workforce: workforce,
+                placements: [placement],
+                inspectedBuildingKeys: [],
+                maintenanceRiskReduction: 0,
+                models: original.buildings,
+                difficulty: .normal,
+                hazardRules: highLimits
+            )
+            _ = second.advanceMonth(
+                calendar: calendar,
+                workforce: workforce,
+                placements: [placement],
+                inspectedBuildingKeys: [],
+                maintenanceRiskReduction: 0,
+                models: original.buildings,
+                difficulty: .normal,
+                hazardRules: highLimits
+            )
+            let delta = try XCTUnwrap(first.risks.first).fireRisk - before
+            if delta > 0 {
+                XCTAssertEqual(delta % model.fireRiskIncrement, 0)
+                observedFireMultipliers.append(delta / model.fireRiskIncrement)
+            }
+        }
+        XCTAssertEqual(first, second)
+        XCTAssertFalse(observedFireMultipliers.isEmpty)
+        XCTAssertTrue(observedFireMultipliers.allSatisfy { (1...5).contains($0) })
+        XCTAssertLessThan(observedFireMultipliers.count, 64)
+
+        let exactLimits = OriginalBuildingHazardRules(configuration: LegacyINI(text: """
+            [Fire]
+            Multiplier=1
+            Frequency=1
+            BurnLimit=\(model.fireRiskIncrement)
+            BurnDamage=100
+            FireDamageMult=10
+            [Damage]
+            DamageLimit=\(model.damageRiskIncrement)
+            """))
+        var thresholdState = DeterministicCityOperationsState()
+        let settlement = thresholdState.advanceMonth(
+            calendar: SimulationCalendar(year: 1600),
+            workforce: workforce,
+            placements: [placement],
+            inspectedBuildingKeys: [],
+            maintenanceRiskReduction: 0,
+            models: original.buildings,
+            difficulty: .normal,
+            hazardRules: exactLimits
+        )
+        XCTAssertEqual(settlement.failures.first?.kind, .collapse)
+
+        let fireOnlyLimits = OriginalBuildingHazardRules(configuration: LegacyINI(text: """
+            [Fire]
+            Multiplier=1
+            Frequency=1
+            BurnLimit=\(model.fireRiskIncrement)
+            BurnDamage=100
+            FireDamageMult=10
+            [Damage]
+            DamageLimit=1000000
+            """))
+        var fireThresholdState = DeterministicCityOperationsState()
+        let fireSettlement = fireThresholdState.advanceMonth(
+            calendar: SimulationCalendar(year: 1600),
+            workforce: workforce,
+            placements: [placement],
+            inspectedBuildingKeys: [],
+            maintenanceRiskReduction: 0,
+            models: original.buildings,
+            difficulty: .normal,
+            hazardRules: fireOnlyLimits
+        )
+        XCTAssertEqual(fireSettlement.failures.first?.kind, .fire)
+    }
+
+    func testUninspectedHouseParticipatesInOriginalMaintenanceRisk() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")
         }
@@ -3890,7 +4021,13 @@ final class EmperorCoreTests: XCTestCase {
             models: original.buildings
         ))
 
-        for _ in 0..<146 { _ = city.advanceMonth(rules: rules) }
+        var observedFailure: BuildingFailure?
+        for _ in 0..<120 where observedFailure == nil {
+            _ = city.advanceMonth(rules: rules)
+            observedFailure = city.operations.lastSettlement?.failures.first {
+                $0.key == OperationalBuildingKey(category: .residential, instanceID: houseID)
+            }
+        }
 
         XCTAssertFalse(city.houses.contains { $0.id == houseID })
         let ruin = try XCTUnwrap(city.placedBuildings.first {
@@ -3898,14 +4035,10 @@ final class EmperorCoreTests: XCTestCase {
         })
         XCTAssertEqual(ruin.buildingID, OriginalBuildingSpriteCatalog.ruinBuildingID)
         XCTAssertEqual(ruin.footprint, BuildingFootprint(width: 2, height: 2))
-        XCTAssertTrue(city.operations.lastSettlement?.failures.contains {
-            $0.key == OperationalBuildingKey(category: .residential, instanceID: houseID)
-                && $0.kind == .collapse
-                && $0.cause == .maintenance
-        } == true)
+        XCTAssertEqual(observedFailure?.cause, .maintenance)
     }
 
-    func testBreachedInvasionBurnsNearbyBuildingsIntoRuins() throws {
+    func testCityBreachDoesNotInventBatchBuildingFires() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")
         }
@@ -3947,20 +4080,15 @@ final class EmperorCoreTests: XCTestCase {
         )
 
         XCTAssertEqual(movement.reports.first?.outcome, .cityBreached)
-        XCTAssertFalse(city.houses.contains { $0.id == houseID })
-        XCTAssertFalse(city.production.buildings.contains { $0.id == kilnID })
+        XCTAssertTrue(city.houses.contains { $0.id == houseID })
+        XCTAssertTrue(city.production.buildings.contains { $0.id == kilnID })
         XCTAssertEqual(
             city.placedBuildings.filter {
                 $0.buildingID == OriginalBuildingSpriteCatalog.ruinBuildingID
             }.count,
-            2
+            0
         )
-        XCTAssertEqual(
-            city.operations.lastSettlement?.failures.filter {
-                $0.kind == .fire && $0.cause == .invasion
-            }.count,
-            2
-        )
+        XCTAssertNil(city.operations.lastSettlement)
     }
 
     func testStaffedInspectorPatrolRepairsBuildingRisk() throws {
@@ -4223,6 +4351,16 @@ final class EmperorCoreTests: XCTestCase {
         ])
         XCTAssertTrue(city.production.buildings.contains { $0.id == kilnID })
         XCTAssertFalse(city.production.buildings.contains { $0.id == clayID })
+        XCTAssertEqual(
+            city.placedBuildings.first {
+                $0.category == .production && $0.instanceID == clayID
+            }?.buildingID,
+            OriginalBuildingSpriteCatalog.ruinBuildingID
+        )
+        XCTAssertEqual(
+            city.operations.lastSettlement?.failures.first?.cause,
+            .disaster
+        )
         XCTAssertEqual(city.campaignEvents.disasters.last?.epicenter, disasterPoint)
 
         let drought = CampaignEventOccurrence(

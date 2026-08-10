@@ -567,13 +567,8 @@ struct BuildingInfoPopup: View {
               model.fireRiskIncrement > 0 || model.damageRiskIncrement > 0
         else { return [] }
         let record = city.operations.risks.first { $0.key == key }
-        let fireThreshold = DeterministicCityOperationsState.fireThreshold(
-            model: model,
-            category: key.category
-        )
-        let collapseThreshold = DeterministicCityOperationsState.collapseThreshold(
-            model: model,
-            category: key.category
+        let hazardRules = OriginalBuildingHazardRules(
+            configuration: models.generalBuilding
         )
         let inspection = if let year = record?.lastInspectedYear,
                             let month = record?.lastInspectedMonth {
@@ -584,11 +579,11 @@ struct BuildingInfoPopup: View {
         return [
             InfoRow(
                 label: "火险",
-                value: "\(record?.fireRisk ?? 0)/\(fireThreshold)"
+                value: "\(record?.fireRisk ?? 0)/\(hazardRules.fireRiskLimit)"
             ),
             InfoRow(
                 label: "坍塌风险",
-                value: "\(record?.damageRisk ?? 0)/\(collapseThreshold)"
+                value: "\(record?.damageRisk ?? 0)/\(hazardRules.collapseRiskLimit)"
             ),
             InfoRow(label: "最近巡察", value: inspection)
         ]

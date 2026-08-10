@@ -431,14 +431,13 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         switch self {
         case .house, .eliteHouse:
             .residential
-        case .cropFarm, .farmland, .irrigationPump, .fishingWharf, .huntingCamp,
-             .mill, .granary:
+        case .cropFarm, .farmland, .irrigationPump, .fishingWharf, .huntingCamp:
             .agriculture
         case .clayPit, .kiln, .lumberMill, .quarry, .ironMine, .bronzeWorks,
              .jadeWorkshop,
              .lacquerGuild, .lacquerwareWorkshop, .silkWeaver, .weaver, .teaHouse:
             .industry
-        case .warehouse, .market, .grandMarket, .foodShop, .hempShop,
+        case .warehouse, .granary, .mill, .market, .grandMarket, .foodShop, .hempShop,
              .ceramicsShop, .teaShop, .silkShop, .lacquerwareShop,
              .bronzewareShop:
             .commerce

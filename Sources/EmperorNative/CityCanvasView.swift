@@ -112,7 +112,10 @@ struct CityCanvas: View {
                         drawCity(
                             context: &context,
                             size: size,
-                            movementProgress: movementProgress(at: timeline.date)
+                            movementProgress: movementProgress(at: timeline.date),
+                            fireAnimationFrame: Int(
+                                timeline.date.timeIntervalSinceReferenceDate * 12
+                            ) % 50
                         )
                     }
                 }

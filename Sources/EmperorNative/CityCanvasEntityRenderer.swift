@@ -611,14 +611,11 @@ extension CityCanvas {
         tileWidth: CGFloat,
         tileHeight: CGFloat,
         origin: CGPoint,
-        viewport: Viewport
+        viewport: Viewport,
+        animationFrame: Int
     ) {
         for failure in city.operations.lastSettlement?.failures ?? [] {
-            if failure.kind == .fire,
-               let sprite = buildingSprites[BuildingSpriteReference(
-                archiveBaseName: OriginalBuildingSpriteCatalog.generalArchiveBaseName,
-                imageID: OriginalBuildingSpriteCatalog.operationsFireImageID
-               )] {
+            if failure.kind == .fire {
                 guard let ruin = city.placedBuildings.first(where: {
                     $0.category == failure.key.category
                         && $0.instanceID == failure.key.instanceID
@@ -626,6 +623,16 @@ extension CityCanvas {
                 }) else { continue }
                 let flamePoints = ruin.occupiedPoints
                 for flamePoint in flamePoints where viewport.contains(flamePoint) {
+                    let familyIndex = abs(
+                        flamePoint.x &* 31 &+ flamePoint.y &* 17
+                    ) % OriginalBuildingSpriteCatalog.operationsFireAnimationImageIDs.count
+                    let frames = OriginalBuildingSpriteCatalog
+                        .operationsFireAnimationImageIDs[familyIndex]
+                    let frameIndex = min(max(0, animationFrame), frames.count - 1)
+                    guard let sprite = buildingSprites[BuildingSpriteReference(
+                        archiveBaseName: OriginalBuildingSpriteCatalog.destructionArchiveBaseName,
+                        imageID: frames[frameIndex]
+                    )] else { continue }
                     let center = point(
                         at: flamePoint,
                         tileWidth: tileWidth,
