@@ -1174,6 +1174,10 @@ private struct ClassicControlPanel: View {
                 ForEach(categoryOrder) { category in
                     let available = categoryIsAvailable(category)
                     Button {
+                        if library.constructionTool != .inspect,
+                           library.constructionTool.category != category {
+                            library.cancelCurrentInteraction()
+                        }
                         selectedCategory = category
                     } label: {
                         categoryIcon(

@@ -166,6 +166,54 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(projectedLength(straight), projectedLength(corner), accuracy: 0.001)
     }
 
+    func testConstructionDragPlannerPreservesRoadTurns() {
+        let firstLeg = ConstructionDragPlanner.orthogonalSegment(
+            from: GridPoint(x: 2, y: 3),
+            to: GridPoint(x: 5, y: 3)
+        )
+        let path = ConstructionDragPlanner.appendingOrthogonalSegment(
+            to: firstLeg,
+            endingAt: GridPoint(x: 5, y: 6)
+        )
+        XCTAssertEqual(path, [
+            GridPoint(x: 2, y: 3),
+            GridPoint(x: 3, y: 3),
+            GridPoint(x: 4, y: 3),
+            GridPoint(x: 5, y: 3),
+            GridPoint(x: 5, y: 4),
+            GridPoint(x: 5, y: 5),
+            GridPoint(x: 5, y: 6),
+        ])
+    }
+
+    func testConstructionDragPlannerFillsFieldsAndTilesHousing() {
+        XCTAssertEqual(
+            ConstructionDragPlanner.rectangularPoints(
+                from: GridPoint(x: 4, y: 5),
+                to: GridPoint(x: 6, y: 6)
+            ),
+            [
+                GridPoint(x: 4, y: 5), GridPoint(x: 5, y: 5),
+                GridPoint(x: 6, y: 5), GridPoint(x: 4, y: 6),
+                GridPoint(x: 5, y: 6), GridPoint(x: 6, y: 6),
+            ]
+        )
+        XCTAssertEqual(
+            ConstructionDragPlanner.tiledOrigins(
+                from: GridPoint(x: 8, y: 8),
+                to: GridPoint(x: 4, y: 4),
+                footprint: BuildingFootprint(width: 2, height: 2)
+            ),
+            [
+                GridPoint(x: 8, y: 8), GridPoint(x: 6, y: 8),
+                GridPoint(x: 4, y: 8), GridPoint(x: 8, y: 6),
+                GridPoint(x: 6, y: 6), GridPoint(x: 4, y: 6),
+                GridPoint(x: 8, y: 4), GridPoint(x: 6, y: 4),
+                GridPoint(x: 4, y: 4),
+            ]
+        )
+    }
+
     func testLocalCatalogWhenOriginalAssetsAreInstalled() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")

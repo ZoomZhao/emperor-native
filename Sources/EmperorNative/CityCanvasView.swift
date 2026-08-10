@@ -29,6 +29,7 @@ struct CityCanvas: View {
     @State var hoveredMapPoint: GridPoint?
     @State private var canvasHoverLocation: CGPoint?
     @State var draggedPlacementPoints: [GridPoint] = []
+    @State private var dragPlacementStart: GridPoint?
     @State private var isDraggingCanvas = false
     @State private var canvasDragStartOffsetX: Double?
     @State private var canvasDragStartOffsetY: Double?
@@ -132,10 +133,7 @@ struct CityCanvas: View {
                                         at: value.location,
                                         size: geometry.size
                                     ) else { return }
-                                    draggedPlacementPoints = areaPlacementPoints(
-                                        from: start,
-                                        to: end
-                                    )
+                                    updateDraggedPlacement(from: start, to: end)
                                 } else {
                                     updateCameraForCanvasDrag(
                                         translation: value.translation,
@@ -146,8 +144,7 @@ struct CityCanvas: View {
                             .onEnded { value in
                                 isDraggingCanvas = false
                                 if constructionTool.supportsDragPlacement {
-                                    let points: [GridPoint]
-                                    if let start = mapPoint(
+                                    if let start = dragPlacementStart ?? mapPoint(
                                         at: value.startLocation,
                                         size: geometry.size
                                     ),
@@ -155,14 +152,10 @@ struct CityCanvas: View {
                                         at: value.location,
                                         size: geometry.size
                                        ) {
-                                        points = areaPlacementPoints(
-                                            from: start,
-                                            to: end
-                                        )
-                                    } else {
-                                        points = draggedPlacementPoints
+                                        updateDraggedPlacement(from: start, to: end)
                                     }
-                                    draggedPlacementPoints = []
+                                    let points = draggedPlacementPoints
+                                    resetDraggedPlacement()
                                     resetCanvasDragBaseline()
                                     if !points.isEmpty {
                                         onPlaceConstructionArea(points)
@@ -236,7 +229,7 @@ struct CityCanvas: View {
                             inspectedTarget(at: $0)
                         }
                     } else {
-                        draggedPlacementPoints = []
+                        resetDraggedPlacement()
                         isDraggingCanvas = false
                         resetCanvasDragBaseline()
                         inspectedTarget = nil
@@ -262,7 +255,8 @@ struct CityCanvas: View {
                 )
             )
             .onReceive(edgeScrollTimer) { _ in
-                guard !isDraggingCanvas, let canvasHoverLocation else {
+                guard let canvasHoverLocation,
+                      !isDraggingCanvas || constructionTool.supportsDragPlacement else {
                     resetEdgeScrollDelay()
                     return
                 }
@@ -270,6 +264,13 @@ struct CityCanvas: View {
                     location: canvasHoverLocation,
                     canvasSize: geometry.size
                 )
+                if isDraggingCanvas,
+                   constructionTool.supportsDragPlacement,
+                   let start = dragPlacementStart,
+                   let end = mapPoint(at: canvasHoverLocation, size: geometry.size) {
+                    hoveredMapPoint = end
+                    updateDraggedPlacement(from: start, to: end)
+                }
             }
             .overlay(alignment: .bottomTrailing) {
                 if showsNavigationOverlay {
@@ -346,7 +347,39 @@ struct CityCanvas: View {
                 guard value != lastPublishedCameraOffsetY else { return }
                 cameraPositionY = Double(value)
             }
+            .onChange(of: constructionTool) { _ in
+                resetDraggedPlacement()
+                isDraggingCanvas = false
+                inspectedTarget = nil
+            }
         }
+    }
+
+    private func updateDraggedPlacement(from start: GridPoint, to end: GridPoint) {
+        if dragPlacementStart == nil {
+            dragPlacementStart = start
+        }
+        switch constructionTool {
+        case .road, .cityWall:
+            if draggedPlacementPoints.isEmpty {
+                draggedPlacementPoints = ConstructionDragPlanner.orthogonalSegment(
+                    from: start,
+                    to: end
+                )
+            } else {
+                draggedPlacementPoints = ConstructionDragPlanner.appendingOrthogonalSegment(
+                    to: draggedPlacementPoints,
+                    endingAt: end
+                )
+            }
+        default:
+            draggedPlacementPoints = areaPlacementPoints(from: start, to: end)
+        }
+    }
+
+    private func resetDraggedPlacement() {
+        draggedPlacementPoints = []
+        dragPlacementStart = nil
     }
 
     private func canvasAccessibilityValue(
@@ -356,7 +389,15 @@ struct CityCanvas: View {
         let metrics = renderMetrics(for: size)
         let hover = hoveredMapPoint.map { "\($0.x),\($0.y)" } ?? "none"
         let lastPointer = lastPointerLocation.map { "\($0.x),\($0.y)" } ?? "none"
-        return "startX=\(metrics.viewport.startX);startY=\(metrics.viewport.startY);columns=\(metrics.viewport.columns);rows=\(metrics.viewport.rows);mapWidth=\(city.roadNetwork.width);mapHeight=\(city.roadNetwork.height);tileWidth=\(metrics.tileWidth);tileHeight=\(metrics.tileHeight);originX=\(metrics.origin.x);originY=\(metrics.origin.y);globalX=\(globalFrame.minX);globalY=\(globalFrame.minY);globalWidth=\(globalFrame.width);globalHeight=\(globalFrame.height);hover=\(hover);pointerEvents=\(pointerEventSequence);lastPointer=\(lastPointer)"
+        let placement: String
+        if constructionTool == .inspect || constructionTool == .rally {
+            placement = "none"
+        } else if let hoveredMapPoint {
+            placement = placementIsValid(at: hoveredMapPoint) ? "valid" : "invalid"
+        } else {
+            placement = "none"
+        }
+        return "startX=\(metrics.viewport.startX);startY=\(metrics.viewport.startY);columns=\(metrics.viewport.columns);rows=\(metrics.viewport.rows);mapWidth=\(city.roadNetwork.width);mapHeight=\(city.roadNetwork.height);tileWidth=\(metrics.tileWidth);tileHeight=\(metrics.tileHeight);originX=\(metrics.origin.x);originY=\(metrics.origin.y);globalX=\(globalFrame.minX);globalY=\(globalFrame.minY);globalWidth=\(globalFrame.width);globalHeight=\(globalFrame.height);hover=\(hover);placement=\(placement);dragCount=\(draggedPlacementPoints.count);pointerEvents=\(pointerEventSequence);lastPointer=\(lastPointer)"
     }
 
     private var isUISmokeMode: Bool {

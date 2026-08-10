@@ -151,7 +151,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
 
     var supportsDragPlacement: Bool {
         switch self {
-        case .road, .house, .farmland, .cityWall, .demolish, .clearLand: true
+        case .road, .house, .eliteHouse, .farmland, .cityWall, .demolish, .clearLand: true
         default: false
         }
     }

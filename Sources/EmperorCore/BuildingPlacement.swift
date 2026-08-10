@@ -28,6 +28,78 @@ public struct BuildingFootprint: Sendable, Hashable, Codable {
     }
 }
 
+/// Deterministic construction-drag geometry shared by the player canvas and
+/// interaction tests. Paths preserve the tiles actually crossed by the
+/// pointer, while grid placement advances by the authored footprint size.
+public enum ConstructionDragPlanner {
+    public static func orthogonalSegment(
+        from start: GridPoint,
+        to end: GridPoint
+    ) -> [GridPoint] {
+        let horizontal = inclusiveValues(from: start.x, to: end.x).map {
+            GridPoint(x: $0, y: start.y)
+        }
+        let vertical = inclusiveValues(from: start.y, to: end.y).dropFirst().map {
+            GridPoint(x: end.x, y: $0)
+        }
+        return horizontal + vertical
+    }
+
+    public static func appendingOrthogonalSegment(
+        to existing: [GridPoint],
+        endingAt end: GridPoint
+    ) -> [GridPoint] {
+        guard let start = existing.last else { return [end] }
+        var result = existing
+        var visited = Set(existing)
+        for point in orthogonalSegment(from: start, to: end).dropFirst()
+            where visited.insert(point).inserted {
+            result.append(point)
+        }
+        return result
+    }
+
+    public static func rectangularPoints(
+        from start: GridPoint,
+        to end: GridPoint
+    ) -> [GridPoint] {
+        let minimumX = min(start.x, end.x)
+        let maximumX = max(start.x, end.x)
+        let minimumY = min(start.y, end.y)
+        let maximumY = max(start.y, end.y)
+        return (minimumY...maximumY).flatMap { y in
+            (minimumX...maximumX).map { GridPoint(x: $0, y: y) }
+        }
+    }
+
+    public static func tiledOrigins(
+        from start: GridPoint,
+        to end: GridPoint,
+        footprint: BuildingFootprint
+    ) -> [GridPoint] {
+        inclusiveValues(from: start.y, to: end.y, step: footprint.height).flatMap { y in
+            inclusiveValues(from: start.x, to: end.x, step: footprint.width).map { x in
+                GridPoint(x: x, y: y)
+            }
+        }
+    }
+
+    private static func inclusiveValues(
+        from start: Int,
+        to end: Int,
+        step: Int = 1
+    ) -> [Int] {
+        let signedStep = start <= end ? max(1, step) : -max(1, step)
+        var result: [Int] = []
+        var value = start
+        while signedStep > 0 ? value <= end : value >= end {
+            result.append(value)
+            value += signedStep
+        }
+        return result
+    }
+}
+
 /// Original non-monument footprints used by the native construction layer.
 /// Rectangular buildings can be rotated by swapping these authored dimensions.
 public enum OriginalBuildingFootprintCatalog {

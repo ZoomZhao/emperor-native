@@ -202,41 +202,24 @@ extension CityCanvas {
     func areaPlacementPoints(from start: GridPoint, to end: GridPoint) -> [GridPoint] {
         switch constructionTool {
         case .road, .cityWall:
-            let horizontal = inclusiveValues(from: start.x, to: end.x).map {
-                GridPoint(x: $0, y: start.y)
-            }
-            let vertical = inclusiveValues(from: start.y, to: end.y).dropFirst().map {
-                GridPoint(x: end.x, y: $0)
-            }
-            return horizontal + vertical
-        case .house:
-            return inclusiveValues(from: start.y, to: end.y, step: 2).flatMap { y in
-                inclusiveValues(from: start.x, to: end.x, step: 2).map { x in
-                    GridPoint(x: x, y: y)
-                }
-            }
-        case .demolish, .clearLand:
-            let minimumX = min(start.x, end.x)
-            let maximumX = max(start.x, end.x)
-            let minimumY = min(start.y, end.y)
-            let maximumY = max(start.y, end.y)
-            return (minimumY...maximumY).flatMap { y in
-                (minimumX...maximumX).map { GridPoint(x: $0, y: y) }
-            }
+            return ConstructionDragPlanner.orthogonalSegment(from: start, to: end)
+        case .house, .eliteHouse:
+            let footprint = activeConstructionBuildingID.flatMap {
+                OriginalBuildingFootprintCatalog.footprint(
+                    forBuildingID: $0,
+                    orientation: constructionOrientation
+                )
+            } ?? BuildingFootprint(width: 2, height: 2)
+            return ConstructionDragPlanner.tiledOrigins(
+                from: start,
+                to: end,
+                footprint: footprint
+            )
+        case .farmland, .demolish, .clearLand:
+            return ConstructionDragPlanner.rectangularPoints(from: start, to: end)
         default:
             return [start]
         }
-    }
-
-    func inclusiveValues(from start: Int, to end: Int, step: Int = 1) -> [Int] {
-        let signedStep = start <= end ? max(1, step) : -max(1, step)
-        var result: [Int] = []
-        var value = start
-        while signedStep > 0 ? value <= end : value >= end {
-            result.append(value)
-            value += signedStep
-        }
-        return result
     }
 
     func drawPlacementHighlight(
@@ -345,6 +328,13 @@ extension CityCanvas {
         guard !components.isEmpty else { return }
         var previewContext = context
         previewContext.opacity = isValid ? 0.72 : 0.48
+        previewContext.addFilter(
+            .colorMultiply(
+                isValid
+                    ? Color(red: 0.64, green: 1.0, blue: 0.70)
+                    : Color(red: 1.0, green: 0.54, blue: 0.48)
+            )
+        )
         for component in components {
             guard let sprite = buildingSprites[component.sprite] else { continue }
             let componentOrigin = component.origin(relativeTo: buildingOrigin)
