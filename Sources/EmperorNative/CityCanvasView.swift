@@ -255,7 +255,11 @@ struct CityCanvas: View {
                 )
             )
             .onReceive(edgeScrollTimer) { _ in
-                guard let canvasHoverLocation,
+                // The smoke harness drives map tiles through accessibility and
+                // separately validates the edge-scroll transform in core tests.
+                // Suppress timer-driven camera drift only for that synthetic run.
+                guard !isUISmokeMode,
+                      let canvasHoverLocation,
                       !isDraggingCanvas || constructionTool.supportsDragPlacement else {
                     resetEdgeScrollDelay()
                     return
@@ -280,29 +284,29 @@ struct CityCanvas: View {
                                 identifier: "city-pan-west",
                                 systemImage: "arrow.left",
                                 label: "视野向西",
-                                deltaX: -8,
-                                deltaY: 0
+                                deltaX: -4,
+                                deltaY: 4
                             )
                             cameraPanButton(
                                 identifier: "city-pan-north",
                                 systemImage: "arrow.up",
                                 label: "视野向北",
-                                deltaX: 0,
-                                deltaY: -8
+                                deltaX: -4,
+                                deltaY: -4
                             )
                             cameraPanButton(
                                 identifier: "city-pan-south",
                                 systemImage: "arrow.down",
                                 label: "视野向南",
-                                deltaX: 0,
-                                deltaY: 8
+                                deltaX: 4,
+                                deltaY: 4
                             )
                             cameraPanButton(
                                 identifier: "city-pan-east",
                                 systemImage: "arrow.right",
                                 label: "视野向东",
-                                deltaX: 8,
-                                deltaY: 0
+                                deltaX: 4,
+                                deltaY: -4
                             )
                         }
                         minimap

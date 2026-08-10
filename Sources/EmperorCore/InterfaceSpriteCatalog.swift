@@ -139,12 +139,12 @@ public enum OriginalInterfaceChromeSpriteCatalog {
 /// Standalone city-interface / tool artwork that is not stored as a four-state
 /// category-button family.
 ///
-/// - #1283: the original green shovel shown in the city utility strip
-/// - Demolish intentionally falls back to the native trash symbol until a
-///   distinct original demolition family is verified; #1287 is Undo.
-/// - Road tools reuse an authored China_Terrain dirt-road tile
-///   (`roadTerrainLocalID`) rather than the Great Wall category button (#1319)
+/// - #1275/#1279/#1283/#1287: the road, inspection, shovel and red removal
+///   actions visible in the original five-button city utility strip
+/// - Player-built world roads still use the authored China_Terrain connection
+///   family (`roadTerrainLocalID`), not the Great Wall category button (#1319)
 public enum OriginalInterfaceUtilityIcon: String, CaseIterable, Sendable, Hashable {
+    case inspect
     case clearLand
     case demolish
     case road
@@ -190,7 +190,12 @@ public enum OriginalInterfaceUtilitySpriteCatalog {
     }
 
     private static let interfaceImageIDs: [OriginalInterfaceUtilityIcon: Int] = [
+        // The original five-button strip uses the road tile, city inspection
+        // screen, shovel, red removal/undo action and help star in this order.
+        .road: 1_275,
+        .inspect: 1_279,
         .clearLand: 1_283,
+        .demolish: 1_287,
     ]
 
     public static func imageID(for icon: OriginalInterfaceUtilityIcon) -> Int? {
@@ -220,6 +225,7 @@ public enum OriginalConstructionButtonSpriteCatalog {
         2: 1_491,   // common housing
         11: 1_494,  // elite housing
         31: 1_512,  // fishing wharf
+        33: 1_506,  // hunting camp
         35: 1_515,  // clay pit
         36: 1_518,  // quarry / stoneworks
         43: 1_521,  // kiln
@@ -234,8 +240,13 @@ public enum OriginalConstructionButtonSpriteCatalog {
         209: 1_566, // administrative city
         110: 1_569, // palace
         125: 1_572, // tax office
+        203: 1_575, // irrigation pump
+        211: 1_584, // music school
+        212: 1_587, // acrobat school
+        213: 1_590, // drama school
         214: 1_596, // ancestral shrine
         215: 1_599, // Daoist shrine
+        216: 1_599, // large Daoist temple shares the Daoist button family
         218: 1_602, // Buddhist pagoda
         219: 1_605, // Confucian academy
         220: 1_608, // crossbow fort
@@ -248,7 +259,14 @@ public enum OriginalConstructionButtonSpriteCatalog {
         117: 1_629, // ornate sculpture
         120: 1_632, // pond
         121: 1_635, // tai chi park
+        119: 1_638, // wayside pavilion
         118: 1_641, // flowering tree
+        122: 1_644, // private garden
+        233: 1_647, // laborers camp
+        52: 1_650,  // carpenters guild
+        235: 1_650, // masons guild shares the guild button family
+        236: 1_650, // ceramists guild shares the guild button family
+        93: 1_653,  // grand pagoda
     ]
 
     public static func imageID(

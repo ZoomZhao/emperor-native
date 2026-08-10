@@ -217,6 +217,23 @@ public final class GameSessionController: @unchecked Sendable {
             }
             city = updated
             result = .applied("土长城第 \(index + 1) 段进入下一施工阶段")
+        case let .issueMilitaryOrder(unitIDs, point):
+            guard campaignRuntime?.outcome == .running,
+                  var updated = city else {
+                result = .rejected("mission has reached a terminal outcome")
+                break
+            }
+            let ordered = updated.issueMilitaryOrder(
+                unitIDs: unitIDs,
+                to: point,
+                models: models.figures
+            )
+            guard ordered > 0 else {
+                result = .rejected("目标不可通行或没有存活部队")
+                break
+            }
+            city = updated
+            result = .applied("已命令 \(ordered) 支部队向 \(point.x), \(point.y) 集结")
         case let .setSpeed(requested):
             if campaignRuntime?.outcome != .running, requested > 0 {
                 result = .rejected("mission has reached a terminal outcome")

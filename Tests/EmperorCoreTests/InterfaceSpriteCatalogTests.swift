@@ -95,13 +95,23 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
         )
     }
 
-    func testClearUsesOriginalShovelAndDemolishAvoidsUndoArtwork() throws {
+    func testClassicUtilityStripUsesVerifiedOriginalFamilies() throws {
+        XCTAssertEqual(
+            OriginalInterfaceUtilitySpriteCatalog.imageID(for: .road),
+            1_275
+        )
+        XCTAssertEqual(
+            OriginalInterfaceUtilitySpriteCatalog.imageID(for: .inspect),
+            1_279
+        )
         XCTAssertEqual(
             OriginalInterfaceUtilitySpriteCatalog.imageID(for: .clearLand),
             1_283
         )
-        XCTAssertNil(OriginalInterfaceUtilitySpriteCatalog.imageID(for: .demolish))
-        XCTAssertNil(OriginalInterfaceUtilitySpriteCatalog.imageID(for: .road))
+        XCTAssertEqual(
+            OriginalInterfaceUtilitySpriteCatalog.imageID(for: .demolish),
+            1_287
+        )
         XCTAssertEqual(
             OriginalInterfaceUtilitySpriteCatalog.roadTerrainLocalID,
             782
@@ -123,7 +133,7 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
         )
         XCTAssertEqual(
             OriginalInterfaceUtilitySpriteCatalog.requiredImageIDs,
-            Set([1_283])
+            Set([1_275, 1_279, 1_283, 1_287])
         )
     }
 
@@ -146,6 +156,29 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
             ),
             1_553
         )
+        let additionalVerifiedBases: [Int: Int] = [
+            33: 1_506,
+            203: 1_575,
+            211: 1_584,
+            212: 1_587,
+            213: 1_590,
+            119: 1_638,
+            122: 1_644,
+            233: 1_647,
+            52: 1_650,
+            235: 1_650,
+            236: 1_650,
+            93: 1_653,
+        ]
+        for (buildingID, base) in additionalVerifiedBases {
+            XCTAssertEqual(
+                OriginalConstructionButtonSpriteCatalog.imageID(
+                    forBuildingID: buildingID,
+                    state: .normal
+                ),
+                base
+            )
+        }
         XCTAssertEqual(
             OriginalConstructionButtonSpriteCatalog.cropImageID(
                 isRice: true,

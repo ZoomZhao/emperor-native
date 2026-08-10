@@ -38,6 +38,7 @@ geometry:
   minimap-width: 138px
   minimap-height: 138px
   bottom-navigation-height: 40px
+  map-message-panel-height: 116px
 fallback-colors:
   background-app: "#0E110E"
   surface: "#381F11"

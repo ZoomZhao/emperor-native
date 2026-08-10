@@ -100,6 +100,38 @@ final class Qin4CampaignBaselineTests: XCTestCase {
         )
     }
 
+    func testPlayerCommandBuildsAndRalliesAFormation() throws {
+        let controller = try startedController()
+        XCTAssertTrue(controller.perform(.selectConstruction(.fort)).wasApplied)
+        let fortPoint = try XCTUnwrap(
+            controller.city?.nextBuildingConstructionLocation(buildingID: 220),
+            "Qin M4 should expose a valid infantry-fort site"
+        )
+        let build = controller.perform(
+            .placeSelectedConstruction(at: fortPoint, orientation: .northSouth)
+        )
+        XCTAssertTrue(build.wasApplied, build.message)
+
+        let unit = try XCTUnwrap(controller.city?.military.units.first)
+        let city = try XCTUnwrap(controller.city)
+        let destination = try XCTUnwrap(
+            (0..<city.roadNetwork.height).lazy.flatMap { y in
+                (0..<city.roadNetwork.width).lazy.map { GridPoint(x: $0, y: y) }
+            }.first {
+                $0 != unit.currentPoint && city.canIssueMilitaryOrder(to: $0)
+            },
+            "Qin M4 should expose a passable rally destination"
+        )
+        let order = controller.perform(
+            .issueMilitaryOrder(unitIDs: [unit.id], to: destination)
+        )
+        XCTAssertTrue(order.wasApplied, order.message)
+        let orderedUnit = try XCTUnwrap(controller.city?.military.units.first)
+        XCTAssertEqual(orderedUnit.status, .marching)
+        XCTAssertEqual(orderedUnit.rallyPoint, destination)
+        XCTAssertFalse(orderedUnit.route.isEmpty)
+    }
+
     private func startedController() throws -> GameSessionController {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")

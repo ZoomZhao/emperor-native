@@ -10,26 +10,33 @@ macOS application.
 
 ## Verified playability scope
 
-The release gate now proves that the original Xia tutorial mission 0, “Shelter and Sustenance”, can be
-started from its shipping data and completed in a bounded replay using only player-visible commands. The
-fixed replay builds roads, houses, a hunting camp, mill, common market, wells, ancestral shrine and inspector
-tower; it then observes natural migration, workforce assignment, physical meat delivery, market distribution,
-all three residential services, housing evolution and a single victory transition. It does not inject
-population, inventory, workers, housing levels, goal progress or disabled simulation rules. A missing-market
-and broken-road replay is required not to win.
+The release gate exercises representative player-command vertical slices directly from the shipping campaign
+data. Xia tutorial mission 0, “Shelter and Sustenance”, is completed in a bounded replay that builds roads,
+houses, a hunting camp, mill, common market, wells, ancestral shrine and inspector tower; the test observes
+natural migration, workforce assignment, physical meat delivery, market distribution, residential services,
+housing evolution and exactly one victory transition. A missing-market and broken-road replay is required not
+to win.
+
+Coverage now continues into later systems instead of stopping at the first tutorial: Xia mission 1 inherits
+the winning city and proves millet farming, delivery, milling, food distribution and further housing growth;
+Qin mission 0 completes the Zheng Guo Canal and its iron-production victory goal using player commands; Qin
+mission 1 builds and operates the elite food, hemp, ceramics, lacquerware, silk, service, tax and monument
+supply chains; and Qin mission 3 builds an infantry fort and sends its formation to a player-selected rally
+point through the same command boundary used by the city UI. Combat, walls, gates, towers, multi-formation
+orders and authored invasions have deterministic core coverage, but no claim is made that every original
+mission is already a fully directed player-completion replay.
 
 The same mutation boundary is used by SwiftUI and the headless gate. Mission outcomes now have save-compatible
 running, victory and continuous-debt defeat states; payroll can create debt, 36 consecutive negative months
 cause defeat, and terminal missions pause and offer replay/load/continue/return actions. The first tutorial's
 permanent buildings and key walkers resolve to original SG3 sprites with deterministic eight-direction frames.
 
-This evidence applies only to the first Xia tutorial. Other missions retain the parser and deterministic
-simulation coverage described below, but are not yet claimed as player-completable vertical slices. The real
-Accessibility + CGEvent replay in `scripts/xia1-ui-smoke.sh` passed on 2026-07-24: it selected the shipping
-campaign and mission, issued 85 coordinate-verified construction clicks, selected 3× speed and observed the
-native victory overlay at population 151. `RUN_UI_SMOKE=1 ./scripts/release-gate.sh` passed with all 121 tests,
-the full build and no skipped directed test. The run saves built-city, live-city and victory images plus the
-complete command log under `tmp/ui-smoke/`.
+The real Accessibility + CGEvent replay in `scripts/xia1-ui-smoke.sh` selects the shipping campaign and
+mission, verifies the classic objectives, world-map and bottom-message interactions, issues 85
+coordinate-verified construction clicks, selects 3× speed and waits for the native victory overlay. The run
+saves message-panel, built-city, live-city and victory images plus the complete command log under
+`tmp/ui-smoke/`. `scripts/qin1-ui-smoke.sh` separately guards the original mission treasury, zodiac HUD,
+category order, availability ordering, scrolling catalog and fixed-width classic city shell.
 
 ## Engine coverage
 

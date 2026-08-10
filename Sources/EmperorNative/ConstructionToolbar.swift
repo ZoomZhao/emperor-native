@@ -439,14 +439,15 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
              .ceramicsShop, .teaShop, .silkShop, .lacquerwareShop,
              .bronzewareShop:
             .commerce
-        case .well, .herbalist, .acupuncture, .bathhouse, .watchtower,
+        case .well, .herbalist, .acupuncture, .watchtower,
              .inspect, .demolish, .clearLand, .road, .roadblock:
             .safety
-        case .inspectorTower, .taxOffice, .administrativeCity, .palace, .magistrate:
+        case .inspectorTower, .taxOffice, .administrativeCity, .palace:
             .government
         case .musicSchool, .acrobatSchool, .dramaSchool:
             .entertainment
-        case .ancestralShrine, .confucianAcademy, .daoistShrine:
+        case .ancestralShrine, .confucianAcademy, .daoistShrine,
+             .bathhouse, .magistrate:
             .religious
         case .barracks, .cityWall, .gatehouse, .tower, .fort, .catapultFort,
              .cavalryFort, .chariotFort, .rally:

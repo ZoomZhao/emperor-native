@@ -313,6 +313,7 @@ final class LibraryModel: ObservableObject {
     /// Drives the auto-advance loop while `gameSpeed > 0`.
     private var speedTimerCancellable: AnyCancellable?
     @Published var renderedMap: RenderedMap?
+    @Published private(set) var isRenderingMap = false
     @Published var buildingSprites: [BuildingSpriteReference: RenderedTerrainSprite] = [:]
     @Published var figureSprites: [FigureSpriteReference: RenderedTerrainSprite] = [:]
     @Published var interfaceSprites: [Int: RenderedTerrainSprite] = [:]
@@ -573,6 +574,43 @@ final class LibraryModel: ObservableObject {
         guard case let .loaded(_, _, _, _, models, _) = state,
               var city = cityState else { return }
         let rules = EconomyRulesEngine(models: models)
+        if constructionTool == .rally,
+           let controller = gameplayController,
+           controller.selectedCampaignID != nil,
+           controller.selectedMissionID == selectedMissionID {
+            if let unit = controller.city?.military.units
+                .filter({ $0.status != .destroyed && $0.currentPoint == point })
+                .sorted(by: { $0.id < $1.id })
+                .first {
+                if selectedMilitaryUnitIDs.contains(unit.id) {
+                    selectedMilitaryUnitIDs.remove(unit.id)
+                } else {
+                    selectedMilitaryUnitIDs.insert(unit.id)
+                }
+                let count = selectedMilitaryUnitIDs.count
+                saveStatus = count == 0
+                    ? "已清除编队选择；下一道命令将调动全部存活部队"
+                    : "已选择 \(count) 支编队"
+                return
+            }
+            let liveIDs = Set(
+                controller.city?.military.units
+                    .filter { $0.hitPoints > 0 }
+                    .map(\.id) ?? []
+            )
+            selectedMilitaryUnitIDs.formIntersection(liveIDs)
+            let result = controller.perform(
+                .issueMilitaryOrder(unitIDs: selectedMilitaryUnitIDs, to: point)
+            )
+            syncFromGameplayController()
+            switch result {
+            case let .applied(message):
+                saveStatus = message
+            case .rejected:
+                saveStatus = "无法集结：目标不可通行或没有存活部队"
+            }
+            return
+        }
         if let controller = gameplayController,
            controller.selectedCampaignID != nil,
            controller.selectedMissionID == selectedMissionID,
@@ -1398,11 +1436,7 @@ final class LibraryModel: ObservableObject {
             let result = controller.perform(.replayMission)
             syncFromGameplayController()
             if result.wasApplied, let world = controller.activeWorld {
-                selectedMap = try? MapProbe(url: world.mapAssignment.embeddedMap.mapURL)
-                if case let .loaded(source, _, _, _, _, _) = state,
-                   let selectedMap {
-                    loadRenderedMap(selectedMap, dataDirectory: source.dataDirectory)
-                }
+                bindRenderedMap(to: world)
                 saveStatus = "已重玩当前任务"
             } else {
                 saveStatus = ClassicTextLocalization.statusMessage(result.message)
@@ -1573,7 +1607,12 @@ final class LibraryModel: ObservableObject {
             campaignRuntimeState = save.campaignRuntime
             if let controller = gameplayController {
                 let result = controller.restorePersistedSession(save)
-                if result.wasApplied { syncFromGameplayController() }
+                if result.wasApplied {
+                    syncFromGameplayController()
+                    if let world = controller.activeWorld {
+                        bindRenderedMap(to: world)
+                    }
+                }
             }
             lastSaveURL = url
             lastAutosaveFingerprint = AutosaveFingerprint(
@@ -1673,17 +1712,13 @@ final class LibraryModel: ObservableObject {
             let result = controller.perform(
                 .startCampaignMission(campaignID: campaignID, missionID: mission.id)
             )
-            if result.wasApplied, let world = controller.activeWorld,
-               case let .loaded(source, _, _, _, _, _) = state {
+            if result.wasApplied, let world = controller.activeWorld {
                 selectedMissionID = mission.id
                 activeMissionWorld = world
                 syncFromGameplayController()
                 constructionTool = .inspect
                 constructionOrientation = .northSouth
-                if let probe = try? MapProbe(url: world.mapAssignment.embeddedMap.mapURL) {
-                    selectedMap = probe
-                    loadRenderedMap(probe, dataDirectory: source.dataDirectory)
-                }
+                bindRenderedMap(to: world)
                 saveStatus = "已开始："
                     + "\(ClassicTextLocalization.missionTitle(mission.title))"
                     + " · \(ClassicTextLocalization.difficultyTitle(selectedDifficulty))"
@@ -1697,7 +1732,7 @@ final class LibraryModel: ObservableObject {
             }
             return
         }
-        guard case let .loaded(source, _, _, _, models, _) = state,
+        guard case let .loaded(_, _, _, _, models, _) = state,
               let missionMaps = campaignMissionMaps,
               let missionSettings = campaignMissionSettings,
               let eventSet = campaignEventArchive?.missions.first(where: { $0.id == mission.id }),
@@ -1760,8 +1795,7 @@ final class LibraryModel: ObservableObject {
             campaignRuntimeState = newRuntime
             latestCampaignAdvance = nil
             setGameSpeed(0)
-            selectedMap = probe
-            loadRenderedMap(probe, dataDirectory: source.dataDirectory)
+            bindRenderedMap(to: world, probe: probe)
             let yearLabel = world.startSettings.startYear < 0
                 ? "公元前 \(-world.startSettings.startYear) 年"
                 : "公元 \(world.startSettings.startYear) 年"
@@ -1880,6 +1914,7 @@ final class LibraryModel: ObservableObject {
         mapLoadGeneration += 1
         let generation = mapLoadGeneration
         renderedMap = nil
+        isRenderingMap = true
         Task.detached(priority: .userInitiated) {
             do {
                 let map = try EmperorMap(url: probe.url)
@@ -1992,15 +2027,38 @@ final class LibraryModel: ObservableObject {
                         map: map,
                         spriteArchives: renderedArchives
                     )
+                    self.isRenderingMap = false
                 }
             } catch {
                 NativeDiagnostics.record("Map rendering failed", error: error)
                 await MainActor.run {
                     guard generation == self.mapLoadGeneration else { return }
                     self.renderedMap = nil
+                    self.isRenderingMap = false
                 }
             }
         }
+    }
+
+    /// Reconnects a live or restored city to the exact authored mission map.
+    /// Save files intentionally store deterministic city state rather than
+    /// decoded pixels, so every entry path must rebuild this presentation
+    /// dependency before the classic city canvas becomes visible.
+    private func bindRenderedMap(
+        to world: CampaignMissionWorldState,
+        probe suppliedProbe: MapProbe? = nil
+    ) {
+        guard case let .loaded(source, _, _, _, _, _) = state else { return }
+        let mapURL = world.mapAssignment.embeddedMap.mapURL
+        guard let probe = suppliedProbe ?? (try? MapProbe(url: mapURL)) else {
+            renderedMap = nil
+            isRenderingMap = false
+            NativeDiagnostics.record("Mission map probe failed: \(mapURL.lastPathComponent)")
+            return
+        }
+        selectedMap = probe
+        selectedMapURL = probe.url
+        loadRenderedMap(probe, dataDirectory: source.dataDirectory)
     }
 
     private func loadBuildingSprites(dataDirectory: URL) {

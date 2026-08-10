@@ -261,7 +261,7 @@ private struct ClassicMainMenuButtonStyle: ButtonStyle {
 }
 
 /// Places the 1024×768 front-end plate at native 1×, centered in the window.
-private struct ClassicFrontEndLayout {
+struct ClassicFrontEndLayout {
     let container: CGSize
 
     var viewport: CGSize { EmperorTheme.classicViewportSize }
@@ -283,7 +283,7 @@ private struct ClassicFrontEndLayout {
 }
 
 /// Centers classic front-end art at 1×; extra window space uses a matching field.
-private struct ClassicFrontEndCanvas<Content: View>: View {
+struct ClassicFrontEndCanvas<Content: View>: View {
     let screen: ClassicFrontEndArt.Screen
     let sourceRoot: URL?
     @ViewBuilder var content: (ClassicFrontEndLayout) -> Content

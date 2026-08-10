@@ -1038,6 +1038,31 @@ private func runSmoke(arguments: Arguments) throws {
         }
         try press(closeObjectives, identifier: "city-objectives-close")
 
+        let messages = try waitForElement(
+            in: application,
+            identifier: "city-button-messages",
+            timeout: 15
+        )
+        try press(messages, identifier: "city-button-messages")
+        _ = try waitForElement(
+            in: application,
+            identifier: "city-message-panel",
+            timeout: 15,
+            requireEnabled: false
+        )
+        let messageScreenshot = arguments.logDirectory
+            .appendingPathComponent("xia1-city-message-panel.png")
+        guard captureWindow(application: application, to: messageScreenshot) else {
+            throw SmokeFailure("could not capture the classic city message panel")
+        }
+        let confirmMessage = try waitForElement(
+            in: application,
+            identifier: "city-message-panel-confirm",
+            timeout: 15
+        )
+        try press(confirmMessage, identifier: "city-message-panel-confirm")
+        log.record("verified classic bottom city-message panel=\(messageScreenshot.path)")
+
         let worldMap = try waitForElement(
             in: application,
             identifier: "city-button-world-map",
