@@ -308,8 +308,19 @@ struct BuildingInfoPopup: View {
                 rows.append(InfoRow(label: "运行状态", value: "缺少劳工，设施暂停"))
             }
         }
+        if placement.buildingID != OriginalBuildingSpriteCatalog.ruinBuildingID {
+            rows.append(contentsOf: maintenanceRows(
+                key: OperationalBuildingKey(
+                    category: placement.category,
+                    instanceID: placement.instanceID
+                ),
+                buildingID: placement.buildingID
+            ))
+        }
 
         switch placement.category {
+        case .residential:
+            rows.append(InfoRow(label: "状态", value: "住宅废墟，需手动清理"))
         case .production:
             if let building = city.production.buildings.first(where: { $0.id == placement.instanceID }) {
                 rows.append(InfoRow(
@@ -541,7 +552,46 @@ struct BuildingInfoPopup: View {
                 value: "当前住宅资料不足"
             ))
         }
+        rows.append(contentsOf: maintenanceRows(
+            key: OperationalBuildingKey(category: .residential, instanceID: house.id),
+            buildingID: house.houseLevelID + 3
+        ))
         return rows
+    }
+
+    private func maintenanceRows(
+        key: OperationalBuildingKey,
+        buildingID: Int
+    ) -> [InfoRow] {
+        guard let model = models.buildings[buildingID: buildingID],
+              model.fireRiskIncrement > 0 || model.damageRiskIncrement > 0
+        else { return [] }
+        let record = city.operations.risks.first { $0.key == key }
+        let fireThreshold = DeterministicCityOperationsState.fireThreshold(
+            model: model,
+            category: key.category
+        )
+        let collapseThreshold = DeterministicCityOperationsState.collapseThreshold(
+            model: model,
+            category: key.category
+        )
+        let inspection = if let year = record?.lastInspectedYear,
+                            let month = record?.lastInspectedMonth {
+            "\(year)年\(month)月"
+        } else {
+            "尚未巡察"
+        }
+        return [
+            InfoRow(
+                label: "火险",
+                value: "\(record?.fireRisk ?? 0)/\(fireThreshold)"
+            ),
+            InfoRow(
+                label: "坍塌风险",
+                value: "\(record?.damageRisk ?? 0)/\(collapseThreshold)"
+            ),
+            InfoRow(label: "最近巡察", value: inspection)
+        ]
     }
 
     /// Chinese display name for a building ID, preferring the construction-tool
@@ -557,6 +607,7 @@ struct BuildingInfoPopup: View {
 
     private func categoryLabel(_ category: PlacedBuildingCategory) -> String {
         switch category {
+        case .residential: "住宅"
         case .production: "生产建筑"
         case .agriculturalPlot: "农田"
         case .warehouse: "仓库"

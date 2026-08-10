@@ -619,25 +619,33 @@ extension CityCanvas {
                 archiveBaseName: OriginalBuildingSpriteCatalog.generalArchiveBaseName,
                 imageID: OriginalBuildingSpriteCatalog.operationsFireImageID
                )] {
-                let center = point(
-                    at: failure.location,
-                    tileWidth: tileWidth,
-                    tileHeight: tileHeight,
-                    origin: origin,
-                    viewport: viewport
-                )
-                let scale = tileWidth / CGFloat(80)
-                let drawWidth = CGFloat(sprite.width) * scale
-                let drawHeight = CGFloat(sprite.height) * scale
-                context.draw(
-                    Image(decorative: sprite.image, scale: 1),
-                    in: CGRect(
-                        x: center.x - drawWidth / 2,
-                        y: center.y + tileHeight / 2 - drawHeight,
-                        width: drawWidth,
-                        height: drawHeight
+                guard let ruin = city.placedBuildings.first(where: {
+                    $0.category == failure.key.category
+                        && $0.instanceID == failure.key.instanceID
+                        && $0.buildingID == OriginalBuildingSpriteCatalog.ruinBuildingID
+                }) else { continue }
+                let flamePoints = ruin.occupiedPoints
+                for flamePoint in flamePoints where viewport.contains(flamePoint) {
+                    let center = point(
+                        at: flamePoint,
+                        tileWidth: tileWidth,
+                        tileHeight: tileHeight,
+                        origin: origin,
+                        viewport: viewport
                     )
-                )
+                    let scale = tileWidth / CGFloat(96)
+                    let drawWidth = CGFloat(sprite.width) * scale
+                    let drawHeight = CGFloat(sprite.height) * scale
+                    context.draw(
+                        Image(decorative: sprite.image, scale: 1),
+                        in: CGRect(
+                            x: center.x - drawWidth / 2,
+                            y: center.y + tileHeight / 2 - drawHeight,
+                            width: drawWidth,
+                            height: drawHeight
+                        )
+                    )
+                }
                 continue
             }
             // Collapse leaves a persistent #161 placement. Its rubble bed is

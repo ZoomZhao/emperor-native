@@ -3856,15 +3856,111 @@ final class EmperorCoreTests: XCTestCase {
             $0.key.instanceID == clayID && $0.kind == .collapse
         })
         XCTAssertFalse(city.production.buildings.contains { $0.id == kilnID || $0.id == clayID })
-        XCTAssertFalse(city.placedBuildings.contains {
+        let fireRuin = try XCTUnwrap(city.placedBuildings.first {
             $0.category == .production && $0.instanceID == kilnID
         })
-        let ruin = try XCTUnwrap(city.placedBuildings.first {
+        XCTAssertEqual(fireRuin.buildingID, OriginalBuildingSpriteCatalog.ruinBuildingID)
+        let collapseRuin = try XCTUnwrap(city.placedBuildings.first {
             $0.category == .production && $0.instanceID == clayID
+        })
+        XCTAssertEqual(collapseRuin.buildingID, OriginalBuildingSpriteCatalog.ruinBuildingID)
+        XCTAssertEqual(collapseRuin.footprint, BuildingFootprint(width: 2, height: 2))
+        XCTAssertEqual(city.operations.lastSettlement?.workforce.availableWorkers, 0)
+    }
+
+    func testLongUninspectedHouseCollapsesAndLeavesPersistentRuin() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let rules = EconomyRulesEngine(models: original)
+        var city = DeterministicCityState(
+            year: 1600,
+            treasury: 50_000,
+            mapWidth: 12,
+            mapHeight: 8
+        )
+        city.workforceEnabled = true
+        city.housingEvolutionEnabled = false
+        _ = city.buildRoad((0..<12).map { GridPoint(x: $0, y: 5) }, rules: rules)
+        let houseID = try XCTUnwrap(city.addHouse(
+            levelID: 0,
+            residents: 7,
+            location: GridPoint(x: 2, y: 3),
+            models: original.buildings
+        ))
+
+        for _ in 0..<146 { _ = city.advanceMonth(rules: rules) }
+
+        XCTAssertFalse(city.houses.contains { $0.id == houseID })
+        let ruin = try XCTUnwrap(city.placedBuildings.first {
+            $0.category == .residential && $0.instanceID == houseID
         })
         XCTAssertEqual(ruin.buildingID, OriginalBuildingSpriteCatalog.ruinBuildingID)
         XCTAssertEqual(ruin.footprint, BuildingFootprint(width: 2, height: 2))
-        XCTAssertEqual(city.operations.lastSettlement?.workforce.availableWorkers, 0)
+        XCTAssertTrue(city.operations.lastSettlement?.failures.contains {
+            $0.key == OperationalBuildingKey(category: .residential, instanceID: houseID)
+                && $0.kind == .collapse
+                && $0.cause == .maintenance
+        } == true)
+    }
+
+    func testBreachedInvasionBurnsNearbyBuildingsIntoRuins() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let rules = EconomyRulesEngine(models: original)
+        var city = DeterministicCityState(
+            year: 1600,
+            treasury: 50_000,
+            mapWidth: 12,
+            mapHeight: 8
+        )
+        city.housingEvolutionEnabled = false
+        _ = city.buildRoad((0..<12).map { GridPoint(x: $0, y: 5) }, rules: rules)
+        let houseID = try XCTUnwrap(city.addHouse(
+            levelID: 0,
+            residents: 7,
+            location: GridPoint(x: 2, y: 3),
+            models: original.buildings
+        ))
+        let kilnID = try XCTUnwrap(city.constructProductionBuilding(
+            buildingID: 43,
+            at: GridPoint(x: 6, y: 3),
+            rules: rules
+        ))
+        let invasion = CampaignEventOccurrence(
+            eventID: 7,
+            occurrenceIndex: 0,
+            kindRawValue: CampaignEventKind.invasion.rawValue,
+            triggerMode: .oneTime,
+            relativeYear: 0,
+            month: 1,
+            amount: 16
+        )
+        _ = city.applyCampaignCityEvent(invasion)
+
+        let movement = city.advanceMilitary(
+            maximumStepsPerUnit: 100,
+            models: original.figures
+        )
+
+        XCTAssertEqual(movement.reports.first?.outcome, .cityBreached)
+        XCTAssertFalse(city.houses.contains { $0.id == houseID })
+        XCTAssertFalse(city.production.buildings.contains { $0.id == kilnID })
+        XCTAssertEqual(
+            city.placedBuildings.filter {
+                $0.buildingID == OriginalBuildingSpriteCatalog.ruinBuildingID
+            }.count,
+            2
+        )
+        XCTAssertEqual(
+            city.operations.lastSettlement?.failures.filter {
+                $0.kind == .fire && $0.cause == .invasion
+            }.count,
+            2
+        )
     }
 
     func testStaffedInspectorPatrolRepairsBuildingRisk() throws {
@@ -3877,12 +3973,12 @@ final class EmperorCoreTests: XCTestCase {
         city.workforceEnabled = true
         city.housingEvolutionEnabled = false
         _ = city.buildRoad((0..<12).map { GridPoint(x: $0, y: 5) }, rules: rules)
-        _ = city.addHouse(
+        let residentHouseID = try XCTUnwrap(city.addHouse(
             levelID: 14,
             residents: 100,
             location: GridPoint(x: 11, y: 4),
             models: original.buildings
-        )
+        ))
         XCTAssertGreaterThanOrEqual(city.population, 17)
         let kilnID = try XCTUnwrap(city.constructProductionBuilding(
             buildingID: 43,
@@ -3905,6 +4001,14 @@ final class EmperorCoreTests: XCTestCase {
         let kilnRisk = city.operations.risks.first { $0.key == kilnKey }
         XCTAssertEqual(kilnRisk?.fireRisk, 0)
         XCTAssertEqual(kilnRisk?.damageRisk, 0)
+        let houseKey = OperationalBuildingKey(
+            category: .residential,
+            instanceID: residentHouseID
+        )
+        XCTAssertTrue(city.houses.contains { $0.id == residentHouseID })
+        XCTAssertTrue(city.operations.lastSettlement?.inspectedBuildingKeys.contains(houseKey) == true)
+        XCTAssertEqual(city.operations.risks.first { $0.key == houseKey }?.fireRisk, 0)
+        XCTAssertEqual(city.operations.risks.first { $0.key == houseKey }?.damageRisk, 0)
         XCTAssertEqual(
             city.operations.lastSettlement?.workforce.assignments.first {
                 $0.key == kilnKey

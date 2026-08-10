@@ -20,6 +20,7 @@ private enum MinimapColors {
 
     static func category(_ category: PlacedBuildingCategory) -> Color {
         switch category {
+        case .residential: house
         case .production: Color(red: 0.55, green: 0.22, blue: 0.10)
         case .agriculturalPlot: Color(red: 0.67, green: 0.54, blue: 0.16)
         case .warehouse: Color(red: 0.24, green: 0.18, blue: 0.53)

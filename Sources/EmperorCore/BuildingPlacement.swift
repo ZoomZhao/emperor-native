@@ -207,6 +207,7 @@ public enum OriginalBuildingFootprintCatalog {
 }
 
 public enum PlacedBuildingCategory: String, Sendable, Hashable, Codable {
+    case residential
     case production
     case agriculturalPlot
     case warehouse

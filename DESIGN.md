@@ -21,6 +21,14 @@ reference-artifacts:
     encoded-size: "1920x1080"
     use: "behavior-and-state-only"
     limitations: "widescreen-patched-canvas, video-compression, uploader-watermark, commentary-overlay"
+  maintenance-and-siege-video:
+    path: "local/BV1Au4y1T78t.mp4"
+    source: "https://www.bilibili.com/video/BV1Au4y1T78t/"
+    sha256: "f18fd8394f3d32ae7a2893d115a4a6d2b0825425d43917ff3c0620e5bcb1e6b3"
+    duration: "1053.440s"
+    encoded-size: "1920x1080"
+    use: "building-maintenance-failure-and-invasion-behavior"
+    limitations: "widescreen-patched-canvas, video-compression, uploader-watermark, commentary-overlay, edited-playthrough"
 reference-order:
   - original-runtime-assets
   - undistorted-original-application-screenshots
@@ -131,6 +139,17 @@ Emperor Native 的玩家界面不是受《皇帝：龙之崛起》启发的现�
 | `04:25–08:15` | 城市持续运行、运输与供给链成熟 | 模拟反馈、暂停建造、目录保持 |
 | `08:16–08:55` | 仓储与生产建筑信息窗 | 左上直角信息面板、表格密度、确认入口 |
 | `09:28–10:08` | 达成目标后显示胜利结果 | 中央直角结算面板、目标摘要与后续操作 |
+
+第三份参考 `local/BV1Au4y1T78t.mp4` 重点补充建筑维护事故与敌军攻城。上传标题把大规模倒塌归因于「风水」，但连续画面和解说把约 `06:50–07:10` 出现的普通倒塌指向巡察塔未覆盖；因此不得把风水评价直接实现为失火或坍塌触发器。风水仍影响选址评价，建筑维护则继续使用原版 `EmperorBuildingModels.txt` 中的火险增量、损坏增量、风险削减和结构强度字段。
+
+| 时间段 | 可观察状态 | 复刻规则 |
+| --- | --- | --- |
+| `06:50–07:10` | 未被巡察路线覆盖的既有建筑倒塌，道路保留，原址持续显示废墟 | 住宅与非住宅都进入维护风险；倒塌移除原设施并留下占地不变、可手动清理的阻塞废墟 |
+| `07:10–08:00` | 玩家补建巡察塔，解说指出此前建筑没有得到巡察 | 只有具备劳工且巡察员实际经过相邻道路的建筑获得风险削减；建筑信息需能说明当前火险、坍塌风险和最近巡察时间 |
+| `14:10–16:40` | 敌军与攻城器械进入城区后，多处建筑成片燃烧 | 攻城纵火属于战斗突破结果，不受日常巡察保护；突破点附近按确定性顺序烧毁若干建筑 |
+| `14:10–17:10` | 火焰在原址持续可见，随后留下需要清理的残骸 | 失火不能让建筑瞬间无痕消失；当前事故期叠加原版火焰素材，之后保留与原占地相同的废墟 |
+
+维护事故和战斗破坏必须保持两条独立因果链，但共用事故呈现、消息和废墟清理流程。普通事故消息提示巡察覆盖与劳工；敌军纵火消息明确提示城防突破，避免让玩家误判巡察失效。住宅倒塌属于长期失察后果，累积周期必须显著长于普通工坊事故，不能在教程和城市早期抢先摧毁人口链；攻城纵火不受此宽限。
 
 ## 当前城内基准截图
 

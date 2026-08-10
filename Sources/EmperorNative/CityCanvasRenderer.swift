@@ -431,6 +431,7 @@ extension CityCanvas {
                 continue
             }
             let color: Color = switch placement.category {
+            case .residential: .orange
             case .production: .brown
             case .agriculturalPlot: .yellow
             case .warehouse: .indigo

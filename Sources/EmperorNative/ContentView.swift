@@ -598,12 +598,15 @@ private struct ClassicCityGameView: View {
             )
         }
         let failureRows = (city.operations.lastSettlement?.failures ?? []).map { failure in
-            ClassicMapMessageRow(
+            let invasionFire = failure.kind == .fire && failure.cause == .invasion
+            return ClassicMapMessageRow(
                 id: "failure-\(failure.key.category.rawValue)-\(failure.key.instanceID)-\(failure.kind)",
-                title: failure.kind == .fire ? "建筑失火" : "建筑倒塌",
-                body: failure.kind == .fire
-                    ? "城市中的一座建筑发生火灾。请检查巡察覆盖与劳工供应。"
-                    : "城市中的一座建筑因损坏倒塌。请检查巡察覆盖与维护状况。",
+                title: invasionFire ? "敌军纵火" : (failure.kind == .fire ? "建筑失火" : "建筑倒塌"),
+                body: invasionFire
+                    ? "敌军突破城防后烧毁了建筑。火场会留下阻塞用地的废墟。"
+                    : (failure.kind == .fire
+                        ? "城市中的一座建筑发生火灾。请检查巡察覆盖与劳工供应。"
+                        : "城市中的一座建筑因损坏倒塌。请检查巡察覆盖与维护状况。"),
                 detail: "位置：\(failure.location.x), \(failure.location.y)"
             )
         }

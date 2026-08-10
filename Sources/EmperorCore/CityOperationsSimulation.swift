@@ -44,11 +44,33 @@ public enum BuildingFailureKind: String, Sendable, Hashable, Codable {
     case collapse
 }
 
+public enum BuildingFailureCause: String, Sendable, Hashable, Codable {
+    case maintenance
+    case invasion
+}
+
 public struct BuildingFailure: Sendable, Hashable, Codable {
     public let key: OperationalBuildingKey
     public let buildingID: Int
     public let location: GridPoint
     public let kind: BuildingFailureKind
+    /// Optional so saves written before failure causes were recorded continue
+    /// to decode; `nil` is interpreted as ordinary maintenance failure.
+    public let cause: BuildingFailureCause?
+
+    public init(
+        key: OperationalBuildingKey,
+        buildingID: Int,
+        location: GridPoint,
+        kind: BuildingFailureKind,
+        cause: BuildingFailureCause? = .maintenance
+    ) {
+        self.key = key
+        self.buildingID = buildingID
+        self.location = location
+        self.kind = kind
+        self.cause = cause
+    }
 }
 
 public struct CityOperationsMonthlySettlement: Sendable, Hashable, Codable {
@@ -79,7 +101,11 @@ public struct DeterministicCityOperationsState: Sendable, Hashable, Codable {
     ) -> WorkforceMonthlySettlement {
         var remaining = max(0, population)
         var assignments: [WorkforceAssignment] = []
-        let ordered = placements.filter { $0.category != .agriculturalPlot }.sorted {
+        let ordered = placements.filter {
+            $0.category != .agriculturalPlot
+                && $0.category != .residential
+                && $0.buildingID != OriginalBuildingSpriteCatalog.ruinBuildingID
+        }.sorted {
             let lhsRank = Self.workforcePriority($0.category)
             let rhsRank = Self.workforcePriority($1.category)
             if lhsRank != rhsRank { return lhsRank < rhsRank }
@@ -123,7 +149,10 @@ public struct DeterministicCityOperationsState: Sendable, Hashable, Codable {
         maintenanceRiskReduction: Int,
         models: BuildingModelTable
     ) -> CityOperationsMonthlySettlement {
-        let operationalPlacements = placements.filter { $0.category != .agriculturalPlot }
+        let operationalPlacements = placements.filter {
+            $0.category != .agriculturalPlot
+                && $0.buildingID != OriginalBuildingSpriteCatalog.ruinBuildingID
+        }
         let placementKeys = Set(operationalPlacements.map {
             OperationalBuildingKey(category: $0.category, instanceID: $0.instanceID)
         })
@@ -166,8 +195,14 @@ public struct DeterministicCityOperationsState: Sendable, Hashable, Codable {
                 risks[index].lastInspectedMonth = calendar.month
             }
 
-            let fireThreshold = max(100, model.structuralIntegrity / 2)
-            let collapseThreshold = max(100, model.structuralIntegrity)
+            let fireThreshold = Self.fireThreshold(
+                model: model,
+                category: risks[index].key.category
+            )
+            let collapseThreshold = Self.collapseThreshold(
+                model: model,
+                category: risks[index].key.category
+            )
             let failureKind: BuildingFailureKind?
             if risks[index].fireRisk >= fireThreshold {
                 failureKind = .fire
@@ -201,7 +236,7 @@ public struct DeterministicCityOperationsState: Sendable, Hashable, Codable {
 
     private static func workforcePriority(_ category: PlacedBuildingCategory) -> Int {
         switch category {
-        case .residentialService: 0
+        case .residential, .residentialService: 0
         // Distribution buildings must remain staffed during a shortage or
         // every producer can be full while no food or goods ever reach homes.
         // Producers support partial staffing; storage, markets and trade do
@@ -215,5 +250,60 @@ public struct DeterministicCityOperationsState: Sendable, Hashable, Codable {
         case .aesthetic: 7
         case .agriculturalPlot: 8
         }
+    }
+
+    /// Residential failure is a long-horizon city-planning consequence in the
+    /// reference playthrough rather than an early tutorial tax. Its lower
+    /// damage threshold also lets long-neglected homes collapse before their
+    /// ordinary fire counter wins; invasion fire bypasses both thresholds.
+    public static func fireThreshold(
+        model: BuildingModel,
+        category: PlacedBuildingCategory
+    ) -> Int {
+        category == .residential
+            ? max(100, model.structuralIntegrity * 15)
+            : max(100, model.structuralIntegrity / 2)
+    }
+
+    public static func collapseThreshold(
+        model: BuildingModel,
+        category: PlacedBuildingCategory
+    ) -> Int {
+        category == .residential
+            ? max(100, model.structuralIntegrity * 8)
+            : max(100, model.structuralIntegrity)
+    }
+
+    /// Adds failures caused outside the monthly maintenance loop, such as a
+    /// breached invasion force setting buildings alight.
+    public mutating func recordExternalFailures(
+        calendar: SimulationCalendar,
+        failures newFailures: [BuildingFailure]
+    ) {
+        guard !newFailures.isEmpty else { return }
+        let failedKeys = Set(newFailures.map(\.key))
+        risks.removeAll { failedKeys.contains($0.key) }
+
+        let existing = lastSettlement
+        let workforce = existing?.workforce ?? WorkforceMonthlySettlement(
+            availableWorkers: 0,
+            requiredWorkers: 0,
+            assignedWorkers: 0,
+            assignments: []
+        )
+        var failures = existing?.failures ?? []
+        for failure in newFailures where !failures.contains(where: {
+            $0.key == failure.key && $0.kind == failure.kind
+        }) {
+            failures.append(failure)
+        }
+        lastSettlement = CityOperationsMonthlySettlement(
+            year: calendar.year,
+            month: calendar.month,
+            workforce: workforce,
+            inspectedBuildingKeys: existing?.inspectedBuildingKeys ?? [],
+            repairedRiskByBuildingKey: existing?.repairedRiskByBuildingKey ?? [:],
+            failures: failures
+        )
     }
 }
