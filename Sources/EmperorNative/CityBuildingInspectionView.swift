@@ -148,6 +148,67 @@ struct BuildingInfoPopup: View {
                         .frame(maxWidth: .infinity)
                     }
                 }
+            case .mill:
+                if let mill = city.logistics.mills.first(where: { $0.id == placement.instanceID }) {
+                    Divider()
+                    settingHeader
+                    Text("磨坊订单与存储（每格 4 担）")
+                        .font(EmperorTheme.labelSmall)
+                        .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                    ScrollView(.vertical, showsIndicators: true) {
+                        LazyVStack(spacing: 4) {
+                            ForEach(models.trade.commodities.filter {
+                                OriginalFoodCatalog.isMillCommodity($0.id)
+                            }) { commodity in
+                                let amount = mill.inventoryByCommodityID[commodity.id, default: 0]
+                                let limit = mill.storageLimit(for: commodity.id)
+                                HStack(spacing: 4) {
+                                    VStack(alignment: .leading, spacing: 1) {
+                                        Text(ClassicTextLocalization.commodityName(commodity.name))
+                                            .lineLimit(1)
+                                        Text("\(amount / 100)/\(limit / 100) 担")
+                                            .font(EmperorTheme.labelSmall)
+                                            .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                                    }
+                                    Spacer(minLength: 2)
+                                    Button {
+                                        onSettingChange(.millStorageLimit(
+                                            millID: placement.instanceID,
+                                            commodityID: commodity.id,
+                                            amount: max(0, limit - 400)
+                                        ))
+                                    } label: {
+                                        Image(systemName: "chevron.down")
+                                    }
+                                    .buttonStyle(ClassicInspectorGlyphButtonStyle())
+                                    .disabled(limit == 0)
+                                    Button {
+                                        onSettingChange(.millStorageLimit(
+                                            millID: placement.instanceID,
+                                            commodityID: commodity.id,
+                                            amount: min(mill.capacity, limit + 400)
+                                        ))
+                                    } label: {
+                                        Image(systemName: "chevron.up")
+                                    }
+                                    .buttonStyle(ClassicInspectorGlyphButtonStyle())
+                                    Menu {
+                                        millPolicyButton("接受", policy: .accept, millID: placement.instanceID, commodityID: commodity.id)
+                                        millPolicyButton("拒收", policy: .doNotAccept, millID: placement.instanceID, commodityID: commodity.id)
+                                        millPolicyButton("获取", policy: .get, millID: placement.instanceID, commodityID: commodity.id)
+                                        millPolicyButton("清空", policy: .empty, millID: placement.instanceID, commodityID: commodity.id)
+                                    } label: {
+                                        Text(millOrderTitle(mill.policy(for: commodity.id)))
+                                            .frame(width: 42, alignment: .trailing)
+                                    }
+                                    .menuStyle(.borderlessButton)
+                                }
+                                .font(EmperorTheme.bodySmall)
+                            }
+                        }
+                    }
+                    .frame(maxHeight: 170)
+                }
             case .warehouse:
                 Divider()
                 settingHeader
@@ -273,10 +334,35 @@ struct BuildingInfoPopup: View {
         }
     }
 
+    private func millPolicyButton(
+        _ title: String,
+        policy: WarehouseCommodityPolicy,
+        millID: Int,
+        commodityID: Int
+    ) -> some View {
+        Button(title) {
+            onSettingChange(.millPolicy(
+                millID: millID,
+                commodityID: commodityID,
+                policy: policy
+            ))
+        }
+    }
+
+    private func millOrderTitle(_ policy: WarehouseCommodityPolicy) -> String {
+        switch policy {
+        case .doNotAccept: "拒收"
+        case .accept: "接受"
+        case .empty: "清空"
+        case .get: "获取"
+        }
+    }
+
     private func warehousePolicyTitle(_ policy: WarehouseCommodityPolicy) -> String {
         switch policy {
         case .doNotAccept: "拒收"
         case .accept: "接收"
+        case .empty: "清空"
         case .get: "调取"
         }
     }
@@ -374,7 +460,20 @@ struct BuildingInfoPopup: View {
             }
         case .mill:
             if let mill = city.logistics.mills.first(where: { $0.id == placement.instanceID }) {
-                rows.append(InfoRow(label: "磨坊储粮", value: "\(mill.storedAmount / 100) 车"))
+                rows.append(InfoRow(label: "磨坊储粮", value: "\(mill.storedAmount / 100)/\(mill.capacity / 100) 担"))
+                rows.append(InfoRow(label: "食物品质", value: mill.foodQuality.displayName))
+                let stocked = mill.inventoryByCommodityID
+                    .filter { $0.value > 0 }
+                    .sorted { $0.key < $1.key }
+                    .map { id, amount in
+                        let name = models.trade[commodityID: id]
+                            .map { ClassicTextLocalization.commodityName($0.name) }
+                            ?? "商品 #\(id)"
+                        return "\(name) \(amount / 100)/\(mill.storageLimit(for: id) / 100) 担"
+                    }
+                if !stocked.isEmpty {
+                    rows.append(InfoRow(label: "存量", value: stocked.joined(separator: "、")))
+                }
             } else {
                 rows.append(InfoRow(label: "磨坊储粮", value: "—"))
             }
@@ -397,6 +496,39 @@ struct BuildingInfoPopup: View {
                             .map(chineseBuildingName)
                             .joined(separator: "、")
                     ))
+                    for shopBuildingID in market.shopBuildingIDs {
+                        let commodityID = shopBuildingID == OriginalFoodCatalog.foodShopBuildingID
+                            ? nil
+                            : OriginalMarketCatalog.commodityID(forShopBuildingID: shopBuildingID)
+                        let stock: Int
+                        if let commodityID {
+                            stock = market.inventoryByCommodityID[commodityID, default: 0]
+                        } else {
+                            stock = market.inventoryByCommodityID.reduce(0) {
+                                $0 + (OriginalFoodCatalog.isMillCommodity($1.key) ? $1.value : 0)
+                            }
+                        }
+                        let buyerKey = commodityID ?? -1
+                        let hasBuyer = market.activeBuyerByCommodityID[buyerKey] != nil
+                        let hasPeddler = city.markets.peddlers.contains {
+                            $0.marketID == market.id
+                                && $0.commodityID == (commodityID ?? -1)
+                        }
+                        let status: String
+                        if hasPeddler {
+                            status = "正在销售"
+                        } else if hasBuyer {
+                            status = "正在采购"
+                        } else if stock > 0 {
+                            status = "囤积"
+                        } else {
+                            status = "无商品"
+                        }
+                        rows.append(InfoRow(
+                            label: chineseBuildingName(shopBuildingID),
+                            value: "库存 \(stock) · \(status)"
+                        ))
+                    }
                 }
             }
         case .trading:
@@ -537,14 +669,12 @@ struct BuildingInfoPopup: View {
                evaluation.nextLevelID != nil {
                 rows.append(InfoRow(label: "升级状态", value: "条件已满足，等待月结"))
             } else if !evaluation.missingEvolutionRequirements.isEmpty {
-                rows.append(InfoRow(
-                    label: "升级缺口",
-                    value: evaluation.missingEvolutionRequirements
-                        .map {
-                            houseEvolutionRequirementDescription($0, models: models)
-                        }
-                        .joined(separator: "、")
-                ))
+                rows.append(contentsOf: evaluation.missingEvolutionRequirements.map {
+                    InfoRow(
+                        label: "无法升级",
+                        value: houseEvolutionRequirementDescription($0, models: models)
+                    )
+                })
             }
         } else {
             rows.append(InfoRow(
@@ -637,17 +767,42 @@ private func houseEvolutionRequirementDescription(
 ) -> String {
     switch requirement {
     case let .desirability(current, required):
-        "宜居度 \(current)/\(required)"
+        return "这所房子不能升级，因为该地区吸引力不足（\(current)/\(required)）。"
     case let .service(service):
-        "缺\(service.chineseTitle)"
+        return switch service {
+        case .water:
+            "干渴的居民们要喝水，没有水这所房子就不能升级。"
+        case .herbalist:
+            "这所房子里的居民需要草药医生来服务。"
+        case .acupuncture:
+            "这所房子里的居民需要针灸医生来检查身体。"
+        case .music:
+            "这所房子里的居民要听到音乐，房子才能升级。"
+        case .acrobat:
+            "这所房子里的居民要看到杂技表演，房子才能升级。"
+        case .drama:
+            "这所房子里的居民要看到戏曲表演，房子才能升级。"
+        case .ancestor:
+            "除非有先祖庙的人到这里来，否则这所房子不能升级。"
+        case .confucian:
+            "这所房子需要孔庙的人来访，房子才能升级。"
+        case .daoistOrBuddhist:
+            "如果没有术士或和尚来这里，那么这所房子就不能升级。"
+        default:
+            "缺少\(service.chineseTitle)。"
+        }
     case let .foodQuality(current, required):
-        "食物品质 \(current)/\(required)"
+        let quality = FoodQuality(rawValue: required)?.displayName ?? "品质 \(required)"
+        return "这所房子里的居民需要 \(quality) 食物，房子才能升级（当前 \(current)）。"
     case let .commodityAlternatives(ids):
-        "缺" + ids.map {
+        let names = ids.map {
             models.trade[commodityID: $0]
                 .map { ClassicTextLocalization.commodityName($0.name) }
                 ?? "商品 #\($0)"
+        }.joined(separator: "或")
+        if Set(ids) == [23, 22] {
+            return "这所房子需要生活器皿（青铜器或漆器），房子才能升级。"
         }
-            .joined(separator: "或")
+        return "要是没有小贩送来\(names)，这所房子就不能升级。"
     }
 }

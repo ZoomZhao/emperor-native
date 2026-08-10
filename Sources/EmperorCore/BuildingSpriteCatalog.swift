@@ -77,6 +77,19 @@ public enum OriginalBuildingSpriteCatalog {
     ]
     public static let marketEntertainmentAreaImageID = 629
     public static let marketTileImageIDs = [632, 633, 634, 635]
+    /// Shop bays are authored as 2×2 plots along the west side of the market;
+    /// the remaining east-side bay is the always-present entertainment area.
+    /// These positions are shared by common (4-shop) and grand (6-shop)
+    /// squares, so adding a shop changes only the occupied bay, never the
+    /// market shell or its paving.
+    public static func marketShopOrigins(forBuildingID buildingID: Int) -> [GridPoint] {
+        let origins = [
+            GridPoint(x: 0, y: 0), GridPoint(x: 2, y: 0), GridPoint(x: 4, y: 0),
+            GridPoint(x: 0, y: 2), GridPoint(x: 2, y: 2), GridPoint(x: 4, y: 2),
+        ]
+        let capacity = OriginalMarketCatalog.shopCapacity(forMarketBuildingID: buildingID) ?? 0
+        return Array(origins.prefix(capacity))
+    }
     /// The shipping destruction archive contains five 50-frame fire families.
     /// These are the burning-ruin effects used per occupied tile; the previous
     /// `China_General` #2231 mapping was a frame from `China_Banners.bmp`.
@@ -358,7 +371,8 @@ public enum OriginalBuildingSpriteCatalog {
     public static func buildingComponents(
         forBuildingID buildingID: Int,
         orientation: IsometricBuildingOrientation = .northSouth,
-        quayWaterEdge: QuayWaterEdge? = nil
+        quayWaterEdge: QuayWaterEdge? = nil,
+        marketShopBuildingIDs: [Int]? = nil
     ) -> [BuildingSpriteComponent] {
         guard let canonicalFootprint = OriginalBuildingFootprintCatalog.footprint(
             forBuildingID: buildingID
@@ -394,7 +408,11 @@ public enum OriginalBuildingSpriteCatalog {
         case 58:
             canonical = tradingStationComponents(footprint: canonicalFootprint)
         case 59, 60:
-            canonical = marketComponents(footprint: canonicalFootprint)
+            canonical = marketComponents(
+                footprint: canonicalFootprint,
+                buildingID: buildingID,
+                shopBuildingIDs: marketShopBuildingIDs
+            )
         case 110:
             return palaceComponents(orientation: orientation)
         case 130:
@@ -485,6 +503,9 @@ public enum OriginalBuildingSpriteCatalog {
             )
         })
         references.formUnion(shopImageIDByBuildingID.values.map {
+            BuildingSpriteReference(archiveBaseName: generalArchiveBaseName, imageID: $0)
+        })
+        references.formUnion(millAnimationImageIDs.map {
             BuildingSpriteReference(archiveBaseName: generalArchiveBaseName, imageID: $0)
         })
         references.formUnion(grandCanalStageImageIDs.map {
@@ -669,22 +690,31 @@ public enum OriginalBuildingSpriteCatalog {
         return components
     }
 
+    public static let millAnimationImageIDs = Array(648...671)
+
     private static func marketComponents(
-        footprint: BuildingFootprint
+        footprint: BuildingFootprint,
+        buildingID: Int,
+        shopBuildingIDs: [Int]?
     ) -> [BuildingSpriteComponent] {
-        let foodOrigin = GridPoint(x: 0, y: 0)
+        let shopIDs = Array((shopBuildingIDs ?? [OriginalFoodCatalog.foodShopBuildingID]).prefix(
+            OriginalMarketCatalog.shopCapacity(forMarketBuildingID: buildingID) ?? 0
+        ))
+        let shopOrigins = marketShopOrigins(forBuildingID: buildingID)
         let entertainmentOrigin = GridPoint(
             x: footprint.width - 2,
             y: footprint.height - 2
         )
-        let foodPoints = Set(BuildingFootprint(width: 2, height: 2).points(at: foodOrigin))
         let entertainmentPoints = Set(
             BuildingFootprint(width: 2, height: 2).points(at: entertainmentOrigin)
         )
+        let shopPoints = Set(shopIDs.indices.flatMap { index in
+            BuildingFootprint(width: 2, height: 2).points(at: shopOrigins[index])
+        })
         var components: [BuildingSpriteComponent] = footprint.points(
             at: GridPoint(x: 0, y: 0)
         ).compactMap { point in
-            guard !foodPoints.contains(point), !entertainmentPoints.contains(point) else {
+            guard !shopPoints.contains(point), !entertainmentPoints.contains(point) else {
                 return nil
             }
             let imageID = marketTileImageIDs[(point.x + point.y) % marketTileImageIDs.count]
@@ -698,15 +728,19 @@ public enum OriginalBuildingSpriteCatalog {
                 footprint: BuildingFootprint(width: 1, height: 1)
             )
         }
-        components.append(BuildingSpriteComponent(
-            sprite: BuildingSpriteReference(
-                archiveBaseName: generalArchiveBaseName,
-                imageID: foodShopImageID
-            ),
-            tileOffsetX: foodOrigin.x,
-            tileOffsetY: foodOrigin.y,
-            footprint: BuildingFootprint(width: 2, height: 2)
-        ))
+        for (index, shopBuildingID) in shopIDs.enumerated() {
+            guard let imageID = shopImageIDByBuildingID[shopBuildingID] else { continue }
+            let origin = shopOrigins[index]
+            components.append(BuildingSpriteComponent(
+                sprite: BuildingSpriteReference(
+                    archiveBaseName: generalArchiveBaseName,
+                    imageID: imageID
+                ),
+                tileOffsetX: origin.x,
+                tileOffsetY: origin.y,
+                footprint: BuildingFootprint(width: 2, height: 2)
+            ))
+        }
         components.append(BuildingSpriteComponent(
             sprite: BuildingSpriteReference(
                 archiveBaseName: generalArchiveBaseName,

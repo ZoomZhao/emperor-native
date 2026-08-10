@@ -1929,6 +1929,32 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
     }
 
     @discardableResult
+    public mutating func setMillPolicy(
+        _ policy: WarehouseCommodityPolicy,
+        millID: Int,
+        commodityID: Int
+    ) -> Bool {
+        var logistics = logisticsState ?? DeterministicLogisticsState()
+        guard logistics.mills.contains(where: { $0.id == millID }) else { return false }
+        logistics.setMillPolicy(policy, commodityID: commodityID, millID: millID)
+        logisticsState = logistics
+        return true
+    }
+
+    @discardableResult
+    public mutating func setMillStorageLimit(
+        _ amount: Int,
+        millID: Int,
+        commodityID: Int
+    ) -> Bool {
+        var logistics = logisticsState ?? DeterministicLogisticsState()
+        guard logistics.mills.contains(where: { $0.id == millID }) else { return false }
+        logistics.setMillStorageLimit(amount, commodityID: commodityID, millID: millID)
+        logisticsState = logistics
+        return true
+    }
+
+    @discardableResult
     public mutating func setTradeEnabled(
         _ enabled: Bool,
         tradingBuildingID: Int

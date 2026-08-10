@@ -51,6 +51,32 @@ final class BuildingSpriteCatalogTests: XCTestCase {
         )
     }
 
+    func testMarketShellUsesActualInstalledShopSprites() {
+        let empty = OriginalBuildingSpriteCatalog.buildingComponents(
+            forBuildingID: OriginalMarketCatalog.commonMarketBuildingID,
+            marketShopBuildingIDs: []
+        )
+        XCTAssertFalse(empty.contains {
+            $0.sprite.imageID == OriginalBuildingSpriteCatalog.foodShopImageID
+        })
+        XCTAssertEqual(
+            empty.filter {
+                $0.sprite.imageID == OriginalBuildingSpriteCatalog.marketEntertainmentAreaImageID
+            }.count,
+            1
+        )
+
+        let installed = OriginalBuildingSpriteCatalog.buildingComponents(
+            forBuildingID: OriginalMarketCatalog.commonMarketBuildingID,
+            marketShopBuildingIDs: [67, 66]
+        )
+        XCTAssertEqual(
+            Set(installed.map(\.sprite.imageID)).intersection([619, 611]),
+            Set([619, 611])
+        )
+        XCTAssertFalse(installed.contains { $0.sprite.imageID == 617 })
+    }
+
     func testEverySupportedPlacedBuildingHasOriginalComponents() {
         for buildingID in OriginalBuildingSpriteCatalog.supportedPlacedBuildingIDs {
             XCTAssertFalse(

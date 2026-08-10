@@ -31,7 +31,10 @@ extension CityCanvas {
             let components = OriginalBuildingSpriteCatalog.buildingComponents(
                 forBuildingID: placement.buildingID,
                 orientation: renderOrientation,
-                quayWaterEdge: city.quayWaterEdge(for: placement)
+                quayWaterEdge: city.quayWaterEdge(for: placement),
+                marketShopBuildingIDs: placement.category == .market
+                    ? city.markets.markets.first(where: { $0.id == placement.instanceID })?.shopBuildingIDs
+                    : nil
             )
             var overlayContext = context
             overlayContext.opacity = 0.82
@@ -77,7 +80,8 @@ extension CityCanvas {
         tileHeight: CGFloat,
         origin: CGPoint,
         viewport: Viewport,
-        movementProgress: CGFloat
+        movementProgress: CGFloat,
+        buildingAnimationFrame: Int
     ) {
         var renderItems: [BuildingRenderItem] = []
         for (index, house) in city.houses.enumerated() {
@@ -106,7 +110,10 @@ extension CityCanvas {
             let components = OriginalBuildingSpriteCatalog.buildingComponents(
                 forBuildingID: placement.buildingID,
                 orientation: renderOrientation,
-                quayWaterEdge: city.quayWaterEdge(for: placement)
+                quayWaterEdge: city.quayWaterEdge(for: placement),
+                marketShopBuildingIDs: placement.category == .market
+                    ? city.markets.markets.first(where: { $0.id == placement.instanceID })?.shopBuildingIDs
+                    : nil
             )
             for (componentIndex, component) in components.enumerated()
                 where buildingSprites[component.sprite] != nil {
@@ -123,6 +130,28 @@ extension CityCanvas {
                     usesLegacyHouseAnchor: false,
                     isFigure: false,
                     stableOrder: 10_000 + placementIndex * 100 + componentIndex
+                ))
+            }
+            if placement.buildingID == OriginalFoodCatalog.millBuildingID,
+               let mill = city.logistics.mills.first(where: { $0.id == placement.instanceID }),
+               mill.storedAmount > 0,
+               let animationImageID = OriginalBuildingSpriteCatalog
+                    .millAnimationImageIDs
+                    .dropFirst(buildingAnimationFrame)
+                    .first {
+                renderItems.append(BuildingRenderItem(
+                    buildingReference: BuildingSpriteReference(
+                        archiveBaseName: OriginalBuildingSpriteCatalog.generalArchiveBaseName,
+                        imageID: animationImageID
+                    ),
+                    figureReference: nil,
+                    mapOrigin: placement.origin,
+                    previousMapOrigin: nil,
+                    footprint: placement.footprint,
+                    usesLegacyHouseAnchor: false,
+                    isFigure: false,
+                    isMillAnimationOverlay: true,
+                    stableOrder: 10_000 + placementIndex * 100 + components.count + 1
                 ))
             }
         }
@@ -234,6 +263,23 @@ extension CityCanvas {
                     + (CGFloat(sprite.width) * 0.5 - CGFloat(sprite.offsetX)) * scale
                 imageBottomY = center.y + tileHeight * 0.5
                     + (CGFloat(sprite.height) - CGFloat(sprite.offsetY)) * scale
+            } else if item.isMillAnimationOverlay {
+                // #647 is a 398×289 base frame whose 24 authored animation
+                // frames are 121×84 overlays at (160,115). The offsets are
+                // present in the SG3 metadata and must be applied relative to
+                // the base frame instead of being centered as a new building.
+                let baseWidth = CGFloat(398) * scale
+                let baseHeight = CGFloat(289) * scale
+                let baseCenterX = center.x
+                    + CGFloat(item.footprint.width - item.footprint.height)
+                    * tileWidth * 0.25
+                let baseBottomY = center.y
+                    + CGFloat(item.footprint.width + item.footprint.height - 1)
+                    * tileHeight * 0.5
+                imageCenterX = baseCenterX - baseWidth * 0.5
+                    + CGFloat(160 + 121 / 2) * scale
+                imageBottomY = baseBottomY - baseHeight
+                    + CGFloat(115 + 84) * scale
             } else if item.usesLegacyHouseAnchor {
                 imageCenterX = center.x
                 imageBottomY = center.y + tileHeight * 0.5

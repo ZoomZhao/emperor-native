@@ -183,6 +183,16 @@ public enum PlayerCommand: Sendable, Hashable, Codable {
         commodityID: Int,
         policy: WarehouseCommodityPolicy
     )
+    case setMillPolicy(
+        millID: Int,
+        commodityID: Int,
+        policy: WarehouseCommodityPolicy
+    )
+    case setMillStorageLimit(
+        millID: Int,
+        commodityID: Int,
+        amount: Int
+    )
     case setTradeEnabled(tradingBuildingID: Int, enabled: Bool)
     case setTradeImporting(
         tradingBuildingID: Int,

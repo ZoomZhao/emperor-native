@@ -127,6 +127,7 @@ public final class GameSessionController: @unchecked Sendable {
             let title = switch policy {
             case .doNotAccept: "拒收"
             case .accept: "接收"
+            case .empty: "清空"
             case .get: "主动调取"
             }
             result = .applied("仓库模式已设为\(title)")
@@ -146,9 +147,34 @@ public final class GameSessionController: @unchecked Sendable {
             let title = switch policy {
             case .doNotAccept: "拒收"
             case .accept: "接收"
+            case .empty: "清空"
             case .get: "主动调取"
             }
             result = .applied("\(commodity)已设为\(title)")
+        case let .setMillPolicy(millID, commodityID, policy):
+            guard var updated = city,
+                  updated.setMillPolicy(
+                      policy,
+                      millID: millID,
+                      commodityID: commodityID
+                  ) else {
+                result = .rejected("mill does not exist")
+                break
+            }
+            city = updated
+            result = .applied("磨坊订单已更新")
+        case let .setMillStorageLimit(millID, commodityID, amount):
+            guard var updated = city,
+                  updated.setMillStorageLimit(
+                      amount,
+                      millID: millID,
+                      commodityID: commodityID
+                  ) else {
+                result = .rejected("mill does not exist")
+                break
+            }
+            city = updated
+            result = .applied("磨坊存储限制已更新")
         case let .setTradeEnabled(tradingBuildingID, enabled):
             guard var updated = city,
                   updated.setTradeEnabled(

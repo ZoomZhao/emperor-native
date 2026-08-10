@@ -51,7 +51,8 @@ extension CityCanvas {
             tileHeight: tileHeight,
             origin: origin,
             viewport: viewport,
-            movementProgress: movementProgress
+            movementProgress: movementProgress,
+            buildingAnimationFrame: fireAnimationFrame % 24
         )
         drawFengShuiBuildingOverlay(context: &context, metrics: metrics)
         drawPlacementHighlight(
@@ -206,18 +207,6 @@ extension CityCanvas {
         switch constructionTool {
         case .road, .cityWall:
             return ConstructionDragPlanner.orthogonalSegment(from: start, to: end)
-        case .house, .eliteHouse:
-            let footprint = activeConstructionBuildingID.flatMap {
-                OriginalBuildingFootprintCatalog.footprint(
-                    forBuildingID: $0,
-                    orientation: constructionOrientation
-                )
-            } ?? BuildingFootprint(width: 2, height: 2)
-            return ConstructionDragPlanner.tiledOrigins(
-                from: start,
-                to: end,
-                footprint: footprint
-            )
         case .farmland, .demolish, .clearLand:
             return ConstructionDragPlanner.rectangularPoints(from: start, to: end)
         default:
@@ -308,6 +297,13 @@ extension CityCanvas {
                 tileOffsetY: 0,
                 footprint: footprint
             )]
+        }
+        if constructionTool == .market || constructionTool == .grandMarket {
+            return OriginalBuildingSpriteCatalog.buildingComponents(
+                forBuildingID: buildingID,
+                orientation: constructionOrientation,
+                marketShopBuildingIDs: []
+            )
         }
         return OriginalBuildingSpriteCatalog.buildingComponents(
             forBuildingID: buildingID,

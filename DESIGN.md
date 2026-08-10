@@ -35,6 +35,10 @@ reference-artifacts:
     encoded-size: "1920x1080"
     use: "building-maintenance-failure-and-invasion-behavior"
     limitations: "widescreen-patched-canvas, video-compression, uploader-watermark, commentary-overlay, edited-playthrough"
+  original-user-manual:
+    path: "GameData/EmperorManual.pdf"
+    use: "original interaction and capacity rules"
+    limitations: "scanned manual screenshots and text describe the Windows build; they are not a pixel baseline for the macOS canvas"
 reference-order:
   - original-runtime-assets
   - original-program-behavior
@@ -270,7 +274,10 @@ macOS 系统菜单栏可以提供等价命令，但不能用系统 toolbar 替�
 - 不在每个槽中常驻显示工具名称。
 - 不因某条说明、建筑名称或数字改变列宽。
 - 不把原版下方工具行拆成多个现代功能分组。
-- 暂未实现的原版功能保留正确位置和禁用状态，不用新功能填补空位。
+- **本关可用的建筑/作物排在目录前面**，同页其余原版项仍保留为禁用槽，不用新功能填补空位。可用优先是原生城内面板的明确编排规则，便于任务初期找到可建项；诊断用 `ConstructionToolbar` 采用同一排序。
+- 分类内的相对次序在「可用」与「不可用」两组内部保持 `NativeConstructionTool` / 作物枚举的稳定顺序。
+- 下方常驻工具行为道路、浏览、清地、拆除，外加帮助入口；消息入口留在底部导航，不占用该工具行。
+- 建造按钮图来自 `China_Interface` 的 `New_Bbuttons` 三态族（`#1488–#1655`，每族 normal/hover/selected）。`GameData` 与哈希核对后的 `Emperor[EN].exe` 均**没有**已恢复的 `buildingID → 按钮基帧` 扁平底表；模型表只有造价/风水等字段。当前 `OriginalConstructionButtonSpriteCatalog` 中商业等缺口行仍属 **inferred**（条带顺序 + 导出帧核对），不得写成 exe 确认。只读逆向的地址、否定搜索与后续挖掘步骤见 `docs/exe-research/construction-bbuttons.md`。
 
 ### 迷你地图与底部导航
 
@@ -352,6 +359,19 @@ macOS 系统菜单栏可以提供等价命令，但不能用系统 toolbar 替�
 - 原版顾问/任务消息会从地图底部展开为横向棕色面板，包含细边框、标题、正文、帮助与确认入口。复刻该覆盖层的位置、层级与密度；它覆盖地图列、暂停或配合消息状态，不把整个固定画布向上挤压，也不改成系统 alert。
 - 警告、费用或限制文本可在地图上缘短暂堆叠，但应使用原版紧凑行式、自动消退且不抢占固定布局。不得转换为圆角通知卡。
 - 暂停、速度、选择和建造状态必须在画面与模拟中一致；暂停时动画/时间推进停止，但当前选择、预览和可读信息不应消失。
+
+## 本轮原版资料契约
+
+这四项修正使用 `GameData/EmperorText.txt`、`GameData/Model/EmperorBuildingModels.txt`、`GameData/Model/GeneralBuildingConfig.txt`、`GameData/EmperorManual.pdf` 和 `China_General` 的 SG3/PNG 索引交叉核对。实现必须保持以下关系：
+
+- **市场与店铺：** `#59/#60` 只是 4/6 个店铺槽的市场本体；`#64…#70` 才是店铺。市场信息窗按 `MarketSquare.shopBuildingIDs` 的实际顺序逐行显示库存和状态，地图精灵也按相同数组填充 2×2 店铺槽，不得默认生成 `#66` 食物铺。市场的娱乐区仍属于市场壳体，未安装的店铺位置只显示市场地面。
+- **磨坊：** 手册确认磨坊有 8 个储位，每储位最多 4 担（100 单位/担），总上限 32 担；订单为“接受/拒收/清空/获取”。核心状态以 400 单位为最小调整粒度，信息窗显示每种食物的存量、限制和订单。`China_General.sg3` 的 `#647` 是 398×289 本体，`#648…#671` 是其 24 帧、位于 SG3 偏移 `(160,115)` 的有货/工作叠加帧。
+- **住宅升级原因：** 右键信息窗复用 `DeterministicHousingEvolution.evaluate` 的实时缺口；每个缺口显示 `EmperorText.txt` 对应的原版原因句（吸引力、水、食物品质、服务和商品），不能只显示一个无来源的“不可升级”。
+- **建造与铲除：** 原版手册确认道路等连续工具使用左键拖拽、右键退出；单体建筑使用一次点击，右键取消。画布因此只允许道路、农田、墙体、清地和铲除进入区域拖拽，其他建造工具的左键拖动不应偷偷平移镜头或提交重复建筑。
+
+### 证据状态
+
+市场店铺 ID、容量、磨坊储位/订单、住宅条件和取消快捷键是已确认事实。市场 7×4/7×6 外壳内的 2×2 店铺槽顺序由原版占地尺寸、`China_StorNDist` 店铺精灵尺寸和手册市场区截图共同约束；在恢复无变形原版运行截图前，槽坐标仍标记为可替换的几何推断，集中在 `OriginalBuildingSpriteCatalog.marketShopOrigins`，不得在 View 中复制坐标。
 
 ## 交互、键盘与无障碍
 

@@ -88,7 +88,30 @@ struct CityCanvas: View {
         let footprint: BuildingFootprint
         let usesLegacyHouseAnchor: Bool
         let isFigure: Bool
+        let isMillAnimationOverlay: Bool
         let stableOrder: Int
+
+        init(
+            buildingReference: BuildingSpriteReference?,
+            figureReference: FigureSpriteReference?,
+            mapOrigin: GridPoint,
+            previousMapOrigin: GridPoint?,
+            footprint: BuildingFootprint,
+            usesLegacyHouseAnchor: Bool,
+            isFigure: Bool,
+            isMillAnimationOverlay: Bool = false,
+            stableOrder: Int
+        ) {
+            self.buildingReference = buildingReference
+            self.figureReference = figureReference
+            self.mapOrigin = mapOrigin
+            self.previousMapOrigin = previousMapOrigin
+            self.footprint = footprint
+            self.usesLegacyHouseAnchor = usesLegacyHouseAnchor
+            self.isFigure = isFigure
+            self.isMillAnimationOverlay = isMillAnimationOverlay
+            self.stableOrder = stableOrder
+        }
 
         var farDepth: Int {
             mapOrigin.x + mapOrigin.y + footprint.width + footprint.height - 2
@@ -137,7 +160,7 @@ struct CityCanvas: View {
                                         size: geometry.size
                                     ) else { return }
                                     updateDraggedPlacement(from: start, to: end)
-                                } else {
+                                } else if constructionTool == .inspect {
                                     updateCameraForCanvasDrag(
                                         translation: value.translation,
                                         canvasSize: geometry.size
@@ -166,10 +189,12 @@ struct CityCanvas: View {
                                     return
                                 }
                                 draggedPlacementPoints = []
-                                updateCameraForCanvasDrag(
-                                    translation: value.translation,
-                                    canvasSize: geometry.size
-                                )
+                                if constructionTool == .inspect {
+                                    updateCameraForCanvasDrag(
+                                        translation: value.translation,
+                                        canvasSize: geometry.size
+                                    )
+                                }
                                 resetCanvasDragBaseline()
                             }
                     )

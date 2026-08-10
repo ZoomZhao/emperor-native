@@ -30,6 +30,16 @@ enum NativeBuildingSettingChange {
         commodityID: Int,
         policy: WarehouseCommodityPolicy
     )
+    case millPolicy(
+        millID: Int,
+        commodityID: Int,
+        policy: WarehouseCommodityPolicy
+    )
+    case millStorageLimit(
+        millID: Int,
+        commodityID: Int,
+        amount: Int
+    )
     case tradeEnabled(tradingBuildingID: Int, enabled: Bool)
 }
 
@@ -978,6 +988,18 @@ final class LibraryModel: ObservableObject {
                 commodityID: commodityID,
                 policy: policy
             )
+        case let .millPolicy(millID, commodityID, policy):
+            command = .setMillPolicy(
+                millID: millID,
+                commodityID: commodityID,
+                policy: policy
+            )
+        case let .millStorageLimit(millID, commodityID, amount):
+            command = .setMillStorageLimit(
+                millID: millID,
+                commodityID: commodityID,
+                amount: amount
+            )
         case let .tradeEnabled(tradingBuildingID, enabled):
             command = .setTradeEnabled(
                 tradingBuildingID: tradingBuildingID,
@@ -1023,6 +1045,20 @@ final class LibraryModel: ObservableObject {
                 .map { ClassicTextLocalization.commodityName($0.name) }
                 ?? "商品 #\(commodityID)"
             saveStatus = "\(commodity)已设为\(warehousePolicyTitle(policy))"
+        case let .millPolicy(millID, commodityID, policy):
+            applied = city.setMillPolicy(
+                policy,
+                millID: millID,
+                commodityID: commodityID
+            )
+            saveStatus = "磨坊订单已更新"
+        case let .millStorageLimit(millID, commodityID, amount):
+            applied = city.setMillStorageLimit(
+                amount,
+                millID: millID,
+                commodityID: commodityID
+            )
+            saveStatus = "磨坊存储限制已设为\(amount / 100) 担"
         case let .tradeEnabled(tradingBuildingID, enabled):
             applied = city.setTradeEnabled(
                 enabled,
@@ -1041,6 +1077,7 @@ final class LibraryModel: ObservableObject {
         switch policy {
         case .doNotAccept: "拒收"
         case .accept: "接收"
+        case .empty: "清空"
         case .get: "主动调取"
         }
     }
@@ -2006,7 +2043,8 @@ final class LibraryModel: ObservableObject {
                         guard metadata.width > 0, metadata.height > 0,
                               let sprite = try? SpriteDecoder.decode(
                                 image: metadata,
-                                pixelData: pixels
+                                pixelData: pixels,
+                                images: archive.images
                               ) else { continue }
                         decoded[id] = sprite
                     }
@@ -2016,7 +2054,8 @@ final class LibraryModel: ObservableObject {
                             let metadata = archive.images[id]
                             guard let sprite = try? SpriteDecoder.decode(
                                 image: metadata,
-                                pixelData: pixels
+                                pixelData: pixels,
+                                images: archive.images
                             ) else { continue }
                             vegetationSprites[id] = sprite.greenVegetationOnly()
                         }
@@ -2119,7 +2158,8 @@ final class LibraryModel: ObservableObject {
                             ),
                             sprite: try SpriteDecoder.decode(
                                 image: archive.images[imageID],
-                                pixelData: pixels
+                                pixelData: pixels,
+                                images: archive.images
                             ),
                             offsetX: archive.images[imageID].spriteOffsetX,
                             offsetY: archive.images[imageID].spriteOffsetY
@@ -2173,7 +2213,8 @@ final class LibraryModel: ObservableObject {
                             ),
                             sprite: try SpriteDecoder.decode(
                                 image: record,
-                                pixelData: pixels
+                                pixelData: pixels,
+                                images: archive.images
                             ).correctingFigureShadow(),
                             offsetX: record.spriteOffsetX,
                             offsetY: record.spriteOffsetY
@@ -2224,7 +2265,8 @@ final class LibraryModel: ObservableObject {
                     }
                     decoded[imageID] = try SpriteDecoder.decode(
                         image: record,
-                        pixelData: pixels
+                        pixelData: pixels,
+                        images: archive.images
                     )
                 }
                 let decodedSprites = decoded

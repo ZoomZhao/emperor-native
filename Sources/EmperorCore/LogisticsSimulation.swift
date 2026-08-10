@@ -3,6 +3,7 @@ import Foundation
 public enum WarehouseCommodityPolicy: String, Sendable, Hashable, Codable {
     case doNotAccept
     case accept
+    case empty
     case get
 }
 
@@ -299,6 +300,30 @@ public struct DeterministicLogisticsState: Sendable, Hashable, Codable {
         // The original UI works in four-load bays. Preserve that granularity.
         let clamped = min(warehouses[index].capacity, max(0, amount))
         warehouses[index].storageLimitByCommodityID[commodityID] = clamped / 400 * 400
+    }
+
+    public mutating func setMillPolicy(
+        _ policy: WarehouseCommodityPolicy,
+        commodityID: Int,
+        millID: Int
+    ) {
+        guard var mills = foodMillStorage,
+              let index = mills.firstIndex(where: { $0.id == millID }) else { return }
+        mills[index].policyByCommodityID[commodityID] = policy
+        foodMillStorage = mills
+    }
+
+    public mutating func setMillStorageLimit(
+        _ amount: Int,
+        commodityID: Int,
+        millID: Int
+    ) {
+        guard var mills = foodMillStorage,
+              let index = mills.firstIndex(where: { $0.id == millID }) else { return }
+        let clamped = min(mills[index].capacity, max(0, amount))
+        // The Windows dialog changes one four-load bay at a time.
+        mills[index].storageLimitByCommodityID[commodityID] = clamped / 400 * 400
+        foodMillStorage = mills
     }
 
     /// Accepts as much of a scripted campaign gift as the city's physical
