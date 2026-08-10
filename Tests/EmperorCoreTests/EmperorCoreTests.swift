@@ -124,6 +124,48 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testEdgeScrollConvertsScreenEdgesToIsometricMapAxes() {
+        let right = IsometricEdgeScrollPolicy.mapDelta(
+            for: IsometricScreenPoint(x: 1, y: 0),
+            elapsed: 1,
+            tileWidth: 80,
+            tileHeight: 40
+        )
+        XCTAssertGreaterThan(right.x, 0)
+        XCTAssertLessThan(right.y, 0)
+
+        let down = IsometricEdgeScrollPolicy.mapDelta(
+            for: IsometricScreenPoint(x: 0, y: 1),
+            elapsed: 1,
+            tileWidth: 80,
+            tileHeight: 40
+        )
+        XCTAssertGreaterThan(down.x, 0)
+        XCTAssertGreaterThan(down.y, 0)
+    }
+
+    func testCornerEdgeScrollKeepsTheSameScreenSpeed() {
+        let straight = IsometricEdgeScrollPolicy.mapDelta(
+            for: IsometricScreenPoint(x: 1, y: 0),
+            elapsed: 0.5,
+            tileWidth: 80,
+            tileHeight: 40
+        )
+        let corner = IsometricEdgeScrollPolicy.mapDelta(
+            for: IsometricScreenPoint(x: 1, y: 1),
+            elapsed: 0.5,
+            tileWidth: 80,
+            tileHeight: 40
+        )
+
+        func projectedLength(_ delta: IsometricScreenPoint) -> Double {
+            let x = (delta.x - delta.y) * 80 * 0.5
+            let y = (delta.x + delta.y) * 40 * 0.5
+            return hypot(x, y)
+        }
+        XCTAssertEqual(projectedLength(straight), projectedLength(corner), accuracy: 0.001)
+    }
+
     func testLocalCatalogWhenOriginalAssetsAreInstalled() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")

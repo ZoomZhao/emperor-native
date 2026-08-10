@@ -201,3 +201,81 @@ public enum OriginalInterfaceUtilitySpriteCatalog {
         Set(interfaceImageIDs.values)
     }
 }
+
+/// The original construction menu stores 54×53 button artwork as consecutive
+/// normal, hover, and selected records in `China_Interface_New_Bbuttons`.
+/// These are UI sprites, not the isometric world sprites used on the map.
+public enum OriginalConstructionButtonState: Int, CaseIterable, Sendable, Hashable {
+    case normal
+    case hover
+    case selected
+}
+
+public enum OriginalConstructionButtonSpriteCatalog {
+    public static let archiveBaseName = OriginalInterfaceSpriteCatalog.archiveBaseName
+
+    /// Verified first records of three-state button families, matched against
+    /// the shipped button sheet and the reference gameplay recording.
+    private static let baseImageIDByBuildingID: [Int: Int] = [
+        2: 1_491,   // common housing
+        11: 1_494,  // elite housing
+        31: 1_512,  // fishing wharf
+        35: 1_515,  // clay pit
+        36: 1_518,  // quarry / stoneworks
+        43: 1_521,  // kiln
+        39: 1_524,  // bronze smelter
+        40: 1_524,  // iron smelter shares the furnace button
+        38: 1_527,  // lumber mill
+        72: 1_551,  // well
+        207: 1_554, // herbalist
+        208: 1_557, // acupuncture clinic
+        124: 1_560, // inspector tower
+        127: 1_563, // watchtower
+        209: 1_566, // administrative city
+        110: 1_569, // palace
+        125: 1_572, // tax office
+        214: 1_596, // ancestral shrine
+        215: 1_599, // Daoist shrine
+        218: 1_602, // Buddhist pagoda
+        219: 1_605, // Confucian academy
+        220: 1_608, // crossbow fort
+        221: 1_611, // infantry fort
+        224: 1_614, // cavalry fort
+        225: 1_617, // chariot fort
+        223: 1_620, // catapult fort
+        116: 1_623, // decorative sculpture
+        115: 1_626, // garden
+        117: 1_629, // ornate sculpture
+        120: 1_632, // pond
+        121: 1_635, // tai chi park
+        118: 1_641, // flowering tree
+    ]
+
+    public static func imageID(
+        forBuildingID buildingID: Int,
+        state: OriginalConstructionButtonState = .normal
+    ) -> Int? {
+        baseImageIDByBuildingID[buildingID].map { $0 + state.rawValue }
+    }
+
+    /// Crop buttons are semantic because several crop models intentionally
+    /// share the same original field or orchard artwork.
+    public static func cropImageID(
+        isRice: Bool,
+        isOrchard: Bool,
+        state: OriginalConstructionButtonState = .normal
+    ) -> Int {
+        let base = isRice ? 1_500 : (isOrchard ? 1_509 : 1_497)
+        return base + state.rawValue
+    }
+
+    public static var requiredImageIDs: Set<Int> {
+        let buildingIDs = baseImageIDByBuildingID.values.flatMap { base in
+            OriginalConstructionButtonState.allCases.map { base + $0.rawValue }
+        }
+        let cropIDs = [1_497, 1_500, 1_509].flatMap { base in
+            OriginalConstructionButtonState.allCases.map { base + $0.rawValue }
+        }
+        return Set(buildingIDs + cropIDs)
+    }
+}

@@ -2126,6 +2126,7 @@ final class LibraryModel: ObservableObject {
                 let requiredImageIDs = OriginalInterfaceSpriteCatalog.requiredImageIDs
                     .union(OriginalInterfaceUtilitySpriteCatalog.requiredImageIDs)
                     .union(OriginalInterfaceChromeSpriteCatalog.requiredImageIDs)
+                    .union(OriginalConstructionButtonSpriteCatalog.requiredImageIDs)
                 for imageID in requiredImageIDs.sorted()
                     where archive.images.indices.contains(imageID) {
                     let record = archive.images[imageID]

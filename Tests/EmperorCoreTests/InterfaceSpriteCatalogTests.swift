@@ -36,6 +36,7 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
         let requiredImageIDs = OriginalInterfaceSpriteCatalog.requiredImageIDs
             .union(OriginalInterfaceUtilitySpriteCatalog.requiredImageIDs)
             .union(OriginalInterfaceChromeSpriteCatalog.requiredImageIDs)
+            .union(OriginalConstructionButtonSpriteCatalog.requiredImageIDs)
         for imageID in requiredImageIDs.sorted() {
             let record = archive.images[imageID]
             XCTAssertFalse(record.isExternal, "interface image #\(imageID) is external")
@@ -124,5 +125,38 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
             OriginalInterfaceUtilitySpriteCatalog.requiredImageIDs,
             Set([1_283])
         )
+    }
+
+    func testConstructionButtonsUseVerifiedThreeStateFamilies() throws {
+        XCTAssertEqual(
+            try OriginalConstructionButtonState.allCases.map {
+                try XCTUnwrap(
+                    OriginalConstructionButtonSpriteCatalog.imageID(
+                        forBuildingID: 2,
+                        state: $0
+                    )
+                )
+            },
+            [1_491, 1_492, 1_493]
+        )
+        XCTAssertEqual(
+            OriginalConstructionButtonSpriteCatalog.imageID(
+                forBuildingID: 72,
+                state: .selected
+            ),
+            1_553
+        )
+        XCTAssertEqual(
+            OriginalConstructionButtonSpriteCatalog.cropImageID(
+                isRice: true,
+                isOrchard: false,
+                state: .hover
+            ),
+            1_501
+        )
+        XCTAssertNil(
+            OriginalConstructionButtonSpriteCatalog.imageID(forBuildingID: 999)
+        )
+        XCTAssertFalse(OriginalConstructionButtonSpriteCatalog.requiredImageIDs.isEmpty)
     }
 }

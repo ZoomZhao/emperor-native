@@ -1060,6 +1060,8 @@ private struct ClassicControlPanel: View {
     @State private var showsMessages = false
     @State private var showsAdvancedControls = false
     @State private var hoveredCategory: ConstructionToolCategory?
+    @State private var hoveredConstructionTool: NativeConstructionTool?
+    @State private var hoveredCrop: AgriculturalCrop?
 
     private let categoryOrder = ConstructionToolCategory.allCases
 
@@ -1218,28 +1220,21 @@ private struct ClassicControlPanel: View {
                 && !agriculturalProducerTools.contains($0)
         }
         let availableTools = categoryTools.filter(isAvailable)
-        let unavailableTools = categoryTools.filter { !isAvailable($0) }
         let cropOrder: [AgriculturalCrop] = [
             .wheat, .soybeans, .rice, .millet, .cabbage,
             .hemp, .tea, .mulberry, .lacquer,
         ]
         let availableCrops = cropOrder.filter(isCropAvailable)
-        let unavailableCrops = cropOrder.filter { !isCropAvailable($0) }
         let availableItems: [ClassicConstructionCatalogItem]
-        let unavailableItems: [ClassicConstructionCatalogItem]
         if selectedCategory == .agriculture {
             availableItems = availableCrops.map(ClassicConstructionCatalogItem.crop)
                 + availableTools.map(ClassicConstructionCatalogItem.tool)
-            unavailableItems = unavailableCrops.map(ClassicConstructionCatalogItem.crop)
-                + unavailableTools.map(ClassicConstructionCatalogItem.tool)
         } else {
             availableItems = availableTools.map(ClassicConstructionCatalogItem.tool)
-            unavailableItems = unavailableTools.map(ClassicConstructionCatalogItem.tool)
         }
-        let items = availableItems + unavailableItems
         return ScrollView(.vertical, showsIndicators: true) {
-            constructionCatalogGrid(items)
-            .padding(.horizontal, 5)
+            constructionCatalogGrid(availableItems)
+                .padding(.horizontal, 4)
         }
     }
 
@@ -1261,13 +1256,7 @@ private struct ClassicControlPanel: View {
             ForEach(0..<placeholderCount, id: \.self) { _ in
                 Rectangle()
                     .fill(Color.clear)
-                    .frame(width: 52, height: 52)
-                    .overlay(
-                        Rectangle().strokeBorder(
-                            ClassicPalette.border.opacity(0.7),
-                            lineWidth: 1
-                        )
-                    )
+                    .frame(width: 54, height: 53)
             }
         }
     }
@@ -1286,9 +1275,9 @@ private struct ClassicControlPanel: View {
 
     private var classicConstructionGridColumns: [GridItem] {
         [
-            GridItem(.fixed(52), spacing: 2),
-            GridItem(.fixed(52), spacing: 2),
-            GridItem(.fixed(52), spacing: 0),
+            GridItem(.fixed(54), spacing: 0),
+            GridItem(.fixed(54), spacing: 0),
+            GridItem(.fixed(54), spacing: 0),
         ]
     }
 
@@ -1299,7 +1288,19 @@ private struct ClassicControlPanel: View {
             library.selectAgriculturalCrop(crop)
         } label: {
             Group {
-                if let sprite = agriculturalSprite(for: crop) {
+                if let sprite = originalCropButtonSprite(
+                    for: crop,
+                    state: constructionButtonState(
+                        selected: selected,
+                        hovered: hoveredCrop == crop
+                    )
+                ) {
+                    Image(decorative: sprite.image, scale: 1)
+                        .resizable()
+                        .interpolation(.none)
+                        .frame(width: 54, height: 53)
+                        .accessibilityHidden(true)
+                } else if let sprite = agriculturalSprite(for: crop) {
                     Image(decorative: sprite.image, scale: 1)
                         .resizable()
                         .interpolation(.none)
@@ -1313,18 +1314,14 @@ private struct ClassicControlPanel: View {
                         .accessibilityHidden(true)
                 }
             }
-            .frame(width: 52, height: 52)
+            .frame(width: 54, height: 53)
             .foregroundStyle(Color.white.opacity(0.92))
-            .background(selected ? ClassicPalette.gold.opacity(0.20) : Color.clear)
-            .overlay(
-                Rectangle().strokeBorder(
-                    selected ? ClassicPalette.gold : ClassicPalette.border.opacity(0.7),
-                    lineWidth: 1
-                )
-            )
         }
         .buttonStyle(.plain)
         .disabled(!isCropAvailable(crop))
+        .onHover { hovering in
+            hoveredCrop = hovering ? crop : nil
+        }
         .accessibilityIdentifier("construction-crop-\(crop.rawValue)")
         .help(
             isCropAvailable(crop)
@@ -1390,29 +1387,25 @@ private struct ClassicControlPanel: View {
     }
 
     private func constructionButton(_ tool: NativeConstructionTool) -> some View {
-        Button {
+        let selected = library.constructionTool == tool
+        return Button {
             library.selectConstructionTool(tool)
         } label: {
-            constructionToolIcon(tool)
-            .frame(width: 52, height: 52)
+            constructionToolIcon(
+                tool,
+                buttonState: constructionButtonState(
+                    selected: selected,
+                    hovered: hoveredConstructionTool == tool
+                )
+            )
+            .frame(width: 54, height: 53)
             .foregroundStyle(Color.white.opacity(0.92))
-            .background(
-                library.constructionTool == tool
-                    ? ClassicPalette.gold.opacity(0.20)
-                    : Color.clear
-            )
-            .overlay(
-                Rectangle()
-                    .strokeBorder(
-                        library.constructionTool == tool
-                            ? ClassicPalette.gold
-                            : ClassicPalette.border.opacity(0.7),
-                        lineWidth: 1
-                    )
-            )
         }
         .buttonStyle(.plain)
         .disabled(!isAvailable(tool))
+        .onHover { hovering in
+            hoveredConstructionTool = hovering ? tool : nil
+        }
         .accessibilityIdentifier("construction-tool-\(tool.rawValue)")
         .help(
             isAvailable(tool)
@@ -1425,8 +1418,20 @@ private struct ClassicControlPanel: View {
     }
 
     @ViewBuilder
-    private func constructionToolIcon(_ tool: NativeConstructionTool) -> some View {
-        if let sprite = utilityToolSprite(for: tool) {
+    private func constructionToolIcon(
+        _ tool: NativeConstructionTool,
+        buttonState: OriginalConstructionButtonState = .normal
+    ) -> some View {
+        if let sprite = originalConstructionButtonSprite(
+            for: tool,
+            state: buttonState
+        ) {
+            Image(decorative: sprite.image, scale: 1)
+                .resizable()
+                .interpolation(.none)
+                .frame(width: 54, height: 53)
+                .accessibilityHidden(true)
+        } else if let sprite = utilityToolSprite(for: tool) {
             Image(decorative: sprite.image, scale: 1)
                 .resizable()
                 .interpolation(.none)
@@ -1455,6 +1460,39 @@ private struct ClassicControlPanel: View {
                 .frame(height: 27)
                 .accessibilityHidden(true)
         }
+    }
+
+    private func constructionButtonState(
+        selected: Bool,
+        hovered: Bool
+    ) -> OriginalConstructionButtonState {
+        if selected { return .selected }
+        if hovered { return .hover }
+        return .normal
+    }
+
+    private func originalConstructionButtonSprite(
+        for tool: NativeConstructionTool,
+        state: OriginalConstructionButtonState
+    ) -> RenderedTerrainSprite? {
+        guard let buildingID = tool.buildingID,
+              let imageID = OriginalConstructionButtonSpriteCatalog.imageID(
+                forBuildingID: buildingID,
+                state: state
+              ) else { return nil }
+        return library.interfaceSprites[imageID]
+    }
+
+    private func originalCropButtonSprite(
+        for crop: AgriculturalCrop,
+        state: OriginalConstructionButtonState
+    ) -> RenderedTerrainSprite? {
+        let imageID = OriginalConstructionButtonSpriteCatalog.cropImageID(
+            isRice: crop == .rice,
+            isOrchard: crop.category == .orchard,
+            state: state
+        )
+        return library.interfaceSprites[imageID]
     }
 
     private func constructionCatalogComponents(
