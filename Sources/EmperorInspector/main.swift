@@ -1957,7 +1957,8 @@ do {
         let pixelsURL = archiveURL.deletingPathExtension().appendingPathExtension("555")
         let decoded = try SpriteDecoder.decode(
             image: archive.images[imageID],
-            pixelData: Data(contentsOf: pixelsURL, options: [.mappedIfSafe])
+            pixelData: Data(contentsOf: pixelsURL, options: [.mappedIfSafe]),
+            images: archive.images
         )
         guard let image = decoded.makeCGImage(),
               let destination = CGImageDestinationCreateWithURL(

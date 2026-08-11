@@ -140,7 +140,9 @@ public enum OriginalInterfaceChromeSpriteCatalog {
 /// category-button family.
 ///
 /// - #1275/#1279/#1283/#1287: the road, inspection, shovel and red removal
-///   actions visible in the original five-button city utility strip
+///   actions visible in the original city utility strip above the minimap
+/// - #1291: help star used as the strip's trailing entry (messages stay on the
+///   bottom navigation bar; the message family is not yet verified)
 /// - Player-built world roads still use the authored China_Terrain connection
 ///   family (`roadTerrainLocalID`), not the Great Wall category button (#1319)
 public enum OriginalInterfaceUtilityIcon: String, CaseIterable, Sendable, Hashable {
@@ -148,6 +150,7 @@ public enum OriginalInterfaceUtilityIcon: String, CaseIterable, Sendable, Hashab
     case clearLand
     case demolish
     case road
+    case help
 }
 
 public enum OriginalInterfaceUtilitySpriteCatalog {
@@ -190,12 +193,12 @@ public enum OriginalInterfaceUtilitySpriteCatalog {
     }
 
     private static let interfaceImageIDs: [OriginalInterfaceUtilityIcon: Int] = [
-        // The original five-button strip uses the road tile, city inspection
-        // screen, shovel, red removal/undo action and help star in this order.
+        // Road tile, city inspection, shovel, red removal, then help star.
         .road: 1_275,
         .inspect: 1_279,
         .clearLand: 1_283,
         .demolish: 1_287,
+        .help: 1_291,
     ]
 
     public static func imageID(for icon: OriginalInterfaceUtilityIcon) -> Int? {
@@ -210,6 +213,12 @@ public enum OriginalInterfaceUtilitySpriteCatalog {
 /// The original construction menu stores 54×53 button artwork as consecutive
 /// normal, hover, and selected records in `China_Interface_New_Bbuttons`.
 /// These are UI sprites, not the isometric world sprites used on the map.
+///
+/// Evidence for `buildingID → baseImageID` is **not** fully exe-recovered.
+/// GameData has no button field; read-only `Emperor[EN].exe` notes (addresses,
+/// exhausted negative searches, evidence classes) live in
+/// `docs/exe-research/construction-bbuttons.md`. Do not upgrade inferred rows
+/// to confirmed without linking UI-record writers in that binary.
 public enum OriginalConstructionButtonState: Int, CaseIterable, Sendable, Hashable {
     case normal
     case hover
@@ -219,8 +228,11 @@ public enum OriginalConstructionButtonState: Int, CaseIterable, Sendable, Hashab
 public enum OriginalConstructionButtonSpriteCatalog {
     public static let archiveBaseName = OriginalInterfaceSpriteCatalog.archiveBaseName
 
-    /// Verified first records of three-state button families, matched against
-    /// the shipped button sheet and the reference gameplay recording.
+    /// First records of three-state button families.
+    /// Sheet geometry (54×53, ×3 states) is confirmed from SG3 export.
+    /// Individual building→base rows are inferred from sheet order and frame
+    /// content unless/until exe UI-record writers are recovered; see
+    /// `docs/exe-research/construction-bbuttons.md`.
     private static let baseImageIDByBuildingID: [Int: Int] = [
         2: 1_491,   // common housing
         11: 1_494,  // elite housing
@@ -232,6 +244,16 @@ public enum OriginalConstructionButtonSpriteCatalog {
         39: 1_524,  // bronze smelter
         40: 1_524,  // iron smelter shares the furnace button
         38: 1_527,  // lumber mill
+        // Commerce / light-industry: inferred from New_Bbuttons order after
+        // lumber + exported 54×53 frames (not exe-confirmed).
+        54: 1_528,  // warehouse
+        66: 1_531,  // food shop
+        53: 1_534,  // mill
+        47: 1_537,  // weaver
+        65: 1_540,  // ceramics shop
+        67: 1_543,  // hemp shop
+        59: 1_546,  // common market
+        60: 1_546,  // grand market shares the market pavilion family
         72: 1_551,  // well
         207: 1_554, // herbalist
         208: 1_557, // acupuncture clinic

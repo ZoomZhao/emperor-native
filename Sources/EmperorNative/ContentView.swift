@@ -1251,17 +1251,26 @@ private struct ClassicControlPanel: View {
     private var constructionCatalog: some View {
         // Keep always-visible utility tools out of the category grid so the
         // infrastructure page is not mistaken for a Great-Wall / monument menu.
+        // Orchard sheds are reached via crop buttons (same producer IDs), and
+        // `granary` is a warehouse alias rather than a distinct original button.
         let utilityTools: Set<NativeConstructionTool> = [
             .inspect, .road, .clearLand, .demolish,
         ]
         let agriculturalProducerTools: Set<NativeConstructionTool> = [
             .cropFarm, .teaHouse, .lacquerGuild, .silkWeaver,
         ]
+        let catalogAliases: Set<NativeConstructionTool> = [
+            .granary,
+        ]
         let categoryTools = NativeConstructionTool.allCases.filter {
             $0.category == selectedCategory
                 && !utilityTools.contains($0)
                 && !agriculturalProducerTools.contains($0)
+                && !catalogAliases.contains($0)
         }
+        // Mission-available tools stay first so the player sees actionable
+        // choices immediately; unavailable originals remain behind them as
+        // disabled slots (see DESIGN.md city-panel catalog ordering).
         let orderedTools = categoryTools.sorted {
             let leftAvailable = isAvailable($0)
             let rightAvailable = isAvailable($1)
@@ -1371,6 +1380,7 @@ private struct ClassicControlPanel: View {
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
         .disabled(!isCropAvailable(crop))
+        .opacity(isCropAvailable(crop) ? 1 : 0.42)
         .onHover { hovering in
             hoveredCrop = hovering ? crop : nil
         }
@@ -1435,7 +1445,7 @@ private struct ClassicControlPanel: View {
             Button {
                 onOpenMessages()
             } label: {
-                if let imageID = OriginalInterfaceSpriteCatalog.imageID(for: .help),
+                if let imageID = OriginalInterfaceUtilitySpriteCatalog.imageID(for: .help),
                    let sprite = library.interfaceSprites[imageID] {
                     Image(decorative: sprite.image, scale: 1)
                         .resizable()
@@ -1477,6 +1487,7 @@ private struct ClassicControlPanel: View {
         .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
         .disabled(!isAvailable(tool))
+        .opacity(isAvailable(tool) ? 1 : 0.42)
         .onHover { hovering in
             hoveredConstructionTool = hovering ? tool : nil
         }
@@ -1520,6 +1531,16 @@ private struct ClassicControlPanel: View {
                 .scaledToFit()
                 .frame(maxWidth: 48, maxHeight: 27)
                 .accessibilityHidden(true)
+        } else if let sprite = originalConstructionSprite(for: tool) {
+            // Prefer the curated single catalog tile (e.g. market food-shop
+            // #611) over the full world footprint composite, which for markets
+            // begins with paving tiles #632-635.
+            Image(decorative: sprite.image, scale: 1)
+                .resizable()
+                .interpolation(.none)
+                .scaledToFit()
+                .frame(maxWidth: 49, maxHeight: 46)
+                .accessibilityHidden(true)
         } else if !constructionCatalogComponents(for: tool).isEmpty,
                   constructionCatalogComponents(for: tool).contains(where: {
                       library.buildingSprites[$0.sprite] != nil
@@ -1529,13 +1550,6 @@ private struct ClassicControlPanel: View {
                 sprites: library.buildingSprites
             )
             .frame(width: 50, height: 48)
-        } else if let sprite = originalConstructionSprite(for: tool) {
-            Image(decorative: sprite.image, scale: 1)
-                .resizable()
-                .interpolation(.none)
-                .scaledToFit()
-                .frame(maxWidth: 49, maxHeight: 46)
-                .accessibilityHidden(true)
         } else {
             Image(systemName: tool.symbol)
                 .font(.system(size: 15, weight: .semibold))

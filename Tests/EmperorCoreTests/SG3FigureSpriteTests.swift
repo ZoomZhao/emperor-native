@@ -123,8 +123,9 @@ final class SG3FigureSpriteTests: XCTestCase {
         let animation = try XCTUnwrap(
             OriginalFigureSpriteCatalog.deliveryAnimation(forCommodityID: 4)
         )
-        XCTAssertEqual(animation.logicalGroupID, 130)
-        XCTAssertEqual(animation.imageIDs, Set(7_908..<7_924))
+        XCTAssertEqual(animation.logicalGroupID, 116)
+        XCTAssertEqual(animation.sourceBitmapName, "Cart")
+        XCTAssertEqual(animation.imageIDs, Set(7_684..<7_700))
         XCTAssertTrue(
             OriginalFigureSpriteCatalog.requiredImageIDsByArchive[
                 OriginalFigureSpriteCatalog.mainArchiveBaseName,
@@ -132,24 +133,73 @@ final class SG3FigureSpriteTests: XCTestCase {
             ].isSuperset(of: animation.imageIDs)
         )
 
-        let generic = try XCTUnwrap(
+        let clay = try XCTUnwrap(
             OriginalFigureSpriteCatalog.deliveryAnimation(forCommodityID: 18)
         )
-        XCTAssertEqual(generic.logicalGroupID, 127)
-        XCTAssertEqual(generic.imageIDs, Set(7_860..<7_876))
+        XCTAssertEqual(clay.logicalGroupID, 130)
+        XCTAssertEqual(clay.imageIDs, Set(7_908..<7_924))
+        XCTAssertNotEqual(animation.imageIDs, clay.imageIDs)
+
+        let unknown = try XCTUnwrap(
+            OriginalFigureSpriteCatalog.deliveryAnimation(forCommodityID: 0)
+        )
+        XCTAssertEqual(unknown.logicalGroupID, 122)
+        XCTAssertEqual(unknown.imageIDs, Set(7_780..<7_796))
         XCTAssertEqual(
             Set(OriginalFigureSpriteCatalog.deliveryAnimationsByCommodityID.keys),
-            Set([4, 22, 23, 24, 25]),
-            "Only visually verified commodity families should be hard-coded"
+            Set(1...28)
         )
-        let verifiedGroups = [22: 134, 23: 135, 24: 139, 25: 137]
-        for (commodityID, logicalGroupID) in verifiedGroups {
+        let verified: [Int: (group: Int, first: Int)] = [
+            4: (116, 7_684),
+            10: (122, 7_780),
+            18: (130, 7_908),
+            22: (134, 7_980),
+            23: (135, 7_996),
+            24: (136, 8_012),
+            25: (137, 8_028),
+            27: (139, 8_060),
+        ]
+        for (commodityID, expected) in verified {
             let cargo = try XCTUnwrap(
                 OriginalFigureSpriteCatalog.deliveryAnimation(forCommodityID: commodityID)
             )
-            XCTAssertEqual(cargo.logicalGroupID, logicalGroupID)
-            XCTAssertNotEqual(cargo.imageIDs, generic.imageIDs)
+            XCTAssertEqual(cargo.logicalGroupID, expected.group, "commodity \(commodityID)")
+            XCTAssertEqual(cargo.framesByDirection.first?.first, expected.first)
         }
+    }
+
+    func testMirroredFigureFramesDecodeByFlippingTheirSource() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let source = try GameDataSource.openDefault()
+        let archive = try SG3Archive(
+            contentsOf: source.dataDirectory.appendingPathComponent("SprMain.sg3")
+        )
+        let pixels = try Data(
+            contentsOf: source.dataDirectory.appendingPathComponent("SprMain.555"),
+            options: [.mappedIfSafe]
+        )
+        // Timber/iron cart SE (#7864) is a horizontal mirror of NE (#7862).
+        let mirrored = archive.images[7_864]
+        XCTAssertEqual(mirrored.mirrorOffset, -2)
+        XCTAssertEqual(mirrored.dataLength, 0)
+        let decoded = try SpriteDecoder.decode(
+            image: mirrored,
+            pixelData: pixels,
+            images: archive.images
+        )
+        let opaque = decoded.rgba.enumerated().filter { $0.offset % 4 == 3 && $0.element > 0 }.count
+        XCTAssertGreaterThan(opaque, 100)
+        XCTAssertEqual(decoded.width, mirrored.width)
+        XCTAssertEqual(decoded.height, mirrored.height)
+
+        let sourceFrame = try SpriteDecoder.decode(
+            image: archive.images[7_862],
+            pixelData: pixels,
+            images: archive.images
+        )
+        XCTAssertEqual(decoded.rgba, sourceFrame.flippedHorizontally().rgba)
     }
 
     func testLocalTutorialFigureSequencesMatchLogicalGroupsAndDecode() throws {
@@ -182,7 +232,11 @@ final class SG3FigureSpriteTests: XCTestCase {
             XCTAssertTrue(archive.bitmapNames.contains(animation.sourceBitmapName))
             for imageID in animation.imageIDs.sorted() {
                 XCTAssertTrue(archive.images.indices.contains(imageID), "\(animation.role) #\(imageID)")
-                let decoded = try SpriteDecoder.decode(image: archive.images[imageID], pixelData: pixels)
+                let decoded = try SpriteDecoder.decode(
+                    image: archive.images[imageID],
+                    pixelData: pixels,
+                    images: archive.images
+                )
                 XCTAssertGreaterThan(decoded.width, 0)
                 XCTAssertGreaterThan(decoded.height, 0)
                 XCTAssertNotNil(decoded.makeCGImage())

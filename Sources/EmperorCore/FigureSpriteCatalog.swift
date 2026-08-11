@@ -115,19 +115,24 @@ public enum OriginalFigureSpriteCatalog {
     public static let main2ArchiveBaseName = "SprMain2"
     public static let xiongnuArchiveBaseName = "China_Xiongnu"
     public static let meatCommodityID = 4
+    public static let clayCommodityID = 18
+    public static let woodCommodityID = 10
 
-    /// `Gen_Transport` stores one 16-frame, eight-direction family per cargo.
-    /// Logical group 127 (#7860) is the timber cart; hunting camps produce
-    /// meat and therefore use logical group 130 (#7908).
-    public static let meatDeliveryAnimation = FigureSpriteAnimation(
-        role: .delivery,
-        figureID: 22,
-        archiveBaseName: mainArchiveBaseName,
-        sourceBitmapName: "Gen_Transport",
-        logicalGroupID: 130,
-        firstImageID: 7_908,
-        framesPerDirection: 2
-    )
+    /// Deliveryman cargo families occupy contiguous SG3 logical groups starting
+    /// at `Cart` #113. Trade commodity IDs from `Trade.txt` map as
+    /// `logicalGroup = 112 + commodityID` (Meat #4 → #116 / first image #7684;
+    /// Clay #18 → #130 / #7908). Groups 113...126 live in `Cart`; 127... continue
+    /// in `Gen_Transport`.
+    public static let deliveryLogicalGroupBase = 112
+
+    /// First image ID of each delivery family, keyed by Trade.txt commodity ID.
+    /// Stone (#20) uses 3 frames/direction; Dinners (#28) uses 8; all others use 2.
+    public static let deliveryFirstImageIDByCommodityID: [Int: Int] = [
+        1: 7_636, 2: 7_652, 3: 7_668, 4: 7_684, 5: 7_700, 6: 7_716, 7: 7_732,
+        8: 7_748, 9: 7_764, 10: 7_780, 11: 7_796, 12: 7_812, 13: 7_828, 14: 7_844,
+        15: 7_860, 16: 7_876, 17: 7_892, 18: 7_908, 19: 7_924, 20: 7_940, 21: 7_964,
+        22: 7_980, 23: 7_996, 24: 8_012, 25: 8_028, 26: 8_044, 27: 8_060, 28: 8_076,
+    ]
 
     public static let xiongnuInfantryAnimation = FigureSpriteAnimation(
         role: .xiongnuInfantry,
@@ -139,32 +144,58 @@ public enum OriginalFigureSpriteCatalog {
         framesPerDirection: 12
     )
 
-    /// Commodity mappings are deliberately limited to visually verified
-    /// `Gen_Transport` families. The exported first frames show lacquer jars,
-    /// bronze vessels, ceramic pots, and silk bolts respectively. Unverified
-    /// cargo safely uses the timber cart.
-    public static let deliveryAnimationsByCommodityID: [Int: FigureSpriteAnimation] = [
-        meatCommodityID: meatDeliveryAnimation,
-        22: transportAnimation(logicalGroupID: 134, firstImageID: 7_980),
-        23: transportAnimation(logicalGroupID: 135, firstImageID: 7_996),
-        24: transportAnimation(logicalGroupID: 139, firstImageID: 8_060),
-        25: transportAnimation(logicalGroupID: 137, firstImageID: 8_028),
-    ]
+    public static func deliveryLogicalGroupID(forCommodityID commodityID: Int) -> Int? {
+        guard deliveryFirstImageIDByCommodityID[commodityID] != nil else { return nil }
+        return deliveryLogicalGroupBase + commodityID
+    }
+
+    public static func deliveryFramesPerDirection(forCommodityID commodityID: Int) -> Int {
+        switch commodityID {
+        case 20: return 3
+        case 28: return 8
+        default: return 2
+        }
+    }
+
+    public static func deliverySourceBitmapName(forLogicalGroupID logicalGroupID: Int) -> String {
+        logicalGroupID <= 126 ? "Cart" : "Gen_Transport"
+    }
 
     private static func transportAnimation(
         logicalGroupID: Int,
-        firstImageID: Int
+        firstImageID: Int,
+        framesPerDirection: Int
     ) -> FigureSpriteAnimation {
         FigureSpriteAnimation(
             role: .delivery,
             figureID: 22,
             archiveBaseName: mainArchiveBaseName,
-            sourceBitmapName: "Gen_Transport",
+            sourceBitmapName: deliverySourceBitmapName(forLogicalGroupID: logicalGroupID),
             logicalGroupID: logicalGroupID,
             firstImageID: firstImageID,
-            framesPerDirection: 2
+            framesPerDirection: framesPerDirection
         )
     }
+
+    public static func makeDeliveryAnimation(forCommodityID commodityID: Int) -> FigureSpriteAnimation? {
+        guard let firstImageID = deliveryFirstImageIDByCommodityID[commodityID],
+              let logicalGroupID = deliveryLogicalGroupID(forCommodityID: commodityID) else {
+            return nil
+        }
+        return transportAnimation(
+            logicalGroupID: logicalGroupID,
+            firstImageID: firstImageID,
+            framesPerDirection: deliveryFramesPerDirection(forCommodityID: commodityID)
+        )
+    }
+
+    public static let meatDeliveryAnimation = makeDeliveryAnimation(forCommodityID: meatCommodityID)!
+
+    public static let deliveryAnimationsByCommodityID: [Int: FigureSpriteAnimation] = {
+        Dictionary(uniqueKeysWithValues: deliveryFirstImageIDByCommodityID.keys.map { commodityID in
+            (commodityID, makeDeliveryAnimation(forCommodityID: commodityID)!)
+        })
+    }()
 
     public static let animations: [FigureSpriteAnimation] = [
         .init(
@@ -174,8 +205,8 @@ public enum OriginalFigureSpriteCatalog {
         ),
         .init(
             role: .delivery, figureID: 22, archiveBaseName: mainArchiveBaseName,
-            sourceBitmapName: "Gen_Transport", logicalGroupID: 127,
-            firstImageID: 7_860, framesPerDirection: 2
+            sourceBitmapName: "Cart", logicalGroupID: 122,
+            firstImageID: 7_780, framesPerDirection: 2
         ),
         .init(
             role: .peddler, figureID: 23, archiveBaseName: mainArchiveBaseName,

@@ -29,6 +29,15 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(Array(sprite.rgba.suffix(4)), [255, 0, 8, 255])
     }
 
+    func testDecodedSpriteFlipsHorizontally() {
+        let sprite = DecodedSprite(
+            width: 2,
+            height: 1,
+            rgba: Data([1, 2, 3, 255, 4, 5, 6, 255])
+        ).flippedHorizontally()
+        XCTAssertEqual(Array(sprite.rgba), [4, 5, 6, 255, 1, 2, 3, 255])
+    }
+
     func testVegetationCanBeClearedWithoutLosingUnderlyingTerrain() throws {
         var terrain = try DeterministicTerrainState(
             width: 2,

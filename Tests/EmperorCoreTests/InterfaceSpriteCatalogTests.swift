@@ -133,7 +133,7 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
         )
         XCTAssertEqual(
             OriginalInterfaceUtilitySpriteCatalog.requiredImageIDs,
-            Set([1_275, 1_279, 1_283, 1_287])
+            Set([1_275, 1_279, 1_283, 1_287, 1_291])
         )
     }
 
@@ -158,6 +158,14 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
         )
         let additionalVerifiedBases: [Int: Int] = [
             33: 1_506,
+            54: 1_528,
+            66: 1_531,
+            53: 1_534,
+            47: 1_537,
+            65: 1_540,
+            67: 1_543,
+            59: 1_546,
+            60: 1_546,
             203: 1_575,
             211: 1_584,
             212: 1_587,

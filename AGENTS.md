@@ -25,6 +25,8 @@ When evidence is incomplete or conflicts, record the source, state, timestamp or
 
 For simulation rules, video is supporting evidence only. Read the relevant files under `GameData/Model`, the shipping `EmperorManual.pdf`/`Emperor.chm`, event text, audio tables, figure models, and sprite archives before implementing a mechanic. Numeric thresholds, difficulty scaling, exemptions, random frequencies, damage, and resource IDs must come from those authored sources when available. When those sources expose constants but not control flow, reproduce the behavior in a legal local installation and, if still ambiguous, perform read-only static inspection of the hash-identified original executable recorded in `DESIGN.md`; never add that proprietary executable to the repository, bundle, or tests. Do not infer a numeric rule from elapsed video time or add a deterministic shortcut merely because it resembles one edited playthrough. If the exact algorithm remains unknown, preserve any parsed constants as research evidence, document the missing control flow, and keep the behavior unimplemented instead of presenting an approximation as fidelity work.
 
+Read-only exe findings that later agents must reuse (addresses, negative searches, evidence classes) live under `docs/exe-research/`. For construction-menu `China_Interface` Bbuttons and `buildingID → button base` work, read `docs/exe-research/construction-bbuttons.md` before changing `OriginalConstructionButtonSpriteCatalog` or re-scanning the exe for the same table encodings.
+
 ## Source-first development gate
 
 The project goal is reproduction, not invention. Research is a required part of implementation, not an optional preliminary step. Do not write or modify player-visible behavior until the corresponding original evidence has been located and recorded.
@@ -56,7 +58,7 @@ Every fidelity commit or pull-request description must identify the primary orig
 ## Centralized implementation
 
 - Put shared geometry, fallback colors, typography, and classic/native distinctions in `Sources/EmperorNative/EmperorTheme.swift`, synchronized with the YAML tokens in `DESIGN.md`.
-- Put semantic original-interface image mappings in `Sources/EmperorCore/InterfaceSpriteCatalog.swift`; put building and figure mappings in their existing catalogs. Do not scatter unexplained archive IDs through individual views.
+- Put semantic original-interface image mappings in `Sources/EmperorCore/InterfaceSpriteCatalog.swift`; put building and figure mappings in their existing catalogs. Do not scatter unexplained archive IDs through individual views. Construction Bbutton rows that are not yet exe-linked must keep their `inferred`/`unknown` evidence class as documented in `docs/exe-research/construction-bbuttons.md`; do not treat sheet-order or frame-look matches as `confirmed` original control flow.
 - Prefer an existing classic component and interaction pattern before adding a new player-facing pattern.
 - Constrain fixed-width children explicitly. SwiftUI intrinsic size, translated Chinese, tooltips, VoiceOver labels, and test identifiers must not widen or rearrange the `224px` panel.
 - Original game files remain read-only under `GameData`. `scripts/package-app.sh` copies that tree into bundle Resources so installed builds can launch without a developer path.
