@@ -119,6 +119,17 @@ Full jump-table invert (`0..0x7E6`):
 
 **Agent rule:** A `0x1192B88` record whose graphic key is `#1491` / `#1528` / etc. cannot be how the original paints those construction icons on the `0x4A5960`-gated path. Late entertainment/military-style Bbuttons *can* appear through this path via the key→image+3 map.
 
+### 8. Focused pass: generic record helpers and sprite-id collisions (2026-08-11)
+
+The follow-up xref pass was deliberately limited to the unresolved question: can the generic UI-record helpers be the missing construction-panel path?
+
+- `0x497A00` returns the active record pointer as `0x1192B88 + (0x1192B24 << 6)` (unless the temporary override at `0xC7F85C` is set). It has 35 direct callers. The accessor is shared by text/status and interaction code; it is not a construction-list iterator.
+- `0x50D29D` reads the active record's three payload `int16` values (`+0`, `+2`, `+4`) and sends them to `0x498610`, which performs a bounds-checked list lookup followed by `0x526350` bracketed-string expansion. It then draws fixed interface sprites (`#1E15`, `#1E19`). This is a diagnostic/status-text path, not a Bbutton image resolver.
+- `0x498720` is likewise not a resolver. Its confirmed sequence is `0x4A5960(key)` → `0x526790(result)` → `0x526350(...)`. `0x526790` only checks `0 <= index < [ecx+0xC]` and returns `[[ecx+4] + index*4]`; `0x526350` parses string substitutions. Neither helper produces a `China_Interface` frame id or a `buildingID → buttonBase` mapping.
+- Numeric collisions remain reproducible in the world renderer. For example, `0x4226F0` (`0x422721`) and `0x4237E0` (`0x423811`) push `0x603` (`1539`, inside the Bbutton band) to `0x408170`, immediately read/write per-tile state at `0xF6A9E0` / `0xF6AD70`, mask `0x40`, add terrain-state offsets, and store results in `0xFE9880` / `0xFE9C10`. These are map/world sprite paths, not construction UI draws.
+
+**Conclusion:** this pass rules out three more tempting shortcuts (`0x497A00` active-record access, `0x498720`/`0x526790` list helpers, and the `0x603` world calls). The actual right-panel construction grid draw/writer is still unresolved; no catalog evidence class is upgraded.
+
 ## Exhausted negative searches (do not re-litigate without a new method)
 
 Unless you have a new encoding hypothesis, treat these as **done**:
@@ -166,3 +177,4 @@ Builder RTTI (`cBuildingBuilder`, `cEliteHouseBuilder`, `cFortBuilder`, …) vta
 | --- | --- |
 | 2026-08-11 | Initial write-up from read-only Capstone/PE scan: `0x408170`, `0x4A5960`, model blob `0x86D580`, `0x4B0010`, negative table searches, catalog evidence classes. |
 | 2026-08-11 | Traced `0x546EA0` / `0x547580` as sole `0x1192B88` writers; excluded `0x530xxx` serializers and `0x42E973` object-list rebuild; inverted `0x4A5960` (no early Bbutton images); refuted early-catalog fill via UI records. |
+| 2026-08-11 | Focused xref pass ruled out the generic active-record/text helpers (`0x497A00`, `0x498720`, `0x526790`, `0x526350`) and documented concrete `0x603` world-sprite collisions at `0x422721` / `0x423811`; construction-panel draw path remains open. |
