@@ -130,6 +130,74 @@ The follow-up xref pass was deliberately limited to the unresolved question: can
 
 **Conclusion:** this pass rules out three more tempting shortcuts (`0x497A00` active-record access, `0x498720`/`0x526790` list helpers, and the `0x603` world calls). The actual right-panel construction grid draw/writer is still unresolved; no catalog evidence class is upgraded.
 
+### 9. Focused pass: catalog cross-ref, computed ids, panel markers, builder RTTI (2026-08-11)
+
+Scratch outputs (local only): `.agent_scratch/exe_research_cursor/`. Binary SHA-256 re-checked before scans.
+
+#### 9a. Direct `0x408170` chain vs early catalog bases — `confirmed` negative
+
+- `.text` has **3025** `call 0x408170` sites.
+- Classifying pre-call immediates in `#1488–#1655` yields many mid-band hits (`#1539`, `#1547`, `#1554`, `#1566`, …), but **zero** `push`/`mov reg, imm` of the early catalog bases `#1491`, `#1494`, `#1528`, `#1531`, `#1534`.
+- The sole `.text` imm32 encoding of `#1491` / `0x5D3` is at file bytes decoded near `0x76CCCE` inside CRT-style character classification (`cmp bl, 0x2A` / `'I'` / `'h'` …) — **not** a UI image load. **Classification:** `confirmed` false positive.
+- `#1566` (`0x61E`) has multiple `push` → `mov ecx, 0x1C42130` → `call 0x408170` sites (e.g. `0x421F09`, `0x421F9A`, `0x422034`) that immediately touch tile state (`0xF6A9DC` / `0xF6A9E0`). **Classification:** `confirmed` world-sprite collision, not construction-panel draw.
+- Sibling helper `0x408100` (same object, different id unpack; **155** callers) has **no** Bbutton-band immediates in the pre-call window.
+
+#### 9b. `0x4A5960` body returns — early vs late — `confirmed`
+
+Disassembling `mov eax, imm; ret` stubs inside `0x4A5960`…`0x4A6F28`:
+
+The shared failure stub at `0x4A6F28` is `or eax, -1; ret`. Every early construction base tested (`#1491–#1575`, including the current catalog candidates) dispatches to that stub, so it returns **`-1`**, not image `0`.
+
+| Input/key band | Valid Bbutton images returned |
+| --- | --- |
+| Early construction bases `#1491–#1575` | **0**; the key returns `-1` |
+| Late keys whose cases return China_Interface Bbuttons | **36**, covering image outputs `#1580–#1654` (the contiguous three-state families) |
+
+Category-rail images **do** appear as switch returns (e.g. `0x4A6B88`: `mov eax, 0x527` → `#1319` monument; nearby `#1311–#1335`-class values). So category tabs can live on the UI-record path while early build-grid icons cannot.
+
+#### 9c. Register/`×3` / category-start hypotheses — not found
+
+| Hypothesis | Result |
+| --- | --- |
+| `1488+3*i` / `lea r,[r+r*2]` then `add` Bbutton imm | No genuine hit; prior “computed candidates” were CRT / unrelated LEAs |
+| File-backed `buildingID → base` as u8 sheet-index, u16 base, `base-1488` delta, xor/neg | No table scored ≥8–10 against `OriginalConstructionButtonSpriteCatalog` |
+| Commerce bid run `54,66,53,47,65,67,59` as u8/u16 | Absent from `.rdata`/`.data` |
+| Category-start u16/u32 sequence `[1491,1497,1515,1528,1551,…]` | Absent |
+| Model blob `0x86D580` ±8K adjacency with catalog bases at strides 2..64 | No score ≥8 |
+| Naked `push` of category bases `#1323…#1359` | **0** sites (same “not a flat immediate” pattern as early Bbuttons) |
+
+Catalog-side observation only (**not** exe-confirmed): within each construction category, the *inferred* bases are spaced by multiples of 3 from that category’s minimum — consistent with sheet families, but no matching per-category start table was recovered from the PE.
+
+#### 9d. Panel geometry markers near `0x408170` — false lead
+
+Sites with `push 0x36` (54) near `call 0x408170` (cluster around `0x40B65F`→`0x5288E0` blit, then `push 0x1E15; call 0x408170`) draw **fixed chrome** ids `#0x1E14`/`#0x1E15`/…, not `#1491+`. Width 54 is reused; it does **not** identify the construction Bbutton grid. No `push 0x36` + `push 0x35` (54×53) pair feeds the blit helpers `0x5288E0` / `0x528890`.
+
+#### 9e. String / RTTI cross-ref
+
+| Symbol | VA | Role |
+| --- | --- | --- |
+| `RightPanel` | `0x88156C` | **WON lobby** (`LoginScreen.cpp` / `WONAPI`) — not city right rail. One `.text` imm xref `0x6B3233`. |
+| `China_Interface` | `0x82B19C` | Load-name list only (`0x475C47` → `0x5CCDF0`); still no `Bbuttons` / `New_Bbuttons` string in the exe (name exists in SG3: `China_Interface_New_Bbuttons.BMP`). |
+| `cBuildingBuilder` family | TDs e.g. `0x817780` | Recovered vtables (e.g. `0x7AB79C`) are placement/builder methods; scanned slots show **no** early Bbutton immediates (one unrelated `#1224` in `cAdminCityBuilder`). WON `*Button*` RTTI is lobby UI. |
+
+Documented grid at `0x854030` is still a **data** placement/orientation blob (small integers), not a code vtable of image getters.
+
+#### 9f. Runtime
+
+Embedded Wine exists at `…/SharedSupport/wine/bin/wine`, but no in-process dump was taken this pass (avoid Wine prefix persistence). Static negatives above do not depend on runtime.
+
+**Conclusion:** new methods (1)–(3) from the agent brief were executed; none recovered `buildingID → China_Interface_New_Bbuttons base`. Early catalog rows remain `inferred`; full map remains `unknown`. Next work should prioritize **runtime observation** of the live construction grid object after opening a category, or finding a non-`0x1192B88` button-list allocator that stores image ids without embedding `#1491+` as PE immediates.
+
+### 10. Runtime probe — executable starts, live mapping capture blocked (2026-08-11)
+
+Cursor's follow-up used the embedded Wine runtime with a temporary prefix outside the repository (`/tmp/emperor-exe-research-13804`) and a cloned game tree whose `Emperor[EN].exe` hash matched the reference hash. This is an environment check only; the prefix and clone are not runtime dependencies.
+
+- `Emperor[EN].exe` reached the original main menu in a `1024 × 768` game window (macOS window bounds were `1024 × 796` including the title bar). `Emperor.ini` was changed only in the temporary clone to set `PlayIntroMovie=no` for the probe.
+- Automated key input did not advance from the main menu into a city, so no construction category or live button-list state was observed.
+- A read-only `lldb -p <Wine preloader PID>` attempt stopped at `process attach` and produced no memory reads for `0x1192B30`, `0x1192B88`, or `0x82B19C`. No process memory was patched. `winedbg` is not present in the bundled prefix.
+
+**Classification:** `confirmed` as a runtime-environment result; **no mapping evidence**. The full `buildingID → base` map remains `unknown`, and no catalog row changes evidence class.
+
 ## Exhausted negative searches (do not re-litigate without a new method)
 
 Unless you have a new encoding hypothesis, treat these as **done**:
@@ -144,6 +212,11 @@ Unless you have a new encoding hypothesis, treat these as **done**:
 5. **`1488 + 3 * i` init loop** — not found as `imul …, 3` near `1488` / `0x5D0`.
 6. **`0x530xxx` and `0x1192B88` fill** — **no** `call 0x546EA0` in `0x530xxx`. Save/load touches nearby header `0x1192B30` (~10 sites), not category menu construction of graphic keys.
 7. **Construction-category open → many `0xE0` records with early Bbutton keys** — surveyed all dense `0x546EA0` clusters and type-`0xE0` callers; template keys in those fills are advisor/overlay-style ids (e.g. `0x7A0+`, `1038+`, late `#1577+` / monument `#1631+`), **not** housing/commerce `#1491–#1554`. Combined with §7, treat “build catalog icons live in `0x1192B88`” as a **refuted** hypothesis for early bases.
+8. **Register-computed `1488+3*i` / `lea *3` + Bbutton add** — §9c; no genuine construction-panel hit.
+9. **Catalog-pair / sheet-index / delta / xor tables** in `.rdata`/initialized `.data` and model-adjacent windows — §9c; no match to `OriginalConstructionButtonSpriteCatalog`.
+10. **`RightPanel` / WON `*Button*` RTTI** — lobby only (§9e); not city construction.
+11. **`push 0x36` (54) near `0x408170`** — chrome blit path `#0x1E14+`, not Bbuttons (§9d).
+12. **Naked category-rail immediates `#1323+`** — also absent; category icons resolve via `0x4A5960` returns instead (§9b).
 
 ## Native catalog evidence status
 
@@ -166,10 +239,10 @@ Builder RTTI (`cBuildingBuilder`, `cEliteHouseBuilder`, `cFortBuilder`, …) vta
 
 ## Next read-only steps (if continuing)
 
-1. **Change target:** find the **right-panel construction grid** draw path that blits `China_Interface` `#1491+` **without** requiring `0x4A5960(key) ≥ 0` (direct `0x408170`, panel widget, or button-list object).
-2. From category-tab / build-tool handlers, recover `buildingID → image base` (or sheet frame index) on that path.
-3. Optional: legal local Wine session — dump whatever structure the panel uses after opening 商业; keep dumps local-only.
-4. Re-scan only with a **new** hypothesis (compressed init blobs, register-computed ids, or per-building vtable getters returning `#1491+`).
+1. **Prefer runtime (now higher priority than another PE immediate scan):** with the hash-matched binary under the app’s embedded Wine and a **temporary** `WINEPREFIX`, open 商业 (or 住宅), dump the live construction-slot object that feeds blits — image ids are almost certainly **loaded/computed into RAM** rather than PE immediates (§9a). Do not persist prefix changes into the install tree.
+2. From that object, back-xref its allocator/filler in `.text` (likely writes `int16`/`int32` image fields from a compressed recipe or mission filter, not `#1491` literals).
+3. Category-tab handlers still matter for *which buildingIDs appear*, but category **icons** themselves are already explained via `0x4A5960` (§9b); do not spend cycles re-finding `#1323` pushes.
+4. Re-scan PE only with a **new** encoding (e.g. bit-packed bitstream, table behind an unmapped RVA/BSS init from disk) — flat catalog-score scans are exhausted (§9c).
 
 ## Change log
 
@@ -178,3 +251,5 @@ Builder RTTI (`cBuildingBuilder`, `cEliteHouseBuilder`, `cFortBuilder`, …) vta
 | 2026-08-11 | Initial write-up from read-only Capstone/PE scan: `0x408170`, `0x4A5960`, model blob `0x86D580`, `0x4B0010`, negative table searches, catalog evidence classes. |
 | 2026-08-11 | Traced `0x546EA0` / `0x547580` as sole `0x1192B88` writers; excluded `0x530xxx` serializers and `0x42E973` object-list rebuild; inverted `0x4A5960` (no early Bbutton images); refuted early-catalog fill via UI records. |
 | 2026-08-11 | Focused xref pass ruled out the generic active-record/text helpers (`0x497A00`, `0x498720`, `0x526790`, `0x526350`) and documented concrete `0x603` world-sprite collisions at `0x422721` / `0x423811`; construction-panel draw path remains open. |
+| 2026-08-11 | §9 catalog/computed-id/panel/RTTI pass: early bases absent as `0x408170` immediates; `#1491` sole imm32 is CRT false positive; `0x4A5960` routes early bases to `-1` / exposes 36 late Bbutton image outputs; table and `×3` scans negative; `RightPanel` is WON lobby; `push 54` near helper is chrome `#0x1E14+`. Full `buildingID → base` still `unknown`. |
+| 2026-08-11 | Runtime probe reached the original main menu in a temporary Wine prefix, but input automation and read-only `lldb` attach did not reach or dump the construction grid; no mapping evidence recovered. |
