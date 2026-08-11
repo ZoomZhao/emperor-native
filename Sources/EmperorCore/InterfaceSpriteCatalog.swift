@@ -225,6 +225,18 @@ public enum OriginalConstructionButtonState: Int, CaseIterable, Sendable, Hashab
     case selected
 }
 
+/// Evidence level for a building-to-button association.
+///
+/// The executable research recovered the three-state sheet geometry, but not
+/// the construction-panel writer that associates an authored building model
+/// with an early Bbutton frame. Keeping this distinction in the catalog makes
+/// it impossible for callers and tests to describe the current sheet-order
+/// mapping as exe-confirmed by accident.
+public enum OriginalConstructionButtonEvidence: String, Sendable, Hashable {
+    case inferredFromSheet
+    case unknown
+}
+
 public enum OriginalConstructionButtonSpriteCatalog {
     public static let archiveBaseName = OriginalInterfaceSpriteCatalog.archiveBaseName
 
@@ -296,6 +308,24 @@ public enum OriginalConstructionButtonSpriteCatalog {
         state: OriginalConstructionButtonState = .normal
     ) -> Int? {
         baseImageIDByBuildingID[buildingID].map { $0 + state.rawValue }
+    }
+
+    /// Returns the evidence class for the association used by `imageID`.
+    /// A missing association is deliberately `unknown`; callers must not
+    /// synthesize a Bbutton from a model/building id or from `4A5960`.
+    public static func evidence(
+        forBuildingID buildingID: Int
+    ) -> OriginalConstructionButtonEvidence {
+        baseImageIDByBuildingID[buildingID] == nil
+            ? .unknown
+            : .inferredFromSheet
+    }
+
+    /// Building IDs currently covered by the sheet-order fallback. This is
+    /// useful for diagnostics and tests without exposing the implementation
+    /// dictionary to player-facing code.
+    public static var mappedBuildingIDs: Set<Int> {
+        Set(baseImageIDByBuildingID.keys)
     }
 
     /// Crop buttons are semantic because several crop models intentionally

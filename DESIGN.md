@@ -278,6 +278,7 @@ macOS 系统菜单栏可以提供等价命令，但不能用系统 toolbar 替�
 - 分类内的相对次序在「可用」与「不可用」两组内部保持 `NativeConstructionTool` / 作物枚举的稳定顺序。
 - 下方常驻工具行为道路、浏览、清地、拆除，外加帮助入口；消息入口留在底部导航，不占用该工具行。
 - 建造按钮图来自 `China_Interface` 的 `New_Bbuttons` 三态族（`#1488–#1655`，每族 normal/hover/selected）。`GameData` 与哈希核对后的 `Emperor[EN].exe` 均**没有**已恢复的 `buildingID → 按钮基帧` 扁平底表；模型表只有造价/风水等字段。当前 `OriginalConstructionButtonSpriteCatalog` 中商业等缺口行仍属 **inferred**（条带顺序 + 导出帧核对），不得写成 exe 确认。只读逆向的地址、否定搜索与后续挖掘步骤见 `docs/exe-research/construction-bbuttons.md`。
+- `OriginalConstructionButtonSpriteCatalog.evidence(forBuildingID:)` 必须把当前条带顺序映射报告为 `inferredFromSheet`，未覆盖的建筑报告为 `unknown`；调用方不得把这些值命名为“已验证”或从 `0x4A5960` 反推早期建造图标。只有恢复实际建造面板的绘制/写入路径并与 exe 交叉核对后，才能替换这层推断。
 
 ### 迷你地图与底部导航
 

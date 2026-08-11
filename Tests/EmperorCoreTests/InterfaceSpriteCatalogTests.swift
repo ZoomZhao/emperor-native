@@ -137,7 +137,7 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
         )
     }
 
-    func testConstructionButtonsUseVerifiedThreeStateFamilies() throws {
+    func testConstructionButtonsUseInferredThreeStateFamilies() throws {
         XCTAssertEqual(
             try OriginalConstructionButtonState.allCases.map {
                 try XCTUnwrap(
@@ -156,7 +156,7 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
             ),
             1_553
         )
-        let additionalVerifiedBases: [Int: Int] = [
+        let additionalInferredBases: [Int: Int] = [
             33: 1_506,
             54: 1_528,
             66: 1_531,
@@ -178,7 +178,7 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
             236: 1_650,
             93: 1_653,
         ]
-        for (buildingID, base) in additionalVerifiedBases {
+        for (buildingID, base) in additionalInferredBases {
             XCTAssertEqual(
                 OriginalConstructionButtonSpriteCatalog.imageID(
                     forBuildingID: buildingID,
@@ -197,6 +197,24 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
         )
         XCTAssertNil(
             OriginalConstructionButtonSpriteCatalog.imageID(forBuildingID: 999)
+        )
+        XCTAssertEqual(
+            OriginalConstructionButtonSpriteCatalog.evidence(forBuildingID: 54),
+            .inferredFromSheet
+        )
+        XCTAssertEqual(
+            OriginalConstructionButtonSpriteCatalog.evidence(forBuildingID: 999),
+            .unknown
+        )
+        XCTAssertEqual(
+            OriginalConstructionButtonSpriteCatalog.mappedBuildingIDs.count,
+            53
+        )
+        XCTAssertTrue(
+            OriginalConstructionButtonSpriteCatalog.mappedBuildingIDs.allSatisfy {
+                OriginalConstructionButtonSpriteCatalog.evidence(forBuildingID: $0)
+                    == .inferredFromSheet
+            }
         )
         XCTAssertFalse(OriginalConstructionButtonSpriteCatalog.requiredImageIDs.isEmpty)
     }
