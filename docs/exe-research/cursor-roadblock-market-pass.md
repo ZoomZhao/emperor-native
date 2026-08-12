@@ -34,6 +34,35 @@ GameData. No Swift/GameData changes were made.
   `unknown`. Do not promote the native behavior beyond the documented
   placement invariant without a city runtime capture.
 
+### Additional static passability evidence (EN `.text`)
+
+An unnamed map-cell validation loop at `.text:0x46D593–0x46D767` repeatedly
+calls `0x416BB0` and `0x416BD0` while iterating candidate map cells. Its
+selected-building global is read from `[0x88EBDC]` (the same selector used by
+the surrounding construction code). The loop contains an explicit
+`cmp eax,126` at `0x46D659` and a second check at `0x46D72A`:
+
+```asm
+46D659  cmp eax, 126
+46D65E  and esi, 8
+...
+46D6E3  call 0x416BD0
+46D6F0  cmp dword ptr [0x88EBDC], 126
+46D6F9  ; generic rejection flag is set only when selector != 126
+...
+46D72A  cmp dword ptr [0x88EBDC], 126
+46D73D  ; roadblock-only map flag/occupancy test (bit 0x40 + byte test)
+```
+
+This is `confirmed` evidence that roadblock placement is handled by a
+dedicated branch in the original map-cell test, with a different flag mask
+and a post-loop occupancy/terrain check. It is not sufficient to claim that
+the roadblock blocks every walker: the called routines and the meaning of the
+map bit/byte are not recovered, and no walker/pathfinder call edge was found
+in this bounded scan. The implementation-safe minimum is therefore to keep
+the existing road-only, one-tile placement invariant and avoid adding a
+route-cost or walker-class rule until those callees are resolved.
+
 ## Market shell and shop bays
 
 ### Confirmed authored data
@@ -113,5 +142,6 @@ shop bays and grand market ID 60 has six; the shop order is
 - `inferred`: any visual association between Bbutton families and market
   shells/vendors; the reason the EXE uses `BUILD_ROAD` rather than a literal
   `BUILD_ROADBLOCK` label.
-- `unknown`: original roadblock route-blocking algorithm; complete market
+- `unknown`: original roadblock route-blocking algorithm (the map-cell branch
+  is confirmed, but its bit semantics/callees are unresolved); complete market
   shell state machine; EXE `buildingID → Bbutton` mapping for #1533–#1544.
