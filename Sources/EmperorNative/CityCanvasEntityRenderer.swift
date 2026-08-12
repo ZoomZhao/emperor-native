@@ -417,7 +417,78 @@ extension CityCanvas {
                 interpolatesMovement: false
             )
         }
+
+        // The original map model reserves BUILD_MAP_PREY_POINT for ambient
+        // animals. The native city state does not yet persist those editor
+        // points, so use deterministic clear-land loops until that map layer
+        // is decoded. This keeps the visible behavior data-driven (terrain,
+        // roads and occupied footprints) instead of placing birds over roads
+        // or buildings at arbitrary screen coordinates.
+        for (index, route) in ambientPheasantRoutes().enumerated() {
+            guard !route.isEmpty else { continue }
+            let routeLength = UInt64(route.count)
+            let animationStep = UInt64(tickSequence / 3)
+            let routeOffset = UInt64(index * 5)
+            let phase = (animationStep + routeOffset) % routeLength
+            let currentIndex = Int(phase)
+            let previousIndex = (currentIndex + route.count - 1) % route.count
+            append(
+                figureID: OriginalFigureSpriteCatalog.pheasantAnimation.figureID,
+                stableID: 800_000 + index,
+                point: route[currentIndex],
+                previous: route[previousIndex],
+                animation: OriginalFigureSpriteCatalog.pheasantAnimation
+            )
+        }
         return items
+    }
+
+    private func ambientPheasantRoutes() -> [[GridPoint]] {
+        guard let terrain = city.terrain else { return [] }
+        var blocked = Set(city.roadNetwork.points)
+        blocked.formUnion(city.houses.compactMap(\.location))
+        blocked.formUnion(city.placedBuildings.flatMap(\.occupiedPoints))
+
+        let offsets = [
+            GridPoint(x: 0, y: 0), GridPoint(x: 1, y: 0),
+            GridPoint(x: 1, y: 1), GridPoint(x: 0, y: 1),
+            GridPoint(x: -1, y: 1), GridPoint(x: -1, y: 0),
+            GridPoint(x: -1, y: -1), GridPoint(x: 0, y: -1)
+        ]
+        func isAvailable(_ point: GridPoint) -> Bool {
+            terrain.isClearLand(point) && !blocked.contains(point)
+        }
+        func score(_ point: GridPoint) -> Int {
+            let value = point.x &* 73_856_093
+                &+ point.y &* 19_349_663
+                &+ terrain.width &* 834_927
+            return value & 0x7FFF_FFFF
+        }
+
+        let maximumBirds = terrain.width * terrain.height >= 300 ? 3 : 1
+        let centerX = terrain.width / 2
+        let centerY = terrain.height / 2
+        var candidates: [(distance: Int, score: Int, route: [GridPoint])] = []
+        for y in stride(from: 2, to: terrain.height - 2, by: 2) {
+            for x in stride(from: 2, to: terrain.width - 2, by: 2) {
+                let start = GridPoint(x: x, y: y)
+                let route = offsets.map {
+                    GridPoint(x: start.x + $0.x, y: start.y + $0.y)
+                }
+                guard route.allSatisfy(isAvailable), score(start) % 17 == 0 else {
+                    continue
+                }
+                let distance = abs(start.x - centerX) + abs(start.y - centerY)
+                candidates.append((distance: distance, score: score(start), route: route))
+            }
+        }
+        return candidates
+            .sorted {
+                if $0.distance != $1.distance { return $0.distance < $1.distance }
+                return $0.score < $1.score
+            }
+            .prefix(maximumBirds)
+            .map(\.route)
     }
 
     /// Straight wall pieces automatically follow their live neighbours. This

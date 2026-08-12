@@ -160,10 +160,6 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
             33: 1_506,
             54: 1_528,
             66: 1_531,
-            53: 1_534,
-            47: 1_537,
-            65: 1_540,
-            67: 1_543,
             59: 1_546,
             60: 1_546,
             203: 1_575,
@@ -187,6 +183,12 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
                 base
             )
         }
+        for buildingID in [53, 47, 65, 67] {
+            XCTAssertNil(
+                OriginalConstructionButtonSpriteCatalog.imageID(forBuildingID: buildingID),
+                "runtime-observed 商业 families must not be guessed as building \(buildingID)"
+            )
+        }
         XCTAssertEqual(
             OriginalConstructionButtonSpriteCatalog.cropImageID(
                 isRice: true,
@@ -194,6 +196,20 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
                 state: .hover
             ),
             1_501
+        )
+        XCTAssertEqual(
+            OriginalConstructionButtonSpriteCatalog.cropImageID(
+                for: .hemp,
+                state: .selected
+            ),
+            1_505
+        )
+        XCTAssertEqual(
+            OriginalConstructionButtonSpriteCatalog.cropImageID(
+                for: .tea,
+                state: .normal
+            ),
+            1_509
         )
         XCTAssertNil(
             OriginalConstructionButtonSpriteCatalog.imageID(forBuildingID: 999)
@@ -208,7 +224,7 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
         )
         XCTAssertEqual(
             OriginalConstructionButtonSpriteCatalog.mappedBuildingIDs.count,
-            53
+            49
         )
         XCTAssertTrue(
             OriginalConstructionButtonSpriteCatalog.mappedBuildingIDs.allSatisfy {

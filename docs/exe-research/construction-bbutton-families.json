@@ -1,0 +1,1430 @@
+[
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1488,
+    "stateImageIds": [
+      1488
+    ],
+    "width": 58,
+    "height": 42,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001488_58x42.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1489,
+    "stateImageIds": [
+      1489
+    ],
+    "width": 58,
+    "height": 42,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001489_58x42.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1490,
+    "stateImageIds": [
+      1490
+    ],
+    "width": 58,
+    "height": 42,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001490_58x42.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": 0,
+    "baseImageId": 1491,
+    "stateImageIds": [
+      1491,
+      1492,
+      1493
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001491_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001492_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001493_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 1,
+    "baseImageId": 1494,
+    "stateImageIds": [
+      1494,
+      1495,
+      1496
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001494_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001495_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001496_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 2,
+    "baseImageId": 1497,
+    "stateImageIds": [
+      1497,
+      1498,
+      1499
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001497_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001498_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001499_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 3,
+    "baseImageId": 1500,
+    "stateImageIds": [
+      1500,
+      1501,
+      1502
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001500_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001501_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001502_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 4,
+    "baseImageId": 1503,
+    "stateImageIds": [
+      1503,
+      1504,
+      1505
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001503_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001504_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001505_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 5,
+    "baseImageId": 1506,
+    "stateImageIds": [
+      1506,
+      1507,
+      1508
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001506_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001507_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001508_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 6,
+    "baseImageId": 1509,
+    "stateImageIds": [
+      1509,
+      1510,
+      1511
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001509_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001510_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001511_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 7,
+    "baseImageId": 1512,
+    "stateImageIds": [
+      1512,
+      1513,
+      1514
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001512_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001513_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001514_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 8,
+    "baseImageId": 1515,
+    "stateImageIds": [
+      1515,
+      1516,
+      1517
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001515_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001516_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001517_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 9,
+    "baseImageId": 1518,
+    "stateImageIds": [
+      1518,
+      1519,
+      1520
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001518_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001519_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001520_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 10,
+    "baseImageId": 1521,
+    "stateImageIds": [
+      1521,
+      1522,
+      1523
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001521_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001522_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001523_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 11,
+    "baseImageId": 1524,
+    "stateImageIds": [
+      1524,
+      1525,
+      1526
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001524_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001525_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001526_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 12,
+    "baseImageId": 1527,
+    "stateImageIds": [
+      1527,
+      1528,
+      1529
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001527_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001528_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001529_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 13,
+    "baseImageId": 1530,
+    "stateImageIds": [
+      1530,
+      1531,
+      1532
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001530_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001531_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001532_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1533,
+    "stateImageIds": [
+      1533
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001533_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1534,
+    "stateImageIds": [
+      1534
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001534_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1535,
+    "stateImageIds": [
+      1535
+    ],
+    "width": 54,
+    "height": 52,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001535_54x52.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": 14,
+    "baseImageId": 1536,
+    "stateImageIds": [
+      1536,
+      1537,
+      1538
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001536_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001537_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001538_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 15,
+    "baseImageId": 1539,
+    "stateImageIds": [
+      1539,
+      1540,
+      1541
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001539_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001540_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001541_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 16,
+    "baseImageId": 1542,
+    "stateImageIds": [
+      1542,
+      1543,
+      1544
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001542_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001543_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001544_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 17,
+    "baseImageId": 1545,
+    "stateImageIds": [
+      1545,
+      1546,
+      1547
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001545_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001546_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001547_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 18,
+    "baseImageId": 1548,
+    "stateImageIds": [
+      1548,
+      1549,
+      1550
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001548_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001549_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001550_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 19,
+    "baseImageId": 1551,
+    "stateImageIds": [
+      1551,
+      1552,
+      1553
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001551_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001552_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001553_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 20,
+    "baseImageId": 1554,
+    "stateImageIds": [
+      1554,
+      1555,
+      1556
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001554_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001555_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001556_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 21,
+    "baseImageId": 1557,
+    "stateImageIds": [
+      1557,
+      1558,
+      1559
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001557_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001558_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001559_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 22,
+    "baseImageId": 1560,
+    "stateImageIds": [
+      1560,
+      1561,
+      1562
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001560_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001561_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001562_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 23,
+    "baseImageId": 1563,
+    "stateImageIds": [
+      1563,
+      1564,
+      1565
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001563_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001564_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001565_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 24,
+    "baseImageId": 1566,
+    "stateImageIds": [
+      1566,
+      1567,
+      1568
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001566_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001567_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001568_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 25,
+    "baseImageId": 1569,
+    "stateImageIds": [
+      1569,
+      1570,
+      1571
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001569_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001570_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001571_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 26,
+    "baseImageId": 1572,
+    "stateImageIds": [
+      1572,
+      1573,
+      1574
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001572_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001573_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001574_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 27,
+    "baseImageId": 1575,
+    "stateImageIds": [
+      1575,
+      1576,
+      1577
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001575_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001576_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001577_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 28,
+    "baseImageId": 1578,
+    "stateImageIds": [
+      1578,
+      1579,
+      1580
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001578_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001579_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001580_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 29,
+    "baseImageId": 1581,
+    "stateImageIds": [
+      1581,
+      1582,
+      1583
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001581_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001582_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001583_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 30,
+    "baseImageId": 1584,
+    "stateImageIds": [
+      1584,
+      1585,
+      1586
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001584_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001585_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001586_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1587,
+    "stateImageIds": [
+      1587
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001587_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1588,
+    "stateImageIds": [
+      1588
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001588_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1589,
+    "stateImageIds": [
+      1589
+    ],
+    "width": 54,
+    "height": 52,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001589_54x52.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1590,
+    "stateImageIds": [
+      1590
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001590_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1591,
+    "stateImageIds": [
+      1591
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001591_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1592,
+    "stateImageIds": [
+      1592
+    ],
+    "width": 54,
+    "height": 52,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001592_54x52.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1593,
+    "stateImageIds": [
+      1593
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001593_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1594,
+    "stateImageIds": [
+      1594
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001594_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1595,
+    "stateImageIds": [
+      1595
+    ],
+    "width": 54,
+    "height": 52,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001595_54x52.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": 31,
+    "baseImageId": 1596,
+    "stateImageIds": [
+      1596,
+      1597,
+      1598
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001596_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001597_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001598_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 32,
+    "baseImageId": 1599,
+    "stateImageIds": [
+      1599,
+      1600,
+      1601
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001599_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001600_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001601_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 33,
+    "baseImageId": 1602,
+    "stateImageIds": [
+      1602,
+      1603,
+      1604
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001602_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001603_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001604_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 34,
+    "baseImageId": 1605,
+    "stateImageIds": [
+      1605,
+      1606,
+      1607
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001605_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001606_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001607_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 35,
+    "baseImageId": 1608,
+    "stateImageIds": [
+      1608,
+      1609,
+      1610
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001608_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001609_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001610_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 36,
+    "baseImageId": 1611,
+    "stateImageIds": [
+      1611,
+      1612,
+      1613
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001611_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001612_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001613_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 37,
+    "baseImageId": 1614,
+    "stateImageIds": [
+      1614,
+      1615,
+      1616
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001614_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001615_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001616_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1617,
+    "stateImageIds": [
+      1617
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001617_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1618,
+    "stateImageIds": [
+      1618
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001618_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1619,
+    "stateImageIds": [
+      1619
+    ],
+    "width": 54,
+    "height": 52,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001619_54x52.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1620,
+    "stateImageIds": [
+      1620
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001620_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1621,
+    "stateImageIds": [
+      1621
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001621_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1622,
+    "stateImageIds": [
+      1622
+    ],
+    "width": 54,
+    "height": 52,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001622_54x52.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": 38,
+    "baseImageId": 1623,
+    "stateImageIds": [
+      1623,
+      1624,
+      1625
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001623_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001624_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001625_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 39,
+    "baseImageId": 1626,
+    "stateImageIds": [
+      1626,
+      1627,
+      1628
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001626_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001627_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001628_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 40,
+    "baseImageId": 1629,
+    "stateImageIds": [
+      1629,
+      1630,
+      1631
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001629_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001630_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001631_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1632,
+    "stateImageIds": [
+      1632
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001632_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1633,
+    "stateImageIds": [
+      1633
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001633_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1634,
+    "stateImageIds": [
+      1634
+    ],
+    "width": 54,
+    "height": 52,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001634_54x52.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1635,
+    "stateImageIds": [
+      1635
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001635_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1636,
+    "stateImageIds": [
+      1636
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001636_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1637,
+    "stateImageIds": [
+      1637
+    ],
+    "width": 54,
+    "height": 52,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001637_54x52.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": 41,
+    "baseImageId": 1638,
+    "stateImageIds": [
+      1638,
+      1639,
+      1640
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001638_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001639_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001640_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 42,
+    "baseImageId": 1641,
+    "stateImageIds": [
+      1641,
+      1642,
+      1643
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001641_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001642_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001643_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": 43,
+    "baseImageId": 1644,
+    "stateImageIds": [
+      1644,
+      1645,
+      1646
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001644_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001645_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001646_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1647,
+    "stateImageIds": [
+      1647
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001647_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1648,
+    "stateImageIds": [
+      1648
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001648_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1649,
+    "stateImageIds": [
+      1649
+    ],
+    "width": 54,
+    "height": 52,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001649_54x52.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1650,
+    "stateImageIds": [
+      1650
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001650_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1651,
+    "stateImageIds": [
+      1651
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001651_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": null,
+    "baseImageId": 1652,
+    "stateImageIds": [
+      1652
+    ],
+    "width": 54,
+    "height": 52,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001652_54x52.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+    "note": "Non-54x53 or incomplete triple at sheet edge"
+  },
+  {
+    "sheetFamilyIndex": 44,
+    "baseImageId": 1653,
+    "stateImageIds": [
+      1653,
+      1654,
+      1655
+    ],
+    "width": 54,
+    "height": 53,
+    "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+    "paths": [
+      "China_Interface/008_China_Interface_New_Bbuttons/001653_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001654_54x53.png",
+      "China_Interface/008_China_Interface_New_Bbuttons/001655_54x53.png"
+    ],
+    "evidenceType": "confirmed",
+    "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+    "note": "Three-state family (normal/hover/selected) by consecutive image ids; buildingId/category/slot/screenRect not in SG3"
+  }
+]

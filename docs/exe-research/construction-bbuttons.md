@@ -188,15 +188,54 @@ Embedded Wine exists at `…/SharedSupport/wine/bin/wine`, but no in-process dum
 
 **Conclusion:** new methods (1)–(3) from the agent brief were executed; none recovered `buildingID → China_Interface_New_Bbuttons base`. Early catalog rows remain `inferred`; full map remains `unknown`. Next work should prioritize **runtime observation** of the live construction grid object after opening a category, or finding a non-`0x1192B88` button-list allocator that stores image ids without embedding `#1491+` as PE immediates.
 
-### 10. Runtime probe — executable starts, live mapping capture blocked (2026-08-11)
+### 10. Runtime probe — executable starts (2026-08-11)
 
 Cursor's follow-up used the embedded Wine runtime with a temporary prefix outside the repository (`/tmp/emperor-exe-research-13804`) and a cloned game tree whose `Emperor[EN].exe` hash matched the reference hash. This is an environment check only; the prefix and clone are not runtime dependencies.
 
 - `Emperor[EN].exe` reached the original main menu in a `1024 × 768` game window (macOS window bounds were `1024 × 796` including the title bar). `Emperor.ini` was changed only in the temporary clone to set `PlayIntroMovie=no` for the probe.
-- Automated key input did not advance from the main menu into a city, so no construction category or live button-list state was observed.
+- After Rosetta 2 was installed, `arch -x86_64 wine32on64 --version` returned `wine-5.0` and the hash-matched executable displayed normally. The Wine window is not exposed as a standard accessibility app, so interaction used the permitted low-level mouse-event path and reached the tutorial city and 商业 page documented in §12.
 - A read-only `lldb -p <Wine preloader PID>` attempt stopped at `process attach` and produced no memory reads for `0x1192B30`, `0x1192B88`, or `0x82B19C`. No process memory was patched. `winedbg` is not present in the bundled prefix.
 
-**Classification:** `confirmed` as a runtime-environment result; **no mapping evidence**. The full `buildingID → base` map remains `unknown`, and no catalog row changes evidence class.
+**Classification:** `confirmed` as a runtime-environment result; partial live slot artwork is now `confirmed` for §12, while the full `buildingID → base` map remains `unknown`.
+
+### 11. Runtime remount + asset tables (2026-08-11, later)
+
+Second Cursor pass prioritized LLDB/temp-exe logging and GameData cross-check. Artifacts: `docs/exe-research/construction-panel-mapping.*`, `construction-bbutton-families.*`, `README.md` runtime section.
+
+| Step | Result |
+| --- | --- |
+| Temp clone + hash check | `confirmed` match `8a6d2df1…6753` under `/tmp/emperor-exe-research-27045/game` |
+| `arch -x86_64 wine32on64 --version` | `confirmed`: `wine-5.0` after Rosetta 2 installation |
+| Wineskin `open` / launcher | `confirmed`: original main menu visible in a temporary prefix |
+| LLDB breakpoints / UI clicks | UI walk reached tutorial 商业 page; no live semantic mapping dump yet |
+| Temp trampoline | Recipe + unpatched copy only (`.agent_scratch/exe_re/trampoline-recipe.json`); install exe untouched |
+| `China_Interface` INDEX/SG3 | **45** confirmed 54×53 Bbutton families; no `buildingId`/`slot`/`screenRect` |
+| `map_panels.555` | `confirmed` map-**editor** panel in `China_Unloaded.sg3` — **not** city construction rail |
+
+**Classification:** asset sheet geometry `confirmed`; authoritative construction mapping still `unknown`; runtime interaction is available under Rosetta/Wine and has produced the partial 商业 capture in §12.
+
+### 12. Runtime construction-panel capture (2026-08-12)
+
+With Rosetta 2 installed and the hash-matched temporary clone running under
+Wine 5.0, the tutorial city was entered through the original Chinese front
+end. A direct screen capture of the **商业** tab shows three live construction
+slots in the first row. Their artwork matches the exported Bbutton families by
+pixel structure:
+
+| Runtime slot | Live family | Asset evidence | Semantic building ID |
+| --- | --- | --- | --- |
+| row 1, col 1 | `#1533–#1535` | direct runtime capture + `China_Interface_New_Bbuttons` | `unknown` |
+| row 1, col 2 | `#1536–#1538` | direct runtime capture + `China_Interface_New_Bbuttons` | `unknown` |
+| row 1, col 3 | `#1539–#1541` | direct runtime capture + `China_Interface_New_Bbuttons` | `unknown` |
+
+The capture confirms that these families are actually consumed by the live
+city construction rail; it does **not** prove the native sheet-order guesses
+(`53` mill, `47` weaver, `65` ceramics). The original runtime category is
+商业, while the current tutorial only exposes three slots and does not expose
+the fourth `#1542–#1544` family observed in the longer video. Keep all three
+building associations `unknown` until a slot tooltip, authored menu record, or
+additional runtime state identifies the corresponding building IDs. The
+temporary screenshot remains outside the repository as required by AGENTS.md.
 
 ## Exhausted negative searches (do not re-litigate without a new method)
 
@@ -253,3 +292,5 @@ Builder RTTI (`cBuildingBuilder`, `cEliteHouseBuilder`, `cFortBuilder`, …) vta
 | 2026-08-11 | Focused xref pass ruled out the generic active-record/text helpers (`0x497A00`, `0x498720`, `0x526790`, `0x526350`) and documented concrete `0x603` world-sprite collisions at `0x422721` / `0x423811`; construction-panel draw path remains open. |
 | 2026-08-11 | §9 catalog/computed-id/panel/RTTI pass: early bases absent as `0x408170` immediates; `#1491` sole imm32 is CRT false positive; `0x4A5960` routes early bases to `-1` / exposes 36 late Bbutton image outputs; table and `×3` scans negative; `RightPanel` is WON lobby; `push 54` near helper is chrome `#0x1E14+`. Full `buildingID → base` still `unknown`. |
 | 2026-08-11 | Runtime probe reached the original main menu in a temporary Wine prefix, but input automation and read-only `lldb` attach did not reach or dump the construction grid; no mapping evidence recovered. |
+| 2026-08-11 | §11: remount initially blocked by missing Rosetta; after installation, Wine 5.0 and the original main menu were verified. Interactive category capture continued in §12. |
+| 2026-08-12 | §12: entered the tutorial city and directly matched live 商业 slots to `#1533–#1541`; slot semantics remain `unknown` and the screenshot stays outside the repository. |

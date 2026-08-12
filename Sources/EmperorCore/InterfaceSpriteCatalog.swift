@@ -259,11 +259,11 @@ public enum OriginalConstructionButtonSpriteCatalog {
         // Commerce / light-industry: inferred from New_Bbuttons order after
         // lumber + exported 54×53 frames (not exe-confirmed).
         54: 1_528,  // warehouse
-        66: 1_531,  // food shop
-        53: 1_534,  // mill
-        47: 1_537,  // weaver
-        65: 1_540,  // ceramics shop
-        67: 1_543,  // hemp shop
+        66: 1_531,  // food shop (native/inferred; not runtime-closed)
+        // #1533–#1544 are now directly observed on the original 商业 rail,
+        // but their building IDs are still unknown. Do not keep the old
+        // sheet-order guesses that rendered these vendor families as the
+        // mill, weaver, ceramics shop, or hemp shop.
         59: 1_546,  // common market
         60: 1_546,  // grand market shares the market pavilion family
         72: 1_551,  // well
@@ -330,6 +330,32 @@ public enum OriginalConstructionButtonSpriteCatalog {
 
     /// Crop buttons are semantic because several crop models intentionally
     /// share the same original field or orchard artwork.
+    ///
+    /// The agriculture panel observed in both local playthrough videos shows
+    /// a distinct hemp family (`#1503–#1505`) between the field and rice
+    /// families. The executable's `BUILD_HEMP_CROP` entry (building 194) is
+    /// consistent with that visual grouping. Keep the mapping centralized so
+    /// crop buttons do not silently fall back to the generic field art.
+    public static func cropImageID(
+        for crop: AgriculturalCrop,
+        state: OriginalConstructionButtonState = .normal
+    ) -> Int {
+        let base: Int
+        switch crop {
+        case .rice:
+            base = 1_500
+        case .hemp:
+            base = 1_503
+        case .tea, .mulberry, .lacquer:
+            base = 1_509
+        case .soybeans, .cabbage, .millet, .wheat:
+            base = 1_497
+        }
+        return base + state.rawValue
+    }
+
+    /// Compatibility overload for callers that only know the crop family.
+    /// Prefer `cropImageID(for:state:)` when the semantic crop is available.
     public static func cropImageID(
         isRice: Bool,
         isOrchard: Bool,
@@ -343,7 +369,7 @@ public enum OriginalConstructionButtonSpriteCatalog {
         let buildingIDs = baseImageIDByBuildingID.values.flatMap { base in
             OriginalConstructionButtonState.allCases.map { base + $0.rawValue }
         }
-        let cropIDs = [1_497, 1_500, 1_509].flatMap { base in
+        let cropIDs = [1_497, 1_500, 1_503, 1_509].flatMap { base in
             OriginalConstructionButtonState.allCases.map { base + $0.rawValue }
         }
         return Set(buildingIDs + cropIDs)

@@ -1584,8 +1584,7 @@ private struct ClassicControlPanel: View {
         state: OriginalConstructionButtonState
     ) -> RenderedTerrainSprite? {
         let imageID = OriginalConstructionButtonSpriteCatalog.cropImageID(
-            isRice: crop == .rice,
-            isOrchard: crop.category == .orchard,
+            for: crop,
             state: state
         )
         return library.interfaceSprites[imageID]

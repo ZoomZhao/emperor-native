@@ -49,7 +49,7 @@ final class SG3FigureSpriteTests: XCTestCase {
         )
         XCTAssertEqual(
             Set(OriginalFigureSpriteCatalog.animations.map(\.figureID)),
-            [11, 22, 23, 24, 27, 28, 29, 30, 31, 32, 33, 34, 35, 39, 64, 65, 66, 68]
+            [11, 22, 23, 24, 27, 28, 29, 30, 31, 32, 33, 34, 35, 39, 64, 65, 66, 68, 76]
         )
         for animation in OriginalFigureSpriteCatalog.animations {
             XCTAssertEqual(animation.framesByDirection.count, 8, animation.role.rawValue)
@@ -84,6 +84,22 @@ final class SG3FigureSpriteTests: XCTestCase {
             XCTAssertEqual(animation.framesByDirection.first?.first, group.firstImageID)
             XCTAssertTrue(animation.framesByDirection.allSatisfy { $0.count == 12 })
         }
+    }
+
+    func testAmbientPheasantUsesVerifiedSprMainFamily() throws {
+        let animation = try XCTUnwrap(
+            OriginalFigureSpriteCatalog.animation(forFigureID: 76)
+        )
+        XCTAssertEqual(animation.archiveBaseName, "SprMain")
+        XCTAssertEqual(animation.sourceBitmapName, "pheasant")
+        XCTAssertEqual(animation.logicalGroupID, 42)
+        XCTAssertEqual(animation.framesByDirection.first?.first, 2_657)
+        XCTAssertEqual(animation.framesByDirection.count, 8)
+        XCTAssertTrue(animation.framesByDirection.allSatisfy { $0.count == 12 })
+        XCTAssertTrue(
+            OriginalFigureSpriteCatalog.requiredImageIDsByArchive["SprMain", default: []]
+                .isSuperset(of: animation.imageIDs)
+        )
     }
 
     func testXiongnuInfantryUsesVerifiedEnemyArchive() throws {

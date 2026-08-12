@@ -48,6 +48,7 @@ public enum TutorialFigureRole: String, CaseIterable, Sendable, Hashable, Codabl
     case chineseCavalry
     case chineseCatapult
     case xiongnuInfantry
+    case ambientPheasant
 }
 
 public struct FigureSpriteReference: Sendable, Equatable, Hashable {
@@ -141,6 +142,20 @@ public enum OriginalFigureSpriteCatalog {
         sourceBitmapName: "Xiongnu_Infantry",
         logicalGroupID: 0,
         firstImageID: 1,
+        framesPerDirection: 12
+    )
+
+    /// Ambient prey use the original Pheasant bitmap rather than a marker.
+    /// The model table names figure 76 `Pheasant`; `emperor-inspect
+    /// sg3-figure SprMain.sg3 pheasant` resolves it to logical group 42 and
+    /// image IDs #2657...#2752 (eight directions, twelve frames each).
+    public static let pheasantAnimation = FigureSpriteAnimation(
+        role: .ambientPheasant,
+        figureID: 76,
+        archiveBaseName: mainArchiveBaseName,
+        sourceBitmapName: "pheasant",
+        logicalGroupID: 42,
+        firstImageID: 2_657,
         framesPerDirection: 12
     )
 
@@ -288,6 +303,7 @@ public enum OriginalFigureSpriteCatalog {
             sourceBitmapName: "Chinese_Catapult", logicalGroupID: 154,
             firstImageID: 8_558, framesPerDirection: 12
         ),
+        pheasantAnimation,
     ]
 
     public static func animation(forFigureID figureID: Int) -> FigureSpriteAnimation? {
