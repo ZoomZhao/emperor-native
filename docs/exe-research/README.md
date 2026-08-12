@@ -16,6 +16,7 @@ Read-only static inspection, asset extraction, and **native-inferred** mapping t
 | [construction-orphan-family-crosswalk.md](./construction-orphan-family-crosswalk.md) | Static crosswalk for family-start frames missing from the native catalog |
 | [video-panel-observations.md](./video-panel-observations.md) | `videoObserved` category/grid frames sampled from `BV1uau26gEVV.mp4` |
 | [cursor-commercial-defense-monument-pass.md](./cursor-commercial-defense-monument-pass.md) | Cursor pass: commerce-panel observation and defense/monument evidence gaps |
+| [cursor-roadblock-market-pass.md](./cursor-roadblock-market-pass.md) | Cursor pass: roadblock placement/test evidence and market shell/shop-bay static evidence |
 | [cursor-animal-sprite-groups.md](./cursor-animal-sprite-groups.md) | Cursor pass: authored `SprMain`/`SprMain2` animal bitmap and logical-group bounds; figure-state selectors remain unresolved |
 | [ambient-prey.md](./ambient-prey.md) | Confirmed pheasant figure/sprite data and the remaining map spawn-point gap |
 
@@ -33,6 +34,7 @@ Policy:
 4. **Video-observed** — `video-panel-observations.md` records visible category/slot frames and state offsets; it does not replace executable evidence.
 5. **Runtime-unknown** — live slot artwork is partially captured under Rosetta/Wine, but the original building-ID writer/tooltip is still unresolved (below).
 6. **Animal asset crosswalk** — `cursor-animal-sprite-groups.md` records the authored animal bitmap names, logical-group boundaries, and the explicit `inferred`/`unknown` figure-state gap. It does not authorize adding predator or prey behavior.
+7. **Roadblock/market static pass** — `cursor-roadblock-market-pass.md` records building 126 placement evidence, `cRoadBuildTest` RTTI, market/vendor build-name records, and the authored market shell/shop image IDs. Route blocking, live bay state, and Bbutton ownership remain unresolved.
 
 ## Inferred-layer pass (2026-08-11)
 
