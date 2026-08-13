@@ -346,6 +346,10 @@ final class EmperorCoreTests: XCTestCase {
             "人们希望迁居你的城市"
         )
         XCTAssertEqual(
+            catalog.localized(groupID: 55, rowIndex: 10),
+            "个新移民本月到达"
+        )
+        XCTAssertEqual(
             catalog.localized("Housing for", groupID: 55),
             "目前住宅还可容纳"
         )
@@ -365,6 +369,10 @@ final class EmperorCoreTests: XCTestCase {
             catalog.localized("People wish to come to the city.", groupID: 55),
             "人们希望迁居你的城市"
         )
+        XCTAssertEqual(
+            catalog.localized("newcomers arrived this month.", groupID: 55),
+            "个新移民本月到达"
+        )
     }
 
     func testLocalEmperorTextGroup55RowLookupReturnsNilOutsideBounds() throws {
@@ -376,9 +384,14 @@ final class EmperorCoreTests: XCTestCase {
 
         XCTAssertNil(catalog.localized(groupID: 55, rowIndex: -1))
         XCTAssertNil(catalog.localized(groupID: 55, rowIndex: 7))
-        XCTAssertNil(catalog.localized(groupID: 55, rowIndex: 10))
+        XCTAssertNil(catalog.localized(groupID: 55, rowIndex: 11))
         XCTAssertNil(catalog.localized(groupID: 55, rowIndex: 14))
         XCTAssertNil(catalog.localized(groupID: 55, rowIndex: 36))
+
+        // Row 10 is authorized (newcomer plural suffix `个新移民本月到达`); row 11
+        // stays unauthorized because its 1-4 singular control depends on the
+        // unrecovered signed-pressure equivalence.
+        XCTAssertEqual(catalog.localized(groupID: 55, rowIndex: 10), "个新移民本月到达")
     }
 
     func testLocalEmperorTextRowLookupReturnsNilOutsideBounds() throws {

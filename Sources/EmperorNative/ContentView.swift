@@ -2251,6 +2251,7 @@ private struct ClassicCategoryAdvisorPanel: View {
         case housingCapacity(prefix: String, capacity: Int, suffix: String)
         case migrationWish(line: String)
         case migrationRestriction(lead: String, reason: String)
+        case newcomerCount(count: Int, suffix: String)
         case separator
         case text(line: String)
     }
@@ -2287,11 +2288,12 @@ private struct ClassicCategoryAdvisorPanel: View {
     /// Screenshot-confirmed residential-advisor separators: the original
     /// population advisor draws a horizontal divider after the two action
     /// buttons, one between the capacity sentence and the migration wish, and
-    /// one between the wish and the restriction block. Semantic rows are
+    /// one between the wish and the following detail region. Semantic rows are
     /// separated only between consecutive content rows, so the residential
     /// sequence is capacity / separator / wish / separator / restriction at
-    /// zero capacity (before an assessment or `.noEligibleHousing`), and
-    /// capacity / separator / wish when an assessment plans immigrants.
+    /// `availableHousingCapacity < 1`, capacity / separator / wish /
+    /// separator / newcomer count + row-10 suffix when
+    /// `currentMonthImmigrants > 4`, and capacity alone otherwise.
     /// No trailing separator is emitted, and other categories are unaffected.
     private func withSeparators(_ content: [AdvisorSummaryLine]) -> [AdvisorSummaryLine] {
         var rows: [AdvisorSummaryLine] = []
@@ -2358,6 +2360,15 @@ private struct ClassicCategoryAdvisorPanel: View {
             }
             .font(EmperorTheme.bodySmall)
             .multilineTextAlignment(.center)
+        case let .newcomerCount(count, suffix):
+            VStack(spacing: 0) {
+                Text("\(count)")
+                    .foregroundStyle(ClassicPalette.gold)
+                Text(suffix)
+                    .foregroundStyle(EmperorTheme.onSurface)
+            }
+            .font(EmperorTheme.bodySmall)
+            .multilineTextAlignment(.center)
         case .separator:
             Rectangle()
                 .fill(EmperorTheme.secondary.opacity(0.68))
@@ -2388,25 +2399,28 @@ private struct ClassicCategoryAdvisorPanel: View {
     }
 
     /// Screenshot-confirmed residential-advisor migration region, backed only
-    /// by the typed runtime rows from `ClassicTextLocalization.migrationStatusText`.
-    /// Zero free capacity (either before the first assessment or via
-    /// `.noEligibleHousing`) renders the wish line and the restriction block
-    /// together; an assessment with planned immigrants renders the wish only.
-    /// States whose original text mapping is unsupported (negativeTreasury,
-    /// highUnemployment, stable/zero planned immigration, and a nil assessment
-    /// with positive capacity) fail closed and render no migration line.
+    /// by the typed runtime rows from
+    /// `ClassicTextLocalization.migrationStatusText`. The recovered mode-0
+    /// renderer `FUN_0053b850` decides the region strictly by checker order:
+    /// `currentMonthImmigrants > 4` draws the wish plus a newcomer count with
+    /// the row-10 suffix; otherwise `availableHousingCapacity < 1` draws the
+    /// wish plus the row-12 lead / row-13 housing reason. `.noEligibleHousing`,
+    /// `blockReason`, and `plannedImmigrants` never select a player-visible
+    /// row. Counts 1-4 and every other state fail closed and render no
+    /// migration line.
     private var migrationStatusRows: [AdvisorSummaryLine] {
         guard let text = ClassicTextLocalization.migrationStatusText else { return [] }
-        let assessment = city.migration.lastAssessment
-        let zeroCapacityBeforeAssessment = assessment == nil && availableHousingCapacity == 0
-        let noEligibleHousing = assessment?.blockReason == .noEligibleHousing
         var rows: [AdvisorSummaryLine] = []
-        if (assessment?.plannedImmigrants ?? 0) > 0
-            || zeroCapacityBeforeAssessment
-            || noEligibleHousing {
+        if city.migration.currentMonthImmigrants > 4 {
             rows.append(.migrationWish(line: text.wish))
-        }
-        if zeroCapacityBeforeAssessment || noEligibleHousing {
+            rows.append(
+                .newcomerCount(
+                    count: city.migration.currentMonthImmigrants,
+                    suffix: text.newcomerPluralSuffix
+                )
+            )
+        } else if availableHousingCapacity < 1 {
+            rows.append(.migrationWish(line: text.wish))
             rows.append(
                 .migrationRestriction(lead: text.restrictionLead, reason: text.restrictionReason)
             )

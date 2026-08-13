@@ -988,8 +988,14 @@ private func runSmoke(arguments: Arguments) throws {
                     )
                 }
             }
+            // The baseline is taken at `currentMonthImmigrants == 0` with zero
+            // free capacity, so the recovered mode-0 precedence must render the
+            // wish + restriction branch, never the `> 4` newcomer block. The
+            // row-10 suffix must stay absent here so a wrong priority or leaked
+            // state cannot silently replace the restriction block.
             let unsupportedPopulationTokens = [
                 "等待下一个模拟日评估迁入条件", "缺乏临路住房", "国库为负", "失业率过高",
+                "个新移民本月到达",
             ]
             for token in unsupportedPopulationTokens {
                 guard !populationText.contains(token) else {
