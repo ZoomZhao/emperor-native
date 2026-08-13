@@ -279,6 +279,156 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(catalog.localized("Banpo"), "半坡")
     }
 
+    func testLocalEmperorTextGroup127RowLookupIsExactChinese() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let source = try GameDataSource.openDefault()
+        let catalog = try OriginalLocalizedTextCatalog(root: source.root)
+
+        XCTAssertEqual(
+            catalog.localized(groupID: 127, rowIndex: 58),
+            "干渴的居民们要喝水, 没有水这所房子就不能升级."
+        )
+        XCTAssertEqual(
+            catalog.localized(groupID: 127, rowIndex: 57),
+            "除非这个地区的吸引力有所提高, 否则这所房子就不能升级."
+        )
+        XCTAssertEqual(
+            catalog.localized(groupID: 127, rowIndex: 59),
+            "这所房子里的居民需要 [food_quality] 食物, 房子才能升级."
+        )
+        let expectedRows = [
+            60: "这所房子里的居民要听到音乐, 房子才能升级.",
+            61: "这所房子里的居民要看到杂技表演, 房子才能升级.",
+            62: "这所房子里的居民要看到戏曲表演, 房子才能升级.",
+            63: "这所房子里的居民 需要针灸医生来检查身体.",
+            64: "这所房子里的居民 需要草药医生来服务.",
+            65: "除非有先祖庙的人到这里来, 否则这所房子不能升级.",
+            66: "这所房子里的人 希望能有孔庙里的人来访.",
+            67: "如果没有术士或和尚来这里, 那么这所房子就不能升级.",
+            68: "这所房子里的居民需要瓷器.",
+            69: "要是没有小贩送来苎麻, 这所房子就不能升级.",
+            70: "要是没有小贩来卖茶叶, 这所房子就不能升级.",
+            71: "这所房子里的居民需要生活器皿.",
+            72: "这所房子的居民没有买到丝绸, 房子就不能升级.",
+        ]
+        for (rowIndex, expected) in expectedRows {
+            XCTAssertEqual(catalog.localized(groupID: 127, rowIndex: rowIndex), expected)
+        }
+    }
+
+    func testLocalEmperorTextRowLookupReturnsNilOutsideBounds() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let source = try GameDataSource.openDefault()
+        let catalog = try OriginalLocalizedTextCatalog(root: source.root)
+
+        XCTAssertNil(catalog.localized(groupID: 127, rowIndex: -1))
+        XCTAssertNil(catalog.localized(groupID: 127, rowIndex: 75))
+        XCTAssertNil(catalog.localized(groupID: 0, rowIndex: 0))
+    }
+
+    func testHousingEvolutionRequirementGroup127SemanticRowIDs() {
+        XCTAssertEqual(
+            HouseEvolutionRequirement.desirability(current: 0, required: 1)
+                .emperorTextGroup127UpgradeReasonRowIndex,
+            57
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.foodQuality(current: 20, required: 50)
+                .emperorTextGroup127UpgradeReasonRowIndex,
+            59
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.service(.water).emperorTextGroup127UpgradeReasonRowIndex,
+            58
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.service(.music).emperorTextGroup127UpgradeReasonRowIndex,
+            60
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.service(.acrobat).emperorTextGroup127UpgradeReasonRowIndex,
+            61
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.service(.drama).emperorTextGroup127UpgradeReasonRowIndex,
+            62
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.service(.acupuncture).emperorTextGroup127UpgradeReasonRowIndex,
+            63
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.service(.herbalist).emperorTextGroup127UpgradeReasonRowIndex,
+            64
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.service(.ancestor).emperorTextGroup127UpgradeReasonRowIndex,
+            65
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.service(.confucian).emperorTextGroup127UpgradeReasonRowIndex,
+            66
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.service(.daoistOrBuddhist)
+                .emperorTextGroup127UpgradeReasonRowIndex,
+            67
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.commodityAlternatives([25])
+                .emperorTextGroup127UpgradeReasonRowIndex,
+            68
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.commodityAlternatives([19])
+                .emperorTextGroup127UpgradeReasonRowIndex,
+            69
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.commodityAlternatives([13])
+                .emperorTextGroup127UpgradeReasonRowIndex,
+            70
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.commodityAlternatives([23, 22])
+                .emperorTextGroup127UpgradeReasonRowIndex,
+            71
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.commodityAlternatives([22, 23])
+                .emperorTextGroup127UpgradeReasonRowIndex,
+            71
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.commodityAlternatives([24])
+                .emperorTextGroup127UpgradeReasonRowIndex,
+            72
+        )
+        XCTAssertNil(
+            HouseEvolutionRequirement.service(.inspection)
+                .emperorTextGroup127UpgradeReasonRowIndex
+        )
+        XCTAssertNil(
+            HouseEvolutionRequirement.service(.constable)
+                .emperorTextGroup127UpgradeReasonRowIndex
+        )
+        XCTAssertNil(
+            HouseEvolutionRequirement.service(.tax).emperorTextGroup127UpgradeReasonRowIndex
+        )
+        XCTAssertNil(
+            HouseEvolutionRequirement.commodityAlternatives([13, 25])
+                .emperorTextGroup127UpgradeReasonRowIndex
+        )
+        XCTAssertNil(
+            HouseEvolutionRequirement.commodityAlternatives([22])
+                .emperorTextGroup127UpgradeReasonRowIndex
+        )
+    }
+
     func testLocalCampaignEmpireMapTemplateLayout() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")

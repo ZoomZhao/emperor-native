@@ -9,9 +9,11 @@ public struct OriginalLocalizedTextCatalog: Sendable, Hashable {
     private static let groupRecordByteCount = 8
     private static let groupRecordCapacity = 1_000
     private static let textDataOffset = 28 + groupRecordCapacity * groupRecordByteCount
+    private static let confirmedAlignedGroupIDs: Set<Int> = [127]
 
     private let localizedByGroup: [Int: [String: String]]
     private let unambiguousLocalizedText: [String: String]
+    private let alignedRowsByGroup: [Int: [String]]
 
     public init(root: URL) throws {
         try self.init(
@@ -49,6 +51,17 @@ public struct OriginalLocalizedTextCatalog: Sendable, Hashable {
         unambiguousLocalizedText = candidates.compactMapValues { values in
             values.count == 1 ? values.first : nil
         }
+        // Row-index lookup is deliberately restricted to groups whose shipping
+        // English and Chinese rows were compared semantically, not merely found
+        // to have equal counts. Add another ID only with recorded source evidence.
+        var alignedRows: [Int: [String]] = [:]
+        for groupID in Self.confirmedAlignedGroupIDs {
+            guard let englishRows = englishGroups[groupID] else { continue }
+            guard let chineseRows = chineseGroups[groupID],
+                  englishRows.count == chineseRows.count else { continue }
+            alignedRows[groupID] = chineseRows
+        }
+        alignedRowsByGroup = alignedRows
     }
 
     public func localized(_ authoredText: String, groupID: Int? = nil) -> String? {
@@ -57,6 +70,16 @@ public struct OriginalLocalizedTextCatalog: Sendable, Hashable {
             return localized
         }
         return unambiguousLocalizedText[key]
+    }
+
+    /// Exact zero-based row lookup from a group whose English and Chinese rows
+    /// have been confirmed aligned. Returns `nil` for any other group or when
+    /// the row index is out of bounds; it never invents a row.
+    public func localized(groupID: Int, rowIndex: Int) -> String? {
+        guard let rows = alignedRowsByGroup[groupID], rows.indices.contains(rowIndex) else {
+            return nil
+        }
+        return rows[rowIndex]
     }
 
     private static func englishGroups(contentsOf url: URL) throws -> [Int: [String]] {

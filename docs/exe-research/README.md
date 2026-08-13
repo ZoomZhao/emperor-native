@@ -24,6 +24,7 @@ Read-only static inspection, asset extraction, and **native-inferred** mapping t
 | [great-wall-map-state.md](./great-wall-map-state.md) | Confirmed multipart Great Wall archive/counters, terminal 53-part sprite rendering, dirt-dump versus tamping labor actions, fixed no-direct-difficulty construction contract, worker timing, shared convoy transfer/access/routing, bounded part/whole completion with no Great-Wall-specific reward, aggregate formula, and the hash-identified Qin-4 load path's lack of a phase reset; an aligned historical save, Wine probe, and inaccessible public playthrough are recorded as negative evidence, while the intended first playable state remains open |
 | [grand-canal-map-state.md](./grand-canal-map-state.md) | Confirmed Haunxian canal reserve, five phases, task 102/stone requirements, and explicit wood/control-flow gaps |
 | [hero-effect-lifecycle.md](./hero-effect-lifecycle.md) | Confirmed 12-record `cHero` layout, slot-0 live-effect enter/exit chain, schema-4 serialization and legacy migration; Native physical-presence bridge remains fail-closed pending post-load lifecycle recovery |
+| [housing-evolution-reasons.md](./housing-evolution-reasons.md) | Confirmed `EmperorText` group-127 housing upgrade-reason row matrix and identical `0x51AF60` load path (`group 0x7F`, `reasonCode + 0x27`); row 57 is a confirmed-safe Native choice, rows 60…72 are semantic mappings pending recovery of their reason-code writers, and the row-56 trigger plus exact `[food_quality]` substitution source remain unknown |
 
 Policy:
 

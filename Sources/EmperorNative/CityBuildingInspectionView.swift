@@ -669,11 +669,10 @@ struct BuildingInfoPopup: View {
                evaluation.nextLevelID != nil {
                 rows.append(InfoRow(label: "升级状态", value: "条件已满足，等待月结"))
             } else if !evaluation.missingEvolutionRequirements.isEmpty {
-                rows.append(contentsOf: evaluation.missingEvolutionRequirements.map {
-                    InfoRow(
-                        label: "无法升级",
-                        value: houseEvolutionRequirementDescription($0, models: models)
-                    )
+                rows.append(contentsOf: evaluation.missingEvolutionRequirements.compactMap { requirement in
+                    ClassicTextLocalization.housingEvolutionReason(requirement).map {
+                        InfoRow(label: "无法升级", value: $0)
+                    }
                 })
             }
         } else {
@@ -758,51 +757,5 @@ private struct ClassicInspectorGlyphButtonStyle: ButtonStyle {
                     : EmperorTheme.deepBrown
             )
             .overlay(Rectangle().strokeBorder(EmperorTheme.border, lineWidth: 1))
-    }
-}
-
-private func houseEvolutionRequirementDescription(
-    _ requirement: HouseEvolutionRequirement,
-    models: OriginalEconomyModels
-) -> String {
-    switch requirement {
-    case let .desirability(current, required):
-        return "这所房子不能升级，因为该地区吸引力不足（\(current)/\(required)）。"
-    case let .service(service):
-        return switch service {
-        case .water:
-            "干渴的居民们要喝水，没有水这所房子就不能升级。"
-        case .herbalist:
-            "这所房子里的居民需要草药医生来服务。"
-        case .acupuncture:
-            "这所房子里的居民需要针灸医生来检查身体。"
-        case .music:
-            "这所房子里的居民要听到音乐，房子才能升级。"
-        case .acrobat:
-            "这所房子里的居民要看到杂技表演，房子才能升级。"
-        case .drama:
-            "这所房子里的居民要看到戏曲表演，房子才能升级。"
-        case .ancestor:
-            "除非有先祖庙的人到这里来，否则这所房子不能升级。"
-        case .confucian:
-            "这所房子需要孔庙的人来访，房子才能升级。"
-        case .daoistOrBuddhist:
-            "如果没有术士或和尚来这里，那么这所房子就不能升级。"
-        default:
-            "缺少\(service.chineseTitle)。"
-        }
-    case let .foodQuality(current, required):
-        let quality = FoodQuality(rawValue: required)?.displayName ?? "品质 \(required)"
-        return "这所房子里的居民需要 \(quality) 食物，房子才能升级（当前 \(current)）。"
-    case let .commodityAlternatives(ids):
-        let names = ids.map {
-            models.trade[commodityID: $0]
-                .map { ClassicTextLocalization.commodityName($0.name) }
-                ?? "商品 #\($0)"
-        }.joined(separator: "或")
-        if Set(ids) == [23, 22] {
-            return "这所房子需要生活器皿（青铜器或漆器），房子才能升级。"
-        }
-        return "要是没有小贩送来\(names)，这所房子就不能升级。"
     }
 }

@@ -400,6 +400,53 @@ enum ClassicTextLocalization {
         }
     }
 
+    /// Exact authored Simplified Chinese group 127 upgrade-reason rows from
+    /// `GameData/EmperorText.txt`, used only when the text catalog is unavailable
+    /// (no installed GameData). These are verbatim original rows, not
+    /// paraphrases. Rows 56 and 73/74 are intentionally absent: current state
+    /// cannot attribute the desirability deficit to negative nearby buildings,
+    /// and prime/occupancy states are not upgrade blockers.
+    private static let housingUpgradeReasonRows: [Int: String] = [
+        57: "除非这个地区的吸引力有所提高, 否则这所房子就不能升级.",
+        58: "干渴的居民们要喝水, 没有水这所房子就不能升级.",
+        59: "这所房子里的居民需要 [food_quality] 食物, 房子才能升级.",
+        60: "这所房子里的居民要听到音乐, 房子才能升级.",
+        61: "这所房子里的居民要看到杂技表演, 房子才能升级.",
+        62: "这所房子里的居民要看到戏曲表演, 房子才能升级.",
+        63: "这所房子里的居民 需要针灸医生来检查身体.",
+        64: "这所房子里的居民 需要草药医生来服务.",
+        65: "除非有先祖庙的人到这里来, 否则这所房子不能升级.",
+        66: "这所房子里的人 希望能有孔庙里的人来访.",
+        67: "如果没有术士或和尚来这里, 那么这所房子就不能升级.",
+        68: "这所房子里的居民需要瓷器.",
+        69: "要是没有小贩送来苎麻, 这所房子就不能升级.",
+        70: "要是没有小贩来卖茶叶, 这所房子就不能升级.",
+        71: "这所房子里的居民需要生活器皿.",
+        72: "这所房子的居民没有买到丝绸, 房子就不能升级.",
+    ]
+
+    /// Renders the exact original group 127 upgrade-reason for a missing housing
+    /// evolution requirement. `[food_quality]` is substituted only for the food
+    /// requirement, using the localized name of the required quality. Unsupported
+    /// requirement shapes return `nil` so the caller never shows invented prose.
+    static func housingEvolutionReason(
+        _ requirement: HouseEvolutionRequirement
+    ) -> String? {
+        guard let rowIndex = requirement.emperorTextGroup127UpgradeReasonRowIndex,
+              let row = originalText?.localized(groupID: 127, rowIndex: rowIndex)
+                  ?? housingUpgradeReasonRows[rowIndex] else {
+            return nil
+        }
+        guard case let .foodQuality(_, required) = requirement else {
+            return row
+        }
+        guard let quality = FoodQuality(rawValue: required) else { return nil }
+        return row.replacingOccurrences(
+            of: "[food_quality]",
+            with: foodQualityName(quality)
+        )
+    }
+
     static func authoredName(_ authoredName: String) -> String {
         let house = houseName(authoredName)
         if house != authoredName { return house }
