@@ -318,6 +318,44 @@ final class EmperorCoreTests: XCTestCase {
         }
     }
 
+    func testLocalEmperorTextGroup55HousingCapacityRowsAreExactChinese() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let source = try GameDataSource.openDefault()
+        let catalog = try OriginalLocalizedTextCatalog(root: source.root)
+
+        XCTAssertEqual(
+            catalog.localized(groupID: 55, rowIndex: 8),
+            "目前住宅还可容纳"
+        )
+        XCTAssertEqual(
+            catalog.localized(groupID: 55, rowIndex: 9),
+            "人居住"
+        )
+        XCTAssertEqual(
+            catalog.localized("Housing for", groupID: 55),
+            "目前住宅还可容纳"
+        )
+        XCTAssertEqual(
+            catalog.localized("more people.", groupID: 55),
+            "人居住"
+        )
+    }
+
+    func testLocalEmperorTextGroup55RowLookupReturnsNilOutsideBounds() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let source = try GameDataSource.openDefault()
+        let catalog = try OriginalLocalizedTextCatalog(root: source.root)
+
+        XCTAssertNil(catalog.localized(groupID: 55, rowIndex: -1))
+        XCTAssertNil(catalog.localized(groupID: 55, rowIndex: 7))
+        XCTAssertNil(catalog.localized(groupID: 55, rowIndex: 10))
+        XCTAssertNil(catalog.localized(groupID: 55, rowIndex: 36))
+    }
+
     func testLocalEmperorTextRowLookupReturnsNilOutsideBounds() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")

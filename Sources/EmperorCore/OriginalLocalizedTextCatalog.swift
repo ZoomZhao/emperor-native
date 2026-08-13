@@ -9,11 +9,21 @@ public struct OriginalLocalizedTextCatalog: Sendable, Hashable {
     private static let groupRecordByteCount = 8
     private static let groupRecordCapacity = 1_000
     private static let textDataOffset = 28 + groupRecordCapacity * groupRecordByteCount
-    private static let confirmedAlignedGroupIDs: Set<Int> = [127]
+    /// Groups whose every shipping English row was compared semantically
+    /// against the Chinese row at the same index. Exposing a group here grants
+    /// row-index access to every equal-count row.
+    private static let fullyAlignedGroupIDs: Set<Int> = [127]
+    /// Groups whose shipping English and Chinese rows were compared
+    /// semantically only at the recorded zero-based indices. Row-index access
+    /// is restricted to exactly these rows; the rest of the group is `unknown`
+    /// and must not leak through row lookup.
+    private static let confirmedAlignedRowsByGroup: [Int: Set<Int>] = [
+        55: [8, 9],
+    ]
 
     private let localizedByGroup: [Int: [String: String]]
     private let unambiguousLocalizedText: [String: String]
-    private let alignedRowsByGroup: [Int: [String]]
+    private let alignedRowsByGroup: [Int: [Int: String]]
 
     public init(root: URL) throws {
         try self.init(
@@ -51,15 +61,33 @@ public struct OriginalLocalizedTextCatalog: Sendable, Hashable {
         unambiguousLocalizedText = candidates.compactMapValues { values in
             values.count == 1 ? values.first : nil
         }
-        // Row-index lookup is deliberately restricted to groups whose shipping
-        // English and Chinese rows were compared semantically, not merely found
-        // to have equal counts. Add another ID only with recorded source evidence.
-        var alignedRows: [Int: [String]] = [:]
-        for groupID in Self.confirmedAlignedGroupIDs {
+        // Row-index lookup is deliberately restricted to rows whose shipping
+        // English and Chinese texts were compared semantically, not merely
+        // found to have equal counts. A fully aligned group exposes every
+        // equal-count row; a partially confirmed group exposes only its
+        // recorded row indices. Add either only with recorded source evidence.
+        var alignedRows: [Int: [Int: String]] = [:]
+        for groupID in Self.fullyAlignedGroupIDs {
+            guard let englishRows = englishGroups[groupID] else { continue }
+            guard let chineseRows = chineseGroups[groupID],
+                  englishRows.count == chineseRows.count,
+                  !chineseRows.isEmpty else { continue }
+            alignedRows[groupID] = Dictionary(
+                uniqueKeysWithValues: chineseRows.indices.map { ($0, chineseRows[$0]) }
+            )
+        }
+        for (groupID, confirmedRows) in Self.confirmedAlignedRowsByGroup {
             guard let englishRows = englishGroups[groupID] else { continue }
             guard let chineseRows = chineseGroups[groupID],
                   englishRows.count == chineseRows.count else { continue }
-            alignedRows[groupID] = chineseRows
+            guard confirmedRows.allSatisfy({
+                englishRows.indices.contains($0) && chineseRows.indices.contains($0)
+            }) else {
+                continue
+            }
+            alignedRows[groupID] = Dictionary(
+                uniqueKeysWithValues: confirmedRows.map { ($0, chineseRows[$0]) }
+            )
         }
         alignedRowsByGroup = alignedRows
     }
@@ -72,14 +100,12 @@ public struct OriginalLocalizedTextCatalog: Sendable, Hashable {
         return unambiguousLocalizedText[key]
     }
 
-    /// Exact zero-based row lookup from a group whose English and Chinese rows
-    /// have been confirmed aligned. Returns `nil` for any other group or when
-    /// the row index is out of bounds; it never invents a row.
+    /// Exact zero-based row lookup restricted to rows whose shipping English
+    /// and Chinese rows have been confirmed aligned. Returns `nil` for any
+    /// other group, any unconfirmed row, or an out-of-bounds index; it never
+    /// invents a row.
     public func localized(groupID: Int, rowIndex: Int) -> String? {
-        guard let rows = alignedRowsByGroup[groupID], rows.indices.contains(rowIndex) else {
-            return nil
-        }
-        return rows[rowIndex]
+        alignedRowsByGroup[groupID]?[rowIndex]
     }
 
     private static func englishGroups(contentsOf url: URL) throws -> [Int: [String]] {

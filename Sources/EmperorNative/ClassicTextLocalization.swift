@@ -447,6 +447,23 @@ enum ClassicTextLocalization {
         )
     }
 
+    /// Exact authored Simplified Chinese group 55 housing-capacity sentence from
+    /// the runtime catalog (`GameData/EmperorText.txt` row 8 prefix and row 9
+    /// suffix, semantically aligned with `EmperorText.eng` "Housing for" /
+    /// "more people."). Only group 55 rows 8/9 are authorized in the catalog;
+    /// the rest of group 55 was not compared and is not exposed. Both parts
+    /// must exist and be nonempty or `nil` is returned; there is deliberately
+    /// no invented or hardcoded fallback text.
+    static var housingCapacityLegend: (prefix: String, suffix: String)? {
+        guard let prefix = originalText?.localized(groupID: 55, rowIndex: 8),
+              let suffix = originalText?.localized(groupID: 55, rowIndex: 9),
+              !prefix.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              !suffix.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return nil
+        }
+        return (prefix, suffix)
+    }
+
     static func authoredName(_ authoredName: String) -> String {
         let house = houseName(authoredName)
         if house != authoredName { return house }

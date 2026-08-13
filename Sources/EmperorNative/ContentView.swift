@@ -2171,8 +2171,8 @@ private struct ClassicCategoryAdvisorPanel: View {
                 .frame(height: 1)
                 .padding(.vertical, 1)
 
-            ForEach(Array(advisorSummary.enumerated()), id: \.offset) { index, line in
-                advisorSummaryRow(index: index, line: line)
+            ForEach(Array(advisorSummary.enumerated()), id: \.offset) { _, line in
+                advisorSummaryRow(line)
             }
         }
         .padding(.horizontal, 10)
@@ -2247,24 +2247,44 @@ private struct ClassicCategoryAdvisorPanel: View {
         }
     }
 
-    private var advisorSummary: [String] {
+    private enum AdvisorSummaryLine: Hashable {
+        case housingCapacity(prefix: String, capacity: Int, suffix: String)
+        case migrationStatus(lead: String, emphasis: String)
+        case text(line: String)
+    }
+
+    private var advisorSummary: [AdvisorSummaryLine] {
         if category == .residential {
-            return [
-                "目前住宅还可容纳 \(availableHousingCapacity) 人居住",
-                migrationStatus,
-            ]
+            var rows: [AdvisorSummaryLine] = []
+            if let legend = ClassicTextLocalization.housingCapacityLegend {
+                rows.append(
+                    .housingCapacity(
+                        prefix: legend.prefix,
+                        capacity: availableHousingCapacity,
+                        suffix: legend.suffix
+                    )
+                )
+            }
+            if let parts = migrationStatusParts {
+                rows.append(
+                    .migrationStatus(lead: parts.lead, emphasis: parts.emphasis)
+                )
+            } else {
+                rows.append(.text(line: migrationStatus))
+            }
+            return rows
         }
         if category == .aesthetics {
             let summary = city.fengShuiSummary(models: models.buildings)
             let total = max(1, summary.evaluations.count)
             return [
-                "风水和谐 \(summary.harmoniousCount * 100 / total)%",
-                "吉祥 \(summary.harmoniousCount) · 不祥 \(summary.inauspiciousCount) · 中性 \(summary.neutralCount)",
+                .text(line: "风水和谐 \(summary.harmoniousCount * 100 / total)%"),
+                .text(line: "吉祥 \(summary.harmoniousCount) · 不祥 \(summary.inauspiciousCount) · 中性 \(summary.neutralCount)"),
             ]
         }
         return [
-            category.advisorSummary(in: city),
-            category.advisorHint,
+            .text(line: category.advisorSummary(in: city)),
+            .text(line: category.advisorHint),
         ]
     }
 
@@ -2296,31 +2316,30 @@ private struct ClassicCategoryAdvisorPanel: View {
     }
 
     @ViewBuilder
-    private func advisorSummaryRow(index: Int, line: String) -> some View {
-        if category == .residential, index == 0 {
+    private func advisorSummaryRow(_ line: AdvisorSummaryLine) -> some View {
+        switch line {
+        case let .housingCapacity(prefix, capacity, suffix):
             VStack(spacing: 0) {
-                Text("目前住宅还可容纳")
+                Text(prefix)
                     .foregroundStyle(EmperorTheme.onSurface)
-                Text("\(availableHousingCapacity)")
+                Text("\(capacity)")
                     .font(EmperorTheme.metric)
                     .foregroundStyle(ClassicPalette.gold)
-                Text("人居住")
+                Text(suffix)
                     .foregroundStyle(EmperorTheme.onSurface)
             }
             .font(EmperorTheme.bodySmall)
             .multilineTextAlignment(.center)
-        } else if category == .residential,
-                  index == 1,
-                  let status = migrationStatusParts {
+        case let .migrationStatus(lead, emphasis):
             VStack(spacing: 1) {
-                Text(status.lead)
+                Text(lead)
                     .foregroundStyle(EmperorTheme.onSurface)
-                Text(status.emphasis)
+                Text(emphasis)
                     .foregroundStyle(EmperorTheme.warning)
             }
             .font(EmperorTheme.bodySmall)
             .multilineTextAlignment(.center)
-        } else {
+        case let .text(line):
             highlightedAdvisorText(line)
                 .font(EmperorTheme.bodySmall)
                 .multilineTextAlignment(.center)
