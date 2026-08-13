@@ -18,7 +18,10 @@ public struct OriginalLocalizedTextCatalog: Sendable, Hashable {
     /// is restricted to exactly these rows; the rest of the group is `unknown`
     /// and must not leak through row lookup.
     private static let confirmedAlignedRowsByGroup: [Int: Set<Int>] = [
-        55: [8, 9],
+        // Group 55: housing-capacity legend rows 8/9 plus the three authored
+        // migration components (12 restriction lead, 13 housing reason, 20 wish).
+        // All other rows of group 55 — including 7, 10, and 14 — remain unauthorized.
+        55: [8, 9, 12, 13, 20],
     ]
 
     private let localizedByGroup: [Int: [String: String]]

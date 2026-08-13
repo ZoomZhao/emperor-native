@@ -123,6 +123,33 @@ private func children(of element: AXUIElement) -> [AXUIElement] {
     copyAttribute(element, kAXChildrenAttribute as CFString) as? [AXUIElement] ?? []
 }
 
+/// Bounded BFS over an element's descendants collecting every non-empty string
+/// `AXValue`/`AXDescription`/`AXTitle`, then normalizes all interior whitespace
+/// (including U+3000) to single ASCII spaces. Used to assert the residential
+/// advisor's authored text without depending on its exact view structure.
+private func normalizedDescendantText(of element: AXUIElement) -> String {
+    var queue = children(of: element)
+    var chunks: [String] = []
+    var visited: Set<CFHashCode> = [CFHash(element)]
+    var index = 0
+    while index < queue.count, index < 8_000 {
+        let current = queue[index]
+        index += 1
+        guard visited.insert(CFHash(current)).inserted else { continue }
+        for attribute in [kAXValueAttribute, kAXDescriptionAttribute, kAXTitleAttribute] {
+            if let text = stringAttribute(current, attribute as CFString),
+               !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                chunks.append(text)
+            }
+        }
+        queue.append(contentsOf: children(of: current))
+    }
+    return chunks
+        .joined(separator: " ")
+        .split(whereSeparator: { $0.isWhitespace })
+        .joined(separator: " ")
+}
+
 private func findElement(in application: AXUIElement, identifier: String) -> AXUIElement? {
     let windows = copyAttribute(
         application,
@@ -943,6 +970,42 @@ private func runSmoke(arguments: Arguments) throws {
                   findElement(in: application, identifier: "game-speed-3") == nil else {
                 throw SmokeFailure("advanced city controls should be hidden by default")
             }
+            let populationPanel = try waitForElement(
+                in: application,
+                identifier: "advisor-population-panel",
+                timeout: 15,
+                requireEnabled: false
+            )
+            let populationText = normalizedDescendantText(of: populationPanel)
+            let requiredPopulationTokens = [
+                "目前住宅还可容纳", "0", "人居住",
+                "人们希望迁居你的城市", "移民受到限制.原因是:", "缺乏住房",
+            ]
+            for token in requiredPopulationTokens {
+                guard populationText.contains(token) else {
+                    throw SmokeFailure(
+                        "population advisor missing required token \(token); text=\(populationText)"
+                    )
+                }
+            }
+            let unsupportedPopulationTokens = [
+                "等待下一个模拟日评估迁入条件", "缺乏临路住房", "国库为负", "失业率过高",
+            ]
+            for token in unsupportedPopulationTokens {
+                guard !populationText.contains(token) else {
+                    throw SmokeFailure(
+                        "population advisor rendered unsupported token \(token); text=\(populationText)"
+                    )
+                }
+            }
+            if let panelFrame = axFrame(of: populationPanel)?.rect {
+                guard panelFrame.width <= 224 else {
+                    throw SmokeFailure(
+                        "population advisor panel exceeds 224px: \(panelFrame.width)"
+                    )
+                }
+            }
+            log.record("population advisor tokens=\(populationText)")
             Thread.sleep(forTimeInterval: 2)
             let screenshotURL = arguments.logDirectory
                 .appendingPathComponent("qin-m1-native-city-baseline.png")

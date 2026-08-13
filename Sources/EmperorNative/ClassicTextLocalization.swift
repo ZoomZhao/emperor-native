@@ -450,10 +450,10 @@ enum ClassicTextLocalization {
     /// Exact authored Simplified Chinese group 55 housing-capacity sentence from
     /// the runtime catalog (`GameData/EmperorText.txt` row 8 prefix and row 9
     /// suffix, semantically aligned with `EmperorText.eng` "Housing for" /
-    /// "more people."). Only group 55 rows 8/9 are authorized in the catalog;
-    /// the rest of group 55 was not compared and is not exposed. Both parts
-    /// must exist and be nonempty or `nil` is returned; there is deliberately
-    /// no invented or hardcoded fallback text.
+    /// "more people."). Only group 55 rows 8/9/12/13/20 are authorized in the
+    /// catalog; the rest of group 55 was not compared and is not exposed. Both
+    /// parts must exist and be nonempty or `nil` is returned; there is
+    /// deliberately no invented or hardcoded fallback text.
     static var housingCapacityLegend: (prefix: String, suffix: String)? {
         guard let prefix = originalText?.localized(groupID: 55, rowIndex: 8),
               let suffix = originalText?.localized(groupID: 55, rowIndex: 9),
@@ -462,6 +462,29 @@ enum ClassicTextLocalization {
             return nil
         }
         return (prefix, suffix)
+    }
+
+    /// Typed group 55 migration components for the residential advisor. Each
+    /// part is an exact authored Simplified Chinese row (12 `移民受到限制.原因是:`,
+    /// 13 `缺乏住房`, 20 `人们希望迁居你的城市`). All three runtime rows must exist and
+    /// be nonempty or `nil` is returned; there is no invented or hardcoded
+    /// fallback, and unverified reason rows are never mapped.
+    struct MigrationStatusText: Equatable {
+        let wish: String
+        let restrictionLead: String
+        let restrictionReason: String
+    }
+
+    static var migrationStatusText: MigrationStatusText? {
+        guard let wish = originalText?.localized(groupID: 55, rowIndex: 20),
+              let lead = originalText?.localized(groupID: 55, rowIndex: 12),
+              let reason = originalText?.localized(groupID: 55, rowIndex: 13),
+              !wish.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              !lead.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              !reason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return nil
+        }
+        return MigrationStatusText(wish: wish, restrictionLead: lead, restrictionReason: reason)
     }
 
     static func authoredName(_ authoredName: String) -> String {

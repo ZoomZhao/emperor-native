@@ -318,7 +318,7 @@ final class EmperorCoreTests: XCTestCase {
         }
     }
 
-    func testLocalEmperorTextGroup55HousingCapacityRowsAreExactChinese() throws {
+    func testLocalEmperorTextGroup55HousingCapacityAndMigrationRowsAreExactChinese() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")
         }
@@ -334,12 +334,36 @@ final class EmperorCoreTests: XCTestCase {
             "人居住"
         )
         XCTAssertEqual(
+            catalog.localized(groupID: 55, rowIndex: 12),
+            "移民受到限制.原因是:"
+        )
+        XCTAssertEqual(
+            catalog.localized(groupID: 55, rowIndex: 13),
+            "缺乏住房"
+        )
+        XCTAssertEqual(
+            catalog.localized(groupID: 55, rowIndex: 20),
+            "人们希望迁居你的城市"
+        )
+        XCTAssertEqual(
             catalog.localized("Housing for", groupID: 55),
             "目前住宅还可容纳"
         )
         XCTAssertEqual(
             catalog.localized("more people.", groupID: 55),
             "人居住"
+        )
+        XCTAssertEqual(
+            catalog.localized("Immigration limited by", groupID: 55),
+            "移民受到限制.原因是:"
+        )
+        XCTAssertEqual(
+            catalog.localized("lack of housing vacancies.", groupID: 55),
+            "缺乏住房"
+        )
+        XCTAssertEqual(
+            catalog.localized("People wish to come to the city.", groupID: 55),
+            "人们希望迁居你的城市"
         )
     }
 
@@ -353,6 +377,7 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertNil(catalog.localized(groupID: 55, rowIndex: -1))
         XCTAssertNil(catalog.localized(groupID: 55, rowIndex: 7))
         XCTAssertNil(catalog.localized(groupID: 55, rowIndex: 10))
+        XCTAssertNil(catalog.localized(groupID: 55, rowIndex: 14))
         XCTAssertNil(catalog.localized(groupID: 55, rowIndex: 36))
     }
 
