@@ -541,7 +541,7 @@ private struct ClassicCityGameView: View {
                                 cityCanvas(city)
                             }
 
-                            if showsMapMessagePanel {
+                            if showsMapMessagePanel, !cityMessages.isEmpty {
                                 ClassicMapMessagePanel(
                                     messages: cityMessages,
                                     selectedIndex: selectedMapMessageIndex,
@@ -582,6 +582,7 @@ private struct ClassicCityGameView: View {
                             },
                             onSelectConstructionChoice: selectConstructionChoice,
                             onOpenMessages: {
+                                guard !cityMessages.isEmpty else { return }
                                 selectedMapMessageIndex = max(0, cityMessages.count - 1)
                                 showsMapMessagePanel = true
                             }

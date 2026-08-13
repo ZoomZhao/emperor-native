@@ -66,3 +66,5 @@ state.
   invasion, disaster, strike, gift, and tribute families, but the runtime
   record-to-family, tone, phase, and variable-binding control flow has not been
   recovered; their exact selected wording therefore remains unknown.
+- The focused drought/flood writer search and the recovered shared message
+  record layout are recorded in `disaster-event-message-pipeline.md`.

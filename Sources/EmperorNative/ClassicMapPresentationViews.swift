@@ -14,82 +14,77 @@ struct ClassicMapMessagePanel: View {
     let onSelectIndex: (Int) -> Void
     let onDismiss: () -> Void
 
+    @ViewBuilder
     var body: some View {
         let safeIndex = min(max(0, selectedIndex), max(0, messages.count - 1))
-        let message = messages.indices.contains(safeIndex)
-            ? messages[safeIndex]
-            : ClassicMapMessageRow(
-                id: "empty",
-                title: "城市消息",
-                body: "目前没有等待处理的城市消息。",
-                detail: nil
-            )
-
-        VStack(spacing: 0) {
-            Text(message.title)
-                .font(EmperorTheme.labelMedium)
-                .foregroundStyle(EmperorTheme.gold)
-                .frame(maxWidth: .infinity)
-                .frame(height: 23)
-                .background(EmperorTheme.tileBrown.opacity(0.92))
-                .overlay(alignment: .bottom) {
-                    Rectangle().fill(EmperorTheme.border).frame(height: 1)
-                }
-
-            HStack(alignment: .bottom, spacing: 10) {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(message.body)
-                        .font(EmperorTheme.bodySmall)
-                        .foregroundStyle(EmperorTheme.onSurface)
-                        .lineLimit(3)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    if let detail = message.detail {
-                        Text(detail)
-                            .font(EmperorTheme.caption)
-                            .foregroundStyle(EmperorTheme.onSurfaceMuted)
-                            .lineLimit(1)
+        if messages.indices.contains(safeIndex) {
+            let message = messages[safeIndex]
+            VStack(spacing: 0) {
+                Text(message.title)
+                    .font(EmperorTheme.labelMedium)
+                    .foregroundStyle(EmperorTheme.gold)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 23)
+                    .background(EmperorTheme.tileBrown.opacity(0.92))
+                    .overlay(alignment: .bottom) {
+                        Rectangle().fill(EmperorTheme.border).frame(height: 1)
                     }
-                }
 
-                if messages.count > 1 {
-                    HStack(spacing: 3) {
-                        Button("◀") {
-                            onSelectIndex(max(0, safeIndex - 1))
+                HStack(alignment: .bottom, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(message.body)
+                            .font(EmperorTheme.bodySmall)
+                            .foregroundStyle(EmperorTheme.onSurface)
+                            .lineLimit(3)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        if let detail = message.detail {
+                            Text(detail)
+                                .font(EmperorTheme.caption)
+                                .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                                .lineLimit(1)
                         }
-                        .disabled(safeIndex == 0)
-                        .accessibilityLabel("上一条城市消息")
-
-                        Text("\(safeIndex + 1)/\(messages.count)")
-                            .font(EmperorTheme.caption)
-                            .foregroundStyle(EmperorTheme.onSurfaceMuted)
-
-                        Button("▶") {
-                            onSelectIndex(min(messages.count - 1, safeIndex + 1))
-                        }
-                        .disabled(safeIndex == messages.count - 1)
-                        .accessibilityLabel("下一条城市消息")
                     }
-                    .buttonStyle(ClassicMessageGlyphButtonStyle())
+
+                    if messages.count > 1 {
+                        HStack(spacing: 3) {
+                            Button("◀") {
+                                onSelectIndex(max(0, safeIndex - 1))
+                            }
+                            .disabled(safeIndex == 0)
+                            .accessibilityLabel("上一条城市消息")
+
+                            Text("\(safeIndex + 1)/\(messages.count)")
+                                .font(EmperorTheme.caption)
+                                .foregroundStyle(EmperorTheme.onSurfaceMuted)
+
+                            Button("▶") {
+                                onSelectIndex(min(messages.count - 1, safeIndex + 1))
+                            }
+                            .disabled(safeIndex == messages.count - 1)
+                            .accessibilityLabel("下一条城市消息")
+                        }
+                        .buttonStyle(ClassicMessageGlyphButtonStyle())
+                    }
+
+                    Button("?") {}
+                        .buttonStyle(ClassicMessageGlyphButtonStyle())
+                        .help("城市消息帮助")
+                        .accessibilityLabel("城市消息帮助")
+
+                    Button("确定", action: onDismiss)
+                        .buttonStyle(EmperorClassicButtonStyle(.primary))
+                        .accessibilityIdentifier("city-message-panel-confirm")
                 }
-
-                Button("?") {}
-                    .buttonStyle(ClassicMessageGlyphButtonStyle())
-                    .help("城市消息帮助")
-                    .accessibilityLabel("城市消息帮助")
-
-                Button("确定", action: onDismiss)
-                    .buttonStyle(EmperorClassicButtonStyle(.primary))
-                    .accessibilityIdentifier("city-message-panel-confirm")
+                .padding(.horizontal, 12)
+                .padding(.vertical, 9)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 9)
+            .frame(width: EmperorTheme.cityMapColumnWidth)
+            .frame(height: EmperorTheme.mapMessagePanelHeight)
+            .background(EmperorTheme.panelBrown.opacity(0.98))
+            .overlay(Rectangle().strokeBorder(EmperorTheme.border, lineWidth: 2))
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("city-message-panel")
         }
-        .frame(width: EmperorTheme.cityMapColumnWidth)
-        .frame(height: EmperorTheme.mapMessagePanelHeight)
-        .background(EmperorTheme.panelBrown.opacity(0.98))
-        .overlay(Rectangle().strokeBorder(EmperorTheme.border, lineWidth: 2))
-        .accessibilityElement(children: .contain)
-        .accessibilityIdentifier("city-message-panel")
     }
 }
 

@@ -206,7 +206,7 @@ Emperor Native 的玩家界面不是受《皇帝：龙之崛起》启发的现�
 
 失火阈值不是普通建筑无动画地消失：可执行文件先把建筑内部燃烧状态由 `0` 置为 `1`，随后通过原版火焰族绘制燃烧并把占地转换为 `#161` 废墟单元；坍塌走独立的破坏入口。当前月级模拟把这段亚月事故过程呈现为“当月火焰覆盖 + 同占地持久废墟”，这是时间粒度折叠，不得据此声称巡察员能在原生实现中实时改道救火；实时灭火与蔓延只有在恢复原版逐帧火场状态机后才能标记为完成。
 
-事故消息正文必须来自 `Model/EmperorEventmsg.txt`，不能由原生界面另写说明。火灾使用 `PHRASE_fire_title` 与 `PHRASE_fire_initial_announcement`，坍塌使用 `PHRASE_collapsed_building_title` 与 `PHRASE_collapsed_building_initial_announcement`；该文件按 GB18030 读取。已知玩家帐号可替换 `[player_name]`，未知时必须保留占位符并视为未完成的称谓绑定，不能杜撰默认君主名。消息列表不显示未经原版证据确认的地图坐标详情。其他事件的标题、阶段正文与变量替换尚未闭环，不得套用这两类事故的选择规则。Native 当前对未闭环的战役事件（request/invasion/earthquake/drought/flood/strike/gift/tribute）保持 fail-closed：消息列表只呈现已闭环的 fire/collapse 事故记录，不为这些事件渲染标题或正文，也不因事件入队而自动弹出消息面板；不得用杜撰中文文案填充，任何接入都必须先闭环原版短语族、阶段正文与变量替换。
+事故消息正文必须来自 `Model/EmperorEventmsg.txt`，不能由原生界面另写说明。火灾使用 `PHRASE_fire_title` 与 `PHRASE_fire_initial_announcement`，坍塌使用 `PHRASE_collapsed_building_title` 与 `PHRASE_collapsed_building_initial_announcement`；该文件按 GB18030 读取。已知玩家帐号可替换 `[player_name]`，未知时必须保留占位符并视为未完成的称谓绑定，不能杜撰默认君主名。消息列表不显示未经原版证据确认的地图坐标详情。其他事件的标题、阶段正文与变量替换尚未闭环，不得套用这两类事故的选择规则。Native 当前对未闭环的战役事件（request/invasion/earthquake/drought/flood/strike/gift/tribute）保持 fail-closed：消息列表只呈现已闭环的 fire/collapse 事故记录，不为这些事件渲染标题或正文，也不因事件入队而自动弹出消息面板；没有已闭环消息时，消息按钮不打开空面板。不得用杜撰中文文案填充，任何接入都必须先闭环原版短语族、阶段正文与变量替换。
 
 维护事故和战斗破坏必须保持两条独立因果链，但共用事故呈现、消息和废墟清理流程。普通事故消息使用上述原版短语；其中火灾正文提到巡视员灭火，坍塌正文建议增建巡视员塔楼，均不得扩写为原版未写出的劳工提示。敌军纵火只有在具体作战单位真正对建筑实施攻击时才能产生。原版手册确认步兵可纵火、弩兵与骑兵可射燃烧箭、投石车会造成结构伤害或发射燃烧弹，而战车不能纵火；在逐单位建筑攻击尚未实现前，不得用城市突破报告代替这套过程。
 
