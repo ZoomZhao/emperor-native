@@ -45,6 +45,14 @@ state.
   name.
 - Native coordinate detail is omitted because no original message-field
   contract for it has been recovered.
+- `ClassicCityGameView.cityMessages` renders only the two closed-loop building
+  failure families above. Campaign events (`request`, `invasion`,
+  `earthquake`, `drought`, `flood`, `strike`, `gift`, `tribute`) are
+  fail-closed in the player UI: they receive no invented title or body, and
+  message enqueue no longer auto-opens the map message panel. Previously
+  fabricated Chinese campaign title/body rows (`campaignMessageTitle` /
+  `campaignMessageBody`) were removed rather than swapped for another
+  fallback; do not re-add generic prose.
 
 ## Unknown
 
@@ -54,4 +62,7 @@ state.
   and message lifetime are not established by this slice.
 - Campaign event records require phrase-family, tone, phase, city, commodity,
   amount, and timing selection. They remain unsupported rather than borrowing
-  generic Native prose.
+  generic Native prose. `EmperorEventmsg.txt` does contain candidate request,
+  invasion, disaster, strike, gift, and tribute families, but the runtime
+  record-to-family, tone, phase, and variable-binding control flow has not been
+  recovered; their exact selected wording therefore remains unknown.

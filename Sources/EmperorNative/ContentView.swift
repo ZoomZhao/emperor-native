@@ -503,11 +503,6 @@ private struct ClassicCityGameView: View {
         .onChange(of: library.saveStatus) { status in
             presentMapStatus(status)
         }
-        .onChange(of: library.cityState?.campaignEvents.messages.count ?? 0) { count in
-            guard count > 0 else { return }
-            selectedMapMessageIndex = max(0, cityMessages.count - 1)
-            showsMapMessagePanel = true
-        }
         .onDisappear {
             mapStatusDismissTask?.cancel()
         }
@@ -660,15 +655,6 @@ private struct ClassicCityGameView: View {
 
     private var cityMessages: [ClassicMapMessageRow] {
         guard let city = library.cityState else { return [] }
-        let campaignRows = city.campaignEvents.messages.map { message in
-            let kind = CampaignEventKind(rawValue: message.kindRawValue)
-            return ClassicMapMessageRow(
-                id: "campaign-\(message.id)",
-                title: campaignMessageTitle(kind),
-                body: campaignMessageBody(kind),
-                detail: message.amount.map { "数量：\($0)" }
-            )
-        }
         let failureRows: [ClassicMapMessageRow] = (
             city.operations.lastSettlement?.failures ?? []
         ).compactMap { failure -> ClassicMapMessageRow? in
@@ -683,7 +669,7 @@ private struct ClassicCityGameView: View {
                 detail: nil
             )
         }
-        return campaignRows + failureRows
+        return failureRows
     }
 
     @ViewBuilder
@@ -740,32 +726,6 @@ private struct ClassicCityGameView: View {
             try? await Task.sleep(for: .seconds(3))
             guard !Task.isCancelled else { return }
             visibleMapStatus = nil
-        }
-    }
-
-    private func campaignMessageTitle(_ kind: CampaignEventKind?) -> String {
-        switch kind {
-        case .request: "帝国请求"
-        case .invasion: "入侵警报"
-        case .earthquake: "地震"
-        case .drought: "旱灾"
-        case .flood: "洪水"
-        case .strike: "罢工"
-        case .gift, .tributeToPlayer: "收到贡礼"
-        default: "城市消息"
-        }
-    }
-
-    private func campaignMessageBody(_ kind: CampaignEventKind?) -> String {
-        switch kind {
-        case .request: "帝国向你的城市提出了一项请求，请在期限内准备并交付所需物资。"
-        case .invasion: "敌军正在逼近。请检查城防、部队和通往入侵点的道路。"
-        case .earthquake: "地震袭击了城市，请检查受损或倒塌的建筑。"
-        case .drought: "旱灾正在影响本地农业生产。"
-        case .flood: "洪水正在影响本地农业生产与城市设施。"
-        case .strike: "劳工已经停止工作，请检查工资与城市状况。"
-        case .gift, .tributeToPlayer: "一批贡礼已经送达你的城市。"
-        default: "新的消息已经送达，请留意城市和帝国局势。"
         }
     }
 
