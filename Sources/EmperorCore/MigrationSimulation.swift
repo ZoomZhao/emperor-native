@@ -6,6 +6,12 @@ public enum MigrationBlockReason: Sendable, Hashable, Codable {
     case highUnemployment(percent: Int)
 }
 
+/// Automatic migration remains disabled until the recovered original
+/// popularity/factor producer is represented in Native state.
+public enum AutomaticMigrationAvailability: String, Sendable, Hashable, Codable {
+    case unsupportedOriginalProducer
+}
+
 public struct MigrationAssessment: Sendable, Hashable, Codable {
     public let eligibleHouseIDs: [Int]
     public let availableCapacity: Int
@@ -23,45 +29,79 @@ public struct MigrationAssessment: Sendable, Hashable, Codable {
 }
 
 public struct DeterministicMigrationState: Sendable, Hashable, Codable {
+    public private(set) var automaticMigrationAvailability: AutomaticMigrationAvailability
     public private(set) var lastAssessment: MigrationAssessment?
     public private(set) var lastDailyImmigrants: Int
     public private(set) var currentMonthImmigrants: Int
     public private(set) var lastMonthImmigrants: Int
 
     public init(
+        automaticMigrationAvailability: AutomaticMigrationAvailability = .unsupportedOriginalProducer,
         lastAssessment: MigrationAssessment? = nil,
         lastDailyImmigrants: Int = 0,
         currentMonthImmigrants: Int = 0,
         lastMonthImmigrants: Int = 0
     ) {
+        self.automaticMigrationAvailability = automaticMigrationAvailability
         self.lastAssessment = lastAssessment
         self.lastDailyImmigrants = max(0, lastDailyImmigrants)
         self.currentMonthImmigrants = max(0, currentMonthImmigrants)
         self.lastMonthImmigrants = max(0, lastMonthImmigrants)
     }
 
-    public mutating func recordDay(assessment: MigrationAssessment, admitted: Int) {
+    public mutating func recordUnsupportedDay(assessment: MigrationAssessment) {
+        automaticMigrationAvailability = .unsupportedOriginalProducer
         lastAssessment = assessment
-        lastDailyImmigrants = max(0, admitted)
-        currentMonthImmigrants += max(0, admitted)
+        lastDailyImmigrants = 0
+        currentMonthImmigrants = 0
+        lastMonthImmigrants = 0
     }
 
     public mutating func finishMonth() {
-        lastMonthImmigrants = currentMonthImmigrants
+        lastDailyImmigrants = 0
         currentMonthImmigrants = 0
+        lastMonthImmigrants = 0
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case automaticMigrationAvailability
+        case lastAssessment
+        case lastDailyImmigrants
+        case currentMonthImmigrants
+        case lastMonthImmigrants
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        automaticMigrationAvailability = try container.decodeIfPresent(
+            AutomaticMigrationAvailability.self,
+            forKey: .automaticMigrationAvailability
+        ) ?? .unsupportedOriginalProducer
+        lastAssessment = try container.decodeIfPresent(
+            MigrationAssessment.self,
+            forKey: .lastAssessment
+        )
+        lastDailyImmigrants = max(
+            0,
+            try container.decodeIfPresent(Int.self, forKey: .lastDailyImmigrants) ?? 0
+        )
+        currentMonthImmigrants = max(
+            0,
+            try container.decodeIfPresent(Int.self, forKey: .currentMonthImmigrants) ?? 0
+        )
+        lastMonthImmigrants = max(
+            0,
+            try container.decodeIfPresent(Int.self, forKey: .lastMonthImmigrants) ?? 0
+        )
     }
 }
 
 public enum DeterministicMigration {
-    public static let frontierPopulationLimit = 150
-    public static let maximumDailyImmigrants = 5
-
-    public static func assess(
+    /// Observes the independently recovered housing-capacity input without
+    /// inventing arrivals, departures, popularity, or restriction reasons.
+    public static func observeHousing(
         houses: [ResidentialUnit],
-        population: Int,
-        treasury: Int,
         roadNetwork: RoadNetwork,
-        workforce: WorkforceMonthlySettlement?,
         models: BuildingModelTable
     ) -> MigrationAssessment {
         let eligible = houses
@@ -83,31 +123,12 @@ public enum DeterministicMigration {
         let availableCapacity = eligible.reduce(0) {
             $0 + max(0, $1.capacity(using: models) - $1.residents)
         }
-        guard availableCapacity > 0 else { return .noHousing }
-
-        let unemploymentPercent: Int
-        if let workforce, workforce.availableWorkers > 0 {
-            unemploymentPercent = workforce.unemployedWorkers * 100 / workforce.availableWorkers
-        } else {
-            unemploymentPercent = 0
-        }
-
-        let blockReason: MigrationBlockReason?
-        if population >= frontierPopulationLimit, treasury < 0 {
-            blockReason = .negativeTreasury
-        } else if population >= frontierPopulationLimit, unemploymentPercent > 10 {
-            blockReason = .highUnemployment(percent: unemploymentPercent)
-        } else {
-            blockReason = nil
-        }
         return MigrationAssessment(
             eligibleHouseIDs: eligible.map(\.id),
             availableCapacity: availableCapacity,
-            unemploymentPercent: unemploymentPercent,
-            plannedImmigrants: blockReason == nil
-                ? min(maximumDailyImmigrants, availableCapacity)
-                : 0,
-            blockReason: blockReason
+            unemploymentPercent: 0,
+            plannedImmigrants: 0,
+            blockReason: nil
         )
     }
 }

@@ -432,13 +432,25 @@ housed newcomer count displayed by the renderer. The link is direct:
 
 ### 7.3 Why the Native producer is not equivalent (correction status)
 
-- Native `DeterministicMigration.assess` admits at most
-  `maximumDailyImmigrants = 5` per day, gates every block reason on
-  `population >= frontierPopulationLimit` (150), and plans `min(5, availableCapacity)`
-  immigrants with no popularity/pressure, war-counter, request-cooldown, or
-  calendar-case `0x17` structure. It therefore cannot reproduce the original
-  `DAT_01311FCC` series, the mode-0 `> 4` branch's threshold, or the
-  signed-pressure row 11/10 equivalence for counts 1-4.
+- The former Native `DeterministicMigration.assess` admitted at most five people
+  per day and used population 150, treasury, and unemployment gates. Those
+  rules had no authored-data or executable source and have been removed.
+- Production migration is now explicitly
+  `AutomaticMigrationAvailability.unsupportedOriginalProducer`. Each tick only
+  observes road-adjacent vacant housing through `observeHousing`; planned,
+  daily, current-month, and last-month counts remain zero, and no resident is
+  admitted or removed. `CitySimulation.admitResidents` remains a loader/test
+  fixture primitive and has no production caller.
+- Legacy saves that contain the former count fields still decode. Their values
+  are retained at decode time for compatibility, then cleared by the first
+  production tick so they cannot be presented as original behavior.
+- Native diagnostic migration strips, summary rows, and the count-driven fake
+  immigrant figure have been removed. Qin-1/Qin-2 and Xia-1/Xia-2 positive
+  player playthroughs that need natural population growth are skipped with
+  `BLOCKED BY UNKNOWN`; their migration-independent baseline and negative tests
+  still run. Downstream
+  subsystem unit tests seed residents explicitly and label that setup as a
+  fixture rather than migration evidence.
 - Correction: because the consumer requires an equivalent producer, the earlier
   Native UI contract that selected `currentMonthImmigrants > 4` → status-20
   wish + numeric count + row-10 suffix **is superseded**. The branch,

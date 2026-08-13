@@ -544,22 +544,6 @@ extension CityCanvas {
                 animationFrame: laborer.animationFrame
             )
         }
-        if city.migration.lastDailyImmigrants > 0,
-           let houseID = city.migration.lastAssessment?.eligibleHouseIDs.first,
-           let house = city.houses.first(where: { $0.id == houseID }),
-           let location = house.location,
-           let roadPoint = RoadServiceCoverage.orthogonalNeighbors(of: location)
-            .filter(city.roadNetwork.contains)
-            .sorted(by: { $0.x == $1.x ? $0.y < $1.y : $0.x < $1.x }).first {
-            append(
-                figureID: 11,
-                stableID: 500_000 + houseID,
-                point: roadPoint,
-                previous: location,
-                interpolatesMovement: false
-            )
-        }
-
         // The original map model reserves BUILD_MAP_PREY_POINT for ambient
         // animals. The native city state does not yet persist those editor
         // points, so use deterministic clear-land loops until that map layer

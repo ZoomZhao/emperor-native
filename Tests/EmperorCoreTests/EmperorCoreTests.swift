@@ -2336,13 +2336,15 @@ final class EmperorCoreTests: XCTestCase {
             location: GridPoint(x: 2, y: 1),
             models: original.buildings
         )
+        // Fixture-only occupancy isolates the downgrade/displacement rule;
+        // automatic migration waits for the original popularity producer.
+        XCTAssertEqual(city.admitResidents(8, models: original.buildings), 8)
 
         _ = city.advanceMonth(rules: rules)
         XCTAssertEqual(city.houses[0].houseLevelID, 1)
         XCTAssertEqual(city.lastHousingSettlement?.devolvedCount, 1)
         XCTAssertEqual(city.lastHousingSettlement?.changes.first?.direction, .devolved)
-        // Daily migration fills the level-2 dwelling before it loses service;
-        // the downgrade therefore displaces the eight residents over level 1's capacity.
+        // The full level-2 fixture exceeds level 1 capacity by eight residents.
         XCTAssertEqual(city.lastHousingSettlement?.changes.first?.displacedResidents, 8)
     }
 
@@ -3203,6 +3205,9 @@ final class EmperorCoreTests: XCTestCase {
             location: GridPoint(x: 5, y: 2),
             models: original.buildings
         )
+        // Fixture-only occupancy keeps this test about mill/market food
+        // quantities, not the unsupported automatic migration producer.
+        XCTAssertEqual(city.admitResidents(12, models: original.buildings), 12)
         _ = city.constructProductionBuilding(
             buildingID: 31,
             assignedWorkers: original.buildings[buildingID: 31]?.employees ?? 0,

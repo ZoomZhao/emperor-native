@@ -2,7 +2,7 @@ import EmperorCore
 import XCTest
 
 final class MigrationSimulationTests: XCTestCase {
-    func testMigrationUsesRoadAdjacentVacanciesInHouseIDOrderAtFivePeoplePerDay() throws {
+    func testTickObservesRoadAdjacentHousingWithoutMovingResidents() throws {
         let original = try installedModels()
         let rules = EconomyRulesEngine(models: original)
         var city = DeterministicCityState(
@@ -23,141 +23,111 @@ final class MigrationSimulationTests: XCTestCase {
             models: original.buildings
         )
 
-        let firstDay = city.advanceTick(rules: rules)
-        XCTAssertEqual(firstDay.migratedResidents, 5)
-        XCTAssertEqual(city.population, 5)
-        XCTAssertEqual(city.houses.first(where: { $0.id == firstID })?.residents, 5)
-        XCTAssertEqual(city.houses.first(where: { $0.id == secondID })?.residents, 0)
+        let tick = city.advanceTick(rules: rules)
 
-        let secondDay = city.advanceTick(rules: rules)
-        XCTAssertEqual(secondDay.migratedResidents, 5)
-        XCTAssertEqual(city.houses.first(where: { $0.id == firstID })?.residents, 7)
-        XCTAssertEqual(city.houses.first(where: { $0.id == secondID })?.residents, 3)
+        XCTAssertEqual(tick.migratedResidents, 0)
+        XCTAssertEqual(tick.migrationAssessment.eligibleHouseIDs, [firstID, secondID])
+        XCTAssertEqual(tick.migrationAssessment.availableCapacity, 14)
+        XCTAssertEqual(tick.migrationAssessment.plannedImmigrants, 0)
+        XCTAssertNil(tick.migrationAssessment.blockReason)
+        XCTAssertEqual(city.population, 0)
+        XCTAssertEqual(
+            city.migration.automaticMigrationAvailability,
+            .unsupportedOriginalProducer
+        )
+        XCTAssertEqual(city.migration.lastDailyImmigrants, 0)
+        XCTAssertEqual(city.migration.currentMonthImmigrants, 0)
+        XCTAssertEqual(city.migration.lastMonthImmigrants, 0)
     }
 
-    func testMigrationFillsEliteCompoundsBeforeLowerTierVacancies() throws {
+    func testHousingObservationExcludesVacanciesWithoutRoadAccess() throws {
         let original = try installedModels()
         let rules = EconomyRulesEngine(models: original)
         var city = DeterministicCityState(
             year: 2038,
             treasury: 10_000,
-            mapWidth: 12,
+            mapWidth: 8,
             mapHeight: 5
         )
-        _ = city.buildRoad(
-            (0..<12).flatMap { x in
-                [GridPoint(x: x, y: 0), GridPoint(x: x, y: 3)]
-            },
-            rules: rules
-        )
-        let commonID = city.addHouse(
+        _ = city.buildRoad([GridPoint(x: 0, y: 1)], rules: rules)
+        let accessibleID = city.addHouse(
             levelID: 0,
-            location: GridPoint(x: 2, y: 1),
+            location: GridPoint(x: 1, y: 1),
             models: original.buildings
         )
-        let eliteID = city.addHouse(
-            levelID: 13,
-            location: GridPoint(x: 5, y: 1),
-            models: original.buildings
-        )
-
-        XCTAssertEqual(city.advanceTick(rules: rules).migratedResidents, 5)
-        XCTAssertEqual(city.houses.first(where: { $0.id == eliteID })?.residents, 5)
-        XCTAssertEqual(city.houses.first(where: { $0.id == commonID })?.residents, 0)
-    }
-
-    func testMigrationIgnoresHousingWithoutRoadAccessAndStopsAtCapacity() throws {
-        let original = try installedModels()
-        let rules = EconomyRulesEngine(models: original)
-        var city = DeterministicCityState(year: 2038, treasury: 10_000, mapWidth: 8, mapHeight: 5)
-        _ = city.buildRoad([GridPoint(x: 1, y: 2)], rules: rules)
         _ = city.addHouse(
             levelID: 0,
             location: GridPoint(x: 6, y: 4),
             models: original.buildings
         )
 
-        let blocked = city.advanceTick(rules: rules)
-        XCTAssertEqual(blocked.migratedResidents, 0)
-        XCTAssertEqual(blocked.migrationAssessment.blockReason, .noEligibleHousing)
+        let tick = city.advanceTick(rules: rules)
 
-        _ = city.buildRoad([GridPoint(x: 0, y: 1)], rules: rules)
-        _ = city.addHouse(
+        XCTAssertEqual(tick.migrationAssessment.eligibleHouseIDs, [accessibleID])
+        XCTAssertEqual(tick.migrationAssessment.availableCapacity, 7)
+        XCTAssertEqual(tick.migratedResidents, 0)
+        XCTAssertEqual(city.population, 0)
+    }
+
+    func testLegacyMigrationStateDecodesThenProductionTickClearsApproximation() throws {
+        let original = try installedModels()
+        let rules = EconomyRulesEngine(models: original)
+        var source = DeterministicCityState(
+            year: 2038,
+            treasury: 10_000,
+            mapWidth: 8,
+            mapHeight: 5
+        )
+        _ = source.buildRoad([GridPoint(x: 0, y: 1)], rules: rules)
+        _ = source.addHouse(
             levelID: 0,
             location: GridPoint(x: 1, y: 1),
             models: original.buildings
         )
-        _ = city.advanceTick(rules: rules)
-        let capped = city.advanceTick(rules: rules)
-        XCTAssertEqual(city.population, 7)
-        XCTAssertEqual(capped.migratedResidents, 2)
-        XCTAssertEqual(city.migration.lastAssessment?.blockReason, nil)
-    }
 
-    func testMigrationPausesAtOneHundredFiftyWithHighUnemployment() throws {
-        let original = try installedModels()
-        let rules = EconomyRulesEngine(models: original)
-        var city = DeterministicCityState(year: 2038, treasury: 100_000, mapWidth: 40, mapHeight: 5)
-        city.workforceEnabled = true
-        _ = city.buildRoad((0..<40).map { GridPoint(x: $0, y: 2) }, rules: rules)
-        for x in 1...23 {
-            _ = city.addHouse(
-                levelID: 0,
-                location: GridPoint(x: x, y: 1),
-                models: original.buildings
-            )
-        }
-
-        while city.population < 150 {
-            _ = city.advanceTick(rules: rules)
-        }
-        let blocked = city.advanceTick(rules: rules)
-
-        XCTAssertEqual(city.population, 150)
-        XCTAssertEqual(blocked.migratedResidents, 0)
-        XCTAssertEqual(blocked.migrationAssessment.blockReason, .highUnemployment(percent: 100))
-        XCTAssertEqual(city.migration.lastMonthImmigrants, 150)
-        XCTAssertEqual(city.migration.currentMonthImmigrants, 0)
-    }
-
-    func testMigrationPausesAtOneHundredFiftyWhenTreasuryIsNegative() throws {
-        let original = try installedModels()
-        let rules = EconomyRulesEngine(models: original)
-        let width = 40
-        let height = 5
-        var terrain = Array(repeating: UInt32(0), count: width * height)
-        for x in 0..<width {
-            terrain[2 * width + x] = TerrainFlags.road.rawValue
-        }
-        let terrainState = try DeterministicTerrainState(
-            width: width,
-            height: height,
-            terrainRawValues: terrain
+        var object = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: JSONEncoder().encode(source))
+                as? [String: Any]
         )
-        var city = DeterministicCityState(year: 2038, treasury: -1, terrain: terrainState)
-        for x in 1...23 {
-            _ = city.addHouse(
-                levelID: 0,
-                location: GridPoint(x: x, y: 1),
-                models: original.buildings
-            )
-        }
+        object["migrationState"] = [
+            "lastDailyImmigrants": 5,
+            "currentMonthImmigrants": 21,
+            "lastMonthImmigrants": 17,
+        ]
+        let legacyData = try JSONSerialization.data(withJSONObject: object)
+        var restored = try JSONDecoder().decode(DeterministicCityState.self, from: legacyData)
 
-        while city.population < 150 {
-            _ = city.advanceTick(rules: rules)
-        }
-        let blocked = city.advanceTick(rules: rules)
+        XCTAssertEqual(
+            restored.migration.automaticMigrationAvailability,
+            .unsupportedOriginalProducer
+        )
+        XCTAssertEqual(restored.migration.lastDailyImmigrants, 5)
+        XCTAssertEqual(restored.migration.currentMonthImmigrants, 21)
+        XCTAssertEqual(restored.migration.lastMonthImmigrants, 17)
 
-        XCTAssertEqual(city.population, 150)
-        XCTAssertEqual(blocked.migratedResidents, 0)
-        XCTAssertEqual(blocked.migrationAssessment.blockReason, .negativeTreasury)
+        let tick = restored.advanceTick(rules: rules)
+
+        XCTAssertEqual(tick.migratedResidents, 0)
+        XCTAssertEqual(restored.population, 0)
+        XCTAssertEqual(restored.migration.lastDailyImmigrants, 0)
+        XCTAssertEqual(restored.migration.currentMonthImmigrants, 0)
+        XCTAssertEqual(restored.migration.lastMonthImmigrants, 0)
+        XCTAssertEqual(restored.migration.lastAssessment?.availableCapacity, 7)
     }
 
-    func testMigrationMidMonthSaveReplayIsIdentical() throws {
+    func testUnsupportedMigrationSaveReplayIsIdenticalAndPopulationStaysFixed() throws {
         let original = try installedModels()
         let rules = EconomyRulesEngine(models: original)
-        var uninterrupted = DeterministicCityState(year: 2038, treasury: 10_000, mapWidth: 12, mapHeight: 5)
-        _ = uninterrupted.buildRoad((0..<12).map { GridPoint(x: $0, y: 2) }, rules: rules)
+        var uninterrupted = DeterministicCityState(
+            year: 2038,
+            treasury: 10_000,
+            mapWidth: 12,
+            mapHeight: 5
+        )
+        _ = uninterrupted.buildRoad(
+            (0..<12).map { GridPoint(x: $0, y: 2) },
+            rules: rules
+        )
         for x in [2, 5, 8] {
             _ = uninterrupted.addHouse(
                 levelID: 0,
@@ -175,7 +145,8 @@ final class MigrationSimulationTests: XCTestCase {
         }
 
         XCTAssertEqual(restored, uninterrupted)
-        XCTAssertEqual(restored.migration.currentMonthImmigrants, 21)
+        XCTAssertEqual(restored.population, 0)
+        XCTAssertEqual(restored.migration.currentMonthImmigrants, 0)
     }
 
     private func installedModels() throws -> OriginalEconomyModels {

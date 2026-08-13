@@ -34,7 +34,7 @@ final class XiaTutorialEconomyTests: XCTestCase {
         XCTAssertEqual(OriginalProductionCatalog.recipe(forBuildingID: 33)?.outputCommodityID, 4)
     }
 
-    func testUnifiedWorkforceStartsAtZeroThenReallocatesAfterMigrationAndDemolition() throws {
+    func testUnifiedWorkforceStartsAtZeroThenReallocatesAfterResidentsAndDemolition() throws {
         let original = try OriginalEconomyModels(source: requireOriginalData())
         let rules = EconomyRulesEngine(models: original)
         var city = try makeRoadCity(rules: rules, houseCount: 4)
@@ -54,17 +54,22 @@ final class XiaTutorialEconomyTests: XCTestCase {
         XCTAssertEqual(workforce.assignments.map(\.assignedWorkers), [0, 0])
         XCTAssertTrue(city.production.buildings.allSatisfy { $0.assignedWorkers == 0 })
 
+        // Fixture-only population setup isolates workforce allocation while
+        // automatic migration waits for the original popularity producer.
+        XCTAssertEqual(city.admitResidents(5, models: original.buildings), 5)
         _ = city.advanceTick(rules: rules)
         workforce = city.workforceSnapshot(models: original.buildings)
         XCTAssertEqual(workforce.availableWorkers, 5)
         XCTAssertEqual(workforce.assignments.map(\.assignedWorkers), [5, 0])
         XCTAssertTrue(city.production.buildings.allSatisfy { $0.assignedWorkers == 0 })
 
+        XCTAssertEqual(city.admitResidents(10, models: original.buildings), 10)
         for _ in 0..<2 { _ = city.advanceTick(rules: rules) }
         workforce = city.workforceSnapshot(models: original.buildings)
         XCTAssertEqual(workforce.assignments.map(\.assignedWorkers), [15, 0])
         XCTAssertEqual(city.production.buildings.first(where: { $0.id == first })?.assignedWorkers, 15)
 
+        XCTAssertEqual(city.admitResidents(5, models: original.buildings), 5)
         _ = city.advanceTick(rules: rules)
         workforce = city.workforceSnapshot(models: original.buildings)
         XCTAssertEqual(workforce.assignments.map(\.assignedWorkers), [15, 5])
@@ -91,6 +96,7 @@ final class XiaTutorialEconomyTests: XCTestCase {
         var assignment = try XCTUnwrap(city.workforceAssignment(for: placement, models: original.buildings))
         XCTAssertEqual(assignment.requiredWorkers, 4)
         XCTAssertEqual(assignment.assignedWorkers, 0)
+        XCTAssertEqual(city.admitResidents(4, models: original.buildings), 4)
         _ = city.advanceTick(rules: rules)
         assignment = try XCTUnwrap(city.workforceAssignment(for: placement, models: original.buildings))
         XCTAssertEqual(assignment.assignedWorkers, 4)
@@ -102,6 +108,9 @@ final class XiaTutorialEconomyTests: XCTestCase {
         let rules = EconomyRulesEngine(models: original)
         var city = try makeRoadCity(rules: rules, houseCount: 24, houseStartX: 40)
         try placeTutorialFacilities(in: &city, rules: rules)
+        // Fixture-only seeding lets this test continue validating the authored
+        // downstream food/service chain without pretending migration is known.
+        XCTAssertEqual(city.admitResidents(150, models: original.buildings), 150)
 
         var sawProducerStock = false
         var sawDeliveryWalker = false

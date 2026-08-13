@@ -2395,8 +2395,9 @@ private struct ClassicCategoryAdvisorPanel: View {
     /// other recovered branches (`DAT_01312564 > 3`, original monthly newcomer
     /// count `DAT_01311FCC > 4` with the row-10 suffix, signed pressure, and
     /// modes 1/2/other) stay
-    /// fail-closed because Native's custom daily max-5 migration model does not
-    /// reproduce the original `DAT_01311FCC` producer. `.noEligibleHousing`,
+    /// fail-closed because the former custom daily max-5 model did not
+    /// reproduce the original `DAT_01311FCC` producer and has been removed.
+    /// `.noEligibleHousing`,
     /// `blockReason`, and `plannedImmigrants` never select a player-visible
     /// row.
     private var migrationStatusRows: [AdvisorSummaryLine] {
@@ -2754,8 +2755,6 @@ private struct ClassicCitySummaryView: View {
         let unemploymentPercent = workforce.availableWorkers > 0
             ? workforce.unemployedWorkers * 100 / workforce.availableWorkers
             : 0
-        let assessment = city.migration.lastAssessment
-        let migrationHealthy = assessment?.blockReason == nil
         let foodProduction = city.productionAccounting
             .currentProductionUnitsByCommodityID
             .filter { OriginalFoodCatalog.isMillCommodity($0.key) }
@@ -2794,24 +2793,6 @@ private struct ClassicCitySummaryView: View {
         }
 
         return [
-            SummaryRow(
-                id: "popularity",
-                symbol: "person.3.fill",
-                title: "民心",
-                value: migrationHealthy && unemploymentPercent <= 10 ? "稳定" : "承压",
-                detail: unemploymentPercent > 10
-                    ? "失业率偏高会阻碍移民进入城市。"
-                    : "就业和国库目前没有阻断城市发展。",
-                isHealthy: migrationHealthy && unemploymentPercent <= 10
-            ),
-            SummaryRow(
-                id: "migration",
-                symbol: "figure.walk.arrival",
-                title: "移民",
-                value: "本月 +\(city.migration.currentMonthImmigrants)",
-                detail: migrationDetail(assessment),
-                isHealthy: migrationHealthy
-            ),
             SummaryRow(
                 id: "food-production",
                 symbol: "leaf.fill",
@@ -2905,19 +2886,6 @@ private struct ClassicCitySummaryView: View {
         return "\(covered)/\(total) 户"
     }
 
-    private func migrationDetail(_ assessment: MigrationAssessment?) -> String {
-        guard let assessment else { return "等待下一个模拟日评估迁入条件。" }
-        switch assessment.blockReason {
-        case .none:
-            return "尚有 \(assessment.availableCapacity) 人容量，预计每日迁入 \(assessment.plannedImmigrants) 人。"
-        case .noEligibleHousing:
-            return "没有临路且仍有空位的住宅。"
-        case .negativeTreasury:
-            return "国库为负，暂时没有移民迁入。"
-        case let .highUnemployment(percent):
-            return "失业率 \(percent)% 过高，暂时没有移民迁入。"
-        }
-    }
 }
 
 private struct ClassicMissionGuide: View {
@@ -3339,8 +3307,6 @@ private struct CitySimulationView: View {
                                 symbol: "calendar"
                             )
                         }
-
-                        MigrationStatusStrip(migration: city.migration)
 
                         ConstructionToolbar(library: library, city: city)
 

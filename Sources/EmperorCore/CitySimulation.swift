@@ -1513,37 +1513,12 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
     }
 
     @discardableResult
+    /// Loader/test-fixture primitive. Production simulation must not call this
+    /// until the original popularity/factor migration producer is implemented.
     public mutating func admitResidents(_ requested: Int, models: BuildingModelTable) -> Int {
         guard requested > 0 else { return 0 }
         var remaining = requested
         for index in houses.indices.sorted(by: { houses[$0].id < houses[$1].id }) where remaining > 0 {
-            let vacancy = max(0, houses[index].capacity(using: models) - houses[index].residents)
-            let admitted = min(vacancy, remaining)
-            houses[index].residents += admitted
-            remaining -= admitted
-        }
-        return requested - remaining
-    }
-
-    private mutating func admitResidents(
-        _ requested: Int,
-        eligibleHouseIDs: Set<Int>,
-        models: BuildingModelTable
-    ) -> Int {
-        guard requested > 0, !eligibleHouseIDs.isEmpty else { return 0 }
-        var remaining = requested
-        // Elite compounds attract their own migrant class in the original
-        // game. Prefer the highest authored housing tier, while retaining
-        // stable ID order within a tier, so a large common-housing reserve
-        // cannot permanently starve vacant elite compounds.
-        let admissionOrder = houses.indices.sorted {
-            if houses[$0].houseLevelID != houses[$1].houseLevelID {
-                return houses[$0].houseLevelID > houses[$1].houseLevelID
-            }
-            return houses[$0].id < houses[$1].id
-        }
-        for index in admissionOrder where
-            remaining > 0 && eligibleHouseIDs.contains(houses[index].id) {
             let vacancy = max(0, houses[index].capacity(using: models) - houses[index].residents)
             let admitted = min(vacancy, remaining)
             houses[index].residents += admitted
@@ -3692,27 +3667,14 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             }
         }
 
-        let workforceBeforeMigration: WorkforceMonthlySettlement?
-        if workforceEnabled {
-            workforceBeforeMigration = workforceSnapshot(models: rules.models.buildings)
-        } else {
-            workforceBeforeMigration = nil
-        }
-        let assessment = DeterministicMigration.assess(
+        let assessment = DeterministicMigration.observeHousing(
             houses: houses,
-            population: population,
-            treasury: economy.treasury,
             roadNetwork: roadNetwork,
-            workforce: workforceBeforeMigration,
             models: rules.models.buildings
         )
-        let migrated = admitResidents(
-            assessment.plannedImmigrants,
-            eligibleHouseIDs: Set(assessment.eligibleHouseIDs),
-            models: rules.models.buildings
-        )
+        let migrated = 0
         var migration = migrationState ?? DeterministicMigrationState()
-        migration.recordDay(assessment: assessment, admitted: migrated)
+        migration.recordUnsupportedDay(assessment: assessment)
         migrationState = migration
 
         let activeWorkforce: WorkforceMonthlySettlement?
