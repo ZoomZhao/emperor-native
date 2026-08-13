@@ -25,6 +25,7 @@ Read-only static inspection, asset extraction, and **native-inferred** mapping t
 | [grand-canal-map-state.md](./grand-canal-map-state.md) | Confirmed Haunxian canal reserve, five phases, task 102/stone requirements, and explicit wood/control-flow gaps |
 | [hero-effect-lifecycle.md](./hero-effect-lifecycle.md) | Confirmed 12-record `cHero` layout, slot-0 live-effect enter/exit chain, schema-4 serialization and legacy migration; Native physical-presence bridge remains fail-closed pending post-load lifecycle recovery |
 | [housing-evolution-reasons.md](./housing-evolution-reasons.md) | Confirmed `EmperorText` group-127 housing upgrade-reason row matrix and identical `0x51AF60` load path (`group 0x7F`, `reasonCode + 0x27`); row 57 is a confirmed-safe Native choice, rows 60…72 are semantic mappings pending recovery of their reason-code writers, and the row-56 trigger plus exact `[food_quality]` substitution source remain unknown |
+| [event-message-phrases.md](./event-message-phrases.md) | Confirmed GB18030 fire/collapse title and full-message phrases from `Model/EmperorEventmsg.txt`, its `0x4985D0` loader, and the separate `0x4987D0` message-category parser; other event selection and condensed/full behavior remain unknown |
 
 Policy:
 

@@ -303,6 +303,7 @@ final class LibraryModel: ObservableObject {
     @Published var campaignEmpireMap: CampaignEmpireMap?
     @Published var isResolvingCampaignEmpire = false
     @Published var cityNames: OriginalCityNameCatalog?
+    @Published var eventMessages: OriginalEventMessageCatalog?
     @Published var selectedMissionID: Int?
     @Published var activeMissionWorld: CampaignMissionWorldState?
     @Published var cityState: DeterministicCityState?
@@ -415,6 +416,9 @@ final class LibraryModel: ObservableObject {
                 let cityNames = try OriginalCityNameCatalog(
                     contentsOf: source.root.appendingPathComponent("EmperorText.eng")
                 )
+                let eventMessages = try OriginalEventMessageCatalog(
+                    contentsOf: source.modelDirectory.appendingPathComponent("EmperorEventmsg.txt")
+                )
                 let campaigns = try CampaignCatalog.load(source)
                 let startsQinCampaign = ProcessInfo.processInfo.arguments.contains(
                     "--ui-smoke-auto-start-qin"
@@ -436,6 +440,7 @@ final class LibraryModel: ObservableObject {
                     self.cityState = Self.makeSampleCity(models: economy)
                     self.audioCatalog = audio
                     self.cityNames = cityNames
+                    self.eventMessages = eventMessages
                     self.gameplayController = gameplayController
                     self.state = .loaded(source, catalog, probes, models, economy, campaigns)
                     self.loadBuildingSprites(dataDirectory: source.dataDirectory)

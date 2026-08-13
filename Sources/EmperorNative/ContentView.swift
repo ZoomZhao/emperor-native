@@ -669,14 +669,18 @@ private struct ClassicCityGameView: View {
                 detail: message.amount.map { "数量：\($0)" }
             )
         }
-        let failureRows = (city.operations.lastSettlement?.failures ?? []).map { failure in
+        let failureRows: [ClassicMapMessageRow] = (
+            city.operations.lastSettlement?.failures ?? []
+        ).compactMap { failure -> ClassicMapMessageRow? in
+            guard let message = library.eventMessages?.buildingFailureMessage(
+                for: failure.kind,
+                playerName: library.selectedPlayerAccount
+            ) else { return nil }
             return ClassicMapMessageRow(
                 id: "failure-\(failure.key.category.rawValue)-\(failure.key.instanceID)-\(failure.kind)",
-                title: failure.kind == .fire ? "建筑失火" : "建筑倒塌",
-                body: failure.kind == .fire
-                    ? "城市中的一座建筑发生火灾。请保证道路可达且巡察塔有劳工，避免火势继续扩散。"
-                    : "城市中的一座建筑因长期失修倒塌。请检查巡察路线与劳工供应。",
-                detail: "位置：\(failure.location.x), \(failure.location.y)"
+                title: message.title,
+                body: message.body,
+                detail: nil
             )
         }
         return campaignRows + failureRows
