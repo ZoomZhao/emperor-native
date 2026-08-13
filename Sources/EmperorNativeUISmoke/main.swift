@@ -988,11 +988,14 @@ private func runSmoke(arguments: Arguments) throws {
                     )
                 }
             }
-            // The baseline is taken at `currentMonthImmigrants == 0` with zero
-            // free capacity, so the recovered mode-0 precedence must render the
-            // wish + restriction branch, never the `> 4` newcomer block. The
-            // row-10 suffix must stay absent here so a wrong priority or leaked
-            // state cannot silently replace the restriction block.
+            // The baseline is taken at zero free capacity, so the only
+            // selected migration branch is the screenshot-confirmed
+            // wish + row-12/13 restriction block. The row-10 newcomer suffix is
+            // research-confirmed (group-55 alignment and `FUN_0053b850`
+            // renderer use) yet intentionally unselected until the original
+            // `DAT_01311FCC` newcomer producer is implemented; it must stay
+            // absent here so leaked or wrong state cannot silently replace the
+            // restriction block.
             let unsupportedPopulationTokens = [
                 "等待下一个模拟日评估迁入条件", "缺乏临路住房", "国库为负", "失业率过高",
                 "个新移民本月到达",

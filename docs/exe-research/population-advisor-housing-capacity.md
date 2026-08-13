@@ -4,7 +4,10 @@ Read-only evidence for the residential (population) advisor's housing-capacity
 line and migration-status region in the right control panel. The Native
 composition "prefix + capacity + suffix" consumes two authored rows
 (8/9) from `GameData/EmperorText.txt`, and the migration region consumes the
-four authored rows 10/12/13/20; no invented fallback prose is allowed.
+three authored rows 12/13/20; group-55 row 10 remains catalog-authorized and
+renderer-confirmed but is **no longer selected by Native** (see section 7 for
+the correction and the superseded `currentMonthImmigrants > 4` UI contract).
+No invented fallback prose is allowed.
 
 Binaries: `Emperor[EN].exe` (`8a6d2df1015cb75d797546d117da5f82b86fd08726090c2a13d853b9009d6753`,
 the canonical `1024 × 768` build) and `Emperor[CH].exe`
@@ -42,8 +45,10 @@ Relevant rows (zero-based):
 The surrounding rows are supporting context only and confirm the intended
 cluster: row 7 is `贵族`/`Nobles` (population history subdivision), row 11 is
 `个新移民本月到达`/`newcomer arrived this month.` (the singular variant, whose
-1-4 control depends on the unrecovered signed-pressure equivalence and which is
-**not** authorized for row lookup), and row 14 is `工资太低`/`low Wages.` (an
+selection occurs when signed pressure is positive and the successfully housed
+monthly count equals 1; it is **not** authorized for row lookup because that
+row pair was not included in the direct alignment audit), and row 14 is
+`工资太低`/`low Wages.` (an
 unverified alternative restriction reason). Row 10 was directly compared (its
 authored Chinese `个新移民本月到达` and English `newcomers arrived this month.`
 are exact) and is authorized; rows 7/11/14 are not.
@@ -172,9 +177,11 @@ demonstration that group 55 has no executable consumer.
   fail-closed until the row pair and its simulation producer are separately
   recorded as supported evidence.
 - Field notes: `DAT_0130f998` (housing capacity — Native
-  `availableHousingCapacity`, exactly representable) and `DAT_01311fcc`
-  (newcomer count — Native `currentMonthImmigrants`, exactly representable)
-  are the two recoverable inputs. `plannedImmigrants` is **not** an input to
+  `availableHousingCapacity`, exactly representable) is the only renderer input
+  with an equivalent Native producer. `DAT_01311fcc` is the original successfully
+  housed monthly newcomer count; Native's similarly named
+  `currentMonthImmigrants` does not have the same producer or cadence and is not
+  an equivalent input. `plannedImmigrants` is **not** an input to
   this renderer: no recovered branch consumes it. The other fields (mode
   `DAT_01311fd0`, signed pressure `DAT_01311fbc`, `DAT_01312564`, selector
   `DAT_01312484`) have recovered *selection* semantics only; their producer
@@ -246,16 +253,18 @@ demonstration that group 55 has no executable consumer.
   capacity sentence (`目前住宅还可容纳` + `0` + `人居住`) is followed by the separate
   wish line and then the migration-restriction block (`移民受到限制.原因是:` +
   `缺乏住房`), all using the authored row punctuation verbatim.
-- The Qin-1 UI smoke (`scripts/qin1-ui-smoke.sh`) now asserts the five authored
+- The Qin-1 UI smoke (`scripts/qin1-ui-smoke.sh`) asserts the five authored
   text rows 8/12/13/20 plus the numeric `0` against the `advisor-population-panel` AX
   descendants (recursively collected `AXValue`/`AXDescription`/`AXTitle`,
   whitespace normalized) before the baseline capture, and requires the unsupported tokens
-  (`等待下一个模拟日评估迁入条件`, `缺乏临路住房`, `国库为负`, `失业率过高`, plus the authorized
-  newcomer suffix `个新移民本月到达`) to stay absent. The baseline is captured at
-  `currentMonthImmigrants == 0` and `availableHousingCapacity < 1`, so the
-  row-10 suffix must be absent: a wrong priority or leaked state would render
-  the newcomer block instead of the restriction block and both the required and
-  the absent tokens would detect it. The smoke
+  (`等待下一个模拟日评估迁入条件`, `缺乏临路住房`, `国库为负`, `失业率过高`, plus the
+  research-confirmed but intentionally unselected newcomer suffix
+  `个新移民本月到达`) to stay absent. The baseline is taken at zero free capacity
+  (`availableHousingCapacity < 1`), so the only selected branch is the
+  screenshot-confirmed wish + restriction block; the row-10 suffix must be
+  absent because Native deliberately keeps it unselected until the original
+  `DAT_01311FCC` producer is implemented (see section 7), and a wrong priority
+  or leaked state would render it and be detected by both token sets. The smoke
   also asserts the panel AX frame width stays `<= 224`. This verifies the
   separator layout does not widen the fixed panel.
 - Visual inspection matches the three-line capacity composition, the three
@@ -299,15 +308,23 @@ demonstration that group 55 has no executable consumer.
   which supersedes the earlier negative-search conclusion while the audit
   trail stands. The zero-capacity composition is the mode-0 branch
   `DAT_0130F998 < 1`.
-- **Unknown (remaining):** the producer meanings of the decision-table fields
-  (mode `DAT_01311fd0`, signed pressure `DAT_01311fbc`, `DAT_01312564`,
-  selector `DAT_01312484`) are `inferred` from corpus heuristic naming, not
-  source-mapped; the pressure equivalence that governs newcomer counts 1-4 is
-  unknown; and the exact font/color/coordinate and separator layout constants
-  remain `unknown`. Until those simulation fields are source-mapped, only the
+- **Unknown (remaining):** the writer and semantics of mode `DAT_01311fd0`, the
+  full military/runtime lifecycle behind `DAT_01312564`, the equivalent Native
+  popularity/factor producer, and the exact font/color/coordinate and separator
+  layout constants remain `unknown`. Signed pressure `DAT_01311fbc`, the
+  newcomer count, and selector `DAT_01312484` have the partially recovered
+  producer chains classified in section 7. Until those simulation fields are
+  implemented with equivalent producers, only the
   section-6 contract rows are supported in Native; all other recovered
   branches fail closed. This does not weaken the screenshot-confirmed visible
   composition.
+- **Corrected (2026-08-14):** the earlier Native UI selection of the
+  `currentMonthImmigrants > 4` wish + numeric count + row-10 suffix branch is
+  **superseded** (section 7): Native's custom daily max-5 / `population >= 150`
+  block model is not an equivalent producer for `DAT_01311FCC`, so the branch
+  and `AdvisorSummaryLine.newcomerCount` are removed from the player UI and
+  `migrationStatusText` consumes rows 12/13/20 only. Group-55 row 10 alignment
+  and renderer use remain `confirmed`; only its Native UI selection is revoked.
 
 ## 6. Native contract
 
@@ -318,63 +335,146 @@ demonstration that group 55 has no executable consumer.
   `localized(groupID:rowIndex:)` returns `nil` for any other group, any
   unrecorded row (including group 55 rows 7, 11, 14 and every other
   non-target index), negative indices, and out-of-bounds indices. Row 11 stays
-  unauthorized because its 1-4 singular control depends on the unrecovered
-  signed-pressure equivalence; it is never selected by pressure guesswork.
+  unauthorized because its CH/EN pair was not directly included in the row
+  alignment audit; it is never selected by pressure guesswork.
+  Row 10 stays catalog-authorized (its alignment is confirmed and the
+  `FUN_00528b80` numeric + row-10 renderer path is recovered) but is
+  deliberately not read by `migrationStatusText`.
 - `ClassicTextLocalization.housingCapacityLegend` returns a
   `(prefix: "目前住宅还可容纳", suffix: "人居住")` only when both runtime rows
   exist and are nonempty; otherwise `nil`. There is no hardcoded or invented
   fallback sentence.
 - `ClassicTextLocalization.migrationStatusText` returns the typed tuple
   (wish: `人们希望迁居你的城市`, restrictionLead: `移民受到限制.原因是:`,
-  restrictionReason: `缺乏住房`,
-  newcomerPluralSuffix: `个新移民本月到达`) only when all four runtime rows exist
-  and are nonempty; otherwise `nil` (no fallback). Unverified reason rows (for
-  example the group 55 low-wages row 14, or the duplicated singular row 11)
-  are never mapped.
+  restrictionReason: `缺乏住房`) only when all three runtime rows exist and are
+  nonempty; otherwise `nil` (no fallback). Unverified reason rows (for example
+  the group 55 low-wages row 14, or the duplicated singular row 11) are never
+  mapped. This supersedes the former four-row tuple that read group-55 row 10.
 - `ClassicCategoryAdvisorPanel` (residential) composes the capacity row as
   prefix / capacity metric / suffix, keeping the existing gold metric emphasis
   on `availableHousingCapacity`. When the legend is `nil`, only that row is
-  omitted. The migration region renders the recovered mode-0 branches **in
-  checker order** from `FUN_0053b850` (section 2.2):
-  1. `city.migration.currentMonthImmigrants > 4` (mode-0 branch
-     `DAT_01311FCC > 4`): status-20 wish line, then a **distinct newcomer-count
-     block** with the numeric `currentMonthImmigrants` count on a gold line and
-     the normal-color row-10 suffix (`newcomerPluralSuffix`) on the next line;
-  2. else `availableHousingCapacity < 1` (mode-0 branch `DAT_0130F998 < 1`):
+  omitted. The migration region renders **only** the screenshot-confirmed
+  mode-0 zero-housing branch from `FUN_0053b850` (section 2.2), in its original
+  checker position (the zero-capacity predicate is the third mode-0 check, so a
+  previous branch must not mask it):
+  1. `availableHousingCapacity < 1` (mode-0 branch `DAT_0130F998 < 1`):
      status-20 wish line, then the restriction block (row-12 lead `移民受到限制.原因是:`
      + gold/warning row-13 `缺乏住房`);
-  3. else **(no migration rows)** — this covers newcomer counts 1-4 and every
-     other state (negative treasury, high unemployment, stable/zero
-     immigration, positive capacity). The primary key is
-     `currentMonthImmigrants`, so a `> 4` newcomer block and a restriction
-     block never render together, and a count of 1-4 suppresses the migration
-     region entirely until its pressure field is source-mapped.
+  2. else **(no migration rows)** — every other state (any newcomer count,
+     negative treasury, high unemployment, stable/zero immigration, positive
+     capacity, modes 1/2/other) renders no migration line.
+  The predicate depends only on `availableHousingCapacity < 1` and never on a
+  row-10 suffix being present.
+- The former `city.migration.currentMonthImmigrants > 4` newcomer-count block
+  is **removed from the player UI and superseded** (see section 7): Native's
+  custom daily max-5 / `population >= 150` block model cannot reproduce the
+  original `DAT_01311FCC` producer, so that branch and the other recovered
+  renderer branches (`DAT_01312564 > 3`, signed pressure `DAT_01311FBC > 0` /
+  `< 0` / `== 0`, and the `FUN_0053b790` reason-selector families) remain
+  research-only and fail closed until a source-mapped producer exists.
 - `lastAssessment.blockReason`, `.noEligibleHousing`, and `plannedImmigrants`
-  **never select a player-visible row**. The former zero-capacity triggers
-  (pre-assessment or `.noEligibleHousing`) are replaced by the capacity-only
-  predicate `availableHousingCapacity < 1`, and the former
+  **never select a player-visible row**. The zero-capacity trigger is the
+  capacity-only predicate `availableHousingCapacity < 1`, and the former
   `plannedImmigrants > 0` wish-only path is **removed**: `plannedImmigrants`
-  is not an input to `FUN_0053b850`. The supported branch inputs map exactly
-  to recoverable fields (`DAT_0130f998` ↔ `availableHousingCapacity`,
-  `DAT_01311fcc` ↔ `currentMonthImmigrants`), both exactly representable in
-  Native.
+  is not an input to `FUN_0053b850`. The supported branch input maps exactly to
+  a recoverable field (`DAT_0130f998` ↔ `availableHousingCapacity`).
   Summary lines are semantic (`housingCapacity` / `migrationWish` /
-  `migrationRestriction` / `newcomerCount` / `text`) rather than array-index
-  positions. The summary inserts a semantic `separator` row only between
-  consecutive content rows, so the residential ordering is capacity /
-  separator / wish / separator / restriction when `availableHousingCapacity
-  < 1`, and capacity / separator / wish / separator / newcomer count + row-10
-  suffix stacked on separate lines when `currentMonthImmigrants > 4`, with no
-  trailing separators; the
-  separator renders as the same one-pixel
-  `EmperorTheme.secondary.opacity(0.68)` hairline with `1`pt vertical padding
-  already used after the action buttons. No other category changes.
-- Contract status: the frozen contract is **implemented** — the
-  `plannedImmigrants` wish-only path is dropped, and the exact
-  `currentMonthImmigrants > 4` path renders as status-20 wish + numeric count +
-  row-10 suffix, checked strictly before the `availableHousingCapacity < 1`
-  branch. Every other recovered branch (mode 1/2/other, `DAT_01312564 > 3`,
-  signed pressure `DAT_01311fbc` > 0 / < 0 / == 0, and the `FUN_0053b790`
-  reason-selector families) remains research-only until the corresponding
-  simulation fields are source-mapped; do not upgrade counts 1-4 from pressure
-  by guesswork.
+  `migrationRestriction` / `text`) rather than array-index positions. The
+  summary inserts a semantic `separator` row only between consecutive content
+  rows, so the residential ordering is capacity / separator / wish / separator
+  / restriction when `availableHousingCapacity < 1` and capacity alone
+  otherwise, with no trailing separators; the separator renders as the same
+  one-pixel `EmperorTheme.secondary.opacity(0.68)` hairline with `1`pt vertical
+  padding already used after the action buttons. No other category changes.
+- Contract status: the corrected contract is **implemented** — the
+  `currentMonthImmigrants > 4` branch is dropped from the player UI,
+  `AdvisorSummaryLine.newcomerCount` and its renderer are removed as unused,
+  and `migrationStatusText` consumes rows 12/13/20 only. This **supersedes** the
+  earlier row-10 UI selection contract (implemented in the file's prior commit
+  and recorded as history above) because Native's custom daily max-5 /
+  `population >= 150` block model is not an equivalent producer for
+  `DAT_01311FCC`. Do not select the row-10/11 block until Native reproduces the
+  original persisted popularity and migration producer.
+
+## 7. Original migration producer chain and Native correction (2026-08-14)
+
+This section records the recovered producer chain that feeds the migration
+status region and the reason the earlier row-10 Native UI selection is
+superseded. Binaries are those in the file banner: `Emperor[EN].exe`
+(`8a6d2df1…6753`, canonical build) and `Emperor[CH].exe` (`dbdeca1e…15a`,
+repacked widescreen variant). Per `local/source/compare-report.tsv`, the CH/EN functions
+named here are identical; no CH/EN divergence changes these statements.
+
+### 7.1 Popularity and migration pressure (producer input)
+
+| recoverable fact | value / formula | evidence class |
+| --- | --- | --- |
+| popularity `DAT_0130F974` | init 60; clamped to 0…100 | confirmed (static control flow) |
+| `FUN_005917E0` pressure bands | `<16` → -25; `16…25` → -17; `26…35` → -8; `36…49` → 0; `50…60` → 50; `61…70` → 75; `>=71` → 100 | confirmed (static control flow) |
+| population suppression | `> 199999` population → zero pressure | confirmed (static control flow) |
+| war suppression | war counter `>= 4` suppresses positive pressure | confirmed (static control flow) |
+
+These facts produce *requested* arrivals or departures, not the successfully
+housed newcomer count displayed by the renderer. The link is direct:
+`FUN_005917E0` calls `FUN_0059A1B0(12, abs(pressure))`, whose callee
+`FUN_0043B860` performs the integer ceiling recorded below.
+
+### 7.2 Request cadence and calendar consumption
+
+| recoverable fact | value / formula | evidence class |
+| --- | --- | --- |
+| request amount | `ceil(12 * abs(pressure) / 100)` | confirmed (static control flow) |
+| request cooldown | 2 calendar cycles between requests | confirmed (static control flow) |
+| calendar case `0x17` | `FUN_004AD4A0` handles arrivals/departures | confirmed (static control flow) |
+| renderer count | `FUN_004ADA10` adds `param_1 - remaining` (the actually housed arrivals) to `DAT_01311FB0`, then accumulates that value into `DAT_01311FCC`; `FUN_0053B850` displays `DAT_01311FCC` | confirmed (static control flow) |
+| departures | `FUN_004AD4A0` sends a negative-pressure request through the separate `FUN_004ADC90` departure path; it does not subtract that count from `DAT_01311FCC` | confirmed (static control flow) |
+| month rollover | `FUN_004AC650` copies `DAT_01311FCC` to `DAT_01312604`, then resets `DAT_01311FCC` to zero | confirmed (static control flow) |
+
+### 7.3 Why the Native producer is not equivalent (correction status)
+
+- Native `DeterministicMigration.assess` admits at most
+  `maximumDailyImmigrants = 5` per day, gates every block reason on
+  `population >= frontierPopulationLimit` (150), and plans `min(5, availableCapacity)`
+  immigrants with no popularity/pressure, war-counter, request-cooldown, or
+  calendar-case `0x17` structure. It therefore cannot reproduce the original
+  `DAT_01311FCC` series, the mode-0 `> 4` branch's threshold, or the
+  signed-pressure row 11/10 equivalence for counts 1-4.
+- Correction: because the consumer requires an equivalent producer, the earlier
+  Native UI contract that selected `currentMonthImmigrants > 4` → status-20
+  wish + numeric count + row-10 suffix **is superseded**. The branch,
+  `AdvisorSummaryLine.newcomerCount`, and its renderer are removed from the
+  player UI; `ClassicTextLocalization.migrationStatusText` returns only rows
+  wish 20 / lead 12 / reason 13; and the zero-housing branch
+  (`availableHousingCapacity < 1` → wish + row 12/13) stays independent of any
+  row-10 suffix presence.
+- Group-55 row 10 alignment (section 1) and its renderer use (section 2.2,
+  `FUN_00528b80` numeric + row-10 suffix at `y = DAT_010C73D4 + 0x10 + n2`)
+  remain `confirmed` evidence, and the row index stays catalog-authorized; only
+  the Native UI *selection* is revoked pending a source-mapped producer. Row 10
+  and all other unmapped renderer branches fail closed, exactly as before.
+
+### 7.4 Remaining unknowns
+
+- `DAT_01311FD0` mode semantics and writer — `unknown`; no writer appears in
+  the decompiled corpus searched on 2026-08-14.
+- `DAT_01312564 > 3` as the first advisor branch and as a suppressor of positive
+  pressure is `confirmed`; its exact military/runtime lifecycle and equivalent
+  Native field remain `unknown` (the war/block description is only `inferred`).
+- `DAT_01312484 = min(DAT_01312514, 9)` and the eight selected factor families
+  are `confirmed`; Native does not yet reproduce all underlying food,
+  unemployment, tax, wage, debt, festival, feng-shui, and despotism inputs with
+  the original update cadence, so current/past reason selection remains
+  unsupported.
+- The pressure bands, request ceiling, arrival/departure split, successfully
+  housed arrival accounting, and row-11 singular (`DAT_01311FCC == 1`) versus
+  row-10 plural selection are recovered. Their Native use remains unsupported
+  because the persisted popularity state and its complete factor producer are
+  absent, not because those downstream formulas are unknown.
+- Exact font/color/coordinate and separator layout constants — `unknown`
+  (unchanged from section 5); no precise separator geometry is claimed beyond
+  existing evidence.
+
+The prior history (sections 2–6, including the negative-search audit trail and
+the superseded `currentMonthImmigrants > 4` UI implementation contract) is
+preserved above as-is, with only the correction markers and this section
+appended.

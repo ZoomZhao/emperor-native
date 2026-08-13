@@ -465,34 +465,30 @@ enum ClassicTextLocalization {
     }
 
     /// Typed group 55 migration components for the residential advisor. Each
-    /// part is an exact authored Simplified Chinese row (10
-    /// `个新移民本月到达`, 12 `移民受到限制.原因是:`, 13 `缺乏住房`, 20
-    /// `人们希望迁居你的城市`). All four runtime rows must exist and be nonempty or
-    /// `nil` is returned; there is no invented or hardcoded fallback, and
-    /// unverified reason rows (including the duplicated row 11) are never mapped.
+    /// part is an exact authored Simplified Chinese row (12 `移民受到限制.原因是:`,
+    /// 13 `缺乏住房`, 20 `人们希望迁居你的城市`). All three runtime rows must
+    /// exist and be nonempty or `nil` is returned; there is no invented or
+    /// hardcoded fallback, and unverified reason rows (including the duplicated
+    /// row 11) are never mapped.
     struct MigrationStatusText: Equatable {
         let wish: String
         let restrictionLead: String
         let restrictionReason: String
-        let newcomerPluralSuffix: String
     }
 
     static var migrationStatusText: MigrationStatusText? {
         guard let wish = originalText?.localized(groupID: 55, rowIndex: 20),
               let lead = originalText?.localized(groupID: 55, rowIndex: 12),
               let reason = originalText?.localized(groupID: 55, rowIndex: 13),
-              let newcomerPluralSuffix = originalText?.localized(groupID: 55, rowIndex: 10),
               !wish.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
               !lead.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              !reason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-              !newcomerPluralSuffix.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+              !reason.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return nil
         }
         return MigrationStatusText(
             wish: wish,
             restrictionLead: lead,
-            restrictionReason: reason,
-            newcomerPluralSuffix: newcomerPluralSuffix
+            restrictionReason: reason
         )
     }
 

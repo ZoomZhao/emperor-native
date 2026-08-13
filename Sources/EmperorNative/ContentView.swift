@@ -2251,7 +2251,6 @@ private struct ClassicCategoryAdvisorPanel: View {
         case housingCapacity(prefix: String, capacity: Int, suffix: String)
         case migrationWish(line: String)
         case migrationRestriction(lead: String, reason: String)
-        case newcomerCount(count: Int, suffix: String)
         case separator
         case text(line: String)
     }
@@ -2291,9 +2290,7 @@ private struct ClassicCategoryAdvisorPanel: View {
     /// one between the wish and the following detail region. Semantic rows are
     /// separated only between consecutive content rows, so the residential
     /// sequence is capacity / separator / wish / separator / restriction at
-    /// `availableHousingCapacity < 1`, capacity / separator / wish /
-    /// separator / newcomer count + row-10 suffix when
-    /// `currentMonthImmigrants > 4`, and capacity alone otherwise.
+    /// `availableHousingCapacity < 1` and capacity alone otherwise.
     /// No trailing separator is emitted, and other categories are unaffected.
     private func withSeparators(_ content: [AdvisorSummaryLine]) -> [AdvisorSummaryLine] {
         var rows: [AdvisorSummaryLine] = []
@@ -2360,15 +2357,6 @@ private struct ClassicCategoryAdvisorPanel: View {
             }
             .font(EmperorTheme.bodySmall)
             .multilineTextAlignment(.center)
-        case let .newcomerCount(count, suffix):
-            VStack(spacing: 0) {
-                Text("\(count)")
-                    .foregroundStyle(ClassicPalette.gold)
-                Text(suffix)
-                    .foregroundStyle(EmperorTheme.onSurface)
-            }
-            .font(EmperorTheme.bodySmall)
-            .multilineTextAlignment(.center)
         case .separator:
             Rectangle()
                 .fill(EmperorTheme.secondary.opacity(0.68))
@@ -2401,31 +2389,23 @@ private struct ClassicCategoryAdvisorPanel: View {
     /// Screenshot-confirmed residential-advisor migration region, backed only
     /// by the typed runtime rows from
     /// `ClassicTextLocalization.migrationStatusText`. The recovered mode-0
-    /// renderer `FUN_0053b850` decides the region strictly by checker order:
-    /// `currentMonthImmigrants > 4` draws the wish plus a newcomer count with
-    /// the row-10 suffix; otherwise `availableHousingCapacity < 1` draws the
-    /// wish plus the row-12 lead / row-13 housing reason. `.noEligibleHousing`,
+    /// renderer `FUN_0053b850` decides the region strictly by checker order,
+    /// but Native selects only its zero-housing branch: `availableHousingCapacity
+    /// < 1` draws the wish plus the row-12 lead / row-13 housing reason. The
+    /// other recovered branches (`DAT_01312564 > 3`, original monthly newcomer
+    /// count `DAT_01311FCC > 4` with the row-10 suffix, signed pressure, and
+    /// modes 1/2/other) stay
+    /// fail-closed because Native's custom daily max-5 migration model does not
+    /// reproduce the original `DAT_01311FCC` producer. `.noEligibleHousing`,
     /// `blockReason`, and `plannedImmigrants` never select a player-visible
-    /// row. Counts 1-4 and every other state fail closed and render no
-    /// migration line.
+    /// row.
     private var migrationStatusRows: [AdvisorSummaryLine] {
         guard let text = ClassicTextLocalization.migrationStatusText else { return [] }
-        var rows: [AdvisorSummaryLine] = []
-        if city.migration.currentMonthImmigrants > 4 {
-            rows.append(.migrationWish(line: text.wish))
-            rows.append(
-                .newcomerCount(
-                    count: city.migration.currentMonthImmigrants,
-                    suffix: text.newcomerPluralSuffix
-                )
-            )
-        } else if availableHousingCapacity < 1 {
-            rows.append(.migrationWish(line: text.wish))
-            rows.append(
-                .migrationRestriction(lead: text.restrictionLead, reason: text.restrictionReason)
-            )
-        }
-        return rows
+        guard availableHousingCapacity < 1 else { return [] }
+        return [
+            .migrationWish(line: text.wish),
+            .migrationRestriction(lead: text.restrictionLead, reason: text.restrictionReason),
+        ]
     }
 }
 
