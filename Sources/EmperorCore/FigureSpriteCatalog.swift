@@ -49,6 +49,12 @@ public enum TutorialFigureRole: String, CaseIterable, Sendable, Hashable, Codabl
     case chineseCatapult
     case xiongnuInfantry
     case ambientPheasant
+    case grandCanalLaborerTraveling
+    case grandCanalLaborerWorking
+    case grandCanalLaborerReturning
+    case grandCanalStoneCarrier
+    case grandCanalStoneFirstFollower
+    case grandCanalStoneSecondFollower
 }
 
 public struct FigureSpriteReference: Sendable, Equatable, Hashable {
@@ -99,6 +105,18 @@ public struct FigureSpriteAnimation: Sendable, Equatable, Hashable {
         return FigureSpriteReference(
             archiveBaseName: archiveBaseName,
             imageID: frames[frameIndex]
+        )
+    }
+
+    public func reference(
+        direction: FigureMovementDirection,
+        frameIndex: Int
+    ) -> FigureSpriteReference {
+        let frames = framesByDirection[direction.rawValue]
+        let normalizedFrame = ((frameIndex % frames.count) + frames.count) % frames.count
+        return FigureSpriteReference(
+            archiveBaseName: archiveBaseName,
+            imageID: frames[normalizedFrame]
         )
     }
 
@@ -158,6 +176,82 @@ public enum OriginalFigureSpriteCatalog {
         firstImageID: 2_657,
         framesPerDirection: 12
     )
+
+    /// Ordinary Grand Canal stone convoy selected by the hash-matched
+    /// executable for commodity 20. These are not the type-table defaults.
+    public static let grandCanalStoneCarrierAnimation = FigureSpriteAnimation(
+        role: .grandCanalStoneCarrier,
+        figureID: 19,
+        archiveBaseName: mainArchiveBaseName,
+        sourceBitmapName: "TeamLeader",
+        logicalGroupID: 165,
+        firstImageID: 9_743,
+        framesPerDirection: 12
+    )
+
+    public static let grandCanalStoneFirstFollowerAnimation = FigureSpriteAnimation(
+        role: .grandCanalStoneFirstFollower,
+        figureID: 20,
+        archiveBaseName: main2ArchiveBaseName,
+        sourceBitmapName: "WaterBuffaloSolo",
+        logicalGroupID: 55,
+        firstImageID: 2_234,
+        framesPerDirection: 12
+    )
+
+    public static let grandCanalStoneSecondFollowerAnimation = FigureSpriteAnimation(
+        role: .grandCanalStoneSecondFollower,
+        figureID: 20,
+        archiveBaseName: main2ArchiveBaseName,
+        sourceBitmapName: "WaterBuffaloCart",
+        logicalGroupID: 135,
+        firstImageID: 7_033,
+        framesPerDirection: 12
+    )
+
+    /// Figure 10 monument-laborer states selected by `FUN_004D6060` in the
+    /// hash-matched executable. Raw states 12/13 use key 0x4C58, state 14
+    /// uses 0x4C5B, and states 15/16 use 0x4C59.
+    public static let grandCanalLaborerTravelingAnimation = FigureSpriteAnimation(
+        role: .grandCanalLaborerTraveling,
+        figureID: 10,
+        archiveBaseName: mainArchiveBaseName,
+        sourceBitmapName: "Laborer",
+        logicalGroupID: 87,
+        firstImageID: 5_786,
+        framesPerDirection: 12
+    )
+
+    public static let grandCanalLaborerWorkingAnimation = FigureSpriteAnimation(
+        role: .grandCanalLaborerWorking,
+        figureID: 10,
+        archiveBaseName: mainArchiveBaseName,
+        sourceBitmapName: "Laborer",
+        logicalGroupID: 90,
+        firstImageID: 6_074,
+        framesPerDirection: 19
+    )
+
+    public static let grandCanalLaborerReturningAnimation = FigureSpriteAnimation(
+        role: .grandCanalLaborerReturning,
+        figureID: 10,
+        archiveBaseName: mainArchiveBaseName,
+        sourceBitmapName: "Laborer",
+        logicalGroupID: 88,
+        firstImageID: 5_882,
+        framesPerDirection: 12
+    )
+
+    public static func grandCanalLaborerAnimation(
+        forRawState rawState: Int
+    ) -> FigureSpriteAnimation? {
+        switch rawState {
+        case 12, 13: return grandCanalLaborerTravelingAnimation
+        case 14: return grandCanalLaborerWorkingAnimation
+        case 15, 16: return grandCanalLaborerReturningAnimation
+        default: return nil
+        }
+    }
 
     public static func deliveryLogicalGroupID(forCommodityID commodityID: Int) -> Int? {
         guard deliveryFirstImageIDByCommodityID[commodityID] != nil else { return nil }
@@ -306,6 +400,17 @@ public enum OriginalFigureSpriteCatalog {
         pheasantAnimation,
     ]
 
+    /// Context-selected families that must not become generic figure-ID
+    /// defaults. Type 19/20 use other resource groups outside stone convoys.
+    public static let specializedAnimations = [
+        grandCanalLaborerTravelingAnimation,
+        grandCanalLaborerWorkingAnimation,
+        grandCanalLaborerReturningAnimation,
+        grandCanalStoneCarrierAnimation,
+        grandCanalStoneFirstFollowerAnimation,
+        grandCanalStoneSecondFollowerAnimation,
+    ]
+
     public static func animation(forFigureID figureID: Int) -> FigureSpriteAnimation? {
         animations.first { $0.figureID == figureID }
     }
@@ -329,7 +434,8 @@ public enum OriginalFigureSpriteCatalog {
         Dictionary(
             grouping: animations
                 + Array(deliveryAnimationsByCommodityID.values)
-                + [xiongnuInfantryAnimation],
+                + [xiongnuInfantryAnimation]
+                + specializedAnimations,
             by: \.archiveBaseName
         ).mapValues { items in
             items.reduce(into: Set<Int>()) { $0.formUnion($1.imageIDs) }

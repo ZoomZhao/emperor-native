@@ -137,7 +137,7 @@ private func findElement(in application: AXUIElement, identifier: String) -> AXU
     if queue.isEmpty { queue = [application] }
     var index = 0
     var visited: Set<CFHashCode> = []
-    while index < queue.count, index < 12_000 {
+    while index < queue.count, index < 30_000 {
         let element = queue[index]
         index += 1
         guard visited.insert(CFHash(element)).inserted else { continue }
@@ -161,7 +161,7 @@ private func findElement(
     var queue = windows + children(of: application)
     var index = 0
     var visited: Set<CFHashCode> = []
-    while index < queue.count, index < 12_000 {
+    while index < queue.count, index < 30_000 {
         let element = queue[index]
         index += 1
         guard visited.insert(CFHash(element)).inserted else { continue }
@@ -186,7 +186,7 @@ private func accessibilityIdentifierSnapshot(in application: AXUIElement) -> Str
     var index = 0
     var values: [String] = []
     var visited: Set<CFHashCode> = []
-    while index < queue.count, index < 12_000, values.count < 120 {
+    while index < queue.count, index < 30_000, values.count < 120 {
         let element = queue[index]
         index += 1
         guard visited.insert(CFHash(element)).inserted else { continue }
@@ -721,19 +721,32 @@ private func constructionCategoryIdentifier(for toolIdentifier: String) -> Strin
     switch toolIdentifier {
     case "house":
         "residential"
-    case "huntingCamp", "mill":
+    case "huntingCamp", "lacquerGuild", "silkWeaver", "teaHouse":
         "agriculture"
-    case "market", "foodShop", "hempShop", "ceramicsShop", "teaShop",
+    case "mill", "market", "foodShop", "hempShop", "ceramicsShop", "teaShop",
          "silkShop", "lacquerwareShop", "bronzewareShop":
         "commerce"
-    case "well":
+    case "well", "inspectorTower":
         "safety"
-    case "inspectorTower":
-        "government"
     case "ancestralShrine":
         "religious"
     default:
         "monuments"
+    }
+}
+
+private func constructionSelectorID(for toolIdentifier: String) -> Int? {
+    switch toolIdentifier {
+    case "house": 2
+    case "huntingCamp": 30
+    case "mill": 53
+    case "market": 63
+    case "foodShop", "hempShop", "ceramicsShop", "teaShop", "silkShop",
+         "lacquerwareShop", "bronzewareShop": 206
+    case "well": 72
+    case "inspectorTower": 124
+    case "ancestralShrine": 214
+    default: nil
     }
 }
 
@@ -840,48 +853,77 @@ private func runSmoke(arguments: Arguments) throws {
                 agricultureCategory,
                 identifier: "construction-category-agriculture"
             )
-            let cropElements = try AgriculturalCrop.allCases.map { crop in
+            let agricultureSelectorIDs = [24, 200, 201, 29, 25, 30]
+            let constructionSlots = try agricultureSelectorIDs.map { selectorID in
                 try waitForElement(
                     in: application,
-                    identifier: "construction-crop-\(crop.rawValue)",
+                    identifier: "construction-slot-\(selectorID)",
                     timeout: 15,
                     requireEnabled: false
                 )
             }
-            let availableCropFrames = cropElements.compactMap { element -> CGRect? in
-                guard boolAttribute(element, kAXEnabledAttribute as CFString) != false else {
-                    return nil
-                }
-                return axFrame(of: element)?.rect
-            }
-            let unavailableCropFrames = cropElements.compactMap { element -> CGRect? in
-                guard boolAttribute(element, kAXEnabledAttribute as CFString) == false else {
-                    return nil
-                }
-                return axFrame(of: element)?.rect
-            }
-            if let lastAvailableY = availableCropFrames.map(\.minY).max(),
-               let firstUnavailableY = unavailableCropFrames.map(\.minY).min(),
-               lastAvailableY > firstUnavailableY {
+            let slotFrames = constructionSlots.compactMap { axFrame(of: $0)?.rect }
+            guard slotFrames.count == 6,
+                  Set(slotFrames.map { Int($0.minX.rounded()) }).count == 3,
+                  Set(slotFrames.map { Int($0.minY.rounded()) }).count == 2,
+                  slotFrames.allSatisfy({
+                      abs($0.width - 54) <= 1 && abs($0.height - 53) <= 1
+                  }) else {
                 throw SmokeFailure(
-                    "available construction choices must precede unavailable choices"
+                    "construction catalog did not preserve the original fixed 3×2 slots"
                 )
             }
-            guard let firstCrop = cropElements.first,
-                  setVerticalScroll(containing: firstCrop, value: 1) else {
-                throw SmokeFailure("construction catalog did not expose a working scroll bar")
-            }
             Thread.sleep(forTimeInterval: 0.3)
-            let scrolledCatalogScreenshotURL = arguments.logDirectory
-                .appendingPathComponent("qin-m1-construction-catalog-scrolled.png")
+            let catalogScreenshotURL = arguments.logDirectory
+                .appendingPathComponent("qin-m1-construction-catalog-fixed.png")
             guard captureWindow(
                 application: application,
-                to: scrolledCatalogScreenshotURL
+                to: catalogScreenshotURL
             ) else {
-                throw SmokeFailure("could not capture the scrolled construction catalog")
+                throw SmokeFailure("could not capture the fixed construction catalog")
             }
-            log.record("scrolled construction catalog=\(scrolledCatalogScreenshotURL.path)")
-            _ = setVerticalScroll(containing: firstCrop, value: 0)
+            log.record("fixed construction catalog=\(catalogScreenshotURL.path)")
+
+            let commerceCategory = try waitForElement(
+                in: application,
+                identifier: "construction-category-commerce",
+                timeout: 15
+            )
+            try press(commerceCategory, identifier: "construction-category-commerce")
+            let landTradeSelector = try waitForElement(
+                in: application,
+                identifier: "construction-slot-88",
+                timeout: 15
+            )
+            let seaTradeSelector = try waitForElement(
+                in: application,
+                identifier: "construction-slot-87",
+                timeout: 15,
+                requireEnabled: false
+            )
+            guard boolAttribute(seaTradeSelector, kAXEnabledAttribute as CFString) == false else {
+                throw SmokeFailure("Qin M1 unexpectedly enabled the sea-city selector")
+            }
+            try press(landTradeSelector, identifier: "construction-slot-88")
+            let xianyangTradeChoice = try waitForElement(
+                in: application,
+                identifier: "construction-submenu-trade-partner-0",
+                timeout: 15
+            )
+            Thread.sleep(forTimeInterval: 2)
+            let tradeMenuScreenshotURL = arguments.logDirectory
+                .appendingPathComponent("qin-m1-land-trade-city-menu.png")
+            guard captureWindow(
+                application: application,
+                to: tradeMenuScreenshotURL
+            ) else {
+                throw SmokeFailure("could not capture the land trade-city menu")
+            }
+            try press(
+                xianyangTradeChoice,
+                identifier: "construction-submenu-trade-partner-0"
+            )
+            log.record("land trade-city menu=\(tradeMenuScreenshotURL.path)")
 
             let residentialCategory = try waitForElement(
                 in: application,
@@ -1110,6 +1152,7 @@ private func runSmoke(arguments: Arguments) throws {
         log.record("planned \(commands.count) legal construction commands from current mission state")
         var selectedCategory = ""
         var selectedTool = ""
+        var capturedConstructionSubmenu = false
         for (index, command) in commands.enumerated() {
             let category = constructionCategoryIdentifier(for: command.toolIdentifier)
             if selectedCategory != category {
@@ -1126,8 +1169,44 @@ private func runSmoke(arguments: Arguments) throws {
             }
             if selectedTool != command.toolIdentifier {
                 let identifier = "construction-tool-\(command.toolIdentifier)"
-                let tool = try waitForElement(in: application, identifier: identifier, timeout: 15)
-                try press(tool, identifier: identifier)
+                if let tool = findElement(in: application, identifier: identifier) {
+                    try press(tool, identifier: identifier)
+                } else {
+                    guard let selectorID = constructionSelectorID(
+                        for: command.toolIdentifier
+                    ) else {
+                        throw SmokeFailure(
+                            "no original construction selector for \(command.toolIdentifier)"
+                        )
+                    }
+                    let slotIdentifier = "construction-slot-\(selectorID)"
+                    let slot = try waitForElement(
+                        in: application,
+                        identifier: slotIdentifier,
+                        timeout: 15
+                    )
+                    try press(slot, identifier: slotIdentifier)
+                    let memberIdentifier =
+                        "construction-submenu-tool-\(command.toolIdentifier)"
+                    let member = try waitForElement(
+                        in: application,
+                        identifier: memberIdentifier,
+                        timeout: 15
+                    )
+                    if !capturedConstructionSubmenu {
+                        let screenshotURL = arguments.logDirectory
+                            .appendingPathComponent("xia1-construction-submenu.png")
+                        guard captureWindow(
+                            application: application,
+                            to: screenshotURL
+                        ) else {
+                            throw SmokeFailure("could not capture construction submenu")
+                        }
+                        log.record("construction submenu=\(screenshotURL.path)")
+                        capturedConstructionSubmenu = true
+                    }
+                    try press(member, identifier: memberIdentifier)
+                }
                 selectedTool = command.toolIdentifier
                 log.record("selected \(identifier)")
             }

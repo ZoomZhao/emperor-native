@@ -11,7 +11,9 @@ struct CityCanvas: View {
     let interfaceSprites: [Int: RenderedTerrainSprite]
     let figureSprites: [FigureSpriteReference: RenderedTerrainSprite]
     let originalMap: RenderedMap?
+    let greatWallKind: OriginalGreatWallLayoutCatalog.WallKind?
     let constructionTool: NativeConstructionTool
+    let selectedTradePartnerID: Int?
     let agriculturalCrop: AgriculturalCrop
     let constructionOrientation: IsometricBuildingOrientation
     let models: OriginalEconomyModels
@@ -89,6 +91,8 @@ struct CityCanvas: View {
         let usesLegacyHouseAnchor: Bool
         let isFigure: Bool
         let isMillAnimationOverlay: Bool
+        let sourceTopLeftOffsetX: Int?
+        let sourceTopLeftOffsetY: Int?
         let stableOrder: Int
 
         init(
@@ -100,6 +104,8 @@ struct CityCanvas: View {
             usesLegacyHouseAnchor: Bool,
             isFigure: Bool,
             isMillAnimationOverlay: Bool = false,
+            sourceTopLeftOffsetX: Int? = nil,
+            sourceTopLeftOffsetY: Int? = nil,
             stableOrder: Int
         ) {
             self.buildingReference = buildingReference
@@ -110,6 +116,8 @@ struct CityCanvas: View {
             self.usesLegacyHouseAnchor = usesLegacyHouseAnchor
             self.isFigure = isFigure
             self.isMillAnimationOverlay = isMillAnimationOverlay
+            self.sourceTopLeftOffsetX = sourceTopLeftOffsetX
+            self.sourceTopLeftOffsetY = sourceTopLeftOffsetY
             self.stableOrder = stableOrder
         }
 

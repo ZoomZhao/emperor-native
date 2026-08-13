@@ -312,7 +312,8 @@ public struct CampaignMissionRuntimeState: Sendable, Hashable, Codable {
         month: Int,
         city: inout DeterministicCityState,
         rules: EconomyRulesEngine,
-        goalSet: CampaignMissionGoalSet?
+        goalSet: CampaignMissionGoalSet?,
+        completedMonumentBuildingIDsAtBoundary: Set<Int>? = nil
     ) -> CampaignMissionAdvanceResult {
         guard outcome == .running else { return .noChange }
         let relativeYear = max(0, settlementYear - startYear)
@@ -364,7 +365,8 @@ public struct CampaignMissionRuntimeState: Sendable, Hashable, Codable {
                 alliedCityCount: empireState?.alliedCityCount ?? 0,
                 conqueredCityCount: empireState?.conqueredCityCount ?? 0,
                 homageProgress: empireState?.homageProgress ?? 0,
-                menagerieSpeciesCount: menagerieAnimalIDs.count
+                menagerieSpeciesCount: menagerieAnimalIDs.count,
+                completedMonumentBuildingIDs: completedMonumentBuildingIDsAtBoundary
             )
            ) {
             let victory: CampaignMissionOutcome = .victory(CampaignVictoryRecord(

@@ -227,87 +227,382 @@ public enum OriginalConstructionButtonState: Int, CaseIterable, Sendable, Hashab
 
 /// Evidence level for a building-to-button association.
 ///
-/// The executable research recovered the three-state sheet geometry, but not
-/// the construction-panel writer that associates an authored building model
-/// with an early Bbutton frame. Keeping this distinction in the catalog makes
-/// it impossible for callers and tests to describe the current sheet-order
-/// mapping as exe-confirmed by accident.
+/// The hash-identified executable's `0x53A760` writer reads a compact
+/// `(selectorID, sheetFamilyIndex)` table at `0x855888`. Direct rows bind a
+/// building to one family. Submenu rows bind a group to one family and can be
+/// collapsed to a sole available member by the original program; native flat
+/// catalogs reuse that confirmed shared family for every group member.
 public enum OriginalConstructionButtonEvidence: String, Sendable, Hashable {
+    case confirmedDirectFromExecutable
+    case confirmedSubmenuFamilyFromExecutable
     case inferredFromSheet
     case unknown
+}
+
+/// Original city construction categories in the executable's fixed rail order.
+public enum OriginalConstructionPanelCategory: Int, CaseIterable, Sendable, Hashable {
+    case residential
+    case agriculture
+    case industry
+    case commerce
+    case safety
+    case government
+    case entertainment
+    case religion
+    case military
+    case aesthetics
+    case monuments
+}
+
+/// One executable-authored top-level construction slot.
+public struct OriginalConstructionPanelSlot: Sendable, Hashable, Identifiable {
+    public enum Kind: Sendable, Hashable {
+        case directBuilding
+        case buildingSubmenu
+        case resourceSubmenu
+        case dynamicMonument
+    }
+
+    public let category: OriginalConstructionPanelCategory
+    public let position: Int
+    public let selectorID: Int
+    public let familyIndex: Int
+    public let kind: Kind
+    public let memberBuildingIDs: [Int]
+
+    public var id: String { "\(category.rawValue)-\(position)-\(selectorID)" }
+
+    public var baseImageID: Int {
+        OriginalConstructionButtonSpriteCatalog.baseImageID(
+            forFamilyIndex: familyIndex
+        )
+    }
+}
+
+/// Executable-confirmed construction-panel topology.
+///
+/// Sources: category table `0x855888`, selector switch `0x403C80`, and group
+/// members `0x821164` in the hash-identified English executable.
+public enum OriginalConstructionPanelCatalog {
+    /// Only these four selector groups pass through `0x53A640` before the
+    /// top-level records are painted. `0x53A690` replaces the selector with
+    /// its sole available member only for these groups; every other group
+    /// still opens state 6 even when one row remains.
+    public static let singletonCollapsingSelectorIDs: Set<Int> = [63, 204, 205, 222]
+
+    private struct Recipe {
+        let selectorID: Int
+        let familyIndex: Int
+        let kind: OriginalConstructionPanelSlot.Kind
+        let members: [Int]
+    }
+
+    private static func direct(_ selectorID: Int, _ familyIndex: Int) -> Recipe {
+        Recipe(
+            selectorID: selectorID,
+            familyIndex: familyIndex,
+            kind: .directBuilding,
+            members: []
+        )
+    }
+
+    private static func submenu(
+        _ selectorID: Int,
+        _ familyIndex: Int,
+        _ members: [Int]
+    ) -> Recipe {
+        Recipe(
+            selectorID: selectorID,
+            familyIndex: familyIndex,
+            kind: .buildingSubmenu,
+            members: members
+        )
+    }
+
+    private static func resource(_ selectorID: Int, _ familyIndex: Int) -> Recipe {
+        Recipe(
+            selectorID: selectorID,
+            familyIndex: familyIndex,
+            kind: .resourceSubmenu,
+            members: []
+        )
+    }
+
+    private static let recipes: [[Recipe]] = [
+        [direct(2, 1), direct(11, 2)],
+        [
+            submenu(24, 3, [193, 192]),
+            submenu(200, 4, [199, 198, 196, 197, 195, 194]),
+            submenu(201, 5, [202, 203]),
+            submenu(29, 6, [238, 239, 237]),
+            submenu(25, 7, [27, 28, 26]),
+            submenu(30, 8, [31, 33]),
+        ],
+        [
+            direct(35, 9), submenu(34, 10, [38, 36]),
+            submenu(204, 11, [39, 40, 41]), submenu(50, 12, [43, 42, 44]),
+            submenu(140, 13, [47, 45, 46]), direct(37, 14),
+        ],
+        [
+            direct(53, 15), submenu(63, 16, [59, 60]),
+            submenu(206, 17, [66, 67, 65, 70, 69, 64, 68]), direct(54, 18),
+            resource(88, 19), resource(87, 20),
+        ],
+        [direct(72, 21), direct(207, 22), direct(208, 23), direct(124, 24), direct(127, 25)],
+        [
+            direct(209, 26), direct(125, 27), direct(110, 28), direct(123, 29),
+            direct(210, 30), submenu(205, 31, [48, 49]),
+        ],
+        [direct(211, 32), direct(212, 33), direct(213, 34), direct(75, 35)],
+        [
+            direct(214, 36), submenu(240, 37, [215, 216]),
+            submenu(241, 38, [217, 218]), direct(219, 39),
+        ],
+        [
+            direct(220, 40), direct(221, 41), submenu(222, 42, [224, 225]),
+            direct(223, 43), submenu(134, 44, [131, 129, 130]), direct(226, 45),
+        ],
+        [
+            direct(115, 46),
+            submenu(229, 47, [116, 243, 244, 245, 117, 246, 247, 248]),
+            submenu(136, 48, [119, 251, 120, 252, 121, 122]),
+            submenu(230, 49, [111, 113]), submenu(107, 50, [231, 91, 90, 89]),
+            submenu(242, 51, [118, 249, 250]),
+        ],
+        [direct(233, 52), submenu(234, 53, [52, 235, 236])],
+    ]
+
+    /// Exact `(buildingID, familyIndex)` table at `0x855D88`. Every family
+    /// index is 55; retaining the authored ID order is what determines the
+    /// four runtime positions.
+    public static let dynamicMonumentBuildingIDs =
+        Array(76...84) + [92, 93] + Array(253...268)
+
+    /// `0x53A4E0` makes the two project IDs and all sixteen layout IDs
+    /// equivalent only while matching an active monument task. The later
+    /// existing-building scan remains an exact-ID comparison.
+    public static let greatWallTaskFamilyBuildingIDs: Set<Int> =
+        Set([85, 86] + Array(253...268))
+
+    /// Monument task IDs recognized by the support-button gate at the tail of
+    /// `0x53A760`. Clock Tower (92) and Grand Pagoda (93) need the guild slot
+    /// but deliberately omit the laborers-camp slot.
+    public static let monumentTaskBuildingIDs: Set<Int> =
+        Set(Array(76...86) + [92, 93])
+    public static let laborersCampMonumentTaskBuildingIDs: Set<Int> =
+        Set(Array(76...86))
+
+    public static func collapsesSingleAvailableMember(selectorID: Int) -> Bool {
+        singletonCollapsingSelectorIDs.contains(selectorID)
+    }
+
+    /// Reproduces the `0x53A5D0` task match and the first-four scan in
+    /// `0x53A760`. Existing candidates turn into holes in their original
+    /// positions; later matches do not compact forward into those holes.
+    public static func runtimeDynamicMonumentBuildingIDs(
+        monumentTaskBuildingIDs taskBuildingIDs: Set<Int>,
+        existingBuildingIDs: Set<Int>
+    ) -> [Int?] {
+        let matching = dynamicMonumentBuildingIDs.lazy.filter { candidate in
+            if taskBuildingIDs.contains(candidate) { return true }
+            return greatWallTaskFamilyBuildingIDs.contains(candidate)
+                && !taskBuildingIDs.isDisjoint(with: greatWallTaskFamilyBuildingIDs)
+        }
+        var result = Array(matching.prefix(4)).map(Optional.some)
+        while result.count < 4 { result.append(nil) }
+        return result.map { candidate in
+            guard let candidate, !existingBuildingIDs.contains(candidate) else {
+                return nil
+            }
+            return candidate
+        }
+    }
+
+    public static func slots(
+        for category: OriginalConstructionPanelCategory,
+        dynamicMonumentBuildingIDs: [Int?] = []
+    ) -> [OriginalConstructionPanelSlot?] {
+        var result = recipes[category.rawValue].enumerated().map { position, recipe in
+            OriginalConstructionPanelSlot(
+                category: category,
+                position: position,
+                selectorID: recipe.selectorID,
+                familyIndex: recipe.familyIndex,
+                kind: recipe.kind,
+                memberBuildingIDs: recipe.members
+            )
+        }.map(Optional.some)
+
+        if category == .monuments {
+            for position in 2..<6 {
+                let dynamicIndex = position - 2
+                let buildingID = dynamicMonumentBuildingIDs.indices.contains(dynamicIndex)
+                    ? dynamicMonumentBuildingIDs[dynamicIndex]
+                    : nil
+                result.append(
+                    OriginalConstructionPanelSlot(
+                        category: category,
+                        position: position,
+                        selectorID: buildingID ?? 0,
+                        familyIndex: 55,
+                        kind: .dynamicMonument,
+                        memberBuildingIDs: buildingID.map { [$0] } ?? []
+                    )
+                )
+            }
+        }
+        while result.count < 6 { result.append(nil) }
+        return Array(result.prefix(6))
+    }
+
+    /// Applies the monument-task support gate at the end of `0x53A760` in
+    /// addition to the fixed category table. Non-monument categories are
+    /// identical to `slots(for:)`.
+    public static func runtimeSlots(
+        for category: OriginalConstructionPanelCategory,
+        monumentTaskBuildingIDs taskBuildingIDs: Set<Int>,
+        existingMonumentBuildingIDs: Set<Int>
+    ) -> [OriginalConstructionPanelSlot?] {
+        guard category == .monuments else { return slots(for: category) }
+        guard !taskBuildingIDs.isEmpty else { return Array(repeating: nil, count: 6) }
+        var result = slots(
+            for: category,
+            dynamicMonumentBuildingIDs: runtimeDynamicMonumentBuildingIDs(
+                monumentTaskBuildingIDs: taskBuildingIDs,
+                existingBuildingIDs: existingMonumentBuildingIDs
+            )
+        )
+        for position in 2..<6 where result[position]?.memberBuildingIDs.isEmpty == true {
+            result[position] = nil
+        }
+        guard !taskBuildingIDs.isDisjoint(with: monumentTaskBuildingIDs) else {
+            result[0] = nil
+            result[1] = nil
+            return result
+        }
+        if taskBuildingIDs.isDisjoint(with: laborersCampMonumentTaskBuildingIDs) {
+            result[0] = nil
+        }
+        return result
+    }
 }
 
 public enum OriginalConstructionButtonSpriteCatalog {
     public static let archiveBaseName = OriginalInterfaceSpriteCatalog.archiveBaseName
 
-    /// First records of three-state button families.
-    /// Sheet geometry (54×53, ×3 states) is confirmed from SG3 export.
-    /// Individual building→base rows are inferred from sheet order and frame
-    /// content unless/until exe UI-record writers are recovered; see
-    /// `docs/exe-research/construction-bbuttons.md`.
-    private static let baseImageIDByBuildingID: [Int: Int] = [
-        2: 1_491,   // common housing
-        11: 1_494,  // elite housing
-        31: 1_512,  // fishing wharf
-        33: 1_506,  // hunting camp
-        35: 1_515,  // clay pit
-        36: 1_518,  // quarry / stoneworks
-        43: 1_521,  // kiln
-        39: 1_524,  // bronze smelter
-        40: 1_524,  // iron smelter shares the furnace button
-        38: 1_527,  // lumber mill
-        // Commerce / light-industry: inferred from New_Bbuttons order after
-        // lumber + exported 54×53 frames (not exe-confirmed).
-        54: 1_528,  // warehouse
-        66: 1_531,  // food shop (native/inferred; not runtime-closed)
-        // #1533–#1544 are now directly observed on the original 商业 rail,
-        // but their building IDs are still unknown. Do not keep the old
-        // sheet-order guesses that rendered these vendor families as the
-        // mill, weaver, ceramics shop, or hemp shop.
-        59: 1_546,  // common market
-        60: 1_546,  // grand market shares the market pavilion family
-        72: 1_551,  // well
-        207: 1_554, // herbalist
-        208: 1_557, // acupuncture clinic
-        124: 1_560, // inspector tower
-        127: 1_563, // watchtower
-        209: 1_566, // administrative city
-        110: 1_569, // palace
-        125: 1_572, // tax office
-        203: 1_575, // irrigation pump
-        211: 1_584, // music school
-        212: 1_587, // acrobat school
-        213: 1_590, // drama school
-        214: 1_596, // ancestral shrine
-        215: 1_599, // Daoist shrine
-        216: 1_599, // large Daoist temple shares the Daoist button family
-        218: 1_602, // Buddhist pagoda
-        219: 1_605, // Confucian academy
-        220: 1_608, // crossbow fort
-        221: 1_611, // infantry fort
-        224: 1_614, // cavalry fort
-        225: 1_617, // chariot fort
-        223: 1_620, // catapult fort
-        116: 1_623, // decorative sculpture
-        115: 1_626, // garden
-        117: 1_629, // ornate sculpture
-        120: 1_632, // pond
-        121: 1_635, // tai chi park
-        119: 1_638, // wayside pavilion
-        118: 1_641, // flowering tree
-        122: 1_644, // private garden
-        233: 1_647, // laborers camp
-        52: 1_650,  // carpenters guild
-        235: 1_650, // masons guild shares the guild button family
-        236: 1_650, // ceramists guild shares the guild button family
-        93: 1_653,  // grand pagoda
-    ]
+    private struct Mapping: Sendable {
+        let baseImageID: Int
+        let evidence: OriginalConstructionButtonEvidence
+    }
+
+    /// First records of the original three-state button families.
+    ///
+    /// `0x449C10` resolves image group `#695` and adds the offset written by
+    /// `0x53A760`; the latter is `sheetFamilyIndex * 3`. In the exported
+    /// `China_Interface` index this is `1488 + sheetFamilyIndex * 3`.
+    private static let mappingByBuildingID: [Int: Mapping] = {
+        var result: [Int: Mapping] = [:]
+
+        func add(
+            _ buildingIDs: [Int],
+            baseImageID: Int,
+            evidence: OriginalConstructionButtonEvidence
+        ) {
+            for buildingID in buildingIDs {
+                result[buildingID] = Mapping(
+                    baseImageID: baseImageID,
+                    evidence: evidence
+                )
+            }
+        }
+
+        let direct = OriginalConstructionButtonEvidence.confirmedDirectFromExecutable
+        let submenu = OriginalConstructionButtonEvidence.confirmedSubmenuFamilyFromExecutable
+
+        // Direct category-slot rows from the 11×6 table at 0x855888.
+        add([2], baseImageID: 1_491, evidence: direct)
+        add([11], baseImageID: 1_494, evidence: direct)
+        add([35], baseImageID: 1_515, evidence: direct)
+        add([37], baseImageID: 1_530, evidence: direct)
+        add([53], baseImageID: 1_533, evidence: direct)
+        add([54], baseImageID: 1_542, evidence: direct)
+        add([72], baseImageID: 1_551, evidence: direct)
+        add([207], baseImageID: 1_554, evidence: direct)
+        add([208], baseImageID: 1_557, evidence: direct)
+        add([124], baseImageID: 1_560, evidence: direct)
+        add([127], baseImageID: 1_563, evidence: direct)
+        add([209], baseImageID: 1_566, evidence: direct)
+        add([125], baseImageID: 1_569, evidence: direct)
+        add([110], baseImageID: 1_572, evidence: direct)
+        add([123], baseImageID: 1_575, evidence: direct)
+        add([210], baseImageID: 1_578, evidence: direct)
+        add([211], baseImageID: 1_584, evidence: direct)
+        add([212], baseImageID: 1_587, evidence: direct)
+        add([213], baseImageID: 1_590, evidence: direct)
+        add([75], baseImageID: 1_593, evidence: direct)
+        add([214], baseImageID: 1_596, evidence: direct)
+        add([219], baseImageID: 1_605, evidence: direct)
+        add([220], baseImageID: 1_608, evidence: direct)
+        add([221], baseImageID: 1_611, evidence: direct)
+        add([223], baseImageID: 1_617, evidence: direct)
+        add([226], baseImageID: 1_623, evidence: direct)
+        add([115], baseImageID: 1_626, evidence: direct)
+        add([233], baseImageID: 1_644, evidence: direct)
+
+        // Original submenu members from the 45×32 table at 0x821164. The
+        // program keeps the selector's family when only one member is
+        // available, so every member legitimately shares that family.
+        add([193, 192], baseImageID: 1_497, evidence: submenu)
+        add([199, 198, 196, 197, 195, 194], baseImageID: 1_500, evidence: submenu)
+        add([202, 203], baseImageID: 1_503, evidence: submenu)
+        add([238, 239, 237], baseImageID: 1_506, evidence: submenu)
+        add([27, 28, 26], baseImageID: 1_509, evidence: submenu)
+        add([31, 33], baseImageID: 1_512, evidence: submenu)
+        add([38, 36], baseImageID: 1_518, evidence: submenu)
+        add([39, 40, 41], baseImageID: 1_521, evidence: submenu)
+        add([43, 42, 44], baseImageID: 1_524, evidence: submenu)
+        add([47, 45, 46], baseImageID: 1_527, evidence: submenu)
+        add([59, 60], baseImageID: 1_536, evidence: submenu)
+        add([66, 67, 65, 70, 69, 64, 68], baseImageID: 1_539, evidence: submenu)
+        add([48, 49], baseImageID: 1_581, evidence: submenu)
+        add([215, 216], baseImageID: 1_599, evidence: submenu)
+        add([217, 218], baseImageID: 1_602, evidence: submenu)
+        add([224, 225], baseImageID: 1_614, evidence: submenu)
+        add([131, 129, 130], baseImageID: 1_620, evidence: submenu)
+        add([116, 243, 244, 245, 117, 246, 247, 248], baseImageID: 1_629, evidence: submenu)
+        add([119, 251, 120, 252, 121, 122], baseImageID: 1_632, evidence: submenu)
+        add([111, 113], baseImageID: 1_635, evidence: submenu)
+        add([231, 91, 90, 89], baseImageID: 1_638, evidence: submenu)
+        add([118, 249, 250], baseImageID: 1_641, evidence: submenu)
+        add([52, 235, 236], baseImageID: 1_647, evidence: submenu)
+
+        // The monument category fills up to four live entries from 0x855D88;
+        // every emitted building ID receives family index 55 (#1653).
+        add(
+            Array(76...84) + [92, 93] + Array(253...268),
+            baseImageID: 1_653,
+            evidence: direct
+        )
+
+        return result
+    }()
+
+    public static func baseImageID(forFamilyIndex familyIndex: Int) -> Int {
+        1_488 + familyIndex * 3
+    }
+
+    public static func imageID(
+        forFamilyIndex familyIndex: Int,
+        state: OriginalConstructionButtonState = .normal
+    ) -> Int {
+        baseImageID(forFamilyIndex: familyIndex) + state.rawValue
+    }
 
     public static func imageID(
         forBuildingID buildingID: Int,
         state: OriginalConstructionButtonState = .normal
     ) -> Int? {
-        baseImageIDByBuildingID[buildingID].map { $0 + state.rawValue }
+        mappingByBuildingID[buildingID].map { $0.baseImageID + state.rawValue }
     }
 
     /// Returns the evidence class for the association used by `imageID`.
@@ -316,40 +611,33 @@ public enum OriginalConstructionButtonSpriteCatalog {
     public static func evidence(
         forBuildingID buildingID: Int
     ) -> OriginalConstructionButtonEvidence {
-        baseImageIDByBuildingID[buildingID] == nil
-            ? .unknown
-            : .inferredFromSheet
+        mappingByBuildingID[buildingID]?.evidence ?? .unknown
     }
 
-    /// Building IDs currently covered by the sheet-order fallback. This is
+    /// Building IDs currently covered by the executable-derived map. This is
     /// useful for diagnostics and tests without exposing the implementation
     /// dictionary to player-facing code.
     public static var mappedBuildingIDs: Set<Int> {
-        Set(baseImageIDByBuildingID.keys)
+        Set(mappingByBuildingID.keys)
     }
 
     /// Crop buttons are semantic because several crop models intentionally
     /// share the same original field or orchard artwork.
     ///
-    /// The agriculture panel observed in both local playthrough videos shows
-    /// a distinct hemp family (`#1503–#1505`) between the field and rice
-    /// families. The executable's `BUILD_HEMP_CROP` entry (building 194) is
-    /// consistent with that visual grouping. Keep the mapping centralized so
-    /// crop buttons do not silently fall back to the generic field art.
+    /// The original executable maps every member of `BUILD_CROPS` (including
+    /// rice and hemp) to the shared #1500 family, while tea, mulberry, and
+    /// lacquer use the shared orchard #1509 family. The #1503 family belongs
+    /// to the irrigation submenu, not to hemp.
     public static func cropImageID(
         for crop: AgriculturalCrop,
         state: OriginalConstructionButtonState = .normal
     ) -> Int {
         let base: Int
         switch crop {
-        case .rice:
-            base = 1_500
-        case .hemp:
-            base = 1_503
         case .tea, .mulberry, .lacquer:
             base = 1_509
-        case .soybeans, .cabbage, .millet, .wheat:
-            base = 1_497
+        case .soybeans, .cabbage, .millet, .wheat, .rice, .hemp:
+            base = 1_500
         }
         return base + state.rawValue
     }
@@ -361,15 +649,17 @@ public enum OriginalConstructionButtonSpriteCatalog {
         isOrchard: Bool,
         state: OriginalConstructionButtonState = .normal
     ) -> Int {
-        let base = isRice ? 1_500 : (isOrchard ? 1_509 : 1_497)
+        let base = isOrchard ? 1_509 : 1_500
         return base + state.rawValue
     }
 
     public static var requiredImageIDs: Set<Int> {
-        let buildingIDs = baseImageIDByBuildingID.values.flatMap { base in
-            OriginalConstructionButtonState.allCases.map { base + $0.rawValue }
+        let buildingIDs = mappingByBuildingID.values.flatMap { mapping in
+            OriginalConstructionButtonState.allCases.map {
+                mapping.baseImageID + $0.rawValue
+            }
         }
-        let cropIDs = [1_497, 1_500, 1_503, 1_509].flatMap { base in
+        let cropIDs = [1_500, 1_509].flatMap { base in
             OriginalConstructionButtonState.allCases.map { base + $0.rawValue }
         }
         return Set(buildingIDs + cropIDs)

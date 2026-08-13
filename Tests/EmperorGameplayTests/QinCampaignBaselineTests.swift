@@ -26,65 +26,33 @@ final class QinCampaignBaselineTests: XCTestCase {
             return false
         })
 
-        let beginResult = controller.perform(.beginMapMonument(buildingID: 83))
-        XCTAssertTrue(beginResult.wasApplied, beginResult.message)
+        let placement = try XCTUnwrap(city.terrain?.grandCanalPlacement)
+        XCTAssertEqual(placement.origin, GridPoint(x: 4, y: 68))
+        XCTAssertEqual(placement.quarterTurnsClockwise, 0)
+        XCTAssertEqual(
+            Set(
+                OriginalGrandCanalLayoutCatalog
+                    .placedSubBuildings(for: placement)
+                    .flatMap(\.footprintCells)
+            ).count,
+            528
+        )
+
         XCTAssertFalse(
             controller.perform(.beginMapMonument(buildingID: 83)).wasApplied
         )
+        XCTAssertFalse(
+            controller.perform(.selectConstruction(.grandCanalSegment)).wasApplied
+        )
+        XCTAssertNil(OriginalMonumentConfiguration.configuration(buildingID: 83))
     }
 
-    func testQinMissionOneCanObserveCompletedGrandCanalGoal() throws {
+    func testQinMissionOnePreservesArchivedGrandCanalCompletion() throws {
         let controller = try startedQinMissionOne()
-        let rules = EconomyRulesEngine(models: controller.models)
-        var city = DeterministicCityState(
-            year: -260,
-            month: 6,
-            treasury: 100_000,
-            mapWidth: 40,
-            mapHeight: 20
-        )
-        city.publicSafetyEnabled = false
-        _ = city.buildRoad((0..<40).map { GridPoint(x: $0, y: 10) }, rules: rules)
-        _ = try XCTUnwrap(city.constructWarehouse(
-            at: GridPoint(x: 0, y: 7),
-            rules: rules
-        ))
-        for (buildingID, x) in [(233, 4), (52, 7), (235, 10)] {
-            _ = try XCTUnwrap(city.constructAestheticBuilding(
-                buildingID: buildingID,
-                at: GridPoint(x: x, y: 8),
-                rules: rules
-            ))
-        }
-        XCTAssertNotNil(city.beginMapMonument(buildingID: 83))
-        XCTAssertNil(city.beginMapMonument(buildingID: 83))
-
-        let configuration = try XCTUnwrap(
-            OriginalMonumentConfiguration.configuration(buildingID: 83)
-        )
-        for (commodityID, amount) in configuration.requiredCommodityUnits {
-            XCTAssertEqual(
-                city.receiveCampaignCommodityGift(
-                    commodityID: commodityID,
-                    amount: amount
-                ),
-                amount
-            )
-        }
-        for _ in 0..<40 {
-            _ = city.advanceMonth(rules: rules)
-        }
-        for _ in 0..<GrandCanalProjectRuntime.finalStage {
-            for index in (0..<33).reversed() {
-                XCTAssertEqual(
-                    city.advanceGrandCanalSegment(
-                        at: GridPoint(x: 4 + index * 4, y: 68)
-                    ),
-                    index
-                )
-            }
-        }
+        var city = try XCTUnwrap(controller.city)
         XCTAssertTrue(city.aesthetics.completedMonumentBuildingIDs.contains(83))
+        XCTAssertNil(city.aesthetics.grandCanalProject)
+        XCTAssertNil(city.advanceGrandCanalSegment(at: GridPoint(x: 4, y: 68)))
 
         var snapshot = city.campaignGoalProgressSnapshot()
         snapshot.bestYearlyProductionUnitsByCommodityID[15] = 1_800
@@ -96,15 +64,8 @@ final class QinCampaignBaselineTests: XCTestCase {
         )
     }
 
-    func testEarthenGreatWallHasAProgressConfiguration() throws {
-        let configuration = try XCTUnwrap(
-            OriginalMonumentConfiguration.configuration(buildingID: 85)
-        )
-        XCTAssertEqual(configuration.buildingID, 85)
-        XCTAssertGreaterThan(configuration.requiredWork, 0)
-        XCTAssertFalse(configuration.requiredCommodityUnits.isEmpty)
-        XCTAssertTrue(configuration.requiredSupportKinds.contains(.laborersCamp))
-        XCTAssertTrue(configuration.requiredSupportKinds.contains(.masonsGuild))
+    func testEarthenGreatWallDoesNotUseTheLegacyGuessedProgressConfiguration() {
+        XCTAssertNil(OriginalMonumentConfiguration.configuration(buildingID: 85))
     }
 
     func testQinMissionOneCanPlaceVerifiedIrrigationPumpOnAuthoredBank() throws {

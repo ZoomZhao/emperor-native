@@ -86,6 +86,13 @@ public final class GameSessionController: @unchecked Sendable {
         case let .startCampaignMission(campaignID, missionID):
             result = startCampaignMission(campaignID: campaignID, missionID: missionID)
         case let .selectConstruction(tool):
+            guard tool != .grandCanalSegment,
+                  tool != .earthenGreatWallSegment else {
+                result = .rejected(
+                    "Map monument construction is awaiting source-verified rules"
+                )
+                break
+            }
             selectedConstruction = tool
             result = .applied("selected \(tool.rawValue)")
         case let .selectAgriculturalCrop(crop):
@@ -236,13 +243,8 @@ public final class GameSessionController: @unchecked Sendable {
             city = updated
             result = .applied("地图纪念碑 #\(buildingID) 已开工")
         case let .advanceEarthenGreatWallSegment(index):
-            guard var updated = city,
-                  updated.advanceEarthenGreatWallSegment(index: index) != nil else {
-                result = .rejected("该段土长城尚未具备下一阶段所需物资与工期")
-                break
-            }
-            city = updated
-            result = .applied("土长城第 \(index + 1) 段进入下一施工阶段")
+            _ = index
+            result = .rejected("Great Wall construction is awaiting source-verified rules")
         case let .issueMilitaryOrder(unitIDs, point):
             guard campaignRuntime?.outcome == .running,
                   var updated = city else {
@@ -463,7 +465,9 @@ public final class GameSessionController: @unchecked Sendable {
                 month: settlement.month,
                 city: &updatedCity,
                 rules: rules,
-                goalSet: activeGoalSet
+                goalSet: activeGoalSet,
+                completedMonumentBuildingIDsAtBoundary:
+                    settlement.completedMonumentBuildingIDsAtBoundary
             )
             latestCampaignAdvance = advance
             if advance.outcomeChangedNow != nil { evidence.outcomeChangeCount += 1 }
@@ -618,10 +622,8 @@ public final class GameSessionController: @unchecked Sendable {
                 orientation: orientation,
                 rules: rules
             ) != nil
-        case .grandCanalSegment:
-            city.advanceGrandCanalSegment(at: point) != nil
-        case .earthenGreatWallSegment:
-            city.advanceEarthenGreatWallSegment(at: point) != nil
+        case .grandCanalSegment, .earthenGreatWallSegment:
+            false
         case .largePalacePhase:
             city.advanceLargePalacePhase(at: point) != nil
         case .phasedMonumentPhase:

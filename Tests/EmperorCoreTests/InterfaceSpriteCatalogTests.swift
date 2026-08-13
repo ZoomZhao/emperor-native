@@ -137,7 +137,7 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
         )
     }
 
-    func testConstructionButtonsUseInferredThreeStateFamilies() throws {
+    func testConstructionButtonsUseExecutableRecoveredThreeStateFamilies() throws {
         XCTAssertEqual(
             try OriginalConstructionButtonState.allCases.map {
                 try XCTUnwrap(
@@ -156,25 +156,26 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
             ),
             1_553
         )
-        let additionalInferredBases: [Int: Int] = [
-            33: 1_506,
-            54: 1_528,
-            66: 1_531,
-            59: 1_546,
-            60: 1_546,
-            203: 1_575,
+        let recoveredBases: [Int: Int] = [
+            33: 1_512,
+            53: 1_533,
+            54: 1_542,
+            66: 1_539,
+            59: 1_536,
+            60: 1_536,
+            203: 1_503,
             211: 1_584,
             212: 1_587,
             213: 1_590,
-            119: 1_638,
-            122: 1_644,
-            233: 1_647,
-            52: 1_650,
-            235: 1_650,
-            236: 1_650,
+            119: 1_632,
+            122: 1_632,
+            233: 1_644,
+            52: 1_647,
+            235: 1_647,
+            236: 1_647,
             93: 1_653,
         ]
-        for (buildingID, base) in additionalInferredBases {
+        for (buildingID, base) in recoveredBases {
             XCTAssertEqual(
                 OriginalConstructionButtonSpriteCatalog.imageID(
                     forBuildingID: buildingID,
@@ -183,12 +184,14 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
                 base
             )
         }
-        for buildingID in [53, 47, 65, 67] {
-            XCTAssertNil(
-                OriginalConstructionButtonSpriteCatalog.imageID(forBuildingID: buildingID),
-                "runtime-observed 商业 families must not be guessed as building \(buildingID)"
-            )
-        }
+        XCTAssertEqual(
+            OriginalConstructionButtonSpriteCatalog.imageID(forBuildingID: 47),
+            1_527
+        )
+        XCTAssertEqual(
+            OriginalConstructionButtonSpriteCatalog.imageID(forBuildingID: 65),
+            1_539
+        )
         XCTAssertEqual(
             OriginalConstructionButtonSpriteCatalog.cropImageID(
                 isRice: true,
@@ -202,7 +205,7 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
                 for: .hemp,
                 state: .selected
             ),
-            1_505
+            1_502
         )
         XCTAssertEqual(
             OriginalConstructionButtonSpriteCatalog.cropImageID(
@@ -216,7 +219,11 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
         )
         XCTAssertEqual(
             OriginalConstructionButtonSpriteCatalog.evidence(forBuildingID: 54),
-            .inferredFromSheet
+            .confirmedDirectFromExecutable
+        )
+        XCTAssertEqual(
+            OriginalConstructionButtonSpriteCatalog.evidence(forBuildingID: 59),
+            .confirmedSubmenuFamilyFromExecutable
         )
         XCTAssertEqual(
             OriginalConstructionButtonSpriteCatalog.evidence(forBuildingID: 999),
@@ -224,14 +231,130 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
         )
         XCTAssertEqual(
             OriginalConstructionButtonSpriteCatalog.mappedBuildingIDs.count,
-            49
+            130
         )
         XCTAssertTrue(
             OriginalConstructionButtonSpriteCatalog.mappedBuildingIDs.allSatisfy {
                 OriginalConstructionButtonSpriteCatalog.evidence(forBuildingID: $0)
-                    == .inferredFromSheet
+                    != .unknown
             }
         )
         XCTAssertFalse(OriginalConstructionButtonSpriteCatalog.requiredImageIDs.isEmpty)
+    }
+
+    func testConstructionPanelUsesExecutableRecoveredFixedSlots() throws {
+        for category in OriginalConstructionPanelCategory.allCases {
+            XCTAssertEqual(
+                OriginalConstructionPanelCatalog.slots(for: category).count,
+                6
+            )
+        }
+
+        let residential = OriginalConstructionPanelCatalog.slots(for: .residential)
+        XCTAssertEqual(residential.compactMap(\.self).map(\.selectorID), [2, 11])
+        XCTAssertEqual(residential.compactMap(\.self).map(\.baseImageID), [1_491, 1_494])
+
+        let agriculture = OriginalConstructionPanelCatalog.slots(for: .agriculture)
+        XCTAssertEqual(
+            agriculture.compactMap(\.self).map(\.selectorID),
+            [24, 200, 201, 29, 25, 30]
+        )
+        XCTAssertEqual(
+            try XCTUnwrap(agriculture[1]).memberBuildingIDs,
+            [199, 198, 196, 197, 195, 194]
+        )
+        XCTAssertEqual(try XCTUnwrap(agriculture[5]).baseImageID, 1_512)
+
+        let commerce = OriginalConstructionPanelCatalog.slots(for: .commerce)
+        XCTAssertEqual(try XCTUnwrap(commerce[4]).selectorID, 88)
+        XCTAssertEqual(try XCTUnwrap(commerce[4]).kind, .resourceSubmenu)
+        XCTAssertEqual(try XCTUnwrap(commerce[5]).selectorID, 87)
+        XCTAssertEqual(try XCTUnwrap(commerce[5]).baseImageID, 1_548)
+
+        let monuments = OriginalConstructionPanelCatalog.slots(for: .monuments)
+        XCTAssertEqual(monuments.compactMap(\.self).count, 6)
+        XCTAssertEqual(try XCTUnwrap(monuments[0]).selectorID, 233)
+        XCTAssertEqual(try XCTUnwrap(monuments[1]).selectorID, 234)
+        for index in 2..<6 {
+            let slot = try XCTUnwrap(monuments[index])
+            XCTAssertEqual(slot.kind, .dynamicMonument)
+            XCTAssertEqual(slot.familyIndex, 55)
+            XCTAssertEqual(slot.baseImageID, 1_653)
+            XCTAssertTrue(slot.memberBuildingIDs.isEmpty)
+        }
+
+        XCTAssertEqual(
+            OriginalConstructionButtonSpriteCatalog.imageID(
+                forFamilyIndex: 20,
+                state: .selected
+            ),
+            1_550
+        )
+        XCTAssertEqual(
+            OriginalConstructionPanelCatalog.dynamicMonumentBuildingIDs,
+            Array(76...84) + [92, 93] + Array(253...268)
+        )
+    }
+
+    func testOnlyExecutableFlaggedSubmenusCollapseASingleAvailableMember() {
+        XCTAssertEqual(
+            OriginalConstructionPanelCatalog.singletonCollapsingSelectorIDs,
+            Set([63, 204, 205, 222])
+        )
+        for selectorID in [24, 34, 50, 87, 88, 134, 140, 200, 201, 206, 229, 230, 234, 240, 241, 242] {
+            XCTAssertFalse(
+                OriginalConstructionPanelCatalog.collapsesSingleAvailableMember(
+                    selectorID: selectorID
+                )
+            )
+        }
+    }
+
+    func testDynamicMonumentSlotsPreserveExecutableOrderEquivalenceAndHoles() throws {
+        XCTAssertEqual(
+            OriginalConstructionPanelCatalog.runtimeDynamicMonumentBuildingIDs(
+                monumentTaskBuildingIDs: [77],
+                existingBuildingIDs: []
+            ),
+            [77, nil, nil, nil]
+        )
+        XCTAssertEqual(
+            OriginalConstructionPanelCatalog.runtimeDynamicMonumentBuildingIDs(
+                monumentTaskBuildingIDs: [85],
+                existingBuildingIDs: [254]
+            ),
+            [253, nil, 255, 256]
+        )
+
+        let greatWall = OriginalConstructionPanelCatalog.runtimeSlots(
+            for: .monuments,
+            monumentTaskBuildingIDs: [85],
+            existingMonumentBuildingIDs: [254]
+        )
+        XCTAssertEqual(greatWall.compactMap(\.self).count, 5)
+        XCTAssertEqual(try XCTUnwrap(greatWall[0]).selectorID, 233)
+        XCTAssertEqual(try XCTUnwrap(greatWall[1]).selectorID, 234)
+        XCTAssertEqual(try XCTUnwrap(greatWall[2]).selectorID, 253)
+        XCTAssertNil(greatWall[3])
+        XCTAssertEqual(try XCTUnwrap(greatWall[4]).selectorID, 255)
+        XCTAssertEqual(try XCTUnwrap(greatWall[5]).selectorID, 256)
+
+        let clockTower = OriginalConstructionPanelCatalog.runtimeSlots(
+            for: .monuments,
+            monumentTaskBuildingIDs: [92],
+            existingMonumentBuildingIDs: []
+        )
+        XCTAssertNil(clockTower[0])
+        XCTAssertEqual(try XCTUnwrap(clockTower[1]).selectorID, 234)
+        XCTAssertEqual(try XCTUnwrap(clockTower[2]).selectorID, 92)
+
+        XCTAssertEqual(
+            OriginalConstructionPanelCatalog.runtimeSlots(
+                for: .monuments,
+                monumentTaskBuildingIDs: [],
+                existingMonumentBuildingIDs: []
+            ),
+            Array(repeating: nil, count: 6)
+        )
     }
 }

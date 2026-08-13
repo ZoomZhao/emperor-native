@@ -184,6 +184,12 @@ struct RenderedMap {
         }?.vegetationSprites[localID]
     }
 
+    func terrainSprite(localImageID: Int) -> RenderedTerrainSprite? {
+        spriteArchives.first {
+            $0.globalImageBase == EmperorMap.chinaTerrainGlobalImageBase
+        }?.sprites[localImageID]
+    }
+
     func treeSprite(x: Int, y: Int) -> RenderedTerrainSprite? {
         let localID = 927 + abs(x &* 13 &+ y &* 29) % 18
         return spriteArchives.first {
@@ -313,6 +319,7 @@ final class LibraryModel: ObservableObject {
     @Published var constructionTool: NativeConstructionTool = .inspect
     @Published var constructionOrientation: IsometricBuildingOrientation = .northSouth
     @Published var selectedAgriculturalCrop: AgriculturalCrop = .wheat
+    @Published private(set) var selectedTradePartnerID: Int?
     /// Empty means all surviving formations. Non-empty sets are controlled by
     /// clicking formation markers while the rally tool is active.
     @Published var selectedMilitaryUnitIDs: Set<Int> = []
@@ -409,9 +416,12 @@ final class LibraryModel: ObservableObject {
                     contentsOf: source.root.appendingPathComponent("EmperorText.eng")
                 )
                 let campaigns = try CampaignCatalog.load(source)
-                let requestedCampaignFileName = ProcessInfo.processInfo.arguments.contains(
+                let startsQinCampaign = ProcessInfo.processInfo.arguments.contains(
                     "--ui-smoke-auto-start-qin"
+                ) || ProcessInfo.processInfo.arguments.contains(
+                    "--ui-smoke-auto-start-qin4"
                 )
+                let requestedCampaignFileName = startsQinCampaign
                     ? "4 Qin Dynasty.pak"
                     : "1 Xia Dynasty - Tutorials.pak"
                 let defaultCampaign = campaigns.first {
@@ -442,12 +452,18 @@ final class LibraryModel: ObservableObject {
                         self.loadCampaignEmpire(defaultCampaign)
                         if (
                             ProcessInfo.processInfo.arguments.contains("--ui-smoke-auto-start-xia")
-                                || ProcessInfo.processInfo.arguments.contains(
-                                    "--ui-smoke-auto-start-qin"
-                                )
-                        ),
-                           let firstMission = defaultCampaign.missions.first {
-                            self.startMission(firstMission)
+                                || startsQinCampaign
+                        ) {
+                            // Test-only navigation still enters through the real campaign command;
+                            // it never patches the map or monument state used by the snapshot.
+                            let smokeMission = ProcessInfo.processInfo.arguments.contains(
+                                "--ui-smoke-auto-start-qin4"
+                            )
+                                ? defaultCampaign.missions.dropFirst(3).first
+                                : defaultCampaign.missions.first
+                            if let smokeMission {
+                                self.startMission(smokeMission)
+                            }
                         }
                     }
                     self.refreshSaveHistory()
@@ -486,6 +502,15 @@ final class LibraryModel: ObservableObject {
     }
 
     func selectConstructionTool(_ tool: NativeConstructionTool) {
+        if tool != .tradingStation && tool != .tradingQuay {
+            selectedTradePartnerID = nil
+        }
+        if (tool == .tradingStation || tool == .tradingQuay),
+           selectedTradePartnerID == nil {
+            constructionTool = .inspect
+            saveStatus = "请先从商业菜单选择贸易城市"
+            return
+        }
         if let buildingID = tool.buildingID,
            let restriction = cityState?.campaignConstructionRestriction(
                forBuildingID: buildingID
@@ -546,10 +571,37 @@ final class LibraryModel: ObservableObject {
         saveStatus = "\(crop.localizedTitle)农场：先在临路清地放置农场主体，再选择农田铺设田块"
     }
 
+    func selectAgriculturalPlot(_ crop: AgriculturalCrop) {
+        guard cityState?.isAgriculturalCropAvailable(crop) ?? true else {
+            saveStatus = "\(crop.fieldTitle)：本关暂未开放"
+            return
+        }
+        selectedAgriculturalCrop = crop
+        constructionTool = .farmland
+        _ = gameplayController?.perform(.selectAgriculturalCrop(crop))
+        _ = gameplayController?.perform(.selectConstruction(.farmland))
+        saveStatus = "\(crop.fieldTitle)：在同类农场耕作范围内点击或拖动种植；右键取消"
+    }
+
+    func selectTradePartner(_ partnerID: Int) {
+        guard let partner = cityState?.trade.partner(id: partnerID), partner.isOpen,
+              !((cityState?.trade.buildings.contains { $0.partnerID == partnerID }) ?? true),
+              cityState?.isBuildingAvailableInCampaign(partner.routeKind.buildingID) == true else {
+            selectedTradePartnerID = nil
+            constructionTool = .inspect
+            saveStatus = "该贸易城市当前不能修建新的贸易设施"
+            return
+        }
+        selectedTradePartnerID = partnerID
+        constructionTool = partner.routeKind == .land ? .tradingStation : .tradingQuay
+        saveStatus = "\(partner.name)：放置\(constructionTool.title)；右键取消"
+    }
+
     func cancelCurrentInteraction() {
         let previousTool = constructionTool
         let hadMilitarySelection = !selectedMilitaryUnitIDs.isEmpty
         selectedMilitaryUnitIDs.removeAll()
+        selectedTradePartnerID = nil
 
         guard previousTool != .inspect else {
             if hadMilitarySelection {
@@ -586,6 +638,46 @@ final class LibraryModel: ObservableObject {
         guard case let .loaded(_, _, _, _, models, _) = state,
               var city = cityState else { return }
         let rules = EconomyRulesEngine(models: models)
+        if constructionTool == .tradingStation || constructionTool == .tradingQuay {
+            guard let partnerID = selectedTradePartnerID,
+                  let partner = city.trade.partner(id: partnerID),
+                  partner.routeKind.buildingID == constructionTool.buildingID else {
+                saveStatus = "请先从商业菜单选择贸易城市"
+                return
+            }
+            if let controller = gameplayController,
+               controller.selectedCampaignID != nil,
+               controller.selectedMissionID == selectedMissionID {
+                let result = controller.perform(.constructTradingBuilding(
+                    partnerID: partnerID,
+                    at: point,
+                    orientation: constructionOrientation
+                ))
+                syncFromGameplayController()
+                saveStatus = result.wasApplied
+                    ? "已为\(partner.name)建成\(constructionTool.title)"
+                    : "无法在此为\(partner.name)修建\(constructionTool.title)"
+                if result.wasApplied {
+                    selectedTradePartnerID = nil
+                    playOriginalBuildingSound(partner.routeKind.buildingID)
+                }
+                return
+            }
+            guard city.constructTradingBuilding(
+                partnerID: partnerID,
+                at: point,
+                orientation: constructionOrientation,
+                rules: rules
+            ) != nil else {
+                saveStatus = "无法在此为\(partner.name)修建\(constructionTool.title)"
+                return
+            }
+            cityState = city
+            selectedTradePartnerID = nil
+            saveStatus = "已为\(partner.name)建成\(constructionTool.title)"
+            playOriginalBuildingSound(partner.routeKind.buildingID)
+            return
+        }
         if constructionTool == .rally,
            let controller = gameplayController,
            controller.selectedCampaignID != nil,
@@ -655,6 +747,8 @@ final class LibraryModel: ObservableObject {
         }
         switch constructionTool {
         case .inspect:
+            return
+        case .tradingStation, .tradingQuay:
             return
         case .demolish:
             let outcome = city.demolish(at: point, rules: rules)
@@ -1347,7 +1441,9 @@ final class LibraryModel: ObservableObject {
                 month: settlement.month,
                 city: &city,
                 rules: rules,
-                goalSet: goalSet
+                goalSet: goalSet,
+                completedMonumentBuildingIDsAtBoundary:
+                    settlement.completedMonumentBuildingIDsAtBoundary
             )
             campaignRuntimeState = runtime
             latestCampaignAdvance = result
@@ -1661,6 +1757,7 @@ final class LibraryModel: ObservableObject {
             let save = try NativeSaveGameStore.load(from: url)
             cityState = save.city
             constructionTool = .inspect
+            selectedTradePartnerID = nil
             constructionOrientation = .northSouth
             latestTick = nil
             latestSettlement = nil
@@ -1785,6 +1882,7 @@ final class LibraryModel: ObservableObject {
                 activeMissionWorld = world
                 syncFromGameplayController()
                 constructionTool = .inspect
+                selectedTradePartnerID = nil
                 constructionOrientation = .northSouth
                 bindRenderedMap(to: world)
                 saveStatus = "已开始："
@@ -1842,6 +1940,7 @@ final class LibraryModel: ObservableObject {
             activeMissionWorld = world
             cityState = city
             constructionTool = .inspect
+            selectedTradePartnerID = nil
             constructionOrientation = .northSouth
             latestTick = nil
             latestSettlement = nil
@@ -2033,6 +2132,17 @@ final class LibraryModel: ObservableObject {
                     }
                     // Toolbar / player-built roads reuse the dirt-road family.
                     if descriptor.baseName == "China_Terrain" {
+                        // SB_CANAL phase zero normally restores logical
+                        // terrain group 3 (#247). Road-crossing parts use the
+                        // complete nine-frame variation family (#247...255)
+                        // before overwriting their road centre line.
+                        let canalTerrainBase = OriginalBuildingSpriteCatalog
+                            .grandCanalPhaseZeroTerrainBaseImageID
+                        localIDs.formUnion(canalTerrainBase...(canalTerrainBase + 8))
+                        localIDs.insert(
+                            OriginalBuildingSpriteCatalog
+                                .grandCanalPhaseZeroRoadImageID
+                        )
                         localIDs.formUnion(
                             OriginalInterfaceUtilitySpriteCatalog.roadTerrainLocalIDs
                         )
@@ -2339,6 +2449,7 @@ final class LibraryModel: ObservableObject {
         case .dramaSchool: .dramaSchool
         case .farmland: .farmland
         case .cropFarm: .cropFarm
+        case .tradingStation, .tradingQuay: nil
         case .irrigationPump: .irrigationPump
         case .grandCanalSegment: .grandCanalSegment
         case .earthenGreatWallSegment: .earthenGreatWallSegment

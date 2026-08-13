@@ -50,9 +50,12 @@ public struct EarthenGreatWallLayout: Sendable, Hashable, Codable {
     public let segments: [EarthenGreatWallSubBuilding]
     public let phaseRules: [EarthenGreatWallPhaseRule]
 
-    /// The released Badaling map does not use the sub-building layout as one
-    /// rigid transform. These anchors bind the 35 authored logical segments
-    /// onto the 46 baked 4×4 blocks along the visible mountain ridge.
+    /// Legacy Native save compatibility only.
+    ///
+    /// This table predates recovery of the original multipart object model
+    /// and is disproven as a Badaling gameplay binding. New sessions use
+    /// `OriginalGreatWallLayoutCatalog` (layout 257, 53 parts, 740 cells) and
+    /// never instantiate this synthetic 35-segment project.
     public static let badalingMapBindings: [EarthenGreatWallMapBinding] = {
         let origins = [
             (71, 149), (71, 145), (71, 137), (75, 137), (79, 137),
@@ -200,6 +203,10 @@ public struct EarthenGreatWallSegmentRuntime: Sendable, Hashable, Codable {
     }
 }
 
+/// Legacy Native save payload retained so earlier local saves remain
+/// decodable. New campaign sessions must not create or advance this synthetic
+/// project; the original part-level contract lives in
+/// `OriginalGreatWallLayoutCatalog`.
 public struct EarthenGreatWallProjectRuntime: Sendable, Hashable, Codable {
     public static let buildingID = 85
     public static let finalStage = 11

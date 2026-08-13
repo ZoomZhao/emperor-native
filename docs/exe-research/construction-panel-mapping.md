@@ -4,7 +4,10 @@ Goal: recover the original city right-rail construction catalog as
 
 `category × slot → buildingId → China_Interface imageId (+ frame / screenRect)`.
 
-This note is research evidence only. It does **not** claim a complete authoritative map. **Inferred rows must never be labeled `confirmed`.**
+The executable mapping is now recovered and recorded in
+[construction-panel-exe-mapping.md](./construction-panel-exe-mapping.md).
+The inferred files below remain a historical record of the pre-recovery state;
+do not use them as the current source of truth.
 
 ## Evidence classes
 
@@ -39,14 +42,20 @@ does not identify their building IDs. Commerce stretch also has an extra
 **`catalog_base_vs_index_family_start`** conflict — confidence **low** for
 the remaining sheet-order rows.
 
-### C. Runtime-unknown
+### C. Runtime observations and remaining visual gaps
 
 | Item | Status |
 | --- | --- |
 | Wine/LLDB blit capture | **partial** — Rosetta/Wine reached tutorial 商业 and captured `#1533–#1541`; semantic IDs remain unknown |
-| Exe `buildingId→button` writer | **unknown** (`construction-bbuttons.md`) |
-| Authoritative original category/slot order | **unknown** (native taxonomy only) |
+| Exe selector/group→button writer | **confirmed** (`construction-panel-exe-mapping.md`) |
+| Authoritative original top-level category/slot order | **confirmed** (`0x855888`, six slots per category) |
 | Pixel-measured screenRect from original | **unknown** (native theme geometry only) |
+
+### D. Executable-confirmed (current source of truth)
+
+| File | Contents |
+| --- | --- |
+| [construction-panel-exe-mapping.md](./construction-panel-exe-mapping.md) | `0x53A760` writer, compact category table, group expansion, dynamic monument and trade-city control flow, image formula, evidence classes |
 
 `construction-panel-mapping.json` still holds the earlier asset dump + empty `runtimeCapture`.
 
@@ -66,7 +75,11 @@ the remaining sheet-order rows.
 
 ## Inferred (native) summary
 
-From `OriginalConstructionButtonSpriteCatalog` (**53** building rows), `NativeConstructionTool` / `ConstructionToolCategory`, and `ContentView` `ClassicControlPanel`:
+The following counts describe the historical pre-recovery JSON snapshot, not
+the current Swift catalog. From the then-current
+`OriginalConstructionButtonSpriteCatalog` (**53** building rows),
+`NativeConstructionTool` / `ConstructionToolCategory`, and `ContentView`
+`ClassicControlPanel`:
 
 - Category labels and stable slots (enum order + classic filters; **not** mission available-first).
 - Chinese `buildingName` from tool titles.
@@ -75,9 +88,12 @@ From `OriginalConstructionButtonSpriteCatalog` (**53** building rows), `NativeCo
 - Crop buttons (9) and category rail (11) included as inferred rows.
 - 23 classic-grid tools remain **image unknown** (no catalog Bbutton row).
 
-## Not closed with original exe
+## Historical pre-recovery gaps (superseded for mapping)
 
-- No PE writer recovered for early Bbuttons.
-- Catalog vs INDEX family-start misalignment unresolved.
-- Runtime slot artwork is partially captured, but no semantic `buildingId`/writer/tooltip or original pixel rect is closed.
+- The earlier pass had not recovered the PE writer for early Bbuttons; this is
+  now closed by `0x53A760` and `0x449C10`.
+- The earlier catalog vs INDEX family-start misalignment was caused by
+  sheet-order guesses; the executable family-index formula now resolves it.
+- Runtime slot artwork is partially captured; original pixel rects, exact
+  submenu rasterization, and tooltip text remain open.
 - Do not merge section B into section A.

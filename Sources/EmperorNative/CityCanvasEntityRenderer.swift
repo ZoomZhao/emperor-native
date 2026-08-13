@@ -180,6 +180,102 @@ extension CityCanvas {
                 ))
             }
         }
+        let mapCanalParts = city.aesthetics.grandCanalMapPartStates.sorted {
+            $0.subBuildingIndex < $1.subBuildingIndex
+        }
+        for (partPosition, part) in mapCanalParts.enumerated() {
+            let footprint = BuildingFootprint(width: 4, height: 4)
+            guard footprint.points(at: part.worldOrigin).contains(where: viewport.contains) else {
+                continue
+            }
+            let firstNeighborPhase = partPosition > 0
+                ? mapCanalParts[partPosition - 1].currentSubBuildingPhase
+                : part.currentSubBuildingPhase
+            let secondNeighborPhase = partPosition + 1 < mapCanalParts.count
+                ? mapCanalParts[partPosition + 1].currentSubBuildingPhase
+                : part.currentSubBuildingPhase
+            let isRoadCrossing = GrandCanalLayout.original.segments
+                .first(where: { $0.index == part.subBuildingIndex })?.isRoadCrossing == true
+            let variation = originalMap?.map.terrainVisualVariationValue(
+                x: part.worldOrigin.x,
+                y: part.worldOrigin.y
+            ) ?? 0
+            if let reference = OriginalBuildingSpriteCatalog.grandCanalMapPartBodySprite(
+                currentPhase: part.currentSubBuildingPhase,
+                firstNeighborPhase: firstNeighborPhase,
+                secondNeighborPhase: secondNeighborPhase,
+                isRoadCrossing: isRoadCrossing,
+                terrainVariation: variation
+            ), buildingSprites[reference] != nil {
+                renderItems.append(BuildingRenderItem(
+                    buildingReference: reference,
+                    figureReference: nil,
+                    mapOrigin: part.worldOrigin,
+                    previousMapOrigin: nil,
+                    footprint: footprint,
+                    usesLegacyHouseAnchor: false,
+                    isFigure: false,
+                    stableOrder: 9_100 + part.subBuildingIndex * 10
+                ))
+            }
+            if isRoadCrossing,
+               let overlay = OriginalBuildingSpriteCatalog
+                .grandCanalRoadCrossingOverlaySprite(
+                    currentPhase: part.currentSubBuildingPhase
+                ),
+               let offset = OriginalBuildingSpriteCatalog
+                .grandCanalRoadCrossingOverlayTopLeftOffset(
+                    currentPhase: part.currentSubBuildingPhase
+                ),
+               buildingSprites[overlay] != nil {
+                renderItems.append(BuildingRenderItem(
+                    buildingReference: overlay,
+                    figureReference: nil,
+                    mapOrigin: part.worldOrigin,
+                    previousMapOrigin: nil,
+                    footprint: footprint,
+                    usesLegacyHouseAnchor: false,
+                    isFigure: false,
+                    sourceTopLeftOffsetX: offset.x,
+                    sourceTopLeftOffsetY: offset.y,
+                    stableOrder: 9_101 + part.subBuildingIndex * 10
+                ))
+            }
+        }
+        if let greatWallKind,
+           let buildingID = city.aesthetics.greatWallMapPartStates.first?.buildingID,
+           let layout = OriginalGreatWallLayoutCatalog.layout(buildingID: buildingID) {
+            for part in city.aesthetics.greatWallMapPartStates.sorted(by: {
+                $0.subBuildingIndex < $1.subBuildingIndex
+            }) {
+                guard layout.subBuildings.indices.contains(part.subBuildingIndex),
+                      OriginalGreatWallLayoutCatalog.isTerminal(part, layout: layout)
+                else { continue }
+                let subBuilding = layout.subBuildings[part.subBuildingIndex]
+                guard let kind = OriginalGreatWallLayoutCatalog.SubBuildingKind(
+                    rawValue: subBuilding.kind
+                ), let reference = OriginalBuildingSpriteCatalog.greatWallTerminalSprite(
+                    subBuilding: subBuilding,
+                    wallKind: greatWallKind
+                ), buildingSprites[reference] != nil else { continue }
+                let footprint = BuildingFootprint(
+                    width: kind.footprintSide,
+                    height: kind.footprintSide
+                )
+                guard footprint.points(at: part.worldOrigin).contains(where: viewport.contains)
+                else { continue }
+                renderItems.append(BuildingRenderItem(
+                    buildingReference: reference,
+                    figureReference: nil,
+                    mapOrigin: part.worldOrigin,
+                    previousMapOrigin: nil,
+                    footprint: footprint,
+                    usesLegacyHouseAnchor: false,
+                    isFigure: false,
+                    stableOrder: 8_500 + part.subBuildingIndex
+                ))
+            }
+        }
         if let wall = city.aesthetics.earthenGreatWallProject {
             for segment in wall.segments where segment.stage > 0 {
                 guard let segmentOrigin = wall.worldOrigin(forSegment: segment.index),
@@ -290,8 +386,10 @@ extension CityCanvas {
                     + CGFloat(item.footprint.width + item.footprint.height - 1) * tileHeight * 0.5
             }
             let rectangle = CGRect(
-                x: imageCenterX - drawWidth * 0.5,
-                y: imageBottomY - drawHeight,
+                x: item.sourceTopLeftOffsetX.map { center.x + CGFloat($0) * scale }
+                    ?? imageCenterX - drawWidth * 0.5,
+                y: item.sourceTopLeftOffsetY.map { center.y + CGFloat($0) * scale }
+                    ?? imageBottomY - drawHeight,
                 width: drawWidth,
                 height: drawHeight
             )
@@ -308,6 +406,7 @@ extension CityCanvas {
             point: GridPoint,
             previous: GridPoint?,
             animation animationOverride: FigureSpriteAnimation? = nil,
+            animationFrame: Int? = nil,
             interpolatesMovement: Bool = true
         ) {
             guard viewport.contains(point),
@@ -315,11 +414,15 @@ extension CityCanvas {
                     ?? OriginalFigureSpriteCatalog.animation(forFigureID: figureID)
             else { return }
             let direction = FigureMovementDirection.direction(from: previous, to: point)
-            let reference = animation.reference(
-                direction: direction,
-                tickSequence: tickSequence,
-                stableFigureID: stableID
-            )
+            let reference = if let animationFrame {
+                animation.reference(direction: direction, frameIndex: animationFrame)
+            } else {
+                animation.reference(
+                    direction: direction,
+                    tickSequence: tickSequence,
+                    stableFigureID: stableID
+                )
+            }
             items.append(BuildingRenderItem(
                 buildingReference: nil,
                 figureReference: reference,
@@ -400,6 +503,45 @@ extension CityCanvas {
                 animation: OriginalFigureSpriteCatalog.animation(
                     forEnemyTypeID: force.enemyTypeID
                 )
+            )
+        }
+        for convoy in city.aesthetics.grandCanalPhaseTwoConvoys
+            where convoy.isCarrierActive {
+            append(
+                figureID: OriginalGrandCanalLayoutCatalog.phaseTwoCarrierFigureType,
+                stableID: 900_000 + convoy.carrierFigureID,
+                point: convoy.currentPoint,
+                previous: convoy.previousPoint,
+                animation: OriginalFigureSpriteCatalog.grandCanalStoneCarrierAnimation,
+                animationFrame: convoy.animationFrame
+            )
+            for (helperIndex, helper) in convoy.helpers.enumerated()
+                where helper.isActive {
+                let point = helper.currentPoint ?? convoy.sourceOrigin
+                let animation = helperIndex == 0
+                    ? OriginalFigureSpriteCatalog.grandCanalStoneFirstFollowerAnimation
+                    : OriginalFigureSpriteCatalog.grandCanalStoneSecondFollowerAnimation
+                append(
+                    figureID: OriginalGrandCanalLayoutCatalog.phaseTwoHelperFigureType,
+                    stableID: 910_000 + helper.figureID,
+                    point: point,
+                    previous: helper.previousPoint,
+                    animation: animation,
+                    animationFrame: helper.animationFrame
+                )
+            }
+        }
+        for laborer in city.aesthetics.grandCanalPhaseLaborCoordinator.laborers {
+            guard let animation = OriginalFigureSpriteCatalog
+                .grandCanalLaborerAnimation(forRawState: laborer.state.rawValue)
+            else { continue }
+            append(
+                figureID: OriginalGrandCanalLayoutCatalog.phaseLaborFigureID,
+                stableID: 920_000 + laborer.figureID,
+                point: laborer.currentPoint,
+                previous: laborer.previousPoint,
+                animation: animation,
+                animationFrame: laborer.animationFrame
             )
         }
         if city.migration.lastDailyImmigrants > 0,

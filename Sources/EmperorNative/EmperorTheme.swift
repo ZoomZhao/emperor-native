@@ -54,6 +54,15 @@ enum EmperorTheme {
     static let panelWidth: CGFloat = 224
     static let panelHeaderHeight: CGFloat = 34
     static let categoryRailWidth: CGFloat = 54
+    /// Confirmed construction-family button record geometry at `0x855A98`.
+    static let constructionSlotSize = CGSize(width: 54, height: 53)
+    /// Original state-6 list advances one row by `0x18` pixels.
+    static let constructionSubmenuRowHeight: CGFloat = 24
+    /// Bounded presentation fallback until the original row background and
+    /// exact font rasterization are recovered from an undistorted capture.
+    static let constructionSubmenuFallbackWidth: CGFloat = 194
+    /// `0x5B7030` leaves `0x59` pixels between the list and panel origin.
+    static let constructionSubmenuPanelGap: CGFloat = 89
     static let commandRowHeight: CGFloat = 36
     /// `#1223` changes from the woven advisor field to its construction grid
     /// at logical y=321 (281 px below the city-panel origin).

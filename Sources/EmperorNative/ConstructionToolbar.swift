@@ -21,6 +21,22 @@ enum ConstructionToolCategory: String, CaseIterable, Identifiable {
 
     var id: Self { self }
 
+    var originalPanelCategory: OriginalConstructionPanelCategory {
+        switch self {
+        case .residential: .residential
+        case .agriculture: .agriculture
+        case .industry: .industry
+        case .commerce: .commerce
+        case .safety: .safety
+        case .government: .government
+        case .entertainment: .entertainment
+        case .religious: .religion
+        case .military: .military
+        case .aesthetics: .aesthetics
+        case .monuments: .monuments
+        }
+    }
+
     var symbol: String {
         switch self {
         case .residential: "house.fill"
@@ -71,6 +87,8 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
     case eliteHouse
     case warehouse
     case mill
+    case tradingStation
+    case tradingQuay
     case market
     case grandMarket
     case foodShop
@@ -180,6 +198,8 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .eliteHouse: "贵族住宅"
         case .warehouse: "仓库"
         case .mill: "磨坊"
+        case .tradingStation: "贸易站"
+        case .tradingQuay: "贸易码头"
         case .market: "市场"
         case .grandMarket: "大市场"
         case .foodShop: "食物铺"
@@ -269,6 +289,8 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .eliteHouse: "house.and.flag.fill"
         case .warehouse: "shippingbox.fill"
         case .mill: "gearshape.2.fill"
+        case .tradingStation: "arrow.left.arrow.right.square.fill"
+        case .tradingQuay: "ferry.fill"
         case .market: "storefront.fill"
         case .grandMarket: "storefront.circle.fill"
         case .foodShop: "takeoutbag.and.cup.and.straw.fill"
@@ -353,6 +375,8 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .eliteHouse: 11
         case .warehouse: 54
         case .mill: 53
+        case .tradingStation: 58
+        case .tradingQuay: 56
         case .market: 59
         case .grandMarket: 60
         case .bronzewareShop: 64
@@ -432,20 +456,21 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .house, .eliteHouse:
             .residential
         case .cropFarm, .farmland, .irrigationPump, .fishingWharf, .huntingCamp,
-             .mill:
+             .lacquerGuild, .silkWeaver, .teaHouse:
             .agriculture
         case .clayPit, .kiln, .lumberMill, .quarry, .ironMine, .bronzeWorks,
              .jadeWorkshop,
-             .lacquerGuild, .lacquerwareWorkshop, .silkWeaver, .weaver, .teaHouse:
+             .lacquerwareWorkshop, .weaver:
             .industry
-        case .warehouse, .granary, .market, .grandMarket, .foodShop, .hempShop,
+        case .warehouse, .granary, .mill, .tradingStation, .tradingQuay,
+             .market, .grandMarket, .foodShop, .hempShop,
              .ceramicsShop, .teaShop, .silkShop, .lacquerwareShop,
              .bronzewareShop:
             .commerce
-        case .well, .herbalist, .acupuncture, .watchtower,
+        case .well, .herbalist, .acupuncture, .inspectorTower, .watchtower,
              .inspect, .demolish, .clearLand, .road, .roadblock:
             .safety
-        case .inspectorTower, .taxOffice, .administrativeCity, .palace:
+        case .taxOffice, .administrativeCity, .palace:
             .government
         case .musicSchool, .acrobatSchool, .dramaSchool:
             .entertainment
@@ -468,6 +493,10 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
 }
 
 extension NativeConstructionTool {
+    static func tool(forBuildingID buildingID: Int) -> NativeConstructionTool? {
+        allCases.first { $0.buildingID == buildingID && $0 != .granary }
+    }
+
     var marketShopBuildingID: Int? {
         switch self {
         case .foodShop, .hempShop, .ceramicsShop, .teaShop, .silkShop,
@@ -716,11 +745,14 @@ struct ConstructionToolbar: View {
     }
 
     private func isAvailable(_ tool: NativeConstructionTool) -> Bool {
-        if tool == .grandCanalSegment {
-            return city.aesthetics.grandCanalProject?.isComplete == false
+        if tool == .tradingStation || tool == .tradingQuay {
+            return false
         }
-        if tool == .earthenGreatWallSegment {
-            return city.aesthetics.earthenGreatWallProject?.isComplete == false
+        if tool == .grandCanalSegment || tool == .earthenGreatWallSegment {
+            // Both original works use predetermined multipart map objects.
+            // Keep the old click-an-existing-segment actions only for decoding
+            // prior Native saves; never expose them as player tools.
+            return false
         }
         if tool == .largePalacePhase {
             return city.aesthetics.largePalaceProject?.isComplete == false

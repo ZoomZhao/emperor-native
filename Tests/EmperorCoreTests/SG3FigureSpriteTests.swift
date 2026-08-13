@@ -45,12 +45,22 @@ final class SG3FigureSpriteTests: XCTestCase {
     func testTutorialFigureCatalogIsDeterministicAndEightDirectional() throws {
         XCTAssertEqual(
             Set(OriginalFigureSpriteCatalog.animations.map(\.role)),
-            Set(TutorialFigureRole.allCases).subtracting([.xiongnuInfantry])
+            Set(TutorialFigureRole.allCases).subtracting([
+                .xiongnuInfantry,
+                .grandCanalLaborerTraveling,
+                .grandCanalLaborerWorking,
+                .grandCanalLaborerReturning,
+                .grandCanalStoneCarrier,
+                .grandCanalStoneFirstFollower,
+                .grandCanalStoneSecondFollower,
+            ])
         )
         XCTAssertEqual(
             Set(OriginalFigureSpriteCatalog.animations.map(\.figureID)),
             [11, 22, 23, 24, 27, 28, 29, 30, 31, 32, 33, 34, 35, 39, 64, 65, 66, 68, 76]
         )
+        XCTAssertNil(OriginalFigureSpriteCatalog.animation(forFigureID: 19))
+        XCTAssertNil(OriginalFigureSpriteCatalog.animation(forFigureID: 20))
         for animation in OriginalFigureSpriteCatalog.animations {
             XCTAssertEqual(animation.framesByDirection.count, 8, animation.role.rawValue)
             XCTAssertTrue(animation.framesByDirection.allSatisfy { !$0.isEmpty })
@@ -66,6 +76,67 @@ final class SG3FigureSpriteTests: XCTestCase {
             )
             XCTAssertEqual(first, replay)
         }
+    }
+
+    func testGrandCanalStoneConvoyUsesExecutableSelectedSpriteGroups() throws {
+        let expected: [(FigureSpriteAnimation, String, String, Int, Int)] = [
+            (
+                OriginalFigureSpriteCatalog.grandCanalStoneCarrierAnimation,
+                "SprMain", "TeamLeader", 165, 9_743
+            ),
+            (
+                OriginalFigureSpriteCatalog.grandCanalStoneFirstFollowerAnimation,
+                "SprMain2", "WaterBuffaloSolo", 55, 2_234
+            ),
+            (
+                OriginalFigureSpriteCatalog.grandCanalStoneSecondFollowerAnimation,
+                "SprMain2", "WaterBuffaloCart", 135, 7_033
+            ),
+        ]
+        let source = try GameDataSource.openDefault()
+        for (animation, archiveName, bitmapName, logicalGroup, firstImageID) in expected {
+            let archive = try SG3Archive(
+                contentsOf: source.dataDirectory.appendingPathComponent("\(archiveName).sg3")
+            )
+            XCTAssertEqual(animation.archiveBaseName, archiveName)
+            XCTAssertEqual(animation.sourceBitmapName, bitmapName)
+            XCTAssertEqual(animation.logicalGroupID, logicalGroup)
+            XCTAssertEqual(animation.framesByDirection.first?.first, firstImageID)
+            XCTAssertEqual(Int(archive.groupImageIDs[logicalGroup]), firstImageID)
+            XCTAssertEqual(archive.images[firstImageID].spriteCount, 12)
+            XCTAssertTrue(animation.framesByDirection.allSatisfy { $0.count == 12 })
+        }
+    }
+
+    func testGrandCanalLaborerUsesExecutableSelectedStateGroups() throws {
+        let source = try GameDataSource.openDefault()
+        let archive = try SG3Archive(
+            contentsOf: source.dataDirectory.appendingPathComponent("SprMain.sg3")
+        )
+        let cases: [(Int, FigureSpriteAnimation, Int, Int, Int)] = [
+            (12, OriginalFigureSpriteCatalog.grandCanalLaborerTravelingAnimation, 87, 5_786, 12),
+            (14, OriginalFigureSpriteCatalog.grandCanalLaborerWorkingAnimation, 90, 6_074, 19),
+            (16, OriginalFigureSpriteCatalog.grandCanalLaborerReturningAnimation, 88, 5_882, 12),
+        ]
+        for (rawState, animation, logicalGroup, firstImageID, frameCount) in cases {
+            XCTAssertEqual(
+                OriginalFigureSpriteCatalog.grandCanalLaborerAnimation(
+                    forRawState: rawState
+                ),
+                animation
+            )
+            XCTAssertEqual(animation.sourceBitmapName, "Laborer")
+            XCTAssertEqual(animation.logicalGroupID, logicalGroup)
+            XCTAssertEqual(animation.framesByDirection.first?.first, firstImageID)
+            XCTAssertEqual(Int(archive.groupImageIDs[logicalGroup]), firstImageID)
+            XCTAssertEqual(archive.images[firstImageID].spriteCount, frameCount)
+            XCTAssertTrue(animation.framesByDirection.allSatisfy {
+                $0.count == frameCount
+            })
+        }
+        XCTAssertNil(
+            OriginalFigureSpriteCatalog.grandCanalLaborerAnimation(forRawState: 11)
+        )
     }
 
     func testQinFriendlyUnitsUseVerifiedSprMain2Families() throws {

@@ -1383,6 +1383,18 @@ final class EmperorCoreTests: XCTestCase {
                 Set(BuildingFootprint(width: 3, height: 3).points(at: GridPoint(x: 0, y: 0)))
             )
         }
+        XCTAssertEqual(
+            OriginalBuildingSpriteCatalog.constructionCatalogSprite(
+                forBuildingID: TradeRouteKind.land.buildingID
+            )?.imageID,
+            OriginalBuildingSpriteCatalog.tradingStationOfficeImageID
+        )
+        XCTAssertEqual(
+            OriginalBuildingSpriteCatalog.constructionCatalogSprite(
+                forBuildingID: TradeRouteKind.sea.buildingID
+            )?.imageID,
+            OriginalBuildingSpriteCatalog.quayHouseImageIDs[.north]
+        )
 
         for edge in QuayWaterEdge.allCases {
             let quay = OriginalBuildingSpriteCatalog.buildingComponents(
@@ -2696,6 +2708,45 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(january.transactions.first?.amount, original.trade.landCapacity)
         XCTAssertEqual(january.transactions.first?.amount, 800)
         XCTAssertEqual(trade.building(id: buildingID)?.storedAmount, 800)
+    }
+
+    func testTradeConstructionSelectorsFilterRouteOpenStateAndExistingBuilding() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        var trade = DeterministicTradeState()
+        for partner in [
+            TradePartner(id: 9, name: "Sea", routeKind: .sea),
+            TradePartner(id: 7, name: "Land B", routeKind: .land),
+            TradePartner(id: 3, name: "Land A", routeKind: .land),
+            TradePartner(id: 8, name: "Closed", routeKind: .land, isOpen: false),
+        ] {
+            XCTAssertTrue(trade.addPartner(partner, tradeRules: original.trade))
+        }
+
+        XCTAssertEqual(
+            trade.availableConstructionPartners(for: .land).map(\.id),
+            [3, 7]
+        )
+        XCTAssertEqual(
+            trade.availableConstructionPartners(for: .sea).map(\.id),
+            [9]
+        )
+
+        var road = RoadNetwork(width: 4, height: 3)
+        _ = road.insert([GridPoint(x: 1, y: 1)])
+        XCTAssertNotNil(trade.addTradingBuilding(
+            partnerID: 7,
+            roadAccessPoint: GridPoint(x: 1, y: 1),
+            assignedWorkers: 0,
+            models: original.buildings,
+            roadNetwork: road
+        ))
+        XCTAssertEqual(
+            trade.availableConstructionPartners(for: .land).map(\.id),
+            [3]
+        )
     }
 
     func testNativeSaveGameRoundTripsDeterministicCityState() throws {

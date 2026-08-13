@@ -187,6 +187,9 @@ public struct MonthlySettlement: Sendable, Equatable, Codable {
     public let taxSentiment: Int
     public let startingTreasury: Int
     public let endingTreasury: Int
+    /// Monument completion at the original month-boundary checkpoint. The
+    /// final simulation step's monument scheduler runs after this snapshot.
+    public let completedMonumentBuildingIDsAtBoundary: Set<Int>?
 }
 
 /// Result of a demolish/bulldoze action, used by the native UI to surface a
@@ -383,6 +386,233 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         return workforceSnapshot(models: models).assignments.first { $0.key == key }
     }
 
+    /// Projects constructed Laborers' Camps into the exact provider inputs
+    /// consumed by the recovered Grand Canal coordinator. Enumeration follows
+    /// placement order, matching the original strict-distance tie behavior.
+    public func grandCanalPhaseLaborProviders(
+        models: BuildingModelTable
+    ) -> [OriginalGrandCanalLayoutCatalog.PhaseLaborProviderCandidate] {
+        grandCanalPhaseLaborProviders(
+            models: models,
+            coordinator: aesthetics.grandCanalPhaseLaborCoordinator
+        )
+    }
+
+    private func grandCanalPhaseLaborProviders(
+        models: BuildingModelTable,
+        coordinator: OriginalGrandCanalLayoutCatalog.PhaseLaborCoordinatorRuntime
+    ) -> [OriginalGrandCanalLayoutCatalog.PhaseLaborProviderCandidate] {
+        let assignments = Dictionary(uniqueKeysWithValues:
+            workforceSnapshot(models: models).assignments.map { ($0.key, $0) }
+        )
+        let activeCounts = Dictionary(grouping:
+            coordinator.laborers,
+            by: \.providerObjectID
+        ).mapValues(\.count)
+        return placedBuildings.compactMap { placement in
+            guard placement.buildingID
+                    == OriginalGrandCanalLayoutCatalog.phaseLaborProviderBuildingID
+            else { return nil }
+            let key = OperationalBuildingKey(
+                category: placement.category,
+                instanceID: placement.instanceID
+            )
+            let assignment = assignments[key]
+            return OriginalGrandCanalLayoutCatalog.PhaseLaborProviderCandidate(
+                objectID: placement.instanceID,
+                buildingID: placement.buildingID,
+                isActive: true,
+                efficiencyPercent: OriginalGrandCanalLayoutCatalog
+                    .phaseLaborProviderEfficiencyPercent(
+                        requiredWorkers: assignment?.requiredWorkers ?? 0,
+                        assignedWorkers: assignment?.assignedWorkers ?? 0
+                    ),
+                activeMonumentWorkerCount: activeCounts[placement.instanceID] ?? 0,
+                origin: placement.origin
+            )
+        }
+    }
+
+    /// Produces the `FUN_00567540`-equivalent initial targets only from a
+    /// complete source-derived primary routing cache. Callers that cannot
+    /// supply that cache receive no dispatchable accesses.
+    public func grandCanalPhaseLaborTargetAccesses(
+        routingGrids: OriginalGrandCanalLayoutCatalog.WorkerRoutingGrids
+    ) throws -> [OriginalGrandCanalLayoutCatalog.PhaseLaborTargetAccessCandidate] {
+        guard let terrain,
+              terrain.width == routingGrids.width,
+              terrain.height == routingGrids.height else {
+            throw OriginalGrandCanalLayoutCatalog.WorkerRoutingCacheDerivationError
+                .invalidGridDimensions
+        }
+        let ranks = try OriginalGrandCanalLayoutCatalog.workerRoadComponentRankByPoint(
+            width: terrain.width,
+            height: terrain.height,
+            terrainRawValues: terrain.terrainRawValues,
+            primaryPassability: routingGrids.primaryPassability
+        )
+        return OriginalGrandCanalLayoutCatalog.phaseLaborTargetAccesses(
+            parts: aesthetics.grandCanalMapPartStates,
+            roadComponentRankByPoint: ranks
+        )
+    }
+
+    public func grandCanalPhaseTwoTargetAccesses(
+        routingGrids: OriginalGrandCanalLayoutCatalog.WorkerRoutingGrids
+    ) throws -> [OriginalGrandCanalLayoutCatalog.PhaseTwoTargetAccessCandidate] {
+        try grandCanalPhaseLaborTargetAccesses(routingGrids: routingGrids).map {
+            .init(
+                subBuildingIndex: $0.subBuildingIndex,
+                worldOrigin: $0.worldOrigin,
+                roadAccessPoint: $0.roadAccessPoint
+            )
+        }
+    }
+
+    public func greatWallTargetAccesses(
+        routingGrids: OriginalGrandCanalLayoutCatalog.WorkerRoutingGrids
+    ) throws -> [OriginalGreatWallLayoutCatalog.TargetAccessCandidate] {
+        guard let terrain,
+              terrain.width == routingGrids.width,
+              terrain.height == routingGrids.height else {
+            throw OriginalGrandCanalLayoutCatalog.WorkerRoutingCacheDerivationError
+                .invalidGridDimensions
+        }
+        let ranks = try OriginalGrandCanalLayoutCatalog.workerRoadComponentRankByPoint(
+            width: terrain.width,
+            height: terrain.height,
+            terrainRawValues: terrain.terrainRawValues,
+            primaryPassability: routingGrids.primaryPassability
+        )
+        return OriginalGreatWallLayoutCatalog.targetAccesses(
+            parts: aesthetics.greatWallMapPartStates,
+            roadComponentRankByPoint: ranks
+        )
+    }
+
+    /// Rebuilds the original worker routing inputs from the Native city's
+    /// single sources of truth. This intentionally supports only occupancy
+    /// classes whose routing vtables are source-confirmed; encountering any
+    /// other live building stops derivation at that coordinate.
+    public func grandCanalWorkerRoutingGrids() throws
+        -> OriginalGrandCanalLayoutCatalog.WorkerRoutingGrids {
+        guard let terrain else {
+            throw OriginalGrandCanalLayoutCatalog.WorkerRoutingCacheDerivationError
+                .invalidGridDimensions
+        }
+        typealias Occupancy = OriginalGrandCanalLayoutCatalog.WorkerRoutingCellOccupancy
+        var occupancyByPoint: [GridPoint: Occupancy] = [:]
+
+        func insert(_ occupancy: Occupancy, at points: [GridPoint]) throws {
+            for point in points {
+                guard terrain.contains(point) else {
+                    throw OriginalGrandCanalLayoutCatalog
+                        .WorkerRoutingCacheDerivationError.invalidGridDimensions
+                }
+                guard occupancyByPoint.updateValue(occupancy, forKey: point) == nil else {
+                    throw OriginalGrandCanalLayoutCatalog
+                        .WorkerRoutingCacheDerivationError.duplicateOccupancy(point)
+                }
+            }
+        }
+
+        let houseFootprint = OriginalBuildingFootprintCatalog.footprint(forBuildingID: 2)
+            ?? BuildingFootprint(width: 2, height: 2)
+        for house in houses {
+            guard let origin = house.location else { continue }
+            try insert(
+                Occupancy(
+                    buildingID: house.houseLevelID + 3,
+                    genericFootprintPredicate: false
+                ),
+                at: houseFootprint.points(at: origin)
+            )
+        }
+        for placement in placedBuildings {
+            let predicate: Bool?
+            switch placement.buildingID {
+            case 3...17,
+                 36,
+                 54, 56, 58,
+                 OriginalGrandCanalLayoutCatalog.phaseLaborProviderBuildingID:
+                predicate = false
+            default:
+                predicate = nil
+            }
+            try insert(
+                Occupancy(
+                    buildingID: placement.buildingID,
+                    genericFootprintPredicate: predicate
+                ),
+                at: placement.occupiedPoints
+            )
+        }
+        let canalFootprint = BuildingFootprint(width: 4, height: 4)
+        for part in aesthetics.grandCanalMapPartStates {
+            try insert(
+                Occupancy(
+                    buildingID: part.buildingID,
+                    currentMonumentSubBuildingPhase: part.currentSubBuildingPhase
+                ),
+                at: canalFootprint.points(at: part.worldOrigin)
+            )
+        }
+        let greatWallRootPhase = aesthetics.greatWallMapPartStates
+            .first(where: { $0.subBuildingIndex == 0 })?.currentSubBuildingPhase
+        for part in aesthetics.greatWallMapPartStates {
+            guard let kind = OriginalGreatWallLayoutCatalog.subBuildingKind(
+                buildingID: part.buildingID,
+                subBuildingIndex: part.subBuildingIndex
+            ) else {
+                throw OriginalGrandCanalLayoutCatalog
+                    .WorkerRoutingCacheDerivationError.unsupportedGreatWallSubtype(
+                        part.worldOrigin,
+                        buildingID: part.buildingID
+                    )
+            }
+            let footprint = BuildingFootprint(
+                width: kind.footprintSide,
+                height: kind.footprintSide
+            )
+            try insert(
+                Occupancy(
+                    buildingID: part.buildingID,
+                    currentMonumentSubBuildingPhase: part.currentSubBuildingPhase,
+                    greatWallRootSubBuildingPhase: greatWallRootPhase,
+                    greatWallPartKind: kind,
+                    genericFootprintPredicate: false
+                ),
+                at: footprint.points(at: part.worldOrigin)
+            )
+        }
+
+        var inputs: [OriginalGrandCanalLayoutCatalog.WorkerRoutingCellInput] = []
+        inputs.reserveCapacity(terrain.width * terrain.height)
+        for y in 0..<terrain.height {
+            for x in 0..<terrain.width {
+                let point = GridPoint(x: x, y: y)
+                let index = y * terrain.width + x
+                var raw = terrain.terrainRawValues[index] & ~UInt32(0x40)
+                if roadNetwork.contains(point) { raw |= 0x40 }
+                let occupancy = occupancyByPoint[point]
+                if occupancy != nil { raw |= 0x8008 }
+                inputs.append(.init(
+                    point: point,
+                    terrainRawValue: raw,
+                    occupancy: occupancy,
+                    roadWaterAuxiliaryByte: terrain.roadWaterAuxiliary(at: point),
+                    primaryElevationClassByte: terrain.primaryElevationClass(at: point),
+                    primarySurfaceObjectIsAbsentOrNonblocking: true
+                ))
+            }
+        }
+        return try OriginalGrandCanalLayoutCatalog.workerRoutingGrids(
+            width: terrain.width,
+            height: terrain.height,
+            inputs: inputs
+        )
+    }
+
     private func operationalWorkerRequirements(
         models: BuildingModelTable
     ) -> [OperationalBuildingKey: Int] {
@@ -487,6 +717,16 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             height: terrain.height,
             points: terrain.roadPoints
         )
+        if !map.grandCanalPartStates.isEmpty {
+            var aesthetics = aestheticState ?? DeterministicAestheticState()
+            aesthetics.restoreGrandCanalMapPartStates(map.grandCanalPartStates)
+            aestheticState = aesthetics
+        }
+        if !map.greatWallPartStates.isEmpty {
+            var aesthetics = aestheticState ?? DeterministicAestheticState()
+            aesthetics.restoreGreatWallMapPartStates(map.greatWallPartStates)
+            aestheticState = aesthetics
+        }
         workforceEnabledState = true
         publicSafetyEnabledState = true
     }
@@ -1871,6 +2111,33 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         return id
     }
 
+    public func canConstructTradingBuilding(
+        partnerID: Int,
+        at origin: GridPoint,
+        orientation: IsometricBuildingOrientation = .northSouth
+    ) -> Bool {
+        guard let partner = trade.partner(id: partnerID), partner.isOpen,
+              !trade.buildings.contains(where: { $0.partnerID == partnerID }),
+              isBuildingAvailableInCampaign(partner.routeKind.buildingID) else {
+            return false
+        }
+        switch partner.routeKind {
+        case .land:
+            return preparedPlacement(
+                category: .trading,
+                buildingID: partner.routeKind.buildingID,
+                at: origin,
+                orientation: orientation
+            ) != nil
+        case .sea:
+            return preparedQuayPlacement(
+                buildingID: partner.routeKind.buildingID,
+                at: origin,
+                orientation: orientation
+            ) != nil
+        }
+    }
+
     public mutating func setTradeImporting(
         _ enabled: Bool,
         commodityID: Int,
@@ -2273,30 +2540,253 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
     /// map rather than represented by a normal rectangular placement.
     @discardableResult
     public mutating func beginMapMonument(buildingID: Int) -> Int? {
-        guard buildingID == 83 || buildingID == 85,
-              isBuildingAvailableInCampaign(buildingID) else { return nil }
-        var state = aestheticState ?? DeterministicAestheticState()
-        guard let id = state.addMapMonument(buildingID: buildingID) else { return nil }
-        aestheticState = state
-        return id
+        // IDs 83 and 85 use predetermined multipart map geometry. Their
+        // worker scheduling and completion control flow remain incomplete;
+        // never instantiate either legacy synthetic project for a new game.
+        _ = buildingID
+        return nil
     }
 
     public func canAdvanceGrandCanalSegment(at point: GridPoint) -> Bool {
-        guard let canal = aesthetics.grandCanalProject,
-              let segmentIndex = canal.segmentIndex(containing: point),
-              let project = aesthetics.monuments.first(where: { $0.id == canal.projectID }) else {
-            return false
-        }
-        var preview = canal
-        return preview.advanceSegment(index: segmentIndex, project: project)
+        _ = point
+        return false
     }
 
     @discardableResult
     public mutating func advanceGrandCanalSegment(at point: GridPoint) -> Int? {
+        _ = point
+        return nil
+    }
+
+    /// Advances one recovered original monument-scheduler call. Native daily
+    /// ticks use the separately recovered 816-calls-per-month clock adapter;
+    /// this operation remains available for exact boundary tests and research.
+    @discardableResult
+    public mutating func advanceGrandCanalSchedulerCall() throws
+        -> OriginalGrandCanalLayoutCatalog.SchedulerCallOutcome {
         var state = aestheticState ?? DeterministicAestheticState()
-        guard let segment = state.advanceGrandCanalSegment(at: point) else { return nil }
+        let outcome = try state.advanceGrandCanalSchedulerCall()
         aestheticState = state
-        return segment
+        return outcome
+    }
+
+    private mutating func advanceGrandCanalPhaseTwoSimulationSteps(
+        _ count: Int,
+        state: inout DeterministicAestheticState,
+        routingGrids: OriginalGrandCanalLayoutCatalog.WorkerRoutingGrids,
+        targetAccesses: [OriginalGrandCanalLayoutCatalog.PhaseTwoTargetAccessCandidate]
+    ) throws {
+        typealias Catalog = OriginalGrandCanalLayoutCatalog
+        var logistics = logisticsState ?? DeterministicLogisticsState()
+        var production = self.production
+
+        for _ in 0..<count {
+            var parts = state.grandCanalMapPartStates
+            var coordinator = state.grandCanalPhaseTwoCoordinator
+            var convoys = state.grandCanalPhaseTwoConvoys
+            let existingCarrierIDs = convoys.map(\.carrierFigureID)
+
+            for carrierID in existingCarrierIDs {
+                guard let index = convoys.firstIndex(where: {
+                    $0.carrierFigureID == carrierID
+                }) else { continue }
+                switch convoys[index].carrierState {
+                case .travelingToMonument, .returningWithCargo,
+                        .returningToAlternateSource, .returningEmpty:
+                    _ = convoys[index].advanceMovement(routingGrids: routingGrids)
+                case .allocatingAtMonument:
+                    if let allocation = convoys[index].allocateAtMonument(
+                        currentPoint: convoys[index].currentPoint,
+                        pendingRequests: &coordinator.carrierBoundRequests
+                    ) {
+                        for delivery in allocation.deliveries {
+                            guard let partIndex = parts.firstIndex(where: {
+                                $0.subBuildingIndex == delivery.requestID
+                            }) else { continue }
+                            _ = parts[partIndex].acceptPhaseTwoStoneCargo(
+                                delivery.deliveredUnits
+                            )
+                        }
+                    }
+                case .restoringCargoAtSource, .emptyArrivalCleanup:
+                    if case let .sourceTransferDue(cargoUnits)? =
+                        convoys[index].advanceAtSource() {
+                        let accepted = logistics.returnStoredGoods(
+                            warehouseID: convoys[index].sourceObjectID,
+                            commodityID: convoys[index].commodityID,
+                            amount: cargoUnits,
+                            production: &production
+                        )
+                        _ = convoys[index].recordSourceTransfer(
+                            acceptedUnits: accepted,
+                            nextProvider: nil
+                        )
+                    }
+                case .routeFallback:
+                    _ = convoys[index].advanceRouteFallback(nextProvider: nil)
+                }
+                convoys[index].advanceAnimationAndFollowers()
+                convoys[index].updateHelperLiveness()
+            }
+            convoys.removeAll {
+                !$0.isCarrierActive && $0.helpers.allSatisfy { !$0.isActive }
+            }
+            state.restoreGrandCanalMapPartStatesPreservingRuntime(parts)
+            state.restoreGrandCanalPhaseTwoCoordinator(coordinator)
+            state.restoreGrandCanalPhaseTwoConvoys(convoys)
+
+            let outcome = try state.advanceGrandCanalSchedulerCall()
+            guard case .maintainedPhaseTwoMaterialRequests = outcome else { continue }
+            coordinator = state.grandCanalPhaseTwoCoordinator
+            guard let first = coordinator.pendingRequests.first(where: {
+                $0.remainingUnits > 0
+            }) else { continue }
+            let sameCommodityUnits = coordinator.pendingRequests.compactMap {
+                $0.commodityID == first.commodityID ? $0.remainingUnits : nil
+            }
+            guard let requestedUnits = Catalog.nextPhaseTwoSourceRequest(
+                sameCommodityPendingUnits: sameCommodityUnits
+            ) else { continue }
+
+            let warehouseByID = Dictionary(uniqueKeysWithValues:
+                logistics.warehouses.map { ($0.id, $0) }
+            )
+            let warehouses = placedBuildings.compactMap { placement -> StorageWarehouse? in
+                guard placement.category == .warehouse,
+                      let warehouse = warehouseByID[placement.instanceID],
+                      Catalog.isEligiblePhaseTwoMaterialSource(
+                        .init(
+                            objectID: warehouse.id,
+                            buildingID: warehouse.buildingID,
+                            isActive: true,
+                            availableStoneUnits: warehouse.inventoryByCommodityID[
+                                Catalog.phaseTwoStoneCommodityID,
+                                default: 0
+                            ]
+                        ),
+                        requestingObjectID: Int.min,
+                        requestedUnits: requestedUnits
+                      ) else { return nil }
+                return warehouse
+            }
+            guard !warehouses.isEmpty else { continue }
+
+            let orderedTargets = Catalog.orderedPhaseTwoTargetAccesses(
+                requestingSubBuildingOrigin: first.targetPoint,
+                authoredAccessibleCandidates: targetAccesses
+            )
+            var selection: (source: StorageWarehouse,
+                            target: Catalog.PhaseTwoTargetAccessCandidate,
+                            route: Catalog.WorkerRoute)?
+            for target in orderedTargets {
+                guard let sourceIndex = Catalog.phaseTwoSourceCandidateIndex(
+                    primaryValues: routingGrids.primaryPassability,
+                    width: routingGrids.width,
+                    height: routingGrids.height,
+                    from: target.roadAccessPoint,
+                    orderedCandidatePoints: warehouses.map(\.roadAccessPoint)
+                ) else { continue }
+                let source = warehouses[sourceIndex]
+                guard let route = Catalog.phaseTwoCarrierRoute(
+                    primaryValues: routingGrids.primaryPassability,
+                    width: routingGrids.width,
+                    height: routingGrids.height,
+                    from: source.roadAccessPoint,
+                    to: target.roadAccessPoint
+                ) else { continue }
+                selection = (source, target, route)
+                break
+            }
+            guard let selection else { continue }
+
+            let cargo = logistics.takeStoredGoods(
+                warehouseID: selection.source.id,
+                commodityID: first.commodityID,
+                amount: requestedUnits,
+                production: &production
+            )
+            guard cargo == requestedUnits,
+                  let batch = coordinator.dispatchNextBatch(carrierCreated: true)
+            else { continue }
+            let ids = coordinator.reserveConvoyFigureIDs()
+            var convoy = Catalog.PhaseTwoCarrierConvoyRuntime(
+                carrierFigureID: ids.0,
+                firstHelperFigureID: ids.1,
+                secondHelperFigureID: ids.2,
+                sourceObjectID: selection.source.id,
+                sourceBuildingID: selection.source.buildingID,
+                commodityID: batch.commodityID,
+                sourceOrigin: selection.source.roadAccessPoint,
+                monumentObjectID: selection.target.subBuildingIndex,
+                monumentAccessPoint: selection.target.roadAccessPoint,
+                cargoUnits: cargo
+            )
+            convoy.movement = .init(route: selection.route)
+            convoys = state.grandCanalPhaseTwoConvoys
+            convoys.append(convoy)
+            state.restoreGrandCanalPhaseTwoCoordinator(coordinator)
+            state.restoreGrandCanalPhaseTwoConvoys(convoys)
+        }
+        logisticsState = logistics
+        self.production = production
+    }
+
+    private mutating func advanceRecoveredGrandCanalSchedulerCalls(
+        _ count: Int,
+        models: BuildingModelTable
+    ) {
+        guard count > 0, !(aestheticState?.grandCanalMapPartStates.isEmpty ?? true) else {
+            return
+        }
+        var state = aestheticState ?? DeterministicAestheticState()
+        do {
+            let wholePhases = Set(state.grandCanalMapPartStates.map(\.wholeMonumentPhase))
+            if wholePhases == [0] || wholePhases == [1] {
+                let routingGrids = try grandCanalWorkerRoutingGrids()
+                let targetAccesses = try grandCanalPhaseLaborTargetAccesses(
+                    routingGrids: routingGrids
+                )
+                for _ in 0..<count {
+                    let providers = grandCanalPhaseLaborProviders(
+                        models: models,
+                        coordinator: state.grandCanalPhaseLaborCoordinator
+                    )
+                    _ = try state.advanceGrandCanalPhaseLaborSimulationStep(
+                        providers: providers,
+                        targetAccesses: targetAccesses,
+                        routingGrids: routingGrids,
+                        xiWangMuActive: false
+                    )
+                }
+            } else if wholePhases == [2] {
+                let routingGrids = try grandCanalWorkerRoutingGrids()
+                let targetAccesses = try grandCanalPhaseTwoTargetAccesses(
+                    routingGrids: routingGrids
+                )
+                try advanceGrandCanalPhaseTwoSimulationSteps(
+                    count,
+                    state: &state,
+                    routingGrids: routingGrids,
+                    targetAccesses: targetAccesses
+                )
+            } else {
+                _ = try state.advanceGrandCanalSchedulerCalls(count)
+            }
+            aestheticState = state
+        } catch is OriginalGrandCanalLayoutCatalog.WorkerRoutingCacheDerivationError {
+            // A city containing an occupancy branch whose original +0xCC
+            // predicate has not yet been recovered is outside the live bridge's
+            // supported contract. Leave this batch wholly unchanged instead of
+            // inventing a passability class or crashing the surrounding city
+            // simulation; the explicit routing API still exposes the error to
+            // research callers and tests.
+            return
+        } catch {
+            // Unsupported archive phases remain unchanged. Keeping the mutation
+            // atomic prevents a malformed save from partially advancing its
+            // monument state while retaining a debug signal for schema errors.
+            assertionFailure("Unsupported Grand Canal scheduler state: \(error)")
+        }
     }
 
     public func canAdvanceEarthenGreatWallSegment(index: Int) -> Bool {
@@ -3323,10 +3813,27 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             logisticsState = logistics
         }
 
+        let schedulerCalls = OriginalGrandCanalLayoutCatalog.schedulerCalls(
+            forNativeDay: clock.day
+        )
+        let callsAfterMonthBoundary = clock.day == SimulationClockState.daysPerMonth ? 1 : 0
+        advanceRecoveredGrandCanalSchedulerCalls(
+            schedulerCalls - callsAfterMonthBoundary,
+            models: rules.models.buildings
+        )
+
         let clockAdvance = clock.advanceOneDay()
         simulationClockState = clock
         monthlyServiceCoverageState = accumulatedCoverage
         let settlement = clockAdvance.didEndMonth ? settleMonth(rules: rules) : nil
+        // In the original `FUN_005371A0`, the final monthly call reaches
+        // `FUN_004AC2B0/0x4AC650` before the same step reaches `0x564B50`.
+        // Preserve that ordering so a just-completed monument cannot satisfy
+        // the month-boundary goal check one original step too early.
+        advanceRecoveredGrandCanalSchedulerCalls(
+            callsAfterMonthBoundary,
+            models: rules.models.buildings
+        )
         return CityTickResult(
             tickSequence: clockAdvance.tickSequence,
             day: clockAdvance.currentDay,
@@ -3517,7 +4024,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             uncollectedTaxes: uncollected,
             taxSentiment: sentiment,
             startingTreasury: startingTreasury,
-            endingTreasury: economy.treasury
+            endingTreasury: economy.treasury,
+            completedMonumentBuildingIDsAtBoundary: aesthetics.completedMonumentBuildingIDs
         )
     }
 

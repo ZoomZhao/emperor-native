@@ -125,13 +125,6 @@ public struct OriginalMonumentConfiguration: Sendable, Hashable, Codable {
                 requiredCommodityUnits: [10: 800, 18: 800, 20: 800],
                 requiredSupportKinds: labor.union(carpenter).union(ceramist).union(mason)
             )
-        case 83:
-            return Self(
-                buildingID: buildingID,
-                requiredWork: 2_400,
-                requiredCommodityUnits: [10: 600, 20: 800],
-                requiredSupportKinds: labor.union(carpenter).union(mason)
-            )
         case 84:
             return Self(
                 buildingID: buildingID,
@@ -140,13 +133,6 @@ public struct OriginalMonumentConfiguration: Sendable, Hashable, Codable {
                 requiredWork: 4_000,
                 requiredCommodityUnits: [10: 10_600, 18: 1_100],
                 requiredSupportKinds: labor.union(carpenter).union(ceramist)
-            )
-        case 85: // Earthen Great Wall, assembled from map-authored segments.
-            return Self(
-                buildingID: buildingID,
-                requiredWork: 3_600,
-                requiredCommodityUnits: [10: 800, 20: 1_200],
-                requiredSupportKinds: labor.union(carpenter).union(mason)
             )
         case 92: // Clock tower needs wood and bronze; no labor camp.
             return Self(
@@ -243,6 +229,28 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
     public private(set) var constructions: [AestheticConstruction]
     public private(set) var monuments: [MonumentProject]
     public private(set) var grandCanalProject: GrandCanalProjectRuntime?
+    // Optional preserves native format-v1 saves created before original
+    // cMonumentBldg per-part state was decoded. This is the source-backed
+    // replacement state; `grandCanalProject` above remains legacy decoding
+    // compatibility only.
+    private var grandCanalMapPartStatesState: [GrandCanalMapPartState]?
+    /// Read-only source state from the original Great Wall object archive.
+    /// Optionality preserves Native saves created before schema-10 decoding.
+    private var greatWallMapPartStatesState: [GreatWallMapPartState]?
+    /// Optional preserves Native saves written before the original scheduler
+    /// call counter was connected to the decoded per-part state.
+    private var grandCanalSchedulerState: GrandCanalSchedulerState?
+    /// Optional preserves Native saves written before source-backed phase-2
+    /// convoy state existed. Live dispatch is connected only after its city
+    /// inventory/figure inputs have passed the recovered original gates.
+    private var grandCanalPhaseTwoConvoysState:
+        [OriginalGrandCanalLayoutCatalog.PhaseTwoCarrierConvoyRuntime]?
+    private var grandCanalPhaseTwoCoordinatorState:
+        OriginalGrandCanalLayoutCatalog.PhaseTwoCoordinatorRuntime?
+    /// Optional preserves saves written before phase-0/1 task-102 coordinator
+    /// and live laborer state were represented.
+    private var grandCanalPhaseLaborCoordinatorState:
+        OriginalGrandCanalLayoutCatalog.PhaseLaborCoordinatorRuntime?
     public private(set) var earthenGreatWallProject: EarthenGreatWallProjectRuntime?
     public private(set) var largePalaceProject: LargePalaceProjectRuntime?
     private var phasedMonumentProjectsState: [PhasedMonumentProjectRuntime]?
@@ -253,6 +261,12 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
         constructions = []
         monuments = []
         grandCanalProject = nil
+        grandCanalMapPartStatesState = []
+        greatWallMapPartStatesState = []
+        grandCanalSchedulerState = GrandCanalSchedulerState()
+        grandCanalPhaseTwoConvoysState = []
+        grandCanalPhaseTwoCoordinatorState = .init()
+        grandCanalPhaseLaborCoordinatorState = .init()
         earthenGreatWallProject = nil
         largePalaceProject = nil
         phasedMonumentProjectsState = []
@@ -261,11 +275,229 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
     }
 
     public var completedMonumentBuildingIDs: Set<Int> {
-        Set(monuments.filter(\.isComplete).map(\.buildingID))
+        var completed = Set(monuments.filter(\.isComplete).map(\.buildingID))
+        let canalParts = grandCanalMapPartStates
+        if canalParts.count == GrandCanalLayout.original.segments.count,
+           canalParts.map(\.subBuildingIndex).sorted() == Array(0..<33),
+           Set(canalParts.map(\.buildingID)) == [OriginalGrandCanalLayoutCatalog.buildingID],
+           canalParts.allSatisfy({
+               $0.currentSubBuildingPhase
+                   >= OriginalGrandCanalLayoutCatalog.finalCompletedPhaseIndex
+                   && $0.wholeMonumentPhase
+                   >= OriginalGrandCanalLayoutCatalog.finalCompletedPhaseIndex
+           }) {
+            completed.insert(OriginalGrandCanalLayoutCatalog.buildingID)
+        }
+        return completed
     }
 
     public var phasedMonumentProjects: [PhasedMonumentProjectRuntime] {
         phasedMonumentProjectsState ?? []
+    }
+
+    public var grandCanalMapPartStates: [GrandCanalMapPartState] {
+        grandCanalMapPartStatesState ?? []
+    }
+
+    public var greatWallMapPartStates: [GreatWallMapPartState] {
+        greatWallMapPartStatesState ?? []
+    }
+
+    public var grandCanalScheduler: GrandCanalSchedulerState {
+        grandCanalSchedulerState ?? GrandCanalSchedulerState()
+    }
+
+    public var grandCanalPhaseTwoConvoys:
+        [OriginalGrandCanalLayoutCatalog.PhaseTwoCarrierConvoyRuntime] {
+        grandCanalPhaseTwoConvoysState ?? []
+    }
+
+    public var grandCanalPhaseTwoCoordinator:
+        OriginalGrandCanalLayoutCatalog.PhaseTwoCoordinatorRuntime {
+        grandCanalPhaseTwoCoordinatorState ?? .init()
+    }
+
+    public var grandCanalPhaseLaborCoordinator:
+        OriginalGrandCanalLayoutCatalog.PhaseLaborCoordinatorRuntime {
+        grandCanalPhaseLaborCoordinatorState ?? .init()
+    }
+
+    mutating func restoreGrandCanalMapPartStates(
+        _ states: [GrandCanalMapPartState]
+    ) {
+        grandCanalMapPartStatesState = states
+        grandCanalSchedulerState = GrandCanalSchedulerState()
+        grandCanalPhaseTwoConvoysState = []
+        grandCanalPhaseTwoCoordinatorState = .init()
+        grandCanalPhaseLaborCoordinatorState = .init()
+    }
+
+    mutating func restoreGreatWallMapPartStates(
+        _ states: [GreatWallMapPartState]
+    ) {
+        greatWallMapPartStatesState = states
+    }
+
+    /// Live simulation writes part counters without resetting scheduler,
+    /// queues, or figures. The archive-load entry above intentionally retains
+    /// its full-runtime reset semantics.
+    mutating func restoreGrandCanalMapPartStatesPreservingRuntime(
+        _ states: [GrandCanalMapPartState]
+    ) {
+        grandCanalMapPartStatesState = states
+    }
+
+    mutating func restoreGrandCanalPhaseTwoConvoys(
+        _ convoys: [OriginalGrandCanalLayoutCatalog.PhaseTwoCarrierConvoyRuntime]
+    ) {
+        grandCanalPhaseTwoConvoysState = convoys
+    }
+
+    mutating func restoreGrandCanalPhaseTwoCoordinator(
+        _ coordinator: OriginalGrandCanalLayoutCatalog.PhaseTwoCoordinatorRuntime
+    ) {
+        grandCanalPhaseTwoCoordinatorState = coordinator
+    }
+
+    mutating func restoreGrandCanalPhaseLaborCoordinator(
+        _ coordinator: OriginalGrandCanalLayoutCatalog.PhaseLaborCoordinatorRuntime
+    ) {
+        grandCanalPhaseLaborCoordinatorState = coordinator
+    }
+
+    /// Advances the original scheduler-call counter without binding it to the
+    /// Native daily clock. Callers must provide the recovered engine cadence.
+    @discardableResult
+    mutating func advanceGrandCanalSchedulerCall() throws
+        -> OriginalGrandCanalLayoutCatalog.SchedulerCallOutcome {
+        try advanceGrandCanalSchedulerCalls(1).first ?? .alreadyComplete
+    }
+
+    /// Atomically advances a recovered number of original inner simulation
+    /// steps. Invalid or unsupported archive state is left unchanged.
+    mutating func advanceGrandCanalSchedulerCalls(
+        _ count: Int
+    ) throws -> [OriginalGrandCanalLayoutCatalog.SchedulerCallOutcome] {
+        guard count > 0 else { return [] }
+        guard var parts = grandCanalMapPartStatesState, !parts.isEmpty else {
+            return Array(repeating: .alreadyComplete, count: count)
+        }
+        var scheduler = grandCanalSchedulerState ?? GrandCanalSchedulerState()
+        var coordinator = grandCanalPhaseTwoCoordinatorState ?? .init()
+        var outcomes: [OriginalGrandCanalLayoutCatalog.SchedulerCallOutcome] = []
+        outcomes.reserveCapacity(count)
+        for _ in 0..<count {
+            if Set(parts.map(\.wholeMonumentPhase)) == [2] {
+                outcomes.append(
+                    try OriginalGrandCanalLayoutCatalog.advancePhaseTwoSchedulerCall(
+                        parts: &parts,
+                        scheduler: &scheduler,
+                        coordinator: &coordinator
+                    )
+                )
+            } else {
+                outcomes.append(
+                    try OriginalGrandCanalLayoutCatalog.advanceSchedulerCall(
+                        parts: &parts,
+                        scheduler: &scheduler
+                    )
+                )
+            }
+        }
+        grandCanalMapPartStatesState = parts
+        grandCanalSchedulerState = scheduler
+        grandCanalPhaseTwoCoordinatorState = coordinator
+        return outcomes
+    }
+
+    /// Phase-0/1 scheduler entry retains explicit provider inputs so the core
+    /// state can be tested and persisted independently of city-layer staffing.
+    @discardableResult
+    mutating func advanceGrandCanalPhaseLaborSchedulerCall(
+        providers: [OriginalGrandCanalLayoutCatalog.PhaseLaborProviderCandidate],
+        targetAccesses: [OriginalGrandCanalLayoutCatalog.PhaseLaborTargetAccessCandidate],
+        xiWangMuActive: Bool
+    ) throws -> OriginalGrandCanalLayoutCatalog.SchedulerCallOutcome {
+        guard var parts = grandCanalMapPartStatesState, !parts.isEmpty else {
+            return .alreadyComplete
+        }
+        var scheduler = grandCanalSchedulerState ?? GrandCanalSchedulerState()
+        var coordinator = grandCanalPhaseLaborCoordinatorState ?? .init()
+        let outcome = try OriginalGrandCanalLayoutCatalog.advancePhaseLaborSchedulerCall(
+            parts: &parts,
+            scheduler: &scheduler,
+            coordinator: &coordinator,
+            providers: providers,
+            targetAccesses: targetAccesses,
+            xiWangMuActive: xiWangMuActive
+        )
+        grandCanalMapPartStatesState = parts
+        grandCanalSchedulerState = scheduler
+        grandCanalPhaseLaborCoordinatorState = coordinator
+        return outcome
+    }
+
+    /// One recovered original inner simulation step for Grand Canal labor:
+    /// existing figures update first, then the monument scheduler runs. This
+    /// preserves the original creation boundary where a newly dispatched
+    /// worker cannot move until the following step.
+    @discardableResult
+    mutating func advanceGrandCanalPhaseLaborSimulationStep(
+        providers: [OriginalGrandCanalLayoutCatalog.PhaseLaborProviderCandidate],
+        targetAccesses: [OriginalGrandCanalLayoutCatalog.PhaseLaborTargetAccessCandidate],
+        routingGrids: OriginalGrandCanalLayoutCatalog.WorkerRoutingGrids,
+        xiWangMuActive: Bool
+    ) throws -> OriginalGrandCanalLayoutCatalog.SchedulerCallOutcome {
+        guard var parts = grandCanalMapPartStatesState, !parts.isEmpty else {
+            return .alreadyComplete
+        }
+        var scheduler = grandCanalSchedulerState ?? GrandCanalSchedulerState()
+        var coordinator = grandCanalPhaseLaborCoordinatorState ?? .init()
+        _ = coordinator.advanceFigureUpdates(
+            parts: &parts,
+            routingGrids: routingGrids,
+            xiWangMuActive: xiWangMuActive
+        )
+        let outcome = try OriginalGrandCanalLayoutCatalog.advancePhaseLaborSchedulerCall(
+            parts: &parts,
+            scheduler: &scheduler,
+            coordinator: &coordinator,
+            providers: providers,
+            targetAccesses: targetAccesses,
+            xiWangMuActive: xiWangMuActive
+        )
+        grandCanalMapPartStatesState = parts
+        grandCanalSchedulerState = scheduler
+        grandCanalPhaseLaborCoordinatorState = coordinator
+        return outcome
+    }
+
+    @discardableResult
+    mutating func recordGrandCanalLaborerArrival(
+        figureID: Int,
+        at point: GridPoint
+    ) -> OriginalGrandCanalLayoutCatalog.PhaseLaborArrival? {
+        var coordinator = grandCanalPhaseLaborCoordinatorState ?? .init()
+        let outcome = coordinator.recordArrival(figureID: figureID, at: point)
+        grandCanalPhaseLaborCoordinatorState = coordinator
+        return outcome
+    }
+
+    @discardableResult
+    mutating func recordGrandCanalLaborerWorkUpdate(
+        figureID: Int,
+        xiWangMuActive: Bool
+    ) -> OriginalGrandCanalLayoutCatalog.PhaseLaborWorkAdvance? {
+        guard var parts = grandCanalMapPartStatesState else { return nil }
+        var coordinator = grandCanalPhaseLaborCoordinatorState ?? .init()
+        let outcome = coordinator.recordOnSiteWorkUpdate(
+            figureID: figureID,
+            parts: &parts,
+            xiWangMuActive: xiWangMuActive
+        )
+        grandCanalMapPartStatesState = parts
+        grandCanalPhaseLaborCoordinatorState = coordinator
+        return outcome
     }
 
     @discardableResult

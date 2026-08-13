@@ -401,6 +401,28 @@ public struct DeterministicLogisticsState: Sendable, Hashable, Codable {
         return taken
     }
 
+    /// Returns phase-two carrier cargo to its exact physical warehouse using
+    /// that warehouse's live bay/policy capacity. The aggregate production
+    /// inventory mirrors every accepted unit just as ordinary warehouse
+    /// delivery does.
+    @discardableResult
+    public mutating func returnStoredGoods(
+        warehouseID: Int,
+        commodityID: Int,
+        amount: Int,
+        production: inout DeterministicProductionState
+    ) -> Int {
+        guard amount > 0,
+              let index = warehouses.firstIndex(where: { $0.id == warehouseID }) else {
+            return 0
+        }
+        let accepted = min(amount, warehouses[index].availableCapacity(for: commodityID))
+        guard accepted > 0 else { return 0 }
+        warehouses[index].inventoryByCommodityID[commodityID, default: 0] += accepted
+        production.addInventory(commodityID: commodityID, amount: accepted)
+        return accepted
+    }
+
     @discardableResult
     public mutating func takeFoodBundle(
         millID: Int,

@@ -409,16 +409,57 @@ private struct ClassicOriginalPanelTexture: View {
     }
 }
 
-private enum ClassicConstructionCatalogItem: Identifiable {
-    case crop(AgriculturalCrop)
+private enum ClassicConstructionChoice: Hashable, Identifiable {
     case tool(NativeConstructionTool)
+    case cropProducer(AgriculturalCrop, buildingID: Int)
+    case cropPlot(AgriculturalCrop)
+    case tradePartner(TradePartner)
+    case unsupported(buildingID: Int, title: String)
 
     var id: String {
         switch self {
-        case let .crop(crop): "crop-\(crop.rawValue)"
         case let .tool(tool): "tool-\(tool.rawValue)"
+        case let .cropProducer(crop, buildingID): "producer-\(buildingID)-\(crop.rawValue)"
+        case let .cropPlot(crop): "plot-\(crop.plotBuildingID)-\(crop.rawValue)"
+        case let .tradePartner(partner): "trade-partner-\(partner.id)"
+        case let .unsupported(buildingID, _): "unsupported-\(buildingID)"
         }
     }
+
+    var title: String {
+        switch self {
+        case let .tool(tool): tool.title
+        case let .cropProducer(crop, _): "\(crop.localizedTitle)农场"
+        case let .cropPlot(crop): crop.fieldTitle
+        case let .tradePartner(partner): ClassicTextLocalization.cityName(partner.name)
+        case let .unsupported(_, title): title
+        }
+    }
+
+    var buildingID: Int? {
+        switch self {
+        case let .tool(tool): tool.buildingID
+        case let .cropProducer(_, buildingID): buildingID
+        case let .cropPlot(crop): crop.plotBuildingID
+        case let .tradePartner(partner): partner.routeKind.buildingID
+        case let .unsupported(buildingID, _): buildingID
+        }
+    }
+
+    var legacyAccessibilityIdentifier: String? {
+        switch self {
+        case let .tool(tool): "construction-tool-\(tool.rawValue)"
+        case let .cropProducer(crop, _): "construction-crop-\(crop.rawValue)"
+        case .cropPlot, .tradePartner, .unsupported: nil
+        }
+    }
+}
+
+private struct ClassicConstructionSubmenu: Hashable, Identifiable {
+    let selectorID: Int
+    let choices: [ClassicConstructionChoice]
+
+    var id: Int { selectorID }
 }
 
 private struct ClassicCityGameView: View {
@@ -432,6 +473,7 @@ private struct ClassicCityGameView: View {
     @State private var selectedMapMessageIndex = 0
     @State private var visibleMapStatus: String?
     @State private var mapStatusDismissTask: Task<Void, Never>?
+    @State private var constructionSubmenu: ClassicConstructionSubmenu?
 
     var body: some View {
         GeometryReader { geometry in
@@ -456,6 +498,7 @@ private struct ClassicCityGameView: View {
             cameraOffsetY = 0
             showsMapMessagePanel = false
             selectedMapMessageIndex = 0
+            constructionSubmenu = nil
         }
         .onChange(of: library.saveStatus) { status in
             presentMapStatus(status)
@@ -539,6 +582,10 @@ private struct ClassicCityGameView: View {
                             selectedCategory: $selectedCategory,
                             cameraOffsetX: $cameraOffsetX,
                             cameraOffsetY: $cameraOffsetY,
+                            onOpenConstructionSubmenu: {
+                                constructionSubmenu = $0
+                            },
+                            onSelectConstructionChoice: selectConstructionChoice,
                             onOpenMessages: {
                                 selectedMapMessageIndex = max(0, cityMessages.count - 1)
                                 showsMapMessagePanel = true
@@ -555,6 +602,31 @@ private struct ClassicCityGameView: View {
                         height: EmperorTheme.classicViewportSize.height
                             - EmperorTheme.hudHeight
                     )
+                    .overlay(alignment: .topLeading) {
+                        if let constructionSubmenu {
+                            ClassicConstructionSubmenuView(
+                                submenu: constructionSubmenu,
+                                interfaceSprites: library.interfaceSprites,
+                                buildingSprites: library.buildingSprites,
+                                onSelect: selectConstructionChoice,
+                                onCancel: { self.constructionSubmenu = nil }
+                            )
+                            .frame(
+                                width: EmperorTheme.constructionSubmenuFallbackWidth,
+                                alignment: .topLeading
+                            )
+                            .offset(
+                                x: EmperorTheme.cityMapColumnWidth
+                                    - EmperorTheme.constructionSubmenuPanelGap
+                                    - EmperorTheme.constructionSubmenuFallbackWidth
+                            )
+                            .offset(
+                                y: classicConstructionSubmenuTopOffset(
+                                    itemCount: constructionSubmenu.choices.count
+                                )
+                            )
+                        }
+                    }
                 }
 
                 if let runtime = library.campaignRuntimeState,
@@ -618,7 +690,9 @@ private struct ClassicCityGameView: View {
             interfaceSprites: library.interfaceSprites,
             figureSprites: library.figureSprites,
             originalMap: library.renderedMap,
+            greatWallKind: activeGreatWallKind,
             constructionTool: library.constructionTool,
+            selectedTradePartnerID: library.selectedTradePartnerID,
             agriculturalCrop: library.selectedAgriculturalCrop,
             constructionOrientation: library.constructionOrientation,
             models: models,
@@ -634,6 +708,21 @@ private struct ClassicCityGameView: View {
             cameraOffsetY: $cameraOffsetY,
             showsNavigationOverlay: false
         )
+    }
+
+    private var activeGreatWallKind: OriginalGreatWallLayoutCatalog.WallKind? {
+        guard let missionID = library.selectedMissionID,
+              let goalSet = library.campaignGoalArchive?.missions.first(where: {
+                  $0.id == missionID
+              }) else { return nil }
+        for goal in goalSet.goals {
+            guard case let .monument(buildingID) = goal.requirement,
+                  let kind = OriginalGreatWallLayoutCatalog.wallKind(
+                      forTaskBuildingID: buildingID
+                  ) else { continue }
+            return kind
+        }
+        return nil
     }
 
     private func presentMapStatus(_ status: String?) {
@@ -673,6 +762,135 @@ private struct ClassicCityGameView: View {
         case .strike: "劳工已经停止工作，请检查工资与城市状况。"
         case .gift, .tributeToPlayer: "一批贡礼已经送达你的城市。"
         default: "新的消息已经送达，请留意城市和帝国局势。"
+        }
+    }
+
+    private func selectConstructionChoice(_ choice: ClassicConstructionChoice) {
+        constructionSubmenu = nil
+        switch choice {
+        case let .tool(tool):
+            library.selectConstructionTool(tool)
+        case let .cropProducer(crop, _):
+            library.selectAgriculturalCrop(crop)
+        case let .cropPlot(crop):
+            library.selectAgriculturalPlot(crop)
+        case let .tradePartner(partner):
+            library.selectTradePartner(partner.id)
+        case .unsupported:
+            break
+        }
+    }
+}
+
+private func classicConstructionSubmenuTopOffset(itemCount: Int) -> CGFloat {
+    let confirmedOffsets: [Int: CGFloat] = [
+        1: 322, 2: 306, 3: 274, 4: 258, 5: 226, 6: 210,
+        7: 178, 8: 162, 9: 130, 10: 114, 11: 82, 12: 66,
+        13: 34, 14: 18, 15: -14,
+    ]
+    // The executable coordinates include the 40px HUD; this overlay begins
+    // immediately below it, hence 0x6E - 40 = 70.
+    return 70 + (
+        confirmedOffsets[itemCount]
+            ?? max(
+                -14,
+                338 - CGFloat(itemCount) * EmperorTheme.constructionSubmenuRowHeight
+            )
+    )
+}
+
+private struct ClassicConstructionSubmenuView: View {
+    let submenu: ClassicConstructionSubmenu
+    let interfaceSprites: [Int: RenderedTerrainSprite]
+    let buildingSprites: [BuildingSpriteReference: RenderedTerrainSprite]
+    let onSelect: (ClassicConstructionChoice) -> Void
+    let onCancel: () -> Void
+
+    var body: some View {
+        ZStack {
+            VStack(spacing: 0) {
+                ForEach(submenu.choices) { choice in
+                    HStack(spacing: 5) {
+                        Text(choice.title)
+                            .font(EmperorTheme.bold(size: 12))
+                            .foregroundStyle(ClassicPalette.gold)
+                            .lineLimit(1)
+                        constructionThumbnail(for: choice)
+                            .frame(width: 22, height: 20)
+                    }
+                    .padding(.horizontal, 5)
+                    .frame(
+                        width: EmperorTheme.constructionSubmenuFallbackWidth,
+                        height: EmperorTheme.constructionSubmenuRowHeight,
+                        alignment: .trailing
+                    )
+                    .fixedSize(horizontal: true, vertical: true)
+                    .background(
+                        ClassicOriginalPanelTexture(
+                            sprite: interfaceSprites[
+                                OriginalInterfaceChromeSpriteCatalog.cityPanelBackgroundImageID
+                            ]
+                        )
+                    )
+                    .overlay(Rectangle().strokeBorder(ClassicPalette.border, lineWidth: 1))
+                    .clipped(antialiased: false)
+                    .contentShape(Rectangle())
+                    .opacity(isUnsupported(choice) ? 0.42 : 1)
+                    .allowsHitTesting(!isUnsupported(choice))
+                    .onTapGesture { onSelect(choice) }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityIdentifier("construction-submenu-\(choice.id)")
+                    .accessibilityLabel(choice.title)
+                    .accessibilityAction {
+                        if !isUnsupported(choice) { onSelect(choice) }
+                    }
+                }
+            }
+            .frame(
+                width: EmperorTheme.constructionSubmenuFallbackWidth,
+                height: CGFloat(submenu.choices.count)
+                    * EmperorTheme.constructionSubmenuRowHeight,
+                alignment: .top
+            )
+
+            CanvasRightClickMonitor(
+                isEnabled: true,
+                cursor: nil,
+                onPointerMoved: { _ in },
+                onRightClick: onCancel
+            )
+        }
+        .frame(
+            width: EmperorTheme.constructionSubmenuFallbackWidth,
+            height: CGFloat(submenu.choices.count)
+                * EmperorTheme.constructionSubmenuRowHeight
+        )
+        .clipped(antialiased: false)
+        .fixedSize(horizontal: true, vertical: true)
+        .accessibilityElement(children: .contain)
+    }
+
+    private func isUnsupported(_ choice: ClassicConstructionChoice) -> Bool {
+        if case .unsupported = choice { return true }
+        return false
+    }
+
+    @ViewBuilder
+    private func constructionThumbnail(
+        for choice: ClassicConstructionChoice
+    ) -> some View {
+        if let buildingID = choice.buildingID,
+           let reference = OriginalBuildingSpriteCatalog.constructionCatalogSprite(
+               forBuildingID: buildingID
+           ),
+           let sprite = buildingSprites[reference] {
+            Image(decorative: sprite.image, scale: 1)
+                .resizable()
+                .interpolation(.none)
+                .scaledToFit()
+        } else {
+            Color.clear
         }
     }
 }
@@ -1093,12 +1311,15 @@ private struct ClassicControlPanel: View {
     @Binding var selectedCategory: ConstructionToolCategory
     @Binding var cameraOffsetX: Int
     @Binding var cameraOffsetY: Int
+    let onOpenConstructionSubmenu: (ClassicConstructionSubmenu) -> Void
+    let onSelectConstructionChoice: (ClassicConstructionChoice) -> Void
     let onOpenMessages: () -> Void
     @State private var showsObjectives = false
     @State private var showsWorldMap = false
     @State private var showsAdvancedControls = false
     @State private var hoveredCategory: ConstructionToolCategory?
     @State private var hoveredConstructionTool: NativeConstructionTool?
+    @State private var hoveredConstructionSelectorID: Int?
     @State private var hoveredCrop: AgriculturalCrop?
 
     private let categoryOrder = ConstructionToolCategory.allCases
@@ -1249,87 +1470,59 @@ private struct ClassicControlPanel: View {
     }
 
     private var constructionCatalog: some View {
-        // Keep always-visible utility tools out of the category grid so the
-        // infrastructure page is not mistaken for a Great-Wall / monument menu.
-        // Orchard sheds are reached via crop buttons (same producer IDs), and
-        // `granary` is a warehouse alias rather than a distinct original button.
-        let utilityTools: Set<NativeConstructionTool> = [
-            .inspect, .road, .clearLand, .demolish,
-        ]
-        let agriculturalProducerTools: Set<NativeConstructionTool> = [
-            .cropFarm, .teaHouse, .lacquerGuild, .silkWeaver,
-        ]
-        let catalogAliases: Set<NativeConstructionTool> = [
-            .granary,
-        ]
-        let categoryTools = NativeConstructionTool.allCases.filter {
-            $0.category == selectedCategory
-                && !utilityTools.contains($0)
-                && !agriculturalProducerTools.contains($0)
-                && !catalogAliases.contains($0)
-        }
-        // Mission-available tools stay first so the player sees actionable
-        // choices immediately; unavailable originals remain behind them as
-        // disabled slots (see DESIGN.md city-panel catalog ordering).
-        let orderedTools = categoryTools.sorted {
-            let leftAvailable = isAvailable($0)
-            let rightAvailable = isAvailable($1)
-            return leftAvailable && !rightAvailable
-        }
-        let cropOrder: [AgriculturalCrop] = [
-            .wheat, .soybeans, .rice, .millet, .cabbage,
-            .hemp, .tea, .mulberry, .lacquer,
-        ]
-        let orderedCrops = cropOrder.sorted {
-            let leftAvailable = isCropAvailable($0)
-            let rightAvailable = isCropAvailable($1)
-            return leftAvailable && !rightAvailable
-        }
-        let availableItems: [ClassicConstructionCatalogItem]
-        if selectedCategory == .agriculture {
-            availableItems = orderedCrops.map(ClassicConstructionCatalogItem.crop)
-                + orderedTools.map(ClassicConstructionCatalogItem.tool)
-        } else {
-            availableItems = orderedTools.map(ClassicConstructionCatalogItem.tool)
-        }
-        return ScrollView(.vertical, showsIndicators: true) {
-            constructionCatalogGrid(availableItems)
-                .padding(.horizontal, 4)
-        }
-    }
-
-    private func constructionCatalogGrid(
-        _ items: [ClassicConstructionCatalogItem]
-    ) -> some View {
-        let remainder = items.count % classicConstructionGridColumns.count
-        let placeholderCount = remainder == 0
-            ? 0
-            : classicConstructionGridColumns.count - remainder
+        let slots = constructionPanelSlots
         return LazyVGrid(
             columns: classicConstructionGridColumns,
             alignment: .leading,
             spacing: 0
         ) {
-            ForEach(items) { item in
-                constructionCatalogButton(item)
-            }
-            ForEach(0..<placeholderCount, id: \.self) { _ in
-                Rectangle()
-                    .fill(Color.clear)
-                    .frame(width: 54, height: 53)
+            ForEach(Array(slots.indices), id: \.self) { index in
+                if let slot = slots[index] {
+                    constructionSlotButton(slot)
+                } else {
+                    Color.clear.frame(
+                        width: EmperorTheme.constructionSlotSize.width,
+                        height: EmperorTheme.constructionSlotSize.height
+                    )
+                }
             }
         }
+        .padding(.horizontal, 4)
+        .frame(height: 106, alignment: .topLeading)
     }
 
     @ViewBuilder
-    private func constructionCatalogButton(
-        _ item: ClassicConstructionCatalogItem
-    ) -> some View {
-        switch item {
-        case let .crop(crop):
-            cropButton(crop)
-        case let .tool(tool):
-            constructionButton(tool)
+    private func constructionSlotButton(_ slot: OriginalConstructionPanelSlot) -> some View {
+        let choices = availableChoices(for: slot)
+        switch slot.kind {
+        case .directBuilding, .dynamicMonument:
+            if let choice = choices.first {
+                constructionFamilyButton(
+                    slot,
+                    choices: choices,
+                    isEnabled: choiceIsSupported(choice),
+                    directChoice: choice
+                )
+            } else {
+                constructionFamilyButton(slot, choices: choices, isEnabled: false)
+            }
+        case .buildingSubmenu:
+            if choices.count == 1,
+               OriginalConstructionPanelCatalog.collapsesSingleAvailableMember(
+                   selectorID: slot.selectorID
+               ),
+               let choice = choices.first {
+                constructionFamilyButton(
+                    slot,
+                    choices: choices,
+                    isEnabled: choiceIsSupported(choice),
+                    directChoice: choice
+                )
+            } else {
+                constructionFamilyButton(slot, choices: choices, isEnabled: !choices.isEmpty)
+            }
+        case .resourceSubmenu:
+            constructionFamilyButton(slot, choices: choices, isEnabled: !choices.isEmpty)
         }
     }
 
@@ -1339,6 +1532,194 @@ private struct ClassicControlPanel: View {
             GridItem(.fixed(54), spacing: 0),
             GridItem(.fixed(54), spacing: 0),
         ]
+    }
+
+    private func constructionFamilyButton(
+        _ slot: OriginalConstructionPanelSlot,
+        choices: [ClassicConstructionChoice],
+        isEnabled: Bool,
+        directChoice: ClassicConstructionChoice? = nil
+    ) -> some View {
+        let hovered = hoveredConstructionSelectorID == slot.selectorID
+        let selected = directChoice.map(isSelected) ?? false
+        let state = constructionButtonState(selected: selected, hovered: hovered)
+        let imageID = OriginalConstructionButtonSpriteCatalog.imageID(
+            forFamilyIndex: slot.familyIndex,
+            state: state
+        )
+        let label = directChoice?.title ?? submenuTitle(for: slot)
+        let accessibilityIdentifier = directChoice?.legacyAccessibilityIdentifier
+            ?? "construction-slot-\(slot.selectorID)"
+        return Button {
+            if let directChoice {
+                onSelectConstructionChoice(directChoice)
+            } else {
+                onOpenConstructionSubmenu(
+                    ClassicConstructionSubmenu(
+                        selectorID: slot.selectorID,
+                        choices: choices
+                    )
+                )
+            }
+        } label: {
+            Group {
+                if let sprite = library.interfaceSprites[imageID] {
+                    Image(decorative: sprite.image, scale: 1)
+                        .resizable()
+                        .interpolation(.none)
+                } else {
+                    Image(systemName: "square.grid.3x2.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                }
+            }
+            .frame(
+                width: EmperorTheme.constructionSlotSize.width,
+                height: EmperorTheme.constructionSlotSize.height
+            )
+        }
+        .buttonStyle(.plain)
+        .disabled(!isEnabled)
+        .opacity(isEnabled ? 1 : 0.42)
+        .onHover { hovering in
+            hoveredConstructionSelectorID = hovering ? slot.selectorID : nil
+        }
+        .accessibilityIdentifier(accessibilityIdentifier)
+        .accessibilityLabel(label)
+        .accessibilityRepresentation {
+            Button(label) {
+                if let directChoice {
+                    onSelectConstructionChoice(directChoice)
+                } else {
+                    onOpenConstructionSubmenu(
+                        ClassicConstructionSubmenu(
+                            selectorID: slot.selectorID,
+                            choices: choices
+                        )
+                    )
+                }
+            }
+            .disabled(!isEnabled)
+            .accessibilityIdentifier(accessibilityIdentifier)
+        }
+        .help(isEnabled ? label : "\(label)：本关暂未开放")
+    }
+
+    private func availableChoices(
+        for slot: OriginalConstructionPanelSlot
+    ) -> [ClassicConstructionChoice] {
+        switch slot.kind {
+        case .directBuilding:
+            return choice(forBuildingID: slot.selectorID).map { [$0] } ?? []
+        case .buildingSubmenu:
+            return slot.memberBuildingIDs.compactMap { buildingID in
+                guard city.isBuildingAvailableInCampaign(buildingID) else { return nil }
+                return choice(forBuildingID: buildingID)
+            }
+        case .resourceSubmenu:
+            let routeKind: TradeRouteKind = slot.selectorID == 88 ? .land : .sea
+            guard city.isBuildingAvailableInCampaign(routeKind.buildingID) else {
+                return []
+            }
+            return city.trade.availableConstructionPartners(for: routeKind).map {
+                .tradePartner($0)
+            }
+        case .dynamicMonument:
+            return slot.memberBuildingIDs.compactMap(choice(forBuildingID:))
+        }
+    }
+
+    private var constructionPanelSlots: [OriginalConstructionPanelSlot?] {
+        let category = selectedCategory.originalPanelCategory
+        guard category == .monuments else {
+            return OriginalConstructionPanelCatalog.slots(for: category)
+        }
+        return OriginalConstructionPanelCatalog.runtimeSlots(
+            for: category,
+            monumentTaskBuildingIDs: monumentTaskBuildingIDs,
+            existingMonumentBuildingIDs: Set(city.placedBuildings.map(\.buildingID))
+                .union(city.aesthetics.monuments.map(\.buildingID))
+        )
+    }
+
+    private var monumentTaskBuildingIDs: Set<Int> {
+        guard let missionID = library.selectedMissionID,
+              let goals = library.campaignGoalArchive?.missions.first(where: {
+                  $0.id == missionID
+              })?.goals else { return [] }
+        return Set(goals.compactMap { goal in
+            guard case let .monument(buildingID) = goal.requirement else { return nil }
+            return buildingID
+        })
+    }
+
+    private func choice(forBuildingID buildingID: Int) -> ClassicConstructionChoice? {
+        if let crop = AgriculturalCrop.allCases.first(where: {
+            $0.plotBuildingID == buildingID && isCropAvailable($0)
+        }) {
+            return .cropPlot(crop)
+        }
+        if let crop = AgriculturalCrop.allCases.first(where: {
+            $0.producerBuildingID == buildingID && isCropAvailable($0)
+        }) {
+            return .cropProducer(crop, buildingID: buildingID)
+        }
+        if let tool = NativeConstructionTool.tool(forBuildingID: buildingID),
+           isAvailable(tool) {
+            return .tool(tool)
+        }
+        guard city.isBuildingAvailableInCampaign(buildingID) else { return nil }
+        return .unsupported(
+            buildingID: buildingID,
+            title: models.buildings[buildingID: buildingID]?.name ?? "建筑 #\(buildingID)"
+        )
+    }
+
+    private func submenuTitle(for slot: OriginalConstructionPanelSlot) -> String {
+        switch slot.selectorID {
+        case 24: "农场"
+        case 200: "作物田"
+        case 201: "灌溉设施"
+        case 29: "经济林生产"
+        case 25: "果园"
+        case 30: "渔猎设施"
+        case 34: "石材工业"
+        case 204: "金属工业"
+        case 50: "窑炉工业"
+        case 140: "轻工业"
+        case 63: "市场"
+        case 206: "市场商铺"
+        case 205: "税务设施"
+        case 240: "道教建筑"
+        case 241: "佛教建筑"
+        case 222: "骑兵与战车堡"
+        case 134: "城防设施"
+        case 229: "雕塑"
+        case 136: "园林水景"
+        case 230: "书院"
+        case 107: "亭台"
+        case 242: "花木"
+        case 234: "工匠行会"
+        case 87: "水路贸易城市"
+        case 88: "陆路贸易城市"
+        default: "建造选择"
+        }
+    }
+
+    private func isSelected(_ choice: ClassicConstructionChoice) -> Bool {
+        switch choice {
+        case let .tool(tool): library.constructionTool == tool
+        case let .cropProducer(crop, _):
+            library.constructionTool == .cropFarm && library.selectedAgriculturalCrop == crop
+        case let .cropPlot(crop):
+            library.constructionTool == .farmland && library.selectedAgriculturalCrop == crop
+        case let .tradePartner(partner): library.selectedTradePartnerID == partner.id
+        case .unsupported: false
+        }
+    }
+
+    private func choiceIsSupported(_ choice: ClassicConstructionChoice) -> Bool {
+        if case .unsupported = choice { return false }
+        return true
     }
 
     private func cropButton(_ crop: AgriculturalCrop) -> some View {
@@ -1719,20 +2100,10 @@ private struct ClassicControlPanel: View {
     }
 
     private func categoryIsAvailable(_ category: ConstructionToolCategory) -> Bool {
-        if category == .agriculture {
-            let crops: [AgriculturalCrop] = [
-                .wheat, .soybeans, .rice, .millet, .cabbage,
-                .hemp, .tea, .mulberry, .lacquer,
-            ]
-            if crops.contains(where: isCropAvailable) { return true }
-        }
-        let utilityTools: Set<NativeConstructionTool> = [
-            .inspect, .road, .clearLand, .demolish,
-        ]
-        return NativeConstructionTool.allCases.contains {
-            $0.category == category
-                && !utilityTools.contains($0)
-                && isAvailable($0)
+        OriginalConstructionPanelCatalog.slots(
+            for: category.originalPanelCategory
+        ).compactMap { $0 }.contains { slot in
+            !availableChoices(for: slot).isEmpty
         }
     }
 
@@ -1795,11 +2166,10 @@ private struct ClassicControlPanel: View {
     }
 
     private func isAvailable(_ tool: NativeConstructionTool) -> Bool {
-        if tool == .grandCanalSegment {
-            return city.aesthetics.grandCanalProject?.isComplete == false
-        }
-        if tool == .earthenGreatWallSegment {
-            return city.aesthetics.earthenGreatWallProject?.isComplete == false
+        if tool == .grandCanalSegment || tool == .earthenGreatWallSegment {
+            // Both original works use predetermined multipart map objects.
+            // Keep the legacy segment commands out of player-facing layers.
+            return false
         }
         if tool == .largePalacePhase {
             return city.aesthetics.largePalaceProject?.isComplete == false
@@ -1834,67 +2204,6 @@ private struct ClassicCategoryAdvisorPanel: View {
                     kind: action.kind,
                     identifier: action.identifier
                 )
-            }
-
-            if let monumentID = activeMapMonumentID {
-                Button {
-                    library.beginMapMonument(buildingID: monumentID)
-                } label: {
-                    HStack {
-                        Text(mapMonumentIsStarted(monumentID) ? "工程已经开工" : "开始营造")
-                        Spacer()
-                        Text("#\(monumentID)")
-                    }
-                    .font(EmperorTheme.bodySmall)
-                    .padding(.horizontal, 8)
-                    .frame(maxWidth: .infinity, minHeight: 20)
-                    .background(EmperorTheme.surfaceControl)
-                    .overlay(Rectangle().strokeBorder(EmperorTheme.secondary, lineWidth: 1))
-                }
-                .buttonStyle(.plain)
-                .disabled(mapMonumentIsStarted(monumentID))
-                .accessibilityIdentifier("advisor-begin-map-monument")
-
-                if monumentID == GrandCanalProjectRuntime.buildingID,
-                   let canal = city.aesthetics.grandCanalProject,
-                   !canal.isComplete {
-                    Button {
-                        library.selectConstructionTool(.grandCanalSegment)
-                    } label: {
-                        HStack {
-                            Text("选择运河分段施工")
-                            Spacer()
-                            Text("\(canal.completionPercent)%")
-                        }
-                        .font(EmperorTheme.bodySmall)
-                        .padding(.horizontal, 8)
-                        .frame(maxWidth: .infinity, minHeight: 20)
-                        .background(EmperorTheme.surfaceControl)
-                        .overlay(Rectangle().strokeBorder(EmperorTheme.secondary, lineWidth: 1))
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("advisor-select-grand-canal-segment")
-                }
-                if monumentID == EarthenGreatWallProjectRuntime.buildingID,
-                   let wall = city.aesthetics.earthenGreatWallProject,
-                   !wall.isComplete {
-                    Button {
-                        library.selectConstructionTool(.earthenGreatWallSegment)
-                    } label: {
-                        HStack {
-                            Text("选择土长城分段施工")
-                            Spacer()
-                            Text("\(wall.completionPercent)%")
-                        }
-                        .font(EmperorTheme.bodySmall)
-                        .padding(.horizontal, 8)
-                        .frame(maxWidth: .infinity, minHeight: 20)
-                        .background(EmperorTheme.surfaceControl)
-                        .overlay(Rectangle().strokeBorder(EmperorTheme.secondary, lineWidth: 1))
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("advisor-select-earthen-great-wall-segment")
-                }
             }
 
             Rectangle()
@@ -1976,26 +2285,6 @@ private struct ClassicCategoryAdvisorPanel: View {
                 ("查看城市行人", .walkers, "advisor-monuments-walkers"),
             ]
         }
-    }
-
-    private var activeMapMonumentID: Int? {
-        guard category == .monuments,
-              let missionID = library.selectedMissionID,
-              let goalSet = library.campaignGoalArchive?.missions.first(where: {
-                  $0.id == missionID
-              }) else { return nil }
-        return goalSet.goals.compactMap { goal in
-            if case let .monument(buildingID) = goal.requirement,
-               buildingID == 83 || buildingID == 85 {
-                return buildingID
-            }
-            return nil
-        }.first
-    }
-
-    private func mapMonumentIsStarted(_ buildingID: Int) -> Bool {
-        city.aesthetics.monuments.contains { $0.buildingID == buildingID }
-            || city.aesthetics.completedMonumentBuildingIDs.contains(buildingID)
     }
 
     private var advisorSummary: [String] {
@@ -3071,7 +3360,9 @@ private struct CitySimulationView: View {
                             interfaceSprites: library.interfaceSprites,
                             figureSprites: library.figureSprites,
                             originalMap: library.renderedMap,
+                            greatWallKind: nil,
                             constructionTool: library.constructionTool,
+                            selectedTradePartnerID: library.selectedTradePartnerID,
                             agriculturalCrop: library.selectedAgriculturalCrop,
                             constructionOrientation: library.constructionOrientation,
                             models: models,

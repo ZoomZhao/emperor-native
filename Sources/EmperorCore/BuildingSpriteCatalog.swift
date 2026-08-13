@@ -104,8 +104,32 @@ public enum OriginalBuildingSpriteCatalog {
     /// Original model-table ID retained after a collapse so the footprint
     /// remains blocked until the player clears the ruins.
     public static let ruinBuildingID = 161
-    public static let grandCanalStageImageIDs: Set<Int> = [201, 212, 224, 229, 232, 234, 238]
+    /// Complete body ranges selected by `SB_CANAL` vtable slot `+0x14`
+    /// (`0x5786F0`) plus the two road-crossing overlays drawn by slot `+0xA0`
+    /// (`0x578F30`). Phase zero uses China_Terrain rather than this archive.
+    public static let grandCanalStageImageIDs: Set<Int> = Set(201...240)
+    /// `FUN_005786F0` resolves phase-zero non-crossing cells to
+    /// `China_Terrain` logical group 3 (#247). A crossing first fills all
+    /// sixteen cells with the nine-frame #247...255 variation family, then
+    /// overwrites its authored four-cell road line with group 30 (#782 at
+    /// view rotation zero).
+    public static let grandCanalPhaseZeroTerrainBaseImageID = 247
+    public static let grandCanalPhaseZeroRoadImageID = 782
     public static let earthenGreatWallCutImageBase = 482
+
+    public static func greatWallTerminalSprite(
+        subBuilding: PhasedMonumentSubBuilding,
+        wallKind: OriginalGreatWallLayoutCatalog.WallKind
+    ) -> BuildingSpriteReference? {
+        guard let reference = OriginalGreatWallLayoutCatalog.terminalSpriteReference(
+            for: subBuilding,
+            wallKind: wallKind
+        ) else { return nil }
+        return BuildingSpriteReference(
+            archiveBaseName: reference.archiveBaseName,
+            imageID: reference.imageID
+        )
+    }
 
     public static func earthenGreatWallSprites(
         stage: Int,
@@ -150,6 +174,149 @@ public enum OriginalBuildingSpriteCatalog {
             archiveBaseName: grandCanalArchiveBaseName,
             imageID: imageID
         )
+    }
+
+    /// Exact `FUN_00578C90` body-family selector for canal construction
+    /// phases 1...3, followed by the phase-4 orientation branch in
+    /// `FUN_005786F0`. `firstNeighborPhase` and `secondNeighborPhase` are the
+    /// two connected pieces in the order recovered for the unrotated authored
+    /// Grand Canal layout. The original phase count is five, so phase index 4
+    /// is already the terminal completed state; phase 5 is not writable.
+    public static func grandCanalMapPartBodySprite(
+        currentPhase: Int,
+        firstNeighborPhase: Int,
+        secondNeighborPhase: Int,
+        isRoadCrossing: Bool,
+        terrainVariation: UInt8,
+        mapViewRotation: Int = 0
+    ) -> BuildingSpriteReference? {
+        guard currentPhase > 0 else { return nil }
+        let displayedPhase = min(
+            currentPhase,
+            OriginalGrandCanalLayoutCatalog.finalCompletedPhaseIndex
+        )
+        let imageID: Int
+        if displayedPhase == 4 {
+            let orientation = (mapViewRotation + (isRoadCrossing ? 2 : 0)) & 7
+            imageID = orientation == 0 || orientation == 4 ? 233 : 232
+        } else {
+            let shape = grandCanalBodyShape(
+                currentPhase: displayedPhase,
+                firstNeighborPhase: firstNeighborPhase,
+                secondNeighborPhase: secondNeighborPhase,
+                isRoadCrossing: isRoadCrossing
+            )
+            let variation = Int(terrainVariation & 1)
+            let imageOffset: Int
+            switch displayedPhase {
+            case 1:
+                imageOffset = switch shape {
+                case 0...3: shape
+                case 4: 4 + variation
+                case 5: 7 + variation
+                default: 10
+                }
+                imageID = 201 + imageOffset
+            case 2:
+                imageOffset = switch shape {
+                case 0...3: shape
+                case 4: 4 + variation
+                case 5: 7 + variation
+                default: isRoadCrossing ? 10 : 11
+                }
+                imageID = 212 + imageOffset
+            case 3:
+                imageOffset = switch shape {
+                case 0...3: shape
+                case 4: 4
+                case 5: 5
+                default: isRoadCrossing ? 6 : 7
+                }
+                imageID = 224 + imageOffset
+            default:
+                return nil
+            }
+        }
+        return BuildingSpriteReference(
+            archiveBaseName: grandCanalArchiveBaseName,
+            imageID: imageID
+        )
+    }
+
+    public static func grandCanalPhaseZeroTerrainImageID(
+        isRoadCrossing: Bool,
+        isCrossingRoadCell: Bool,
+        terrainVariation: UInt8
+    ) -> Int {
+        if isCrossingRoadCell {
+            return grandCanalPhaseZeroRoadImageID
+        }
+        guard isRoadCrossing else {
+            return grandCanalPhaseZeroTerrainBaseImageID
+        }
+        return grandCanalPhaseZeroTerrainBaseImageID + Int(terrainVariation % 9)
+    }
+
+    /// The road crossing is a second, transparent draw over the 4x4 canal
+    /// body. These IDs are direct resource-key resolutions: C08+2 -> #236 for
+    /// phases 1/2, and C07+2 -> #240 for phases 3/4.
+    public static func grandCanalRoadCrossingOverlaySprite(
+        currentPhase: Int
+    ) -> BuildingSpriteReference? {
+        guard currentPhase > 0 else { return nil }
+        let imageID = min(currentPhase, 4) <= 2 ? 236 : 240
+        return BuildingSpriteReference(
+            archiveBaseName: grandCanalArchiveBaseName,
+            imageID: imageID
+        )
+    }
+
+    /// Original top-left draw offset relative to the sub-building's projected
+    /// origin at view rotation zero. `FUN_005A0F60` returns one half-tile above
+    /// Native's tile centre; the phase/orientation jump tables then add the
+    /// listed source-pixel offsets.
+    public static func grandCanalRoadCrossingOverlayTopLeftOffset(
+        currentPhase: Int
+    ) -> (x: Int, y: Int)? {
+        guard currentPhase > 0 else { return nil }
+        return switch min(currentPhase, 4) {
+        case 1, 2: (60, -100)
+        case 3: (65, -92)
+        default: (56, -86)
+        }
+    }
+
+    private static func grandCanalBodyShape(
+        currentPhase: Int,
+        firstNeighborPhase: Int,
+        secondNeighborPhase: Int,
+        isRoadCrossing: Bool
+    ) -> Int {
+        if currentPhase == firstNeighborPhase {
+            if currentPhase <= secondNeighborPhase {
+                return isRoadCrossing ? 4 : 5
+            }
+            return isRoadCrossing ? 0 : 1
+        }
+        if currentPhase == secondNeighborPhase {
+            if currentPhase <= firstNeighborPhase {
+                return isRoadCrossing ? 4 : 5
+            }
+            return isRoadCrossing ? 2 : 3
+        }
+        if firstNeighborPhase < currentPhase && secondNeighborPhase < currentPhase {
+            return 6
+        }
+        if currentPhase < firstNeighborPhase && currentPhase < secondNeighborPhase {
+            return isRoadCrossing ? 4 : 5
+        }
+        if firstNeighborPhase < currentPhase && currentPhase < secondNeighborPhase {
+            return isRoadCrossing ? 0 : 3
+        }
+        if currentPhase < firstNeighborPhase && secondNeighborPhase < currentPhase {
+            return isRoadCrossing ? 2 : 1
+        }
+        return 0
     }
 
     /// Returns only phase sprites whose original frame mapping is verified.
@@ -350,6 +517,20 @@ public enum OriginalBuildingSpriteCatalog {
         forBuildingID buildingID: Int,
         orientation: IsometricBuildingOrientation = .northSouth
     ) -> BuildingSpriteReference? {
+        if buildingID == 58 {
+            return BuildingSpriteReference(
+                archiveBaseName: generalArchiveBaseName,
+                imageID: tradingStationOfficeImageID
+            )
+        }
+        if buildingID == 56 {
+            return quayHouseImageIDs[orientation == .northSouth ? .north : .east].map {
+                BuildingSpriteReference(
+                    archiveBaseName: generalArchiveBaseName,
+                    imageID: $0
+                )
+            }
+        }
         if buildingID == 59 || buildingID == 60 {
             return BuildingSpriteReference(
                 archiveBaseName: generalArchiveBaseName,
@@ -528,6 +709,16 @@ public enum OriginalBuildingSpriteCatalog {
                 imageID: earthenGreatWallCutImageBase + $0.cutVariant
             )
         })
+        if let badaling = OriginalGreatWallLayoutCatalog.layout(buildingID: 257) {
+            for wallKind in [
+                OriginalGreatWallLayoutCatalog.WallKind.earthen,
+                .stone,
+            ] {
+                references.formUnion(badaling.subBuildings.compactMap {
+                    greatWallTerminalSprite(subBuilding: $0, wallKind: wallKind)
+                })
+            }
+        }
         references.formUnion((371...374).map {
             BuildingSpriteReference(
                 archiveBaseName: tumulusArchiveBaseName,

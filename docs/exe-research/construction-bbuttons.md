@@ -2,6 +2,13 @@
 
 Read-only static inspection notes for subsequent agents. This file records **confirmed** control-flow and **negative** search results for `buildingID → China_Interface New_Bbuttons base image`. It is research evidence, not a player-facing contract; update `DESIGN.md` if a recovered map changes the UI contract.
 
+> **Resolved 2026-08-12:** the writer and compact mapping were recovered from
+> the new Ghidra corpus. Read
+> [construction-panel-exe-mapping.md](./construction-panel-exe-mapping.md)
+> first. Sections 1–12 below remain useful chronological evidence and explain
+> why absolute-image and flat-table scans failed, but their statements that
+> the writer/map is still unknown are superseded.
+
 ## When to read this
 
 - Before changing `OriginalConstructionButtonSpriteCatalog` / right-panel construction icons.
@@ -264,11 +271,15 @@ Implementation: `Sources/EmperorCore/InterfaceSpriteCatalog.swift` → `Original
 | Band / rows | Status | Notes |
 | --- | --- | --- |
 | Sheet family layout (54×53, normal/hover/selected ×3) | `confirmed` | From SG3 export / sheet geometry |
-| Many non-commerce bases (housing, industry, safety, …) historically matched to sheet + play recording | treat as `inferred` until a **non-`0x1192B88`** draw/writer is linked | Do not upgrade to `confirmed` from video alone |
-| Commerce / light-industry `#1528–#1546` (warehouse, food shop, mill, weaver, ceramics, hemp, market) | `inferred` | Sheet order after lumber + exported frame content; **not** exe-confirmed |
-| Full `buildingID → base` authoritative table | `unknown` | Still missing |
+| Direct selector/building rows | `confirmedDirectFromExecutable` | `0x53A760` + table `0x855888` + `0x449C10` draw path |
+| Submenu members sharing a selector family | `confirmedSubmenuFamilyFromExecutable` | `0x403C80`, group table `0x821164`, singleton collapse at `0x53A690` |
+| Full category/selector/family map | `confirmed` | See `construction-panel-exe-mapping.md`; no absolute image-ID table exists |
 
-**Agent rule:** Do not present the current dictionary as exe-recovered. Prefer replacing inferred rows only when the **actual construction-panel draw/writer** (likely **not** `0x1192B88` for early bases) is recovered and cross-checked against the hash-identified binary.
+**Current agent rule:** Treat only the direct and shared-submenu rows recorded in
+`construction-panel-exe-mapping.md` as executable-confirmed. The former warning
+not to present the dictionary as recovered applied before `0x53A760` and
+`0x449C10` were found; it is superseded. Rows outside the recovered tables must
+still remain `unknown` rather than being filled from sheet order.
 
 ## Related exe notes already used elsewhere
 
@@ -276,12 +287,14 @@ Fire / collapse maintenance distribution (separate from Bbuttons): native commen
 
 Builder RTTI (`cBuildingBuilder`, `cEliteHouseBuilder`, `cFortBuilder`, …) vtable\[9\] tables (e.g. `0x854030`) are **placement/orientation grids**, not Bbutton image maps. Do not confuse them with construction icons.
 
-## Next read-only steps (if continuing)
+## Next read-only steps (after mapping recovery)
 
-1. **Prefer runtime (now higher priority than another PE immediate scan):** with the hash-matched binary under the app’s embedded Wine and a **temporary** `WINEPREFIX`, open 商业 (or 住宅), dump the live construction-slot object that feeds blits — image ids are almost certainly **loaded/computed into RAM** rather than PE immediates (§9a). Do not persist prefix changes into the install tree.
-2. From that object, back-xref its allocator/filler in `.text` (likely writes `int16`/`int32` image fields from a compressed recipe or mission filter, not `#1491` literals).
-3. Category-tab handlers still matter for *which buildingIDs appear*, but category **icons** themselves are already explained via `0x4A5960` (§9b); do not spend cycles re-finding `#1323` pushes.
-4. Re-scan PE only with a **new** encoding (e.g. bit-packed bitstream, table behind an unmapped RVA/BSS init from disk) — flat catalog-score scans are exhausted (§9c).
+1. Recover the remaining terrain-fit, material-total, construction-worker,
+   and save/replay contracts for the complete Great Wall layout IDs
+   `253…268`; their full-layout placement callback is now confirmed in
+   `construction-panel-exe-mapping.md`.
+2. Verify mission lock/disable feedback and original tooltip text for one
+   direct, one singleton-collapsed, and one multi-member submenu state.
 
 ## Change log
 
@@ -294,3 +307,6 @@ Builder RTTI (`cBuildingBuilder`, `cEliteHouseBuilder`, `cFortBuilder`, …) vta
 | 2026-08-11 | Runtime probe reached the original main menu in a temporary Wine prefix, but input automation and read-only `lldb` attach did not reach or dump the construction grid; no mapping evidence recovered. |
 | 2026-08-11 | §11: remount initially blocked by missing Rosetta; after installation, Wine 5.0 and the original main menu were verified. Interactive category capture continued in §12. |
 | 2026-08-12 | §12: entered the tutorial city and directly matched live 商业 slots to `#1533–#1541`; slot semantics remain `unknown` and the screenshot stays outside the repository. |
+| 2026-08-12 | New Ghidra corpus recovered `0x53A760` → `0x855888` compact selector/family writer, `0x449C10` draw consumption, `0x403C80` group lookup, and `0x821164` members. Full mapping is recorded in `construction-panel-exe-mapping.md`; prior unknown/inferred conclusions are superseded. |
+| 2026-08-13 | Recovered `0x53A640`'s four singleton-collapse groups, `0x53A5D0/0x53A4E0` dynamic monument task matching and `0x53A760` hole/support behavior, plus the `0x5DB960/0x5DB9C0/0x5DBA20` land/sea trade-city selector path. |
+| 2026-08-13 | Closed the `253…268` placement callback: these are sixteen complete authored Great Wall layouts, not phases; recorded task `85` earthen versus task `86` stone selection and the remaining unknown construction contract. |

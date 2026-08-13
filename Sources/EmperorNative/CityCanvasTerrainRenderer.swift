@@ -278,6 +278,52 @@ extension CityCanvas {
         let terrain = city.terrain?.terrain(at: point)
         let originalTerrain = originalMap.map.terrain(at: point)
 
+        // The authored map stores the same 4x4 canal reserve image in every
+        // one of its 528 cells. The Windows runtime immediately replaces that
+        // grid cache per SB_CANAL object: phase zero restores terrain #247
+        // (with per-cell variations only in crossing parts) and its four-cell
+        // road centre line, while phases 1...4 are drawn once as a depth-
+        // sorted 4x4 body in the entity pass. Never draw the authored #201
+        // once per cell here.
+        if let canalPart = grandCanalMapPart(containing: point) {
+            if canalPart.currentSubBuildingPhase == 0 {
+                let crossing = GrandCanalLayout.original.segments.first {
+                    $0.index == canalPart.subBuildingIndex
+                }?.isRoadCrossing == true
+                let isCrossingRoadCell = crossing
+                    && point.y == canalPart.worldOrigin.y + 2
+                let variation = originalMap.map.terrainVisualVariationValue(
+                    x: point.x,
+                    y: point.y
+                ) ?? 0
+                let localImageID = OriginalBuildingSpriteCatalog
+                    .grandCanalPhaseZeroTerrainImageID(
+                        isRoadCrossing: crossing,
+                        isCrossingRoadCell: isCrossingRoadCell,
+                        terrainVariation: variation
+                    )
+                if let sprite = originalMap.terrainSprite(localImageID: localImageID) {
+                    drawOriginalSprite(
+                        sprite,
+                        center: center,
+                        tileWidth: tileWidth,
+                        tileHeight: tileHeight,
+                        context: &context
+                    )
+                }
+            }
+            return true
+        }
+
+        // The editor-authored Badaling archive repeats a Great Wall reserve
+        // image across each part footprint. The original city renderer
+        // replaces that cache from the live multipart object and draws one
+        // depth-sorted sprite per wall/tower/gate/road part. Suppress the
+        // repeated reserve here whenever that object state is present.
+        if greatWallKind != nil, greatWallMapPart(containing: point) != nil {
+            return true
+        }
+
         // Cliff faces and slope transitions must win over fertility, including
         // Banpo's 0x40000 object encoding. Ordinary China_Terrain records do
         // not win here: most are only the bare-soil bed underneath grass.
@@ -359,6 +405,26 @@ extension CityCanvas {
             )
         }
         return true
+    }
+
+    private func grandCanalMapPart(containing point: GridPoint) -> GrandCanalMapPartState? {
+        return city.aesthetics.grandCanalMapPartStates.first {
+            point.x >= $0.worldOrigin.x && point.x < $0.worldOrigin.x + 4
+                && point.y >= $0.worldOrigin.y && point.y < $0.worldOrigin.y + 4
+        }
+    }
+
+    private func greatWallMapPart(containing point: GridPoint) -> GreatWallMapPartState? {
+        city.aesthetics.greatWallMapPartStates.first { part in
+            guard let kind = OriginalGreatWallLayoutCatalog.subBuildingKind(
+                buildingID: part.buildingID,
+                subBuildingIndex: part.subBuildingIndex
+            ) else { return false }
+            return BuildingFootprint(
+                width: kind.footprintSide,
+                height: kind.footprintSide
+            ).points(at: part.worldOrigin).contains(point)
+        }
     }
 
     func roadConnectionMask(at point: GridPoint) -> Int {

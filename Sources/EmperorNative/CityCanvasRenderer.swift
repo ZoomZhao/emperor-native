@@ -391,6 +391,14 @@ extension CityCanvas {
                 at: point,
                 rules: EconomyRulesEngine(models: models)
             )
+        case .tradingStation, .tradingQuay:
+            selectedTradePartnerID.map {
+                city.canConstructTradingBuilding(
+                    partnerID: $0,
+                    at: point,
+                    orientation: constructionOrientation
+                )
+            } ?? false
         case .foodShop, .hempShop, .ceramicsShop, .teaShop, .silkShop,
              .lacquerwareShop, .bronzewareShop:
             constructionTool.marketShopBuildingID.map {

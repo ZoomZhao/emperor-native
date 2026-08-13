@@ -1,5 +1,11 @@
 # Construction panel — native inferred mapping
 
+> **Historical only:** the executable writer, category rows, and submenu
+> families were recovered on 2026-08-12. Use
+> [construction-panel-exe-mapping.md](./construction-panel-exe-mapping.md) as
+> the current source of truth. This file is retained to explain superseded
+> guesses and contradictions.
+
 Most associations below are `inferred`; the four commerce rows retained for
 traceability are explicitly `unknown` after the runtime contradiction. Sheet
 family geometry remains `confirmed` only in `construction-bbutton-families.*`.

@@ -55,24 +55,24 @@ final class Qin4CampaignBaselineTests: XCTestCase {
                 && $0.amount.bounds == 15...20
         })
 
+        let placement = try XCTUnwrap(city.terrain?.greatWallPlacement)
+        XCTAssertEqual(placement.buildingID, 257)
+        XCTAssertEqual(placement.origin, GridPoint(x: 55, y: 32))
+        XCTAssertEqual(placement.quarterTurnsClockwise, 0)
+        XCTAssertEqual(city.aesthetics.greatWallMapPartStates.count, 53)
+        XCTAssertEqual(
+            Set(city.aesthetics.greatWallMapPartStates.map(\.wholeMonumentPhase)),
+            [8]
+        )
+        XCTAssertFalse(city.aesthetics.completedMonumentBuildingIDs.contains(85))
+        XCTAssertFalse(city.aesthetics.completedMonumentBuildingIDs.contains(257))
+
         let begin = controller.perform(.beginMapMonument(buildingID: 85))
-        XCTAssertTrue(begin.wasApplied, begin.message)
-        XCTAssertNotNil(controller.city?.aesthetics.earthenGreatWallProject)
-        XCTAssertTrue(
+        XCTAssertFalse(begin.wasApplied)
+        XCTAssertNil(controller.city?.aesthetics.earthenGreatWallProject)
+        XCTAssertFalse(
             controller.perform(.selectConstruction(.earthenGreatWallSegment)).wasApplied
         )
-        let firstWallPoint = try XCTUnwrap(
-            EarthenGreatWallLayout.badalingMapBindings.first?.worldOrigin
-        )
-        XCTAssertTrue(
-            controller.city?.aesthetics.earthenGreatWallProject?
-                .segmentIndex(containing: firstWallPoint) == 0
-        )
-        let earlyClick = controller.perform(.placeSelectedConstruction(
-            at: firstWallPoint,
-            orientation: .northSouth
-        ))
-        XCTAssertFalse(earlyClick.wasApplied)
         let earlySegment = controller.perform(.advanceEarthenGreatWallSegment(index: 0))
         XCTAssertFalse(earlySegment.wasApplied)
 
