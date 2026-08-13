@@ -2166,11 +2166,6 @@ private struct ClassicControlPanel: View {
     }
 
     private func isAvailable(_ tool: NativeConstructionTool) -> Bool {
-        if tool == .grandCanalSegment || tool == .earthenGreatWallSegment {
-            // Both original works use predetermined multipart map objects.
-            // Keep the legacy segment commands out of player-facing layers.
-            return false
-        }
         if tool == .largePalacePhase {
             return city.aesthetics.largePalaceProject?.isComplete == false
         }
@@ -3221,10 +3216,6 @@ private func constructionInstruction(
         return "\(tool.title)：选择后点击仍有空铺位的市场；同类商铺可以重复建造；右键取消"
     case .irrigationPump:
         return "灌溉水车：放在河岸清地，须同时邻接水面与道路；右键取消"
-    case .grandCanalSegment:
-        return "郑国渠分段：点击地图中任意 4×4 预置渠段推进施工；跨路段完工后保留道路通行"
-    case .earthenGreatWallSegment:
-        return "土长城分段：点击八达岭山脊中的预置 4×4 墙段推进施工"
     case .largePalacePhase:
         return "大宫殿施工：点击已放置的 12×12 宫殿推进下一夯土、殿身、甬道或入口相位"
     case .phasedMonumentPhase:

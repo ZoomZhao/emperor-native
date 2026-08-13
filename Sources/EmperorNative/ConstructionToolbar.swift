@@ -113,8 +113,6 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
     case daoistShrine
     // Sprint 2 — expanded building menu (20 new tools).
     case irrigationPump
-    case grandCanalSegment
-    case earthenGreatWallSegment
     case largePalace
     case largePalacePhase
     case phasedMonumentPhase
@@ -223,8 +221,6 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .confucianAcademy: "儒家书院"
         case .daoistShrine: "道观"
         case .irrigationPump: "灌溉水车"
-        case .grandCanalSegment: "郑国渠分段"
-        case .earthenGreatWallSegment: "土长城分段"
         case .largePalace: "大宫殿"
         case .largePalacePhase: "大宫殿施工"
         case .phasedMonumentPhase: "陵墓分段施工"
@@ -314,8 +310,6 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
         case .confucianAcademy: "books.vertical.fill"
         case .daoistShrine: "sparkles"
         case .irrigationPump: "water.waves"
-        case .grandCanalSegment: "hammer.circle.fill"
-        case .earthenGreatWallSegment: "hammer.circle"
         case .largePalace: "building.columns.fill"
         case .largePalacePhase: "hammer.circle.fill"
         case .phasedMonumentPhase: "hammer.circle"
@@ -369,7 +363,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
     var buildingID: Int? {
         switch self {
         case .inspect, .demolish, .clearLand, .road, .rally, .cropFarm,
-             .grandCanalSegment, .earthenGreatWallSegment, .largePalacePhase: nil
+             .largePalacePhase: nil
         case .phasedMonumentPhase: nil
         case .house: 2
         case .eliteHouse: 11
@@ -485,7 +479,7 @@ enum NativeConstructionTool: String, CaseIterable, Identifiable {
             .aesthetics
         case .laborersCamp, .carpentersGuild, .masonsGuild, .ceramistsGuild,
              .tumulus, .grandTumulus, .greatTemple, .splendidTemple, .grandPagoda,
-             .undergroundVault, .grandCanalSegment, .earthenGreatWallSegment,
+             .undergroundVault,
              .largePalace, .largePalacePhase, .phasedMonumentPhase:
             .monuments
         }
@@ -664,10 +658,6 @@ struct ConstructionToolbar: View {
             "点击仍有空铺位的市场；同类商铺可以重复建造 · 右键取消"
         case .irrigationPump:
             "放在河岸清地，须同时邻接水面与道路 · 右键取消"
-        case .grandCanalSegment:
-            "点击地图中任意 4×4 郑国渠段推进当前施工阶段 · 右键取消"
-        case .earthenGreatWallSegment:
-            "点击 Badaling 山脊上的 4×4 土长城段推进当前施工阶段 · 右键取消"
         case .largePalacePhase:
             "点击已放置的大宫殿推进下一施工相位 · 右键取消"
         case .phasedMonumentPhase:
@@ -746,12 +736,6 @@ struct ConstructionToolbar: View {
 
     private func isAvailable(_ tool: NativeConstructionTool) -> Bool {
         if tool == .tradingStation || tool == .tradingQuay {
-            return false
-        }
-        if tool == .grandCanalSegment || tool == .earthenGreatWallSegment {
-            // Both original works use predetermined multipart map objects.
-            // Keep the old click-an-existing-segment actions only for decoding
-            // prior Native saves; never expose them as player tools.
             return false
         }
         if tool == .largePalacePhase {

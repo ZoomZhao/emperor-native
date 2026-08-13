@@ -25,6 +25,31 @@ final class GameSessionControllerTests: XCTestCase {
         )
     }
 
+    func testLegacyMapMonumentCommandsStayDecodableAndFailClosed() throws {
+        let legacyCommands: [PlayerCommand] = [
+            .selectConstruction(.grandCanalSegment),
+            .selectConstruction(.earthenGreatWallSegment),
+            .beginMapMonument(buildingID: 83),
+            .advanceEarthenGreatWallSegment(index: 0),
+        ]
+        for command in legacyCommands {
+            let encoded = try JSONEncoder().encode(command)
+            XCTAssertEqual(
+                try JSONDecoder().decode(PlayerCommand.self, from: encoded),
+                command
+            )
+        }
+
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let controller = try GameSessionController()
+        for command in legacyCommands {
+            XCTAssertFalse(controller.perform(command).wasApplied)
+        }
+        XCTAssertEqual(controller.selectedConstruction, .inspect)
+    }
+
     func testMissionStartPauseAndInvalidConstructionCommands() throws {
         let controller = try controllerWithXiaOne()
         let snapshot = try XCTUnwrap(controller.snapshot.city)

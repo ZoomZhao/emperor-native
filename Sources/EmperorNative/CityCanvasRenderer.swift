@@ -373,8 +373,6 @@ extension CityCanvas {
         case .road: city.canConstructRoad(at: point)
         case .roadblock: city.canConstructRoadBlock(at: point)
         case .rally: city.canIssueMilitaryOrder(to: point)
-        case .grandCanalSegment: city.canAdvanceGrandCanalSegment(at: point)
-        case .earthenGreatWallSegment: city.canAdvanceEarthenGreatWallSegment(at: point)
         case .largePalacePhase: city.canAdvanceLargePalacePhase(at: point)
         case .phasedMonumentPhase: city.canAdvancePhasedMonument(at: point)
         case .house: city.canConstructHouse(at: point)
