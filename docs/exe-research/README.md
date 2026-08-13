@@ -23,6 +23,7 @@ Read-only static inspection, asset extraction, and **native-inferred** mapping t
 | [ambient-prey.md](./ambient-prey.md) | Confirmed pheasant figure/sprite data and the remaining map spawn-point gap |
 | [great-wall-map-state.md](./great-wall-map-state.md) | Confirmed multipart Great Wall archive/counters, terminal 53-part sprite rendering, dirt-dump versus tamping labor actions, fixed no-direct-difficulty construction contract, worker timing, shared convoy transfer/access/routing, bounded part/whole completion with no Great-Wall-specific reward, aggregate formula, and the hash-identified Qin-4 load path's lack of a phase reset; an aligned historical save, Wine probe, and inaccessible public playthrough are recorded as negative evidence, while the intended first playable state remains open |
 | [grand-canal-map-state.md](./grand-canal-map-state.md) | Confirmed Haunxian canal reserve, five phases, task 102/stone requirements, and explicit wood/control-flow gaps |
+| [hero-effect-lifecycle.md](./hero-effect-lifecycle.md) | Confirmed 12-record `cHero` layout, slot-0 live-effect enter/exit chain, schema-4 serialization and legacy migration; Native physical-presence bridge remains fail-closed pending post-load lifecycle recovery |
 
 Policy:
 
