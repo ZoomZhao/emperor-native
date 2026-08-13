@@ -38,7 +38,8 @@ public struct RoadServiceWalker: Identifiable, Sendable, Equatable, Codable {
         origin: GridPoint,
         maximumRoadSteps: Int,
         replaySeed: UInt64,
-        roadNetwork: RoadNetwork
+        roadNetwork: RoadNetwork,
+        barrierPoints: Set<GridPoint> = []
     ) {
         self.id = id
         self.figureID = figureID
@@ -51,34 +52,46 @@ public struct RoadServiceWalker: Identifiable, Sendable, Equatable, Codable {
             maximumRoadSteps: max(0, maximumRoadSteps),
             roadNetwork: roadNetwork,
             replaySeed: replaySeed,
-            trip: 0
+            trip: 0,
+            barrierPoints: barrierPoints
         )
         routeIndex = 0
         completedTrips = 0
     }
 
-    mutating func advanceOneRoadStep(on roadNetwork: RoadNetwork) -> Bool {
+    mutating func advanceOneRoadStep(
+        on roadNetwork: RoadNetwork,
+        barrierPoints: Set<GridPoint> = []
+    ) -> Bool {
         guard maximumRoadSteps > 0, roadNetwork.contains(origin) else { return false }
         if route.isEmpty || !route.allSatisfy(roadNetwork.contains) {
-            rebuildRoute(on: roadNetwork)
+            rebuildRoute(on: roadNetwork, barrierPoints: barrierPoints)
         }
         guard route.count > 1 else { return false }
+
+        if barrierPoints.contains(route[routeIndex + 1]) {
+            // Confirmed safety boundary: a roamer never enters a roadblock.
+            // The original post-collision direction choice remains unknown;
+            // retain its position and route rather than inventing a reroute.
+            return false
+        }
 
         routeIndex = min(routeIndex + 1, route.count - 1)
         if routeIndex == route.count - 1 {
             completedTrips += 1
-            rebuildRoute(on: roadNetwork)
+            rebuildRoute(on: roadNetwork, barrierPoints: barrierPoints)
         }
         return true
     }
 
-    private mutating func rebuildRoute(on roadNetwork: RoadNetwork) {
+    private mutating func rebuildRoute(on roadNetwork: RoadNetwork, barrierPoints: Set<GridPoint>) {
         route = DeterministicRoadPatrol.route(
             from: origin,
             maximumRoadSteps: maximumRoadSteps,
             roadNetwork: roadNetwork,
             replaySeed: replaySeed,
-            trip: completedTrips
+            trip: completedTrips,
+            barrierPoints: barrierPoints
         )
         routeIndex = 0
     }
@@ -162,7 +175,8 @@ public struct DeterministicWalkerState: Sendable, Equatable, Codable {
         origin: GridPoint,
         maximumRoadSteps: Int,
         replaySeed: UInt64,
-        roadNetwork: RoadNetwork
+        roadNetwork: RoadNetwork,
+        barrierPoints: Set<GridPoint> = []
     ) -> Int? {
         guard maximumRoadSteps > 0, roadNetwork.contains(origin) else { return nil }
         let id = nextWalkerID
@@ -174,7 +188,8 @@ public struct DeterministicWalkerState: Sendable, Equatable, Codable {
             origin: origin,
             maximumRoadSteps: maximumRoadSteps,
             replaySeed: replaySeed,
-            roadNetwork: roadNetwork
+            roadNetwork: roadNetwork,
+            barrierPoints: barrierPoints
         ))
         return id
     }
@@ -190,7 +205,8 @@ public struct DeterministicWalkerState: Sendable, Equatable, Codable {
         roadStepsPerWalker: Int,
         houses: [ResidentialUnit],
         roadNetwork: RoadNetwork,
-        activeWalkerIDs: Set<Int>? = nil
+        activeWalkerIDs: Set<Int>? = nil,
+        barrierPoints: Set<GridPoint> = []
     ) -> WalkerMovementSummary {
         let steps = max(0, roadStepsPerWalker)
         var moved = 0
@@ -213,7 +229,7 @@ public struct DeterministicWalkerState: Sendable, Equatable, Codable {
                 servicedByService: &servicedByService
             )
             for _ in 0..<steps {
-                if walkers[index].advanceOneRoadStep(on: roadNetwork) {
+                if walkers[index].advanceOneRoadStep(on: roadNetwork, barrierPoints: barrierPoints) {
                     moved += 1
                 }
                 visit(
@@ -246,7 +262,8 @@ public struct DeterministicWalkerState: Sendable, Equatable, Codable {
     public mutating func advanceOnePatrolPerWalker(
         houses: [ResidentialUnit],
         roadNetwork: RoadNetwork,
-        activeWalkerIDs: Set<Int>? = nil
+        activeWalkerIDs: Set<Int>? = nil,
+        barrierPoints: Set<GridPoint> = []
     ) -> WalkerMovementSummary {
         var requested = 0
         var moved = 0
@@ -271,7 +288,7 @@ public struct DeterministicWalkerState: Sendable, Equatable, Codable {
                 servicedByService: &servicedByService
             )
             for _ in 0..<steps {
-                if walkers[index].advanceOneRoadStep(on: roadNetwork) {
+                if walkers[index].advanceOneRoadStep(on: roadNetwork, barrierPoints: barrierPoints) {
                     moved += 1
                 }
                 visit(
@@ -323,22 +340,28 @@ public struct DeterministicWalkerState: Sendable, Equatable, Codable {
 public enum DeterministicRoadPatrol {
     /// Builds a closed, depth-first patrol. The walker always has enough budget
     /// to retrace the current branch to its origin, so the serialized route never
-    /// exceeds the original figure model's roaming range.
+    /// exceeds the original figure model's roaming range. Roadblock tiles are
+    /// closed for the patrol: a roaming walker never enters them (it turns away
+    /// instead), while path-following/destination movement keeps using the
+    /// complete road network.
     public static func route(
         from origin: GridPoint,
         maximumRoadSteps: Int,
         roadNetwork: RoadNetwork,
         replaySeed: UInt64,
-        trip: Int
+        trip: Int,
+        barrierPoints: Set<GridPoint> = []
     ) -> [GridPoint] {
-        guard maximumRoadSteps > 0, roadNetwork.contains(origin) else { return [] }
+        guard maximumRoadSteps > 0,
+              roadNetwork.contains(origin),
+              !barrierPoints.contains(origin) else { return [] }
         var route = [origin]
         var stack = [origin]
         var visited: Set<GridPoint> = [origin]
 
         while let current = stack.last {
             let usedSteps = route.count - 1
-            let candidates = neighbors(of: current, in: roadNetwork)
+            let candidates = neighbors(of: current, in: roadNetwork, barrierPoints: barrierPoints)
                 .filter { !visited.contains($0) }
                 .sorted {
                     patrolRank($0, seed: replaySeed, trip: trip) < patrolRank($1, seed: replaySeed, trip: trip)
@@ -361,13 +384,17 @@ public enum DeterministicRoadPatrol {
         return route
     }
 
-    private static func neighbors(of point: GridPoint, in roadNetwork: RoadNetwork) -> [GridPoint] {
+    private static func neighbors(
+        of point: GridPoint,
+        in roadNetwork: RoadNetwork,
+        barrierPoints: Set<GridPoint>
+    ) -> [GridPoint] {
         [
             GridPoint(x: point.x, y: point.y - 1),
             GridPoint(x: point.x + 1, y: point.y),
             GridPoint(x: point.x, y: point.y + 1),
             GridPoint(x: point.x - 1, y: point.y)
-        ].filter(roadNetwork.contains)
+        ].filter { roadNetwork.contains($0) && !barrierPoints.contains($0) }
     }
 
     private static func patrolRank(_ point: GridPoint, seed: UInt64, trip: Int) -> UInt64 {

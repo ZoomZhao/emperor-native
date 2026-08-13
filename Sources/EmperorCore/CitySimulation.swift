@@ -645,6 +645,17 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         return points
     }
 
+    /// Road-block tiles (building 126). They stay in the road network and in
+    /// every derived routing layer, so destination/path-following movement
+    /// crosses them; roaming patrols and roamer coverage treat them as closed.
+    public var roadblockPoints: Set<GridPoint> {
+        Set(
+            placedBuildings
+                .filter { $0.buildingID == 126 }
+                .flatMap(\.occupiedPoints)
+        )
+    }
+
     /// Houses live outside `buildingPlacementState`, but the original model
     /// table gives every visible residential tier normal fire, damage, and
     /// structural-integrity values. Project them into placement geometry for
@@ -1439,6 +1450,10 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         isBuildingAvailableInCampaign(buildingID)
             && roadNetwork.contains(point)
             && !occupiedBuildingPoints.contains(point)
+            // Terrain guards (0x8/0x400/road-water auxiliary) live in the
+            // centralized terrain predicate; map-less procedural cities have
+            // no terrain and rely on road-network membership alone.
+            && (terrain?.canPlaceRoadBlock(at: point) ?? true)
     }
 
     @discardableResult
@@ -3106,7 +3121,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             origin: serviceRoadStart,
             maximumRoadSteps: figure.behaviorRange,
             replaySeed: replaySeed,
-            roadNetwork: roadNetwork
+            roadNetwork: roadNetwork,
+            barrierPoints: roadblockPoints
         ) else { return nil }
         var buildings = residentialServiceBuildingState ?? []
         // Ruins deliberately keep their placement after the operational
@@ -3136,7 +3152,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         let movement = state.advance(
             roadStepsPerWalker: roadStepsPerWalker,
             houses: houses,
-            roadNetwork: roadNetwork
+            roadNetwork: roadNetwork,
+            barrierPoints: roadblockPoints
         )
         applyServiceCoverage(movement, resetExisting: false)
         walkerState = state
@@ -3434,7 +3451,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             houses: houses,
             roadNetwork: roadNetwork,
             serviceRoadStart: serviceRoadStart,
-            maximumRoadSteps: maximumRoadSteps
+            maximumRoadSteps: maximumRoadSteps,
+            barrierPoints: roadblockPoints
         )
         for index in houses.indices {
             houses[index].hasTaxCoverage = coveredIDs.contains(houses[index].id)
@@ -3712,7 +3730,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
                 roadStepsPerWalker: 1,
                 houses: houses,
                 roadNetwork: roadNetwork,
-                activeWalkerIDs: activeServiceWalkerIDs(workforce: activeWorkforce)
+                activeWalkerIDs: activeServiceWalkerIDs(workforce: activeWorkforce),
+                barrierPoints: roadblockPoints
             )
             accumulatedCoverage.merge(walkerMovement)
             applyServiceCoverage(walkerMovement, resetExisting: false)
@@ -3793,7 +3812,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
                 maximumRoadSteps: peddlerRange,
                 replaySeed: 0x4D41_524B_4554
                     ^ UInt64(bitPattern: Int64(calendar.year * 12 + calendar.month)),
-                activeMarketIDs: activeMarketIDs
+                activeMarketIDs: activeMarketIDs,
+                barrierPoints: roadblockPoints
             )
             let delivered = market.advancePeddlers(
                 // A market walker patrols a substantial portion of its
@@ -3803,7 +3823,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
                 roadStepsPerPeddler: 10,
                 houses: &houses,
                 models: rules.models.buildings,
-                activeMarketIDs: activeMarketIDs
+                activeMarketIDs: activeMarketIDs,
+                barrierPoints: roadblockPoints
             )
             marketMovement = MarketTickMovementSummary(
                 purchasedLoads: purchased,

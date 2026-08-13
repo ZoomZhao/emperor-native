@@ -226,8 +226,12 @@ public struct MarketPeddler: Identifiable, Sendable, Hashable, Codable {
         self.foodCargoes = foodCargoes
     }
 
-    mutating func advanceOneRoadStep() -> Bool {
+    mutating func advanceOneRoadStep(barrierPoints: Set<GridPoint>) -> Bool {
         guard routeIndex + 1 < route.count else { return false }
+        // Confirmed safety boundary: a roaming peddler never enters a roadblock.
+        // The original post-collision direction choice is still unknown, so
+        // Native leaves the peddler in place instead of inventing a reroute.
+        guard !barrierPoints.contains(route[routeIndex + 1]) else { return false }
         routeIndex += 1
         return true
     }
@@ -398,7 +402,8 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
         production: inout DeterministicProductionState,
         roadNetwork: RoadNetwork,
         models: OriginalEconomyModels,
-        replaySeed: UInt64
+        replaySeed: UInt64,
+        barrierPoints: Set<GridPoint> = []
     ) -> MarketMonthlySettlement {
         let buyerRange = max(1, models.figures[figureID: OriginalMarketCatalog.buyerFigureID]?.behaviorRange ?? 50)
         let peddlerRange = max(1, models.figures[figureID: OriginalMarketCatalog.peddlerFigureID]?.behaviorRange ?? 60)
@@ -416,12 +421,14 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
             roadNetwork: roadNetwork,
             models: models.buildings,
             maximumRoadSteps: peddlerRange,
-            replaySeed: replaySeed
+            replaySeed: replaySeed,
+            barrierPoints: barrierPoints
         )
         _ = advancePeddlers(
             roadStepsPerPeddler: peddlerRange,
             houses: &houses,
-            models: models.buildings
+            models: models.buildings,
+            barrierPoints: barrierPoints
         )
         return settleMonth(houses: &houses, models: models.buildings)
     }
@@ -565,7 +572,8 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
         models: BuildingModelTable,
         maximumRoadSteps: Int,
         replaySeed: UInt64,
-        activeMarketIDs: Set<Int>? = nil
+        activeMarketIDs: Set<Int>? = nil,
+        barrierPoints: Set<GridPoint> = []
     ) {
         for marketIndex in markets.indices.sorted(by: { markets[$0].id < markets[$1].id }) {
             let marketID = markets[marketIndex].id
@@ -585,13 +593,15 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
                     houses: houses,
                     models: models,
                     roadNetwork: roadNetwork,
-                    maximumRoadSteps: maximumRoadSteps
+                    maximumRoadSteps: maximumRoadSteps,
+                    barrierPoints: barrierPoints
                 ) ?? DeterministicRoadPatrol.route(
                     from: markets[marketIndex].roadAccessPoint,
                     maximumRoadSteps: maximumRoadSteps,
                     roadNetwork: roadNetwork,
                     replaySeed: replaySeed ^ UInt64(marketID),
-                    trip: nextPeddlerID
+                    trip: nextPeddlerID,
+                    barrierPoints: barrierPoints
                 )
                 guard !route.isEmpty else { continue }
                 markets[marketIndex].inventoryByCommodityID[commodityID, default: 0] -= amount
@@ -619,7 +629,8 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
                     maximumRoadSteps: maximumRoadSteps,
                     roadNetwork: roadNetwork,
                     replaySeed: replaySeed ^ UInt64(marketID),
-                    trip: nextPeddlerID
+                    trip: nextPeddlerID,
+                    barrierPoints: barrierPoints
                 )
                 if amount > 0, quality != .none, !route.isEmpty {
                     peddlers.append(MarketPeddler(
@@ -643,7 +654,8 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
         roadStepsPerPeddler: Int,
         houses: inout [ResidentialUnit],
         models: BuildingModelTable,
-        activeMarketIDs: Set<Int>? = nil
+        activeMarketIDs: Set<Int>? = nil,
+        barrierPoints: Set<GridPoint> = []
     ) -> [HouseholdCommodityDelivery] {
         var deliveries: [HouseholdCommodityDelivery] = []
         var completedIDs: [Int] = []
@@ -651,7 +663,15 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
             guard activeMarketIDs?.contains(peddlers[index].marketID) ?? true else { continue }
             distribute(at: index, houses: &houses, models: models, deliveries: &deliveries)
             for _ in 0..<max(0, roadStepsPerPeddler) {
-                _ = peddlers[index].advanceOneRoadStep()
+                let moved = peddlers[index].advanceOneRoadStep(
+                    barrierPoints: barrierPoints
+                )
+                guard moved else {
+                    if peddlers[index].hasCompletedRoute {
+                        distribute(at: index, houses: &houses, models: models, deliveries: &deliveries)
+                    }
+                    break
+                }
                 distribute(at: index, houses: &houses, models: models, deliveries: &deliveries)
                 if peddlers[index].hasCompletedRoute { break }
             }
@@ -896,14 +916,21 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
         ).subtracting(footprint.points(at: location))
     }
 
+    /// Native's existing household-delivery approximation. The exact original
+    /// roaming branch selection is still unknown, but the recovered roadblock
+    /// contract is not: a peddler route must never enter a barrier tile.
     private static func deliveryRoute(
         from marketRoad: GridPoint,
         commodityID: Int,
         houses: [ResidentialUnit],
         models: BuildingModelTable,
         roadNetwork: RoadNetwork,
-        maximumRoadSteps: Int
+        maximumRoadSteps: Int,
+        barrierPoints: Set<GridPoint>
     ) -> [GridPoint]? {
+        let isPassable: (GridPoint) -> Bool = {
+            roadNetwork.contains($0) && !barrierPoints.contains($0)
+        }
         var remaining = houses
             .filter {
                 house($0, needs: commodityID, models: models)
@@ -917,7 +944,7 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
                         height: roadNetwork.height,
                         from: marketRoad,
                         to: $0,
-                        isPassable: roadNetwork.contains
+                        isPassable: isPassable
                     ).map { $0.count - 1 <= maximumRoadSteps * 2 } ?? false
                 }
             }
@@ -935,7 +962,7 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
                         height: roadNetwork.height,
                         from: current,
                         to: $0,
-                        isPassable: roadNetwork.contains
+                        isPassable: isPassable
                     )
                 }.min(by: { $0.count < $1.count })
                 return path.map { (house, $0) }
@@ -944,7 +971,9 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
                 if $0.house.houseLevelID != $1.house.houseLevelID {
                     return $0.house.houseLevelID > $1.house.houseLevelID
                 }
-                if $0.path.count != $1.path.count { return $0.path.count < $1.path.count }
+                if $0.path.count != $1.path.count {
+                    return $0.path.count < $1.path.count
+                }
                 return $0.house.id < $1.house.id
             }) else { break }
             route.append(contentsOf: next.path.dropFirst())
@@ -957,7 +986,7 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
                 height: roadNetwork.height,
                 from: current,
                 to: marketRoad,
-                isPassable: roadNetwork.contains
+                isPassable: isPassable
               ) else { return nil }
         route.append(contentsOf: returnPath.dropFirst())
         return route

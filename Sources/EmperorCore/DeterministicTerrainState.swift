@@ -97,6 +97,19 @@ public struct DeterministicTerrainState: Sendable, Equatable, Codable {
         return roadWaterAuxiliaryValues[point.y * width + point.x]
     }
 
+    /// Original roadblock terrain guard (recovered from `0x46D110`, roadblock
+    /// branches, and documented in
+    /// `docs/exe-research/roadblock-path-blocking.md` §2.1). The block may sit
+    /// only on a plain road tile: no `0x400` special-crossing surface, no
+    /// occupied-surface marker (`0x8`), and a zero road-water auxiliary byte.
+    public func canPlaceRoadBlock(at point: GridPoint) -> Bool {
+        guard let flags = terrain(at: point) else { return false }
+        return flags.contains(.road)
+            && flags.rawValue & Self.roadBlockSpecialCrossingSurfaceMask == 0
+            && !flags.contains(.building)
+            && (roadWaterAuxiliary(at: point) ?? 0) == 0
+    }
+
     public var roadPoints: Set<GridPoint> {
         var result: Set<GridPoint> = []
         for y in 0..<height {
@@ -316,6 +329,11 @@ public struct DeterministicTerrainState: Sendable, Equatable, Codable {
         }
         return visited
     }
+
+    /// `1 << 10` was not added to `TerrainFlags`' verified set because the
+    /// native water/road parsing never asserts on it; it exists only as the
+    /// original special-crossing surface that blocks roadblock placement.
+    private static let roadBlockSpecialCrossingSurfaceMask: UInt32 = 1 << 10
 
     private static let constructionObstacles: TerrainFlags = [
         .tree, .rock, .water, .building, .scrub, .garden,

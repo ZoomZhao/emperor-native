@@ -3,6 +3,16 @@
 Read-only inspection of the hash-matched original EN executable and shipped
 GameData. No Swift/GameData changes were made.
 
+> **Closure note (supersedes the `unknown` route-semantics conclusion below):**
+> the original roadblock blocking semantics — placement terrain rule (`0x46D110`),
+> passable derived caches (`0x5AD440`/`0x5223B0`), and the walker/**peddler
+> roamer** vs **buyer/destination-walker** movement collision (`0x4E8BC0`) —
+> were subsequently closed by
+> [roadblock-path-blocking.md](./roadblock-path-blocking.md). The paragraphs in
+> this pass that still say the blocking algorithm is `unknown` reflect the state
+> at the time of *this* bounded scan and are superseded by that document. The
+> market-shell and Bbutton items below remain open.
+
 ## Roadblock (`BUILD_ROADBLOCK`, building 126)
 
 ### Confirmed authored/native evidence
@@ -27,12 +37,17 @@ GameData. No Swift/GameData changes were made.
   xrefs do not expose its methods or a literal building-ID comparison.
 - `BUILD_ROADS` is present in the static build-name table, but it is the map
   editor/road tool name, not a confirmed roadblock mapping. No direct
-  `BUILD_ROADBLOCK` string, `126`→sprite record, or isolated “roadblock
-  blocks walker” function was recovered in this pass.
-- Therefore the exact original blocking semantics (whether the object blocks
-  all walker classes, only road traversal, or changes routing cost) remain
-  `unknown`. Do not promote the native behavior beyond the documented
-  placement invariant without a city runtime capture.
+  `BUILD_ROADBLOCK` string or isolated `126`→sprite record was recovered in
+  this pass.
+- *This pass* therefore left the exact blocking semantics `unknown`. That gap
+  is now closed by [roadblock-path-blocking.md](./roadblock-path-blocking.md):
+  placement validation `0x46D110`, passable main/fallback route caches
+  (`0x5AD440`/`0x5223B0`), and the `0x4E8BC0` movement-collision branch that
+  denies the roaming movement context at roadblock/gate tiles while
+  path-following movement and heroes (`+0x12 == 0x4F`) pass. The global
+  context flag's exact cross-figure inheritance remains inferred; the manual's
+  peddler-is-a-roamer and buyers-are-destination-walkers framing (p.34/p.37–38)
+  independently supplies the behavior test.
 
 ### Additional static passability evidence (EN `.text`)
 
@@ -56,12 +71,10 @@ the surrounding construction code). The loop contains an explicit
 
 This is `confirmed` evidence that roadblock placement is handled by a
 dedicated branch in the original map-cell test, with a different flag mask
-and a post-loop occupancy/terrain check. It is not sufficient to claim that
-the roadblock blocks every walker: the called routines and the meaning of the
-map bit/byte are not recovered, and no walker/pathfinder call edge was found
-in this bounded scan. The implementation-safe minimum is therefore to keep
-the existing road-only, one-tile placement invariant and avoid adding a
-route-cost or walker-class rule until those callees are resolved.
+and a post-loop occupancy/terrain check. The called routines' meanings were
+not recoverable from this bounded scan and are now supplied by
+[roadblock-path-blocking.md](./roadblock-path-blocking.md) (`0x46D110`
+terrain rule for `0x40`/`0x8`/`0x400` and the road-water auxiliary byte).
 
 ## Market shell and shop bays
 
@@ -142,6 +155,9 @@ shop bays and grand market ID 60 has six; the shop order is
 - `inferred`: any visual association between Bbutton families and market
   shells/vendors; the reason the EXE uses `BUILD_ROAD` rather than a literal
   `BUILD_ROADBLOCK` label.
-- `unknown`: original roadblock route-blocking algorithm (the map-cell branch
-  is confirmed, but its bit semantics/callees are unresolved); complete market
-  shell state machine; EXE `buildingID → Bbutton` mapping for #1533–#1544.
+- `unknown` (now resolved for roadblock route-blocking): the roadblock
+  blocking algorithm flagged in this pass was `unknown` at scan time; it is
+  closed by `roadblock-path-blocking.md` (placement, passable caches,
+  `0x4E8BC0` roamer-denial/destination-pass, hero exemption). Still unknown:
+  complete market shell state machine; EXE `buildingID → Bbutton` mapping for
+  #1533–#1544.

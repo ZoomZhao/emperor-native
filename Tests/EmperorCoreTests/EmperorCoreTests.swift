@@ -3238,6 +3238,423 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertGreaterThan(city.walkers.walkers[0].completedTrips, 1)
     }
 
+    func testRoadblockBlocksRoamerPatrolAndCoverageButKeepsRoadForDestinationRoute() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let rules = EconomyRulesEngine(models: original)
+        var city = DeterministicCityState(
+            year: 1600,
+            treasury: 1_000,
+            mapWidth: 10,
+            mapHeight: 10
+        )
+        // Horizontal road y=3 across x=0...7 plus a vertical road x=3 up y=0...7.
+        // Grid halves meet at (3,3); a roadblock goes on the vertical road at (3,2).
+        let roads = (0...7).map { GridPoint(x: $0, y: 3) }
+            + (0...7).map { GridPoint(x: 3, y: $0) }
+        XCTAssertEqual(city.buildRoad(roads, rules: rules), Set(roads).count)
+
+        let roadblockPoint = GridPoint(x: 3, y: 2)
+        XCTAssertTrue(city.canConstructRoadBlock(at: roadblockPoint))
+        XCTAssertFalse(city.canConstructRoadBlock(at: GridPoint(x: 0, y: 0)))
+        XCTAssertNil(city.constructRoadBlock(at: GridPoint(x: 0, y: 0), rules: rules))
+        XCTAssertNotNil(city.constructRoadBlock(at: roadblockPoint, rules: rules))
+        XCTAssertEqual(city.roadblockPoints, [roadblockPoint])
+
+        // House beyond the roadblock (orthogonal road neighbour (3,1)).
+        _ = city.addHouse(
+            levelID: 0,
+            residents: 5,
+            location: GridPoint(x: 2, y: 0),
+            models: original.buildings
+        )
+        // Control house on the same side as the service building (orthogonal
+        // road neighbour (4,3) on the horizontal road).
+        _ = city.addHouse(
+            levelID: 0,
+            residents: 5,
+            location: GridPoint(x: 4, y: 4),
+            models: original.buildings
+        )
+        let origin = GridPoint(x: 3, y: 7)
+        XCTAssertNotNil(city.constructTaxOffice(
+            serviceRoadStart: origin,
+            replaySeed: 0x5242_4C_4B,
+            rules: rules
+        ))
+
+        // Roamer patrol never enters the roadblock tile (turns away).
+        let route = DeterministicRoadPatrol.route(
+            from: origin,
+            maximumRoadSteps: 40,
+            roadNetwork: city.roadNetwork,
+            replaySeed: 0x5242_4C_4B,
+            trip: 0,
+            barrierPoints: city.roadblockPoints
+        )
+        XCTAssertEqual(route.first, origin)
+        XCTAssertEqual(route.last, origin)
+        XCTAssertFalse(route.contains(roadblockPoint))
+
+        // Coverage reachability also stops at the roadblock: only the control
+        // house is covered.
+        let covered = city.applyTaxCoverage(from: origin, maximumRoadSteps: 40)
+        XCTAssertEqual(covered, 1)
+        let coveredHouseIDs = Set(city.houses.compactMap { house in
+            house.hasTaxCoverage ? house.id : nil
+        })
+        let controlHouseID = city.houses[1].id
+        XCTAssertEqual(coveredHouseIDs, [controlHouseID])
+
+        // The road itself stays intact, so a destination path still crosses the
+        // roadblock tile.
+        let destinationPath = try XCTUnwrap(GridPathfinder.shortestPath(
+            width: city.roadNetwork.width,
+            height: city.roadNetwork.height,
+            from: origin,
+            to: GridPoint(x: 3, y: 1),
+            isPassable: city.roadNetwork.contains
+        ))
+        XCTAssertTrue(destinationPath.contains(roadblockPoint))
+        XCTAssertTrue(city.roadNetwork.contains(roadblockPoint))
+
+        // Walker movement visits neither the roadblock tile nor the far house.
+        let movement = city.advanceServiceWalkers(roadStepsPerWalker: 40)
+        XCTAssertFalse(movement.visitedRoadPoints.contains(roadblockPoint))
+        XCTAssertEqual(movement.servicedHouseIDs, coveredHouseIDs)
+
+        // Demolishing the roadblock reopens the road for roamers.
+        XCTAssertNotNil(city.demolishBuilding(at: roadblockPoint, rules: rules))
+        XCTAssertTrue(city.roadblockPoints.isEmpty)
+        let reopenedCovered = city.applyTaxCoverage(from: origin, maximumRoadSteps: 40)
+        XCTAssertEqual(reopenedCovered, 2)
+    }
+
+    func testRoadblockPlacedOnWalkerNextTileHoldsPositionWithoutTeleport() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let rules = EconomyRulesEngine(models: original)
+        var city = DeterministicCityState(
+            year: 1600,
+            treasury: 1_000,
+            mapWidth: 10,
+            mapHeight: 10
+        )
+        let roads = (0...7).map { GridPoint(x: $0, y: 3) }
+            + (0...7).map { GridPoint(x: 3, y: $0) }
+        XCTAssertEqual(city.buildRoad(roads, rules: rules), Set(roads).count)
+
+        let origin = GridPoint(x: 3, y: 7)
+        XCTAssertNotNil(city.constructTaxOffice(
+            serviceRoadStart: origin,
+            replaySeed: 0x5242_4C_4B,
+            rules: rules
+        ))
+
+        _ = city.advanceServiceWalkers(roadStepsPerWalker: 1)
+        let positionBeforeBlock = try XCTUnwrap(city.walkers.walkers.first?.currentPoint)
+        XCTAssertNotEqual(positionBeforeBlock, origin)
+        let roadblockPoint = try XCTUnwrap(
+            city.walkers.walkers.first?.route.dropFirst(
+                (city.walkers.walkers.first?.routeIndex ?? 0) + 1
+            ).first
+        )
+        XCTAssertNotNil(city.constructRoadBlock(at: roadblockPoint, rules: rules))
+        let after = city.advanceServiceWalkers(roadStepsPerWalker: 1)
+        XCTAssertFalse(after.visitedRoadPoints.contains(roadblockPoint))
+        XCTAssertEqual(
+            city.walkers.walkers.first?.currentPoint,
+            positionBeforeBlock,
+            "the unsupported post-collision turn choice must not become a teleport to origin"
+        )
+        XCTAssertNotNil(city.demolishBuilding(at: roadblockPoint, rules: rules))
+        _ = city.advanceServiceWalkers(roadStepsPerWalker: 1)
+        XCTAssertEqual(city.walkers.walkers.first?.currentPoint, roadblockPoint)
+    }
+
+    func testAdvanceTickBlocksExistingServiceWalkerAtNewRoadblock() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let rules = EconomyRulesEngine(models: original)
+        var city = DeterministicCityState(
+            year: 1600,
+            treasury: 1_000,
+            mapWidth: 8,
+            mapHeight: 5
+        )
+        let roads = (0...5).map { GridPoint(x: $0, y: 2) }
+        XCTAssertEqual(city.buildRoad(roads, rules: rules), roads.count)
+        let origin = GridPoint(x: 0, y: 2)
+        XCTAssertNotNil(city.constructTaxOffice(
+            serviceRoadStart: origin,
+            replaySeed: 0x5242_4C_4B,
+            rules: rules
+        ))
+        let nextPoint = try XCTUnwrap(city.walkers.walkers.first?.route.dropFirst().first)
+        XCTAssertEqual(nextPoint, GridPoint(x: 1, y: 2))
+        XCTAssertNotNil(city.constructRoadBlock(at: nextPoint, rules: rules))
+
+        _ = city.advanceTick(rules: rules)
+        XCTAssertEqual(city.walkers.walkers.first?.currentPoint, origin)
+        XCTAssertFalse(city.walkers.lastMovement?.visitedRoadPoints.contains(nextPoint) ?? true)
+    }
+
+    func testRoadServiceWalkerSaveRoundTripPreservesRouteState() throws {
+        let origin = GridPoint(x: 0, y: 0)
+        let barrier = GridPoint(x: 3, y: 0)
+        let roads = RoadNetwork(
+            width: 5,
+            height: 1,
+            points: Set((0...4).map { GridPoint(x: $0, y: 0) })
+        )
+        let walker = RoadServiceWalker(
+            id: 1,
+            figureID: 7,
+            service: .tax,
+            origin: origin,
+            maximumRoadSteps: 8,
+            replaySeed: 0x5242_4C_4B,
+            roadNetwork: roads,
+            barrierPoints: [barrier]
+        )
+
+        let decoded = try JSONDecoder().decode(
+            RoadServiceWalker.self,
+            from: JSONEncoder().encode(walker)
+        )
+        XCTAssertEqual(decoded, walker)
+        XCTAssertFalse(decoded.route.contains(barrier))
+    }
+
+    private struct HempMarketFixture {
+        var market: DeterministicMarketState
+        var roadNetwork: RoadNetwork
+        var houses: [ResidentialUnit]
+        let marketRoad: GridPoint
+        let barrier: GridPoint
+        let nearHouseID: Int
+        let farHouseID: Int
+    }
+
+    /// Builds a market whose hemp inventory is stocked through the destination
+    /// buyer. The buyer visits a warehouse beyond `barrier`, so stocking itself
+    /// exercises the buyer's market-to-warehouse route passing the roadblock.
+    private func makeStockedHempMarket(models: BuildingModelTable) throws -> HempMarketFixture {
+        let marketRoad = GridPoint(x: 0, y: 3)
+        let barrier = GridPoint(x: 7, y: 3)
+        let roadNetwork = RoadNetwork(
+            width: 16,
+            height: 10,
+            points: Set((0...15).map { GridPoint(x: $0, y: 3) })
+        )
+        var market = DeterministicMarketState()
+        _ = try XCTUnwrap(market.addMarket(
+            buildingID: OriginalMarketCatalog.commonMarketBuildingID,
+            roadAccessPoint: marketRoad,
+            shopBuildingIDs: [67],
+            roadNetwork: roadNetwork
+        ))
+        var logistics = DeterministicLogisticsState()
+        _ = try XCTUnwrap(logistics.addWarehouse(
+            roadAccessPoint: GridPoint(x: 14, y: 3),
+            roadNetwork: roadNetwork
+        ))
+        var production = DeterministicProductionState()
+        XCTAssertEqual(
+            logistics.storeCampaignGift(commodityID: 19, amount: 100, production: &production),
+            100
+        )
+        let houses = [
+            ResidentialUnit(id: 1, houseLevelID: 4, residents: 10, location: GridPoint(x: 2, y: 4)),
+            ResidentialUnit(id: 2, houseLevelID: 4, residents: 10, location: GridPoint(x: 12, y: 4))
+        ]
+        market.scheduleBuyers(
+            houses: houses,
+            logistics: &logistics,
+            production: &production,
+            roadNetwork: roadNetwork,
+            models: models,
+            maximumOneWayRoadSteps: 50
+        )
+        let buyer = try XCTUnwrap(market.buyers.first)
+        XCTAssertTrue(buyer.route.contains(barrier),
+                      "the buyer is a destination walker and stocks the market across the roadblock tile")
+        _ = market.advanceBuyers(roadStepsPerBuyer: 50)
+        XCTAssertEqual(market.markets[0].inventoryByCommodityID[19, default: 0], 100)
+        return HempMarketFixture(
+            market: market,
+            roadNetwork: roadNetwork,
+            houses: houses,
+            marketRoad: marketRoad,
+            barrier: barrier,
+            nearHouseID: houses[0].id,
+            farHouseID: houses[1].id
+        )
+    }
+
+    func testCommodityPeddlerDispatchRouteAvoidsRoadblockAndNeverServesFarSide() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        var fixture = try makeStockedHempMarket(models: original.buildings)
+
+        fixture.market.schedulePeddlers(
+            houses: fixture.houses,
+            roadNetwork: fixture.roadNetwork,
+            models: original.buildings,
+            maximumRoadSteps: 60,
+            replaySeed: 0x4D41_524B_4554,
+            barrierPoints: [fixture.barrier]
+        )
+        XCTAssertFalse(fixture.market.peddlers.isEmpty)
+        for peddler in fixture.market.peddlers {
+            XCTAssertFalse(
+                peddler.route.contains(fixture.barrier),
+                "a commodity peddler patrol never enters a roadblock tile"
+            )
+            XCTAssertFalse(
+                peddler.route.contains { $0.x > fixture.barrier.x },
+                "the patrol turns before the barrier and stays on the market side"
+            )
+        }
+
+        let deliveries = fixture.market.advancePeddlers(
+            roadStepsPerPeddler: 60,
+            houses: &fixture.houses,
+            models: original.buildings,
+            barrierPoints: [fixture.barrier]
+        )
+        XCTAssertFalse(
+            deliveries.contains { $0.houseID == fixture.farHouseID },
+            "the far-side house must never receive a commodity across the roadblock"
+        )
+        XCTAssertEqual(fixture.houses[1][commodityID: 19], 0)
+        XCTAssertGreaterThan(
+            fixture.houses[0][commodityID: 19],
+            0,
+            "the market-side house keeps receiving hemp"
+        )
+    }
+
+    func testBuyerDestinationRoutePassesThroughRoadblockTile() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let marketRoad = GridPoint(x: 0, y: 3)
+        let barrier = GridPoint(x: 7, y: 3)
+        let roadNetwork = RoadNetwork(
+            width: 16,
+            height: 10,
+            points: Set((0...15).map { GridPoint(x: $0, y: 3) })
+        )
+        var market = DeterministicMarketState()
+        _ = try XCTUnwrap(market.addMarket(
+            buildingID: OriginalMarketCatalog.commonMarketBuildingID,
+            roadAccessPoint: marketRoad,
+            shopBuildingIDs: [67],
+            roadNetwork: roadNetwork
+        ))
+        var logistics = DeterministicLogisticsState()
+        _ = try XCTUnwrap(logistics.addWarehouse(
+            roadAccessPoint: GridPoint(x: 14, y: 3),
+            roadNetwork: roadNetwork
+        ))
+        var production = DeterministicProductionState()
+        XCTAssertEqual(
+            logistics.storeCampaignGift(commodityID: 19, amount: 100, production: &production),
+            100
+        )
+        let houses = [
+            ResidentialUnit(id: 1, houseLevelID: 4, residents: 10, location: GridPoint(x: 2, y: 4))
+        ]
+        market.scheduleBuyers(
+            houses: houses,
+            logistics: &logistics,
+            production: &production,
+            roadNetwork: roadNetwork,
+            models: original.buildings,
+            maximumOneWayRoadSteps: 50
+        )
+        let buyer = try XCTUnwrap(market.buyers.first)
+        XCTAssertTrue(
+            buyer.route.contains(barrier),
+            "the buyer keeps the roadblock tile on its market-to-warehouse destination route"
+        )
+        let purchased = market.advanceBuyers(roadStepsPerBuyer: 50)
+        XCTAssertTrue(purchased.contains { $0.commodityID == 19 })
+        XCTAssertEqual(market.markets[0].inventoryByCommodityID[19, default: 0], 100)
+    }
+
+    func testRoadblockOnExistingPeddlerNextTileHoldsWithoutEnterOrCompleteOrCargoReturn() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        var fixture = try makeStockedHempMarket(models: original.buildings)
+
+        fixture.market.schedulePeddlers(
+            houses: fixture.houses,
+            roadNetwork: fixture.roadNetwork,
+            models: original.buildings,
+            maximumRoadSteps: 60,
+            replaySeed: 0x4D41_524B_4554
+        )
+        let peddlerBefore = try XCTUnwrap(fixture.market.peddlers.first)
+        let startPoint = try XCTUnwrap(peddlerBefore.currentPoint)
+        XCTAssertEqual(startPoint, fixture.marketRoad)
+        let newlyBlockedTile = peddlerBefore.route[peddlerBefore.routeIndex + 1]
+
+        // A roadblock is newly placed on the peddler's very next tile after the
+        // peddler was already dispatched and is standing at a road tile.
+        let deliveries = fixture.market.advancePeddlers(
+            roadStepsPerPeddler: 60,
+            houses: &fixture.houses,
+            models: original.buildings,
+            barrierPoints: [newlyBlockedTile]
+        )
+        XCTAssertTrue(deliveries.isEmpty)
+        let peddlerAfter = try XCTUnwrap(fixture.market.peddlers.first)
+        XCTAssertEqual(
+            peddlerAfter.currentPoint,
+            startPoint,
+            "the blocked peddler must not enter the newly roadblocked next tile"
+        )
+        XCTAssertEqual(
+            peddlerAfter.routeIndex,
+            peddlerBefore.routeIndex,
+            "position and completion state stay unchanged"
+        )
+        XCTAssertFalse(peddlerAfter.hasCompletedRoute)
+        XCTAssertEqual(
+            peddlerAfter.remainingAmount,
+            100,
+            "cargo is neither returned nor lost while the peddler is held at the barrier"
+        )
+        XCTAssertEqual(
+            fixture.market.markets[0].inventoryByCommodityID[19, default: 0],
+            0,
+            "the market inventory is not restocked by a held peddler"
+        )
+        XCTAssertEqual(fixture.houses[0][commodityID: 19], 0,
+                       "no delivery happens before the peddler moves")
+
+        _ = fixture.market.advancePeddlers(
+            roadStepsPerPeddler: 1,
+            houses: &fixture.houses,
+            models: original.buildings
+        )
+        XCTAssertEqual(fixture.market.peddlers.first?.currentPoint, newlyBlockedTile,
+                       "removing the runtime barrier resumes the preserved route")
+    }
+
     func testRoadConstructionAndTaxCoverageUseDeterministicRoutes() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")

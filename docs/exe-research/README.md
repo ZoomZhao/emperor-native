@@ -17,7 +17,8 @@ Read-only static inspection, asset extraction, and **native-inferred** mapping t
 | [construction-orphan-family-crosswalk.md](./construction-orphan-family-crosswalk.md) | Static crosswalk for family-start frames missing from the native catalog |
 | [video-panel-observations.md](./video-panel-observations.md) | `videoObserved` category/grid frames sampled from `BV1uau26gEVV.mp4` |
 | [cursor-commercial-defense-monument-pass.md](./cursor-commercial-defense-monument-pass.md) | Cursor pass: commerce-panel observation and defense/monument evidence gaps |
-| [cursor-roadblock-market-pass.md](./cursor-roadblock-market-pass.md) | Cursor pass: roadblock placement/test evidence and market shell/shop-bay static evidence |
+| [cursor-roadblock-market-pass.md](./cursor-roadblock-market-pass.md) | Cursor pass: roadblock placement/test evidence and market shell/shop-bay static evidence (roadblock blocking semantics superseded by `roadblock-path-blocking.md`) |
+| [roadblock-path-blocking.md](./roadblock-path-blocking.md) | **Current source of truth** — recovered roadblock placement rule, passable route caches, and walker movement-collision control flow; roamer (peddler) vs destination-walker (buyer) contract |
 | [cursor-animal-sprite-groups.md](./cursor-animal-sprite-groups.md) | Cursor pass: authored `SprMain`/`SprMain2` animal bitmap and logical-group bounds; figure-state selectors remain unresolved |
 | [ambient-prey.md](./ambient-prey.md) | Confirmed pheasant figure/sprite data and the remaining map spawn-point gap |
 | [great-wall-map-state.md](./great-wall-map-state.md) | Confirmed multipart Great Wall archive/counters, terminal 53-part sprite rendering, dirt-dump versus tamping labor actions, fixed no-direct-difficulty construction contract, worker timing, shared convoy transfer/access/routing, bounded part/whole completion with no Great-Wall-specific reward, aggregate formula, and the hash-identified Qin-4 load path's lack of a phase reset; an aligned historical save, Wine probe, and inaccessible public playthrough are recorded as negative evidence, while the intended first playable state remains open |
@@ -37,7 +38,15 @@ Policy:
 4. **Video-observed** — `video-panel-observations.md` records visible category/slot frames and state offsets; it does not replace executable evidence.
 5. **Runtime-unknown** — live slot artwork is partially captured under Rosetta/Wine, but the original building-ID writer/tooltip is still unresolved (below).
 6. **Animal asset crosswalk** — `cursor-animal-sprite-groups.md` records the authored animal bitmap names, logical-group boundaries, and the explicit `inferred`/`unknown` figure-state gap. It does not authorize adding predator or prey behavior.
-7. **Roadblock/market static pass** — `cursor-roadblock-market-pass.md` records building 126 placement evidence, `cRoadBuildTest` RTTI, market/vendor build-name records, and the authored market shell/shop image IDs. Route blocking, live bay state, and Bbutton ownership remain unresolved.
+7. **Roadblock/market static pass** — `cursor-roadblock-market-pass.md` records
+   building 126 placement evidence, `cRoadBuildTest` RTTI, market/vendor
+   build-name records, and the authored market shell/shop image IDs. Its
+   `unknown` route-blocking conclusion is superseded by
+   `roadblock-path-blocking.md`, which closes the control flow: placement
+   terrain rule (`0x46D110`), passable main/fallback caches
+   (`0x5AD440`/`0x5223B0`), and the `0x4E8BC0` movement-collision split between
+   roaming figures (peddler) and destination walkers (buyer). Live bay state
+   and Bbutton ownership stay open.
 
 ## Inferred-layer pass (2026-08-11)
 
