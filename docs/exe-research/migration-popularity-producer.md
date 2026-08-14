@@ -10,10 +10,16 @@ This note records recovered constants and the remaining blockers. It does
 Production stays
 `AutomaticMigrationAvailability.unsupportedOriginalProducer`. The
 figure-`#11` / type-`0xB` arrival `house+0x20` write is recovered below
-(`FUN_004C9FD0` @ `0x4CA265`). Food, monument, war, mode, and several
-house-field semantics remain unresolved, so the producer stays
-fail-closed. Never treat assigned/accounted `DAT_01311FCC` as an arrival
-success.
+(`FUN_004C9FD0` @ `0x4CA265`). Food, monument, war, and several
+house-field semantics remain unresolved. `DAT_01311FD0` is **not**
+read by `FUN_005917E0` / `FUN_004AD4A0` or the recovered
+assignment/arrival chain (§6); any value of that dword is therefore
+not a numeric input to the recovered pressure / request / spawn /
+occupancy math. Init-zero and save/load are closed. The gameplay
+writer, full value domain, and source of any nonzero state remain
+`unknown`, so Native nonzero advisor/overlay modes (1 / 2 / other)
+stay unwired. The producer stays fail-closed. Never treat
+assigned/accounted `DAT_01311FCC` as an arrival success.
 
 ## 1. Calendar cadence (confirmed)
 
@@ -191,6 +197,11 @@ Population `>199999` zeros pressure. War troop count `≥4`
 `FUN_004E2560(figure+0x12)` is true: types `0x3A…0x3E` and `0x4E`
 (`confirmed`). Native military entities do not yet expose that
 lifecycle, so the count is **not** an implemented Native field.
+
+`FUN_005917E0` and `FUN_004AD4A0` do **not** read `DAT_01311FD0`
+(`confirmed` negative, §6). When signed pressure changes,
+`FUN_005917E0` calls `FUN_00548340(0)`, which **reads** that dword
+for overlay-message selection and does not write it.
 
 Request size `ceil(12 × |pressure| / 100)` (`FUN_0043B860`). Arrival
 requests use cooldown `DAT_01311FC8`; departure requests use
@@ -783,18 +794,253 @@ CH/EN: `FUN_005188F0`, `FUN_005188D0`, `FUN_00408170`,
 `FUN_00519200` are `identical`. `FUN_00518DE0` and `FUN_004C9FD0`
 are absent from `split-merged` / `compare-report.tsv`.
 
-## 6. Month rollover (confirmed)
+## 6. `DAT_01311FD0` (advisor-mode dword)
+
+City-stats object `DAT_0130F960` + `0x2670` is `DAT_01311FD0`
+(`confirmed` arithmetic: `0x0130F960 + 0x2670 = 0x01311FD0`). The
+dword lives in BSS (PE `.data` virtual size `0x1645F9C`, raw
+`0x7B000`; loader zeros it unless written). Do **not** treat the
+Ghidra name or advisor-string cluster as an original symbol.
+
+This dword is an **advisor / overlay-message selector**.
+`FUN_0053B850` branches on **0 / 1 / 2 / other**. It is **not**
+read by `FUN_005917E0`, `FUN_004AD4A0`, or the recovered
+assignment/arrival producer chain (`FUN_004ADA10` /
+`FUN_004ADE10` / `FUN_004C9FD0`), so **any** value of the field
+is outside that recovered pressure / request / spawn / occupancy
+math. Init-zero and save/load writers are below. The gameplay /
+runtime writer, the full value domain, and the source of any
+nonzero state remain `unknown`. Native must not approximate the
+field as always-0 to enable migration, and must not wire nonzero
+advisor/overlay modes (1 / 2 / other). A loaded save may persist
+whatever dword the stream held, not only 1 or 2.
+
+### 6.1 Authored data (not a variable mapping)
+
+Searched 2026-08-14. Hits are player-facing copy or walker audio.
+None is a model field, campaign flag, or ini key that writes this
+dword. Do not guess the strings below as the DAT’s original name.
+
+| source | what was searched | result |
+| --- | --- | --- |
+| `GameData/Model/*.txt` | `immig` / `emig` / `migrat` / `open city` / `closed city` (ASCII) | only `EmperorFigureModels.txt` line 116 figure ID **11** `immigrant` |
+| `GameData/Emperor.ini` | same ASCII | no hit (`CDDrive`/`RAM`/`CPU`/`PlayIntroMovie` only) |
+| `GameData/DATA/status.txt` | same ASCII | no hit |
+| `GameData/Audio/*.txt` | same ASCII plus GB18030 `移民` | `FigureSounds.txt` line 152 figure key `immigrant` (hit/die sounds) |
+| `GameData/Campaigns/*.pak`, `Cities/*.map` | ASCII `immig`/`emig`/`migrat`/`OpenCity`/`ClosedCity`/`open_city` | no hit |
+| `GameData/Model/EmperorEventmsg.txt` | GB18030 `移民`/`迁入`/`迁出` | `PHRASE_road_to_rome2_initial_announcement` (inspectors cleared a road-blocking building so immigrants and caravans can enter/leave). Access-event copy, not this dword |
+| `GameData/EmperorText.eng` / `.txt` group 55 | rows consumed by `FUN_0053B850` | see consumer table; **not** a writer |
+| `GameData/EmperorMM.eng` / `.txt` | immigration/emigration help | in-game manual prose (housing, popularity, walkers). No open/close-city toggle |
+| `GameData/EmperorManual.pdf` | pypdf text extract, 151 pages | p.27–28 Population Ministry “Migration Status” / “Cause or Effect of Migration Status” describe the advisor display from popularity; p.34 “Attracting Immigrants” / “City Popularity”; p.35 Immigrant/Emigrant walkers. **No** player control that opens or closes the city to immigrants |
+| `GameData/Emperor.chm` | `strings` on the compressed ITSF | no recoverable `Open city` / `Closed city` / `Immigration` body text in this environment (no CHM extractor). TOC-like `immig`/`emig` hits only; not used as a field mapping |
+
+Group 55 rows 20–23 (`EmperorText.eng` exact; Chinese from
+`EmperorText.txt` GB18030, the cluster already used by
+`FUN_0053B850`):
+
+| row | English | Chinese |
+| --- | --- | --- |
+| 20 | `People wish to come to the city.` | `人们希望迁居你的城市` |
+| 21 | `People are leaving the city.` | `人们正在离开你的城市` |
+| 22 | `Population migration is stable.` | `人口数较稳定` |
+| 23 | `Immigration and emigration are balanced.` | `迁入人数和离开人数基本平衡` |
+
+Row 24 `Immigrants aren't coming.` / `移民还没有来.` is the next
+authored string; `FUN_0053B850` “other mode” draws **row 23**
+(`0x17`), not row 24.
+
+`FUN_0053B850` draws status `0x14…0x17` as group 55 rows 20–23
+(`confirmed` in `population-advisor-housing-capacity.md`). Those
+rows are **outputs** of the mode check, not evidence of a writer.
+
+### 6.2 Direct `.text` xrefs (canonical EN `8a6d2df1…6753`)
+
+Whole-file pattern `D0 1F 31 01` (`0x01311FD0`): **three** hits, all
+in `.text`, all instruction-start `A1` loads. No `.rdata` / initialized
+`.data` address constant. No `push 0x01311FD0`, `mov r32, 0x01311FD0`,
+or `lea r, [0x01311FD0]`.
+
+**Reads** (instruction starts, not the disp32):
+
+| VA | bytes | function | next control flow |
+| --- | --- | --- | --- |
+| `0x53B8FC` | `A1 D0 1F 31 01` | `FUN_0053B850` @ `0x53B850` | `sub eax, 0` then mode 0 / `== 1` / `!= 2` (group-55 status 20–23) |
+| `0x54835A` | same | `FUN_00548340` @ `0x548340` | `test eax,eax` / `jne 0x54853B`; mode 1 at `!= 1` returns |
+| `0x5D7F86` | same | `FUN_005D7F70` @ `0x5D7F70` | `test eax,eax` / `jne 0x5D811B` |
+
+**Absolute write-class opcodes targeting `0x01311FD0`:** none
+(`confirmed` negative). Scanned `A3`, `89 05/0D/15/1D`, `C7 05`,
+`C6 05`, `01/09/21/29/31/87 05…`, `FF 05/0D`, `81/83` rmw, `F7 05`.
+
+**`[reg+0x2670]` dword stores (`89` / `C7` mod=2):** one site,
+`0x59000F` `89 8A 70 26 00 00` = `mov [edx+0x2670], ecx` in
+`FUN_0058FE40` (legacy-layout copy, §6.4). No `add r32, 0x2670`.
+
+**`lea r, [reg+0x2670]`:** eight sites, all inside `FUN_00593140`,
+all `push 4; push ptr; call` stream I/O (§6.4). Those are
+save/load pointer formation, not a recovered gameplay store of a
+mode immediate.
+
+### 6.3 Init / reset writer (`confirmed`)
+
+`FUN_00590A70` @ `0x590A70`:
+
+```
+0x590A72  mov ecx, 0xBDA
+0x590A77  xor eax, eax
+0x590A79  mov edi, 0x0130F960
+0x590A7E  xor ebx, ebx
+0x590A80  rep stosd
+```
+
+Range `[0x0130F960, 0x0130F960 + 0xBDA×4) = [0x0130F960, 0x013128C8)`.
+`DAT_01311FD0` is inside that range (offset `0x2670`). This **zeros**
+the dword. The same function then writes popularity `0x3C` and other
+explicit fields; it has no later store to `+0x2670`.
+
+Immediate `0xBDA` appears once as this count (`0x590A73`). The other
+`.text` `DA 0B 00 00` at `0x72AE32` is a `call` rel32, not this loop.
+
+Callers (`E8` to `0x590A70` only):
+
+| call VA | function | when |
+| --- | --- | --- |
+| `0x42ECBC` | `FUN_0042E6A0` @ `0x42E6A0` | new-city path when `*(i+0x58)==0` |
+| `0x5D141D` | `FUN_005D1400` @ `0x5D1400` | reset; afterwards copies a **string** from `DAT_010DE0E4` to `DAT_0130F930` (before `F960`, not this field) |
+
+`rep movsd` sites that mention `0x0130F960` nearby copy the city
+**name** to `0x0130F930` (`0x42EDA8`, `0x5D125E`) or use `ecx=F960` as
+a `this` for a different call (`0x5B4ED8`, dest is not `F960`). None
+bulk-copies onto `DAT_01311FD0`.
+
+### 6.4 Save / load writers (`confirmed` object identity)
+
+`FUN_00593140` @ `0x593140` prologue: `mov esi, ecx`. Every `.text`
+caller sets `ecx = 0x0130F960` immediately before the `call`
+(`push esi; mov ecx, 0x130F960` at nine sites). No `mov esi, …`
+between `0x593149` and the first `+0x2670` lea, so `esi` is still
+the city-stats object at the save-arm serialize.
+
+`FUN_0041FBF0` (`mov ax, [ecx+4]` with `ecx=0x0130F958`) supplies
+the load `switch` cases **1…7**. `FUN_0040CF90` non-zero takes the
+save arm (`FUN_00780642`); zero takes the load arm
+(`FUN_00780533`).
+
+| kind | instruction start | bytes / call | effect on `DAT_01311FD0` |
+| --- | --- | --- | --- |
+| save | `0x593410` | `lea eax, [esi+0x2670]`; `push 4`; `push eax`; `call 0x780642` | **read** 4 bytes to the stream |
+| load case 1 | `0x5943A4` | `lea ecx, [esi+0x2670]`; `call 0x780533` | **write** 4 bytes from the stream |
+| load case 2 | `0x5952C9` | same shape | write |
+| load case 3 | `0x595EA7` | same shape | write |
+| load case 4 | `0x596D95` | same shape | write |
+| load case 5 | `0x597C79` | same shape | write |
+| load case 6 | `0x5985E2` | same shape | write |
+| load case 7 | `0x59946C` | same shape | write |
+
+`FUN_00780642` copies memory → stream. `FUN_00780533` copies stream
+→ memory. Both take a pointer + length 4 at `this+0x2670`.
+
+Nine `call 0x593140` sites, all `mov ecx, 0x0130F960` at call−6 or
+call−5: `0x52FE9E`, `0x53069E`, `0x530C93`, `0x531293`,
+`0x531A7B`, `0x532085`, `0x532674`, `0x532E22`, `0x533629` (inside
+`FUN_0052FDA0` @ `0x52FDA0`).
+
+**Legacy blob remap** (`FUN_0058FE40` @ `0x58FE40`):
+`this` = source buffer, `[esp+4]` = dest. At `0x590009`
+`mov ecx, [eax+0x2740]` then `0x59000F` `mov [edx+0x2670], ecx`.
+Reached from `FUN_0052FDA0` @ `0x5335EB` `cmp ebx, 2; jg 0x533623`:
+the `ebx <= 2` arm `push 0x3014; call 0x780533` into a stack
+buffer, then `push 0x130F960; lea ecx, [esp+…] ; call 0x58FE40`.
+The `jg` arm is the `FUN_00593140` path. `ebx` is a version
+discriminator in that function (`inferred` from the two-arm shape;
+the exact word’s original name is not recovered). No `.text` store
+to `[reg+0x2740]` exists; `+0x2740` is only read as a source field
+of that old blob.
+
+A loaded save can therefore contain **any** persisted dword at this
+offset, including nonzero values other than 1 or 2. That does not
+identify a gameplay/runtime writer.
+
+### 6.5 Consumer meaning (closed for UI; not a producer contract)
+
+Already tabulated in `population-advisor-housing-capacity.md`:
+
+| value | `FUN_0053B850` status row | notes |
+| --- | --- | --- |
+| 0 | checker (war / newcomers / housing / signed pressure) | Native’s only wired branch is the screenshot-confirmed zero-capacity arm |
+| 1 | row 21 + `FUN_0053B790` reasons | same row as mode-0 negative pressure |
+| 2 | row 22 | same row as mode-0 zero pressure |
+| other | row 23 | |
+
+`FUN_00548340` / `FUN_005D7F70` use the same 0 / 1 / other split for
+overlay / help IDs. No original semantic name is assigned here.
+
+`DAT_01311FD0` is not read by `FUN_005917E0` / `FUN_004AD4A0` or
+the recovered assignment/arrival producer chain, so **any** value
+of the field is outside that recovered pressure / request / spawn /
+occupancy math (`confirmed` non-input). Remaining unknowns are the
+gameplay/runtime writer, the full value domain, and the source of
+any nonzero state.
+
+### 6.6 Strict negatives (reusable)
+
+Opcode-bounded. These are not a claim that every x86 form was
+exhausted (no C6/66-width, arithmetic RMW, SIB, or other-base
+alias scan is treated as complete).
+
+- No absolute `.text` hit among the scanned write-class opcodes
+  targeting `0x01311FD0` (`A3`, `89 05/0D/15/1D`, `C7 05`,
+  `C6 05`, `01/09/21/29/31/87 05…`, `FF 05/0D`, `81/83` rmw,
+  `F7 05`).
+- No `89` / `C7` mod=2 **dword** store to `[reg+0x2670]` except
+  `0x59000F` in `FUN_0058FE40`. `lea [reg+0x2670]` sites are the
+  §6.4 stream pointer, not that store encoding. `add r32, 0x2670`
+  was not found; SIB and other displacements were not scanned as
+  a closed set.
+- No second `rep stosd` / `rep movsd` whose dest range is proven
+  to include this dword besides `FUN_00590A70`.
+- Neighbor `DAT_01311FD4` is a different dword (`FUN_004AF020`
+  touches `FD4`, not `FD0`).
+- Known consumers `FUN_0053B850`, `FUN_00548340`, and
+  `FUN_005D7F70` only read. Event phrase
+  `PHRASE_road_to_rome2_initial_announcement` is unrelated access
+  copy. This pass did not recover a write in those consumers or
+  in the scans above; indirect writers outside that scope remain
+  possible and `unknown`.
+- Corpus `DAT_01311fd0 =` assignment: **none** (reads only in the
+  three consumer functions). That corpus gap is closed for
+  **absolute** assignments; it never was proof of “no writer”
+  because of the stosd / serialize aliases above.
+
+### 6.7 CH/EN
+
+`FUN_0053B850`, `FUN_00548340`, `FUN_005D7F70`, `FUN_005917E0`,
+`FUN_00590A70`, `FUN_0042E6A0`, `FUN_005D1400`, `FUN_0058FE40`,
+`FUN_00593140`, `FUN_0052FDA0` are `identical` in
+`local/source/compare-report.tsv`. Canonical conclusions above are
+EN `.text` plus those identical rows. `decompiled-ch.c` shows the
+same three `DAT_01311fd0` reads; no CH-only assignment is in the
+corpus. On-disk CH siblings that are **not** hash
+`dbdeca1e…15a` are not used.
+
+## 7. Month rollover (confirmed)
 
 `FUN_004AC650` copies `DAT_01311FCC` → `DAT_01312604` and zeros
 `DAT_01311FCC` when the 16th slice wraps.
 
-## 7. Native implementation contract (fail-closed)
+## 8. Native implementation contract (fail-closed)
 
 The original immigrant arrival state machine in §5 is recovered.
 That does **not** authorize enabling automatic migration. Food,
-monument, war, mode, `house+0x24`, and `DAT_00D62408` writer/meaning
-remain unresolved. `cHouseInfo+0x3C` method identity and
-`FUN_004C9FD0` gate polarity are closed (§5.9); original semantic
+monument, war, `house+0x24`, and `DAT_00D62408` writer/meaning
+remain unresolved. `DAT_01311FD0` init-zero and save/load are
+§6; it is not a numeric input to the recovered producer chain.
+The gameplay/runtime writer, full value domain, and nonzero-state
+source are still `unknown`, so Native nonzero advisor/overlay
+modes (1 / 2 / other) stay unwired and the field must not be
+forced to 0 as a production default.
+`cHouseInfo+0x3C` method identity and `FUN_004C9FD0` gate polarity
+are closed (§5.9); original semantic
 name, complete writer/lifecycle set, and Native mapping are not.
 House vtable `+0x230` method identity and empty-house skip polarity
 are closed (§5.10). The post-call pairs `(+0x14,+0x16)=(3,0)` and
@@ -824,10 +1070,11 @@ original symbol name are not. Do not spawn walkers or call
 - pass monument / war / mode as `0` and mark the producer supported;
 - upgrade `unsupportedOriginalProducer` saves to a supported tag;
 - spawn immigrant walkers;
-- implement advisor modes 1/2 or render group-55 row 11;
+- implement nonzero advisor/overlay modes (1 / 2 / other) or
+  render group-55 row 11;
 - invent a Great-Wall first-playable state.
 
-## 8. Remaining unknowns
+## 9. Remaining unknowns
 
 - Original semantic name of `HouseBldg+9` (the byte `FUN_0042DD40`
   tests; complete writer set is not recovered). House vtable
@@ -847,9 +1094,14 @@ original symbol name are not. Do not spawn walkers or call
   recovered reads and the `DAT_010C72AC` / `DAT_010C72A8` writes.
 - Whether `FUN_004C8B70` type-`0xB` death unlinks the spawn house
   (`+0x64` test vs `+0x62` lookup).
-- `DAT_01311FD0` mode writer (corpus has reads in `FUN_0053B850` /
-  `FUN_00548340` / `FUN_005D7F70` only; no `DAT_01311FD0 =`
-  assignment).
+- Gameplay/runtime writer of `DAT_01311FD0`, the full value
+  domain, the source of any nonzero state, and the original
+  semantic name of the dword (`FUN_0053B850` branches 0 / 1 / 2 /
+  other; absolute xrefs, `FUN_00590A70` zero, and `FUN_00593140` /
+  `FUN_0058FE40` persistence are §6; non-input to the recovered
+  producer chain is confirmed). Do not treat “no
+  `DAT_01311FD0 =` in the decompiled corpus” as the full writer
+  story, and do not treat 1/2 as the only persistable nonzero.
 - Native military-figure mapping for `DAT_01312564`
   (`FUN_004EBB40` / `FUN_004E2560` types `0x3A…0x3E`, `0x4E`).
 - `FUN_0055AE30` monument-object matching walk.
