@@ -449,9 +449,11 @@ accounted spawn count displayed by the renderer. The link is direct:
   itself is recovered; `cMarket+0x2c` @ `0x5437B0` is the recovered
   normal market-delivery writer/path of `cHouseInfo+0x36` (complete
   writer set not proven). Current Native food consumption, blending,
-  and cadence are confirmed non-isomorphic; the producer of
-  `cMarket+0x180` and the correct Native representation/mapping
-  remain open. Confirmed
+  and cadence are confirmed non-isomorphic; the live `cStall+0x260`
+  blend into `cMarket+0x180` is recovered, while the producer and
+  semantic of cart `figure+0x13`, peddler-vs-buyer `FUN_004EACD0`
+  exclusivity, and the correct Native representation/mapping remain
+  open. Confirmed
   tables live in
   `docs/exe-research/migration-popularity-producer.md`; they are not a public
   production API, and production ticks do not call them.
@@ -489,10 +491,12 @@ accounted spawn count displayed by the renderer. The link is direct:
 - `FUN_00590F30` occupied-house walk is recovered
   (`migration-popularity-producer.md` §3). Authored columns 8 /
   14 / 15 are `EVO_FOOD_QUALITY` / `EVO_CRIME_INC` / `EVO_CRIME_BASE`,
-  not food-stock columns. Remaining unknown is the producer of
-  `cMarket+0x180` (market / food-shop quality), peddler-vs-buyer
-  exclusivity, the complete `cHouseInfo+0x36` writer set, and the
-  correct Native representation/mapping of that raw quality byte.
+  not food-stock columns. Remaining unknown is the producer and
+  semantic of cart `figure+0x13` for the recovered `cStall+0x260`
+  blend into `cMarket+0x180`, whether buyers hit `FUN_004EACD0`
+  (spawn and think rows for 23 vs 24 are exclusive), the complete
+  `cHouseInfo+0x36` writer set, and the correct Native
+  representation/mapping of that raw quality byte.
   Current Native `ResidentialUnit` food consumption, blending, and
   cadence are confirmed non-isomorphic, so
   `lastSuppliedFoodQuality` must not be substituted. Do not name
