@@ -10,8 +10,11 @@ This note records recovered constants and the remaining blockers. It does
 Production stays
 `AutomaticMigrationAvailability.unsupportedOriginalProducer`. The
 figure-`#11` / type-`0xB` arrival `house+0x20` write is recovered below
-(`FUN_004C9FD0` @ `0x4CA265`). Food, monument, war, and several
-house-field semantics remain unresolved. `DAT_01311FD0` is **not**
+(`FUN_004C9FD0` @ `0x4CA265`). Food, war, and several
+house-field semantics remain unresolved. The `FUN_0055AE30`
+monument walk is recovered in §3; Native mapping and save
+lifecycle are not, so monument stays a fail-closed producer
+input. `DAT_01311FD0` is **not**
 read by `FUN_005917E0` / `FUN_004AD4A0` or the recovered
 assignment/arrival chain (§6); any value of that dword is therefore
 not a numeric input to the recovered pressure / request / spawn /
@@ -41,7 +44,7 @@ calls), not two months.
 | update | `FUN_00591200` at slice `0` and `8` | confirmed |
 | per-update sum | `feng + repression + 1 + monument×2 + debt + food + wage + employment + tax` | confirmed |
 | `+1` | literal in `0x591200`, not a hero predicate | confirmed |
-| monument | `FUN_0055AE30`; empty building list (`FUN_00554C00() < 2`) returns `0` | confirmed |
+| monument | `FUN_0055AE30` returns the matching building-goal pair count (each passing `(building, type-2 goal)` pair increments; the same goal may be counted once per matching root; **not** a distinct-goal count); `FUN_00591200` adds that count × 2. Empty list / no match returns `0` (§3) | confirmed |
 | festival | excluded from the per-update sum; applied only by `0x48EA40` / `0x48EAF0` | confirmed |
 
 Damping (`FUN_00591200` @ `0x591200`, `confirmed`). Per-update sum `n`
@@ -169,14 +172,128 @@ Native `ResidentialUnit.lastSuppliedFoodQuality` is **not** the
 gameplay is forbidden. Empty occupied-house set returns `0`
 (`confirmed`).
 
-### Monument matching (`FUN_0055AE30`) — fail-closed
+### Monument matching (`FUN_0055AE30`) — control flow recovered; Native unwired
 
-Empty city returns `0` (`confirmed`). Live matching walks buildings
-against campaign objects with `*(int *)(*p + 4) == 2`, building
-`+0x16 == 0`, `FUN_00565410(...) > 99`, then either exact
-`building+0x14 == object+0xC` or object IDs `0x55`/`0x56` with
-building type in `0xFD…0x10C`. Native does not wire that walk;
-passing `0` while marking the producer `supported` is forbidden.
+Canonical EN `.text` (`8a6d2df1…6753`, image base `0x400000`).
+`FUN_0055AE30` @ `0x55AE30` is `thiscall` (`mov esi, ecx` @
+`0x55AE35`). `FUN_0055BCB0` @ `0x55BCB0` is `mov eax, 0x12A4BA8; ret`.
+`FUN_00591200` @ `0x591281` and `FUN_0055B6A0` @ `0x55B6AB` call
+`FUN_0055AE30` on that object. Empty/no-match returns `0` and does
+**not** invent a completed monument. Production stays
+`unsupportedOriginalProducer`. Do not pass missing monuments as `0`
+and mark the producer supported. Do not guess completion from
+`buildingID` alone.
+
+#### Shared match predicate (`FUN_0055AE30` and `FUN_005604C0`)
+
+Both walks use the same ID / root / percent tests (`confirmed` EN
+bytes). Integer `cmp eax, 0x64` with `jl` skip / `jge` accept is
+`>= 100`, equivalently integer `> 99`.
+
+| check | EN site | polarity |
+| --- | --- | --- |
+| Building vector count | `FUN_00554C00` `this` = `0x8C7634` (`0x55AE4D`, `0x5604D9`) | `[ecx+4]==0` → `0`; else `([ecx+8]-[ecx+4])>>2`. `cmp eax, 1; jbe` → return `0` if count **≤ 1** (unsigned), i.e. `< 2` |
+| Walk start | `FUN_00413B40(1)` `this` = `0x8C7630` (`0x55AE39`, `0x5604C6`) | **Index 0 is never visited.** Slot pointer `+4` per iter; `inc` index; `cmp index, count; jb` |
+| Root only | `cmp word [building+0x16], 0` (`0x55AEC2`, `0x5604F0`) | nonzero sub-index skips the pair |
+| Exact ID | `sx(building+0x14) == goal+0xC` (`0x55AEE2`, `0x5604F7`) | first arm |
+| Special goal IDs | `goal+0xC` is `0x55` **or** `0x56`, **and** `0xFD ≤ (signed word)building+0x14 ≤ 0x10C` (`0x55AEF0` / `jle 0x10C`; `0x560505` / `jg` skip `0x10C`) | second arm; inclusive **253…268**. These `0x55`/`0x56` values are **goal `+0xC` IDs**, not placeable building types |
+| Percent | `FUN_00565410(building+0xB4, 0, 0)` (`push 0; push 0; push [building+0xB4]` @ `0x55AED1`, `0x56051D`) | need return **≥ 100** |
+
+`FUN_00565410` @ `0x565410` is `thiscall` with three stack args
+(`ret 0xC`). Prologue: `param_1 < 1` → `0`; lookup
+`FUN_0047F1B0(param_1)` with `ecx=0x8C7634`. The popularity /
+goal calls pass `param_2=0`, `param_3=0`. The `param_2==0`
+aggregate `(sumNumerator * 100) / sumDenominator`, or `100` when
+the denominator is `≤ 0`, is already closed in
+`docs/exe-research/great-wall-map-state.md` (`0x5666C4` /
+`0x5666DE`). This note does not re-open that formula.
+
+Call order differs; both predicates must still pass:
+
+- `FUN_0055AE30`: live + type gates, then root, then percent, then ID.
+- `FUN_005604C0` @ `0x5604C0`: zeros `goal+8`, no live/type gates,
+  then root, then ID, then percent; first hit sets `goal+8=1` and
+  returns `1`, else `0`.
+
+#### `FUN_0055AE30`-only gates and return
+
+| gate | EN site | polarity | class |
+| --- | --- | --- | --- |
+| Live building | `FUN_00426D10` @ `0x426D10`; `push 0; mov ecx, building; call` @ `0x55AE72` | `byte [this+4]` is **1 or 3**; else skip. Stack `0` unused (`ret 4`) | confirmed |
+| Monument type | `FUN_00562E80` cdecl thunk → `FUN_00562F70` @ `0x562F70` (`0x55AE85`) | jump table `id-0x4C` over `0…0xC0`: true for **76…86, 92, 93, 253…268** | confirmed |
+| Type-2 objects only | `cmp dword [object+4], 2` (`0x55AEB4`); object from `FUN_0047F1B0` with `ecx = this+0x10` | other goal types skipped | confirmed |
+| Match side effect | `0x55AF11` / `0x55AF08` | match: `goal+8 = 1` and increment the return count; mismatch in this arm: `goal+8 = 0`. Incomplete / non-root does **not** write `+8` | confirmed |
+| Return | `eax` = incremented count (`0x55AF5B`) | matching building-goal pair count: one increment per **(building, type-2 goal)** pair that passed the predicate. The same goal may be counted again for another matching root. **Not** a distinct-goal count. Empty list or no pair returns **0**. Later completed roots can clear an earlier `goal+8` without decrementing the already-added count | confirmed |
+
+`FUN_00591200` uses that matching building-goal pair count as the
+monument term of the per-update sum (`monument × 2`, §2). A zero
+return is a real zero contribution, not a stand-in for “monument
+complete”, and it is not a distinct-goal count.
+
+#### `cMonumentGoal` construct / copy
+
+Live object size `0x10` (`FUN_0055A8E0` @ `0x55A8E0` case `2`
+allocates `0x10` and calls `FUN_00559490`). Constructor
+`FUN_005603E0` @ `0x5603E0` writes `this+4 = 2`, `this+0xC = 0`,
+`this+8 = 0` (`confirmed`). Call `+0xC` only the **goal
+building/object ID**. Do not invent a second live value field
+from the archive’s extra `UInt32`.
+
+Mission load `FUN_0055F120` @ `0x55F120` constructs via
+`FUN_0055A8E0(static+4)` then calls the static record’s vtable
+`+0x44` with the live object. Canonical EN bytes immediately after
+`FUN_005604C0` at `0x560560` (`thiscall`, dest on the stack,
+`ret 4`) copy `[src+8] → [dst+8]` and `[src+0xC] → [dst+0xC]`.
+That copy is `confirmed` on the hash-matched EN `.text`. Ghidra
+did not split a named function at `0x560560`, and
+`compare-report.tsv` has **no** row for it; do **not** call it
+CH/EN `identical`. Binding vtable `+0x44` to `0x560560` is
+`inferred` from that adjacency and the `FUN_0055F120` call; this
+pass did not dump the `cMonumentGoal` vtable slot.
+
+Authored cross-map (`confirmed` file/row, not a completion
+oracle):
+
+| ID | source | note |
+| --- | --- | --- |
+| building types 76…84, 92, 93 | `GameData/Model/EmperorBuildingModels.txt` lines 160–168, 191–192 | `BUILD_TUMULUS` … `BUILD_UNDERGROUND_VAULT`, `BUILD_CLOCK_TOWER`, `BUILD_GRAND_PAGODA` |
+| building types 85, 86 | same file lines 169–170 | `BUILD_UNUSED4` / `BUILD_UNUSED5`. **Not** placeable layouts |
+| building types 253…268 (`0xFD…0x10C`) | same file lines 337–352 | `BUILD_GREAT_WALL_01` … `16`; each ID is one multipart layout (`Model/Mon_Great_Wall_NN_subs.txt`), not a construction phase |
+| goal `+0xC` `0x55` / `0x56` (decimal 85 / 86) | matching walk above; display-family mapping in `DESIGN.md` and `docs/exe-research/great-wall-map-state.md` | After city load, `0x5636B0 → 0x563720` selects earthen family for **task `#85`**, stone for **task `#86`**, ruin otherwise (`confirmed` in those notes). The special match arm uses these as **goal IDs** against layout buildings 253…268. Do **not** treat `0x55`/`0x56` as a building type that the player places |
+| Qin-4 archive `cMonumentGoal [85, 0]` | `great-wall-map-state.md`; Native `CampaignGoalArchive` `typeID == 2`, `values[0] == 85` | `typeID` 2 agrees with live `+4 == 2`. `values[0]` is the archive word that the copy path puts in `+0xC` |
+
+`GameData/Model/EmperorEventmsg.txt` has commemorative-monument
+and “construction complete” phrase families (e.g. lines 1466–1472,
+2350+). They are event text, not this popularity walk’s inputs.
+
+#### Native mapping — not isomorphic; do not implement
+
+Native `MonumentProject.completionPercent` (work + delivered
+materials / required), `GrandCanalProjectRuntime.completionPercent`
+(segment-stage fraction), and Earthen Great Wall stage counters
+are **not** a recovered mapping of `FUN_00565410`’s part-weight
+percent. Native `CampaignGoalEvaluation` tests
+`completedMonumentBuildingIDs.contains(buildingID)`, not this
+pair-count walk, and does not stamp live `goal+8`. There is no
+Native walk over a type-2 object vector at `DAT_012A4BA8`, no
+mapped `building+4 ∈ {1,3}`, no mapped `building+0xB4` list
+index, and no recovered save/load of the matching `goal+8`
+side effect.
+
+Missing any of those inputs, production stays
+`unsupportedOriginalProducer`. Do not fill a missing monument
+with `0`. Do not derive `FUN_00565410 >= 100` from `buildingID`
+alone.
+
+#### CH/EN (`compare-report.tsv` rows only)
+
+`identical`: `FUN_00413B40`, `FUN_00426D10`, `FUN_0047F1B0`,
+`FUN_004F8210`, `FUN_00554C00`, `FUN_00559490`, `FUN_0055A8E0`,
+`FUN_0055AE30`, `FUN_0055B6A0`, `FUN_0055BCB0`, `FUN_0055F120`,
+`FUN_005603E0`, `FUN_005604C0`, `FUN_00562E80`, `FUN_00562F70`,
+`FUN_00565410`, `FUN_00591200`. Canonical conclusions above are
+EN `.text` plus those rows. The copy at `0x560560` has **no**
+row. Non-canonical on-disk siblings are not used.
 
 ## 4. Pressure and requests (`FUN_005917E0`) — confirmed
 
@@ -465,8 +582,9 @@ Folding walker travel into instant `admitResidents` remains
 forbidden. The original write is this per-model immigrant
 think/state machine, not an assignment-tick side effect.
 Production still must not spawn walkers or enable the
-migration producer: food / monument / war / mode / `house+0x24` /
-`DAT_00D62408` writer and meaning remain unresolved.
+migration producer: food / Native monument mapping / war / mode /
+`house+0x24` / `DAT_00D62408` writer and meaning remain unresolved.
+The `FUN_0055AE30` walk itself is §3.
 `cHouseInfo+0x3C` method identity and `FUN_004C9FD0` gate polarity
 are closed (§5.9); original semantic name, complete writer/lifecycle
 set, and Native mapping are not. House vtable `+0x230` method
@@ -1032,8 +1150,11 @@ corpus. On-disk CH siblings that are **not** hash
 
 The original immigrant arrival state machine in §5 is recovered.
 That does **not** authorize enabling automatic migration. Food,
-monument, war, `house+0x24`, and `DAT_00D62408` writer/meaning
-remain unresolved. `DAT_01311FD0` init-zero and save/load are
+war, `house+0x24`, and `DAT_00D62408` writer/meaning remain
+unresolved. The `FUN_0055AE30` walk is recovered in §3; Native
+percent / object-vector / `+0xB4` / `goal+8` save mapping is
+not, so monument stays a fail-closed producer input.
+`DAT_01311FD0` init-zero and save/load are
 §6; it is not a numeric input to the recovered producer chain.
 The gameplay/runtime writer, full value domain, and nonzero-state
 source are still `unknown`, so Native nonzero advisor/overlay
@@ -1104,7 +1225,15 @@ original symbol name are not. Do not spawn walkers or call
   story, and do not treat 1/2 as the only persistable nonzero.
 - Native military-figure mapping for `DAT_01312564`
   (`FUN_004EBB40` / `FUN_004E2560` types `0x3A…0x3E`, `0x4E`).
-- `FUN_0055AE30` monument-object matching walk.
+- Native mapping of the recovered `FUN_0055AE30` walk: live
+  `building+4` values 1 vs 3, why index 0 is skipped, `building+0xB4`
+  list-index lifecycle, a Native `FUN_00565410` part-weight percent
+  (existing `MonumentProject` / Grand Canal / Earthen Great Wall
+  percents are not that formula), the live type-2 object vector at
+  `DAT_012A4BA8`, and save/load of `goal+8`. Vtable `+0x44` →
+  `0x560560` pointer identity (copy bytes themselves are §3).
+  Why skip index 0 and the 1-vs-3 live-byte distinction remain
+  `unknown`; do not guess.
 - Original food-stock columns `0xE`/`0xF`, house `+0x8C` accumulator,
   house `+0x5C` streak, and the `vtable +0x1E4` object `+0x36` food
   byte versus Native `lastSuppliedFoodQuality`.

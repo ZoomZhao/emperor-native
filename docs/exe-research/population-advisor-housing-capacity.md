@@ -475,14 +475,19 @@ accounted spawn count displayed by the renderer. The link is direct:
 
 ### 7.4 Remaining unknowns
 
-- Immigrant figure-`#11` state machine after `FUN_004ADE10` spawn state `6`
-  through house `+0x20` resident write — `unknown`. See
-  `docs/exe-research/migration-popularity-producer.md` §5.
+- Immigrant figure-`#11` arrival write chain after `FUN_004ADE10`
+  spawn state `6` through house `+0x20` is recovered in
+  `docs/exe-research/migration-popularity-producer.md` §5. Native
+  vacant-state / type-switch mapping (`ResidentialUnit` IDs 2/11 and
+  walker-arrival `2→3` / `11→13`) remains `unknown`.
 - `FUN_00590f30` current-food byte (`vtable +0x1e4` result `+0x36`), house
   streak byte `p+0x17` (`+0x5C`), and stock accumulator `p[0x23]` (`+0x8C`)
   with model columns `0xE`/`0xF` — Native `lastSuppliedFoodQuality` is not an
   equivalent field.
-- `FUN_0055AE30` live monument-object matching against campaign records.
+- `FUN_0055AE30` monument-object matching walk is recovered
+  (`migration-popularity-producer.md` §3). Remaining unknown is Native
+  mapping of `FUN_00565410` percent, the type-2 object vector,
+  `building+0xB4`, and `goal+8` save/load.
 - `DAT_01312564` Native mapping. Increment/decrement is `FUN_004EBB40` when
   `FUN_004E2560` accepts figure types `0x3A…0x3E` and `0x4E` (`confirmed`);
   Native military figures do not yet expose that lifecycle.
@@ -500,8 +505,9 @@ accounted spawn count displayed by the renderer. The link is direct:
   accounted spawn accounting (`param_1 - remaining` into `DAT_01311FB0` /
   `DAT_01311FCC`, without a `FUN_004EA050` success check), and row-11 singular
   (`DAT_01311FCC == 1`) versus row-10 plural selection are recovered. Their
-  Native use remains unsupported because the complete producer (arrival write
-  chain + unmapped factors) is absent, not because those downstream formulas
+  Native use remains unsupported because Native vacant-state /
+  type-switch mapping and the remaining unmapped factors are absent,
+  not because the arrival write chain or those downstream formulas
   are unknown. Every `FUN_004ADA10` assignment pass also requires
   `house+0x24 > 0` (`confirmed` read; Native semantic mapping `unknown`).
 - Exact font/color/coordinate and separator layout constants — `unknown`
