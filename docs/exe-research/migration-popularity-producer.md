@@ -307,9 +307,9 @@ Preamble (any failure → `figure+0x16 = 2` and return at `0x4CA330`;
 - house `edi` = `FUN_0047F1B0(figure+0x64)` (ecx `0x8C7634`);
 - `FUN_00426D10(house)` must be true (`house+4` is `1` or `3`);
 - `house+0x32` must equal the current figure id;
-- house vtable `+0xB8` must return true (method identity **unknown**);
+- house vtable `+0xB8` must return true (`FUN_0042DD40`; §5.8);
 - `FUN_005188B0(house+0x14)` must be true:
-  `1 < type < 0x12` (building models **2…17**, Vacant House through
+  `2 ≤ type ≤ 0x11` (building models **2…17**, Vacant House through
   Heavenly Elite).
 
 Then `figure+5` increments and wraps at `0xC` (sprite phase). Switch
@@ -561,6 +561,62 @@ Callers/helpers that exist in `compare-report.tsv`
 `FUN_004BAF40`, `FUN_005AE140`, `FUN_005447F0`, `FUN_00540880`,
 `FUN_004ADC90`) are listed `identical`.
 
+### 5.8 House vtable `+0xB8` (`FUN_0042DD40`, 2026-08-14)
+
+Object factory `FUN_0042D360` (`confirmed`). First call is
+`FUN_005188B0(param_1)`: `cmp eax, 2` / `jl` fail; `cmp eax, 0x11` /
+`jg` fail; else `mov al, 1; ret` (fail `xor al, al; ret`). Every
+building ID **2…17** returns true and takes the house arm:
+`FUN_0040AE80(0x10C)` then `FUN_0042D480`. Those IDs do **not** enter
+`FUN_0051C660`. `FUN_005188D0` (elite 11…17) is **not** used here;
+common and elite share one class.
+
+`FUN_0042D480` (`confirmed` last vfptr write). `FUN_00426C90()` on
+`this`; `lea ecx, [esi+0xC8]` / `FUN_00517190()` (subobject, vtable
+`0x7B5C44`, **not** the house vfptr); then
+`mov dword [esi], 0x7ABA38`. `FUN_00516AB0` is the same allocator +
+`FUN_0042D480`.
+
+Final vtable `0x7ABA38` (`confirmed` RTTI). Dword at `0x7ABA34` is
+COL `0x7CFAD0`; type descriptor `0x817938` name `.?AVHouseBldg@@`.
+Slot `+0xB8` @ `0x7ABAF0` is **`FUN_0042DD40` @ `0x42DD40`**.
+
+`FUN_0042DD40` (`confirmed` EN `.text`; corpus gap):
+`mov dl, [ecx+9]; xor eax, eax; test dl, dl; setne al; ret`.
+Returns 1 iff `house+9 != 0`. No stack args.
+
+Call polarity (`confirmed`; any `al==0` skips):
+`FUN_004C9FD0` call `[edx+0xB8]` @ `0x4CA03F`, `test al, al` @
+`0x4CA045`, `je 0x4CA330` @ `0x4CA047`;
+`FUN_004ADD60` call `[eax+0xB8]` @ `0x4ADDA5`, `test al, al` @
+`0x4ADDAB`, `je 0x4ADDEA` @ `0x4ADDAD`;
+`FUN_004ADFB0` call `[edx+0xB8]` @ `0x4AE039`, `test al, al` @
+`0x4AE03F`, `je 0x4AE0E5` @ `0x4AE041`.
+The three sites require a **true** return, then apply their own
+`+0x24` / capacity / type checks. This predicate is **not**
+`house+0x24`, remaining capacity `+0x22`, live-state
+`FUN_00426D10` (`+4` is `1` or `3`), or the `+0x1E4` / `+0x3C` gate.
+
+Byte `+9` writers (same layout; **not** a recovered original name):
+`FUN_00518B70` writes `+9 = 1` after `FUN_00428C10` zeros it.
+`FUN_0042AAA0` first calls `+0xB8`; only if that returns true **and**
+`(short)param_1[8]` (`house+0x20` residents) is nonzero does it call
+`FUN_00591920`, zero `+0x20`, and zero `+9`. Overlay
+`Not_over_a_building.c` tests `obj+9 == 0` as a skip; no debug label
+for that byte. `GameData` house columns do not map to it. Native name
+remains **unknown**. Do not treat `+9` as occupancy.
+
+**Rejected class (`confirmed` negative).** `FUN_0051C9A0` /
+vtable `0x7B65E4` is `.?AVcIndustrialBldg@@`. Its `+0xB8` is
+`FUN_00413A00` (`xor al, al; ret`). IDs 2…17 never take that path
+from `FUN_0042D360`.
+
+CH/EN: `FUN_0042D360`, `FUN_0042D480`, `FUN_005188B0`,
+`FUN_00517190`, `FUN_00516AB0`, `FUN_00426C90`, `FUN_004ADD60`,
+`FUN_004ADFB0`, `FUN_00426D10`, `FUN_00518B70` are `identical` in
+`compare-report.tsv`. `FUN_0042DD40` and `FUN_004C9FD0` are absent
+from `split-merged` / `compare-report.tsv` (EN `.text` only).
+
 ## 6. Month rollover (confirmed)
 
 `FUN_004AC650` copies `DAT_01311FCC` → `DAT_01312604` and zeros
@@ -598,9 +654,12 @@ monument, war, mode, `house+0x24`, needs-object `+0x3C`, and
 
 ## 8. Remaining unknowns
 
-- House vtable methods used by `FUN_004C9FD0`: `+0xB8` (preamble
-  predicate), `+0x1E4` (object whose `+0x3C` gates the add), `+0x230`
-  (empty-house call with `3` or `0xD`).
+- Original semantic name of `HouseBldg+9` (the byte `FUN_0042DD40`
+  tests; complete writer set is not recovered). House vtable
+  `+0xB8` itself is §5.8.
+- House vtable methods used by `FUN_004C9FD0`: `+0x1E4` (object
+  whose `+0x3C` gates the add), `+0x230` (empty-house call with `3`
+  or `0xD`).
 - Semantic name of that `+0x3C` byte (gate is confirmed; complete
   writer set is not).
 - `DAT_00D62408` writer and meaning (empty-house `+0x230` skipped
