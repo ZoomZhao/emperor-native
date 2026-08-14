@@ -201,10 +201,10 @@ requests use cooldown `DAT_01311FC8`; departure requests use
 
 `FUN_004ADA10` house walk (`confirmed`). Local remaining request `i`
 starts as `param_1`. Every assignment pass requires
-`*(short *)(house + 0x24) > 0` (`confirmed` read). The Native semantic
-mapping of `+0x24` is **not recovered** in this pass (`unknown`). Do
-not summarize the walk as vacancy/capacity only, and do not equate
-`+0x24` to Native road adjacency without evidence.
+`*(short *)(house + 0x24) > 0` (`confirmed` read). Lifecycle of that
+short is in §5.7. Native still has **no** mapped field for it
+(`unknown`). Do not summarize the walk as vacancy/capacity only, and
+do not equate `+0x24` to Native `observeHousing` road adjacency.
 
 Pass predicates, all conjoined with `house+0x24 > 0`:
 
@@ -425,8 +425,7 @@ cite this site as confirmed immigrant-house unlink. Stale
 (`+0x16 != 1`), or immediately on the state-7/`+0x19==10` path.
 
 Zeroing `house+0x24` on direction `10` is a **confirmed write**.
-Native mapping of `+0x24` remains **unknown** (assignment still
-requires `+0x24 > 0`).
+Native mapping of `+0x24` remains **unknown**; lifecycle is §5.7.
 
 ### 5.5 Distinct vagrant writer at `0x4CB1CD` (confirmed; not immigrant)
 
@@ -463,8 +462,104 @@ migration producer: food / monument / war / mode / `house+0x24` /
 `+0x3C` / `DAT_00D62408` semantics are unresolved.
 
 `FUN_004ADC90` departure assignment walks occupied houses by
-`house+0x16` buckets and calls `FUN_004ADED0`. Road-adjacent-only
-departure filtering is **not** a recovered house-walk predicate.
+`house+0x16` buckets and calls `FUN_004ADED0`. It does **not** read
+`house+0x24` (`confirmed` negative). Road-adjacent-only departure
+filtering is **not** a recovered house-walk predicate.
+
+### 5.7 Residential `+0x24` lifecycle (2026-08-14)
+
+Same signed short as `FUN_004ADA10` and the immigrant state-7
+direction-10 zero at `0x4CA157`. Object layout matches the
+`FUN_005177B0` → `DAT_010BFEF0` house list: `+0xA/+0xC` tile,
+`+0x14` model, `+0x16` evolution, `+0x20` residents, `+0x22`
+remaining capacity, `+0x32` in-flight figure, `+0xB4` id.
+
+**Value source (`confirmed`).** Refresh methods zero `house+0x24`,
+then store the low 16 bits of per-cell DWORD `DAT_01391FE0[cell]`.
+`FUN_00416400` does **not** search for an access cell: it uses
+`building+0x10` as the cell index and copies its own `+0xA/+0xC`
+into `+0x2A/+0x2C`. Direct store @ `0x416424`:
+`mov dx, word ptr [edi*4 + 0x1391FE0]`; `mov [esi+0x24], dx`.
+Type-specific sister refreshers (`FUN_00426DF0`, `FUN_004F01F0`,
+`FUN_00507950`, `FUN_00508D50`, `FUN_005E1D40`) choose an access
+cell with `FUN_004BAF40` / `FUN_004BA6F0` (the latter already used
+by immigrant state 6) before the same table store. Several of those
+also copy `DAT_010C72AC/A8` into `house+0x2A/+0x2C`.
+`FUN_00507950` requires terrain bit `0x40` (road) on the candidate
+cell before the store.
+
+**Table fill (`confirmed`).** `DAT_01391FE0` is a `0xCB10`-DWORD
+cell map. `FUN_004ACFC0` (calendar case `0x15`, immediately before
+capacity case `0x16` and assignment case `0x17`) calls
+`FUN_005AE140(DAT_00C5CDFC, DAT_00C5CDFE, …)` — the same land-entry
+tile used to spawn type `0xB` — then walks live buildings, zeros
+`+0x2A/+0x2C`, and calls vtable `+0x84` (the refresher family
+above). `FUN_005AE140` flood-fills the map from that seed
+(`[seed]=1`, 4-neighbors `n+1` when the pass predicate holds).
+A later `FUN_004AD3D0` (case `0x16`) includes a house in
+`DAT_0130F994` / `DAT_0130F998` capacity totals only when
+`(short)house+0x24 > 0`.
+
+**Other same-layout readers of `+0x24 > 0` (`confirmed`):**
+`FUN_004ADD60` (nearest house with capacity and `+0x32==0`) and
+`FUN_004ADFB0` (add residents), besides assignment `FUN_004ADA10`
+and capacity `FUN_004AD3D0`.
+
+**Unclassified opcode candidates (not confirmed same-layout).**
+An EN `.text` `cmp word [r+0x24], 0` scan also hits
+`FUN_004AFC50`, `FUN_004E38E0`, `FUN_004AEBD0`, `FUN_004AEEB0`,
+and later sites `0x506DCA`, `0x54132E`, `0x541404`, `0x5D2D50`,
+`0x5D2FF1`, `0x5D3231`, `0x5D59A7`, `0x5D6122`, `0x5DB79C`,
+`0x5DDDA0`, `0x5E1352`. Those sites were **not** re-traced; they
+are candidate / negative-search evidence only. Do not treat them
+as confirmed house `+0x24` readers.
+
+**Other lifecycle writers/copies (`confirmed`).** Zero writer:
+`FUN_005447F0` writes `+0x24 = 0` (function pointer appears as a
+vtable entry at `0x7B7070`; also zeros `+0x4A/+0x4C` and sets
+`+0x5D` from `param_2`; no direct `call rel32`). Refresh-then-store
+writer: `FUN_00543DC0` first zeros `+0x24`, then selects a cell
+through vtable `+0x194` and repopulates `+0x24` from
+`DAT_01391FE0` in the same refresher. Copy helpers:
+`FUN_00426EA0` copies `+0x20…+0x32` including `+0x24`;
+`FUN_00540880` (function pointer appears as a vtable entry at
+`0x7B6CE0`, no direct `call`) copies `+0x24/+0x2A/+0x2C` from
+`FUN_0047F1B0(*(this+0x154))` and returns `+0x24 != 0`. Whether
+every house uses that `+0x154` object is **unknown**.
+
+**Debug overlay (`confirmed` strings, not Native names).** Watching
+a building (`Not_over_a_building.c`) prints `*(short *)(obj+0x24)`
+with label `rome`, `*(byte *)(obj+0x18)` with `roadnet`, and
+`*(short *)(obj+0x22)` with `spare_room`. Do not call `+0x24`
+`roadnet`; that overlay word is `+0x18`. Do not ship `rome` as a
+Native identifier.
+
+**Rejected names (`confirmed` negatives).** Not remaining capacity
+(`+0x22` / overlay `spare_room`). Not the in-flight immigrant slot
+(`+0x32`; zeroing `+0x24` also drops the house from city capacity
+totals). `GameData/Model/EmperorBuildingModels.txt` house columns
+are evolve requirements, not this runtime short. No authored model
+field maps to it.
+
+**Not named (`inferred` only).** Snapshot of the land-entry cell
+flood, gated on a road-bit access cell in some refreshers, is
+consistent with “reachable from the immigrant entry road.” That is
+**not** a recovered original symbol and is **not** Native
+`observeHousing` adjacency. Native mapping remains `unknown`.
+Production stays fail-closed.
+
+**False positives / negatives.** Figure `+0x24` is a byte delay in
+`FUN_004E9620`; `FUN_004C72B0` zeros figure `+0x24`.
+`FUN_0054CC60` `+0x24` is a `0xB4`-stride record, not a house.
+`FUN_004090F0` `param_1+0x24` is an `int*` slot (byte `+0x90`).
+Immediate `mov word [r+0x24], imm16` with `modrm=0x44` is SIB/disp
+noise, not this field. `FUN_004C9FD0` is absent from
+`split-merged`; the direction-10 write is EN `.text` @ `0x4CA157`.
+Callers/helpers that exist in `compare-report.tsv`
+(`FUN_004ADA10`, `FUN_004AD3D0`, `FUN_004ACFC0`, `FUN_00416400`,
+`FUN_00426DF0`, `FUN_004F01F0`, `FUN_00507950`, `FUN_00508D50`,
+`FUN_004BAF40`, `FUN_005AE140`, `FUN_005447F0`, `FUN_00540880`,
+`FUN_004ADC90`) are listed `identical`.
 
 ## 6. Month rollover (confirmed)
 
@@ -525,6 +620,6 @@ monument, war, mode, `house+0x24`, needs-object `+0x3C`, and
   byte versus Native `lastSuppliedFoodQuality`.
 - `DAT_01312214` runtime writers besides init (player wage buttons
   write `DAT_01312218`).
-- Semantic Native mapping of assignment-eligibility `house+0x24`
-  (`confirmed` read of `>0` on every `FUN_004ADA10` pass; confirmed
-  zero on immigrant state-7 direction `10`).
+- Native mapping of `house+0x24` (lifecycle and
+  `DAT_01391FE0` snapshot are in §5.7; overlay label is `rome`, not
+  `roadnet`; no Native field is authorized).
