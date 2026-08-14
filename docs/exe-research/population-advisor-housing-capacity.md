@@ -45,7 +45,7 @@ Relevant rows (zero-based):
 The surrounding rows are supporting context only and confirm the intended
 cluster: row 7 is `贵族`/`Nobles` (population history subdivision), row 11 is
 `个新移民本月到达`/`newcomer arrived this month.` (the singular variant, whose
-selection occurs when signed pressure is positive and the successfully housed
+selection occurs when signed pressure is positive and the assigned/accounted
 monthly count equals 1; it is **not** authorized for row lookup because that
 row pair was not included in the direct alignment audit), and row 14 is
 `工资太低`/`low Wages.` (an
@@ -396,11 +396,12 @@ demonstration that group 55 has no executable consumer.
   `DAT_01311FCC`. Do not select the row-10/11 block until Native reproduces the
   original persisted popularity and migration producer.
 
-## 7. Original migration producer chain and Native correction (2026-08-14)
+## 7. Partial migration producer recovery and Native correction (2026-08-14)
 
-This section records the recovered producer chain that feeds the migration
-status region and the reason the earlier row-10 Native UI selection is
-superseded. Binaries are those in the file banner: `Emperor[EN].exe`
+This section records a partial recovery of the migration producer that
+feeds the status region, and the reason the earlier row-10 Native UI
+selection is superseded. It is not a fully recovered producer chain.
+Binaries are those in the file banner: `Emperor[EN].exe`
 (`8a6d2df1…6753`, canonical build) and `Emperor[CH].exe` (`dbdeca1e…15a`,
 repacked widescreen variant). Per `local/source/compare-report.tsv`, the CH/EN functions
 named here are identical; no CH/EN divergence changes these statements.
@@ -414,8 +415,8 @@ named here are identical; no CH/EN divergence changes these statements.
 | population suppression | `> 199999` population → zero pressure | confirmed (static control flow) |
 | war suppression | war counter `>= 4` suppresses positive pressure | confirmed (static control flow) |
 
-These facts produce *requested* arrivals or departures, not the successfully
-housed newcomer count displayed by the renderer. The link is direct:
+These facts produce *requested* arrivals or departures, not the assigned/
+accounted spawn count displayed by the renderer. The link is direct:
 `FUN_005917E0` calls `FUN_0059A1B0(12, abs(pressure))`, whose callee
 `FUN_0043B860` performs the integer ceiling recorded below.
 
@@ -426,7 +427,7 @@ housed newcomer count displayed by the renderer. The link is direct:
 | request amount | `ceil(12 * abs(pressure) / 100)` | confirmed (static control flow) |
 | request cooldown | 2 calendar cycles between requests | confirmed (static control flow) |
 | calendar case `0x17` | `FUN_004AD4A0` handles arrivals/departures | confirmed (static control flow) |
-| renderer count | `FUN_004ADA10` adds `param_1 - remaining` (the actually housed arrivals) to `DAT_01311FB0`, then accumulates that value into `DAT_01311FCC`; `FUN_0053B850` displays `DAT_01311FCC` | confirmed (static control flow) |
+| renderer count | `FUN_004ADA10` adds `param_1 - remaining` to `DAT_01311FB0`, then accumulates that value into `DAT_01311FCC`; `FUN_0053B850` displays `DAT_01311FCC`. Remaining request `i` is decremented around each `FUN_004ADE10` call without checking `FUN_004EA050` spawn success, so these are assigned/accounted counts, not proven successfully spawned figure counts | confirmed (static control flow) |
 | departures | `FUN_004AD4A0` sends a negative-pressure request through the separate `FUN_004ADC90` departure path; it does not subtract that count from `DAT_01311FCC` | confirmed (static control flow) |
 | month rollover | `FUN_004AC650` copies `DAT_01311FCC` to `DAT_01312604`, then resets `DAT_01311FCC` to zero | confirmed (static control flow) |
 
@@ -441,6 +442,13 @@ housed newcomer count displayed by the renderer. The link is direct:
   daily, current-month, and last-month counts remain zero, and no resident is
   admitted or removed. `CitySimulation.admitResidents` remains a loader/test
   fixture primitive and has no production caller.
+- A later attempt to fold `FUN_004ADE10` figure-`#11` travel into instant
+  occupancy, substitute `lastSuppliedFoodQuality` for `FUN_00590f30` food
+  fields, pass monument/war/mode as 0, and upgrade
+  `unsupportedOriginalProducer` saves was withdrawn: those gaps are still
+  `unknown`. Confirmed tables live in
+  `docs/exe-research/migration-popularity-producer.md`; they are not a public
+  production API, and production ticks do not call them.
 - Legacy saves that contain the former count fields still decode. Their values
   are retained at decode time for compatibility, then cleared by the first
   production tick so they cannot be presented as original behavior.
@@ -467,21 +475,35 @@ housed newcomer count displayed by the renderer. The link is direct:
 
 ### 7.4 Remaining unknowns
 
-- `DAT_01311FD0` mode semantics and writer — `unknown`; no writer appears in
-  the decompiled corpus searched on 2026-08-14.
-- `DAT_01312564 > 3` as the first advisor branch and as a suppressor of positive
-  pressure is `confirmed`; its exact military/runtime lifecycle and equivalent
-  Native field remain `unknown` (the war/block description is only `inferred`).
+- Immigrant figure-`#11` state machine after `FUN_004ADE10` spawn state `6`
+  through house `+0x20` resident write — `unknown`. See
+  `docs/exe-research/migration-popularity-producer.md` §5.
+- `FUN_00590f30` current-food byte (`vtable +0x1e4` result `+0x36`), house
+  streak byte `p+0x17` (`+0x5C`), and stock accumulator `p[0x23]` (`+0x8C`)
+  with model columns `0xE`/`0xF` — Native `lastSuppliedFoodQuality` is not an
+  equivalent field.
+- `FUN_0055AE30` live monument-object matching against campaign records.
+- `DAT_01312564` Native mapping. Increment/decrement is `FUN_004EBB40` when
+  `FUN_004E2560` accepts figure types `0x3A…0x3E` and `0x4E` (`confirmed`);
+  Native military figures do not yet expose that lifecycle.
+- `DAT_01311FD0` mode writer — no assignment appears in the decompiled corpus
+  searched on 2026-08-14.
+- Assignment-eligibility `house+0x24 > 0` is a `confirmed` read on every
+  `FUN_004ADA10` pass; its Native semantic mapping remains `unknown` and is
+  not equated to road adjacency.
 - `DAT_01312484 = min(DAT_01312514, 9)` and the eight selected factor families
   are `confirmed`; Native does not yet reproduce all underlying food,
   unemployment, tax, wage, debt, festival, feng-shui, and despotism inputs with
   the original update cadence, so current/past reason selection remains
   unsupported.
-- The pressure bands, request ceiling, arrival/departure split, successfully
-  housed arrival accounting, and row-11 singular (`DAT_01311FCC == 1`) versus
-  row-10 plural selection are recovered. Their Native use remains unsupported
-  because the persisted popularity state and its complete factor producer are
-  absent, not because those downstream formulas are unknown.
+- The pressure bands, request ceiling, arrival/departure split, assigned/
+  accounted spawn accounting (`param_1 - remaining` into `DAT_01311FB0` /
+  `DAT_01311FCC`, without a `FUN_004EA050` success check), and row-11 singular
+  (`DAT_01311FCC == 1`) versus row-10 plural selection are recovered. Their
+  Native use remains unsupported because the complete producer (arrival write
+  chain + unmapped factors) is absent, not because those downstream formulas
+  are unknown. Every `FUN_004ADA10` assignment pass also requires
+  `house+0x24 > 0` (`confirmed` read; Native semantic mapping `unknown`).
 - Exact font/color/coordinate and separator layout constants — `unknown`
   (unchanged from section 5); no precise separator geometry is claimed beyond
   existing evidence.

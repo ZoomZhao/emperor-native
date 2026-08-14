@@ -7,7 +7,8 @@ public enum MigrationBlockReason: Sendable, Hashable, Codable {
 }
 
 /// Automatic migration remains disabled until the recovered original
-/// popularity/factor producer is represented in Native state.
+/// popularity/factor producer, figure-#11 arrival write chain, and unmapped
+/// factor inputs are represented in Native state.
 public enum AutomaticMigrationAvailability: String, Sendable, Hashable, Codable {
     case unsupportedOriginalProducer
 }
@@ -97,8 +98,9 @@ public struct DeterministicMigrationState: Sendable, Hashable, Codable {
 }
 
 public enum DeterministicMigration {
-    /// Observes the independently recovered housing-capacity input without
-    /// inventing arrivals, departures, popularity, or restriction reasons.
+    /// Observes Native road-adjacent vacant housing without inventing
+    /// arrivals, departures, popularity, or restriction reasons. This filter
+    /// is not a recovered mapping of original `house+0x24`.
     public static func observeHousing(
         houses: [ResidentialUnit],
         roadNetwork: RoadNetwork,
