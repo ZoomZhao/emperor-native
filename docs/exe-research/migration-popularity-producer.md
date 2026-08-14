@@ -12,10 +12,16 @@ Production stays
 figure-`#11` / type-`0xB` arrival `house+0x20` write is recovered below
 (`FUN_004C9FD0` @ `0x4CA265`). War and several
 house-field semantics remain unresolved. The `FUN_00590F30` food
-walk is recovered in §3; Native `lastSuppliedFoodQuality`
-lifecycle/source mapping to `cHouseInfo+0x36` is not proven, so
-it must not be substituted and food stays a fail-closed producer
-input. The `FUN_0055AE30`
+walk is recovered in §3. The recovered normal market-delivery
+writer/path of `cHouseInfo+0x36` is `cMarket` vtable `+0x2c` @
+`0x5437B0` (§3); mill visit `+0x2c` is a `ret 0` stub. The
+complete `+0x36` writer set is not proven. Current Native
+`ResidentialUnit` food consumption, blending, and cadence are
+confirmed non-isomorphic to the recovered original, so those
+fields must not be substituted. The producer of `cMarket+0x180`
+and the correct Native representation/mapping remain open, and
+food stays a fail-closed producer input. No implementation contract is
+authorized. The `FUN_0055AE30`
 monument walk is recovered in §3; Native mapping and save
 lifecycle are not, so monument stays a fail-closed producer
 input. `DAT_01311FD0` is **not**
@@ -148,14 +154,16 @@ Count of building type `0x7F` (Watchtower `#127`). If
 `population > 350` and `population ≤ count×500`, return
 `−min(4, (count×500)/population)`.
 
-### Food (`FUN_00590F30`) — walk recovered; Native `lastSuppliedFoodQuality` unwired
+### Food (`FUN_00590F30`) — walk recovered; Native fields not isomorphic
 
 Canonical EN `.text` (`8a6d2df1…6753`). `FUN_00590F30` @ `0x590F30`
 returns the popularity food term. Empty building list
 (`FUN_00554C00` `this=0x8C7634`, `cmp eax, 1; jbe 0x59111F`) or an
 occupied-house set that never enters the average returns **0**
 (`confirmed`). Production stays `unsupportedOriginalProducer`. Do
-not drive that term from Native `lastSuppliedFoodQuality`.
+not drive that term from Native `lastSuppliedFoodQuality` or from
+`foodQualityRawValue` / `foodSupplyAmount`. No implementation
+contract.
 
 #### Authored house columns (`FUN_0044CC80`)
 
@@ -183,8 +191,9 @@ col 15 `5`, capacity `22`. Common-house col 8 is `0` (Shelter
 and Hut), then `20 / 30 / 50`; `70` is on later elite rows. Native `FoodQuality` raw values
 `0/20/30/50/70/90` are a **confirmed numeric correspondence**
 with that unit set (`Sources/EmperorCore/FoodSimulation.swift`).
-Native `lastSuppliedFoodQuality` lifecycle/source mapping to
-`cHouseInfo+0x36` is not proven, so it must not be substituted. `FUN_00545100` @ `0x545100` bands a byte as
+Native `ResidentialUnit` food fields are not isomorphic to the
+recovered `cHouseInfo+0x36` / `+0x12` consumption, blending, and
+cadence (§3), so they must not be substituted. `FUN_00545100` @ `0x545100` bands a byte as
 `>89→5, >69→4, >49→3, >29→2, >0→1, else 0`. `FUN_00590F30`
 compares the **raw** `cHouseInfo+0x36` quality byte to column 8,
 not that 1…5 band. `EmperorText` group 127 row 59 is the evolution
@@ -220,7 +229,33 @@ mean is `< 0` and `DAT_0130F988 < 0x15E` (350) and
 `DAT_01312575 == 0`, return `0` @ `0x591116`. Else return the
 mean (`mov eax, edi` @ `0x59111F`).
 
-#### `cHouseInfo+0x36` identity and bounded writers
+#### Authored food-quality and delivery semantics
+
+`GameData/EmperorManual.pdf` p.48 (confirmed extract): five named
+qualities bland / plain / appetizing / tasty / delicious from mill
+food-type count plus salt and spices; delicious is **not** required
+for housing evolution (tasty is the highest evolution demand) but
+does affect hygiene (p.95). The type-count table on that page is
+the same decision table as Native `OriginalFoodCatalog.quality(in:)`
+(`confirmed` as mill/distribution **prose**; that Swift function is
+**not** a recovered `cHouseInfo+0x36` writer). p.48 “Food
+Distribution” defers to the Commerce Ministry (p.56). p.62: market
+right-click “current quality” is the quality in the food shop being
+distributed by **peddlers**; buyers fetch from the mill. p.82: Zao
+Jun “delivers delicious food (see p.48) to every house he passes”
+and can bless a food shop by one named level. `GameData/Readme1010.txt`
+line 145 is evolution devolution for poor food quality, not this
+popularity walk. `EmperorText` group 127 row 59 remains the
+evolution `[food_quality]` sentence, not `FUN_00590F30`.
+
+`GameData/Model/Trade.txt` `[DefaultPrices]` key order is Native
+`TradeRules` 0-based IDs (`LegacyModelParser.swift`): index **28**
+(`0x1c`) is **Dinners**. `EmperorFigureModels.txt` ID **23** is
+`peddler`, **24** is `Marketplace buyer`, **79** (`0x4F`) is
+`Player's Heroes`. Building ID **53** (`0x35`) is the mill, **66**
+(`0x42`) is the food shop (`OriginalFoodCatalog` / building models).
+
+#### `cHouseInfo+0x36` identity and writers
 
 Object: `HouseBldg+0x1E4` = `FUN_00416B50` (`lea eax,[ecx+0xC8];
 ret`; corpus gap). Constructor `FUN_00517190` @ `0x517190` writes
@@ -229,30 +264,186 @@ ret`; corpus gap). Constructor `FUN_00517190` @ `0x517190` writes
 `.text`; **no** `compare-report.tsv` row). Save of `+0x36` is 1
 byte @ `0x517570`.
 
-Direct `.text` encodings of `mov byte [reg+0x36], imm8` / `r8`
-were scanned. Stores **proven** to follow `call [vtable+0x1E4]`:
-
-| site | value | class |
-| --- | --- | --- |
-| `FUN_00517190` | `0` | init, confirmed |
-| `FUN_00518690` @ `0x5187BF` | `0` when `cHouseInfo+0x12 < 1` | `+0x12` counter/quantity gate, confirmed |
-| `FUN_00518690` @ `0x518721` | `0x14` (20) when `DAT_00C5CDA0 != 0` | debug/cheat path, confirmed |
-| `FUN_005149C0` @ `0x515259` | `0x5A` (90) after `inc word [cHouseInfo+0x12]` | confirmed store; the heuristic Ghidra name `Check_if_going_to_fire` is **not** an original symbol; switch/case identity of this arm is **unknown** |
+`HouseBldg+0x36` is a **different** byte (`FUN_00427430` 1-byte
+field; `FUN_00518B70` writes `idiv 0x28` remainder there). Do not
+conflate it with `cHouseInfo+0x36`.
 
 `FUN_00518490` starts @ `0x518490` and **reads**
 `cHouseInfo+0x36` at `0x518510` (`cmp byte [eax+0x36], 0x14` /
 `jb`; unsigned `< 0x14` skips, i.e. `> 0x13`) to count
 residents. Do not cite `0x5184A0` as that read: it is not an
-instruction start (`0x51849F`/`0x5184A1` zero `DAT_0130F98C`). `FUN_00517330` **reads** it through `FUN_00545100`.
-This pass does **not** claim those are the only writers: vtable
-or unencoded stores remain possible. Do **not** treat Native
-`OriginalFoodCatalog.quality(in:)` as a recovered `+0x36` writer
-or a complete delivery mapping. The `0x515259` store’s
-switch/case meaning is `unknown`.
+instruction start (`0x51849F`/`0x5184A1` zero `DAT_0130F98C`).
+`FUN_00517330` **reads** it through `FUN_00545100` into
+`cHouseInfo+0x38`.
 
-`HouseBldg+0x36` is a **different** byte (`FUN_00427430` 1-byte
-field; `FUN_00518B70` writes `idiv 0x28` remainder there). Do not
-conflate it with `cHouseInfo+0x36`.
+##### `cHouseInfo+0x12` — food stock slot 0 (confirmed)
+
+`FUN_00447600` @ `0x447600` (`identical`) maps commodity IDs onto
+`cHouseInfo` **word** slots at `+0x12 + slot*2`:
+
+| commodity | `Trade.txt` 0-based name | slot | address |
+| ---: | --- | ---: | --- |
+| `0x1c` (28) | Dinners | 0 | `+0x12` |
+| `0x13` (19) | Hemp | 1 | `+0x14` |
+| `0x19` (25) | Ceramics | 2 | `+0x16` |
+| `0x18` (24) | Silk | 3 | `+0x18` |
+| `0x17` (23) | Bronzeware | 4 | `+0x1A` |
+| `0x16` (22) | Lacquerware | 5 | `+0x1C` |
+| `0xd` (13) | Tea | 6 | `+0x1E` |
+| other | — | `0xFFFFFFFF` | not a house slot |
+
+Do **not** name the whole array from this table alone. Monthly
+food depletion (`FUN_00518690`) and the Dinners arm of `0x5437B0`
+touch slot 0. Other goods are delivered by the `DAT_00857344` loop
+inside `0x5437B0` (six records, stride `0x40`, through
+`0x8574C4`): Hemp/Tea/Ceramics/Bronzeware/Lacquerware/Silk into
+slots 1/6/2/4/5/3. That loop is not a `+0x36` writer.
+
+##### Monthly depletion — `FUN_00518690` (confirmed)
+
+`FUN_00518690` @ `0x518690` (`identical`) is called from
+`FUN_004AC650` @ `0x4AC650` (`identical`) when the 16-slice
+counter wraps (`DAT_00C82EF0 >= 0x10`) — **month rollover**, same
+function that snapshots `DAT_01311FCC`. `FUN_00503E20` @
+`0x503E20` (`identical`) returns `0x19` (25). `FUN_00408B80` @
+`0x408B80` (`identical`) is `(a * b) / 100`. Per live building
+(`p[1]==1`):
+
+- required = `FUN_0044CC80(house+0x16, 8)` (model column 8).
+- `ret2 = FUN_00408B80(sx(house+0x20), 25)` = `(residents * 25) / 100`.
+- If `DAT_00C5CDA0 != 0` (cheat): `+0x12 = ret2` and
+  `+0x36 = 0x14` @ `0x518721`.
+- If cheat==0 and required `> 0`: subtract `ret2` from word
+  `+0x12` (or drain the remainder); if `+0x12 < 1`, zero `+0x12`
+  and **`+0x36 = 0`** @ `0x5187BF`. If required is 0, this block
+  is skipped. Sum consumed → `DAT_0131252C`, then
+  `FUN_005482E0(0)`.
+
+##### Recovered normal market-delivery writer — `cMarket+0x2c` @ `0x5437B0` (confirmed store; complete writer set not proven)
+
+Unsplit EN `.text` at **`0x5437B0`** (`sub esp, 0x18`; `this` in
+`edi`; house stack-arg in `esi`; `ret 8`). **No**
+`compare-report.tsv` row; do **not** call it identical. Ghidra
+did not split it (`FUN_005436A0` is a nearby dtor). One PE
+pointer: `cMarket` vtable `0x7B6F3C+0x2C` = `0x5437B0`. MSVC
+RTTI TypeDescriptor `0x857E70` name `.?AVcMarket@@` (`confirmed`).
+`cMarket+0x28` = `FUN_00429DF0` @ `0x429DF0` (`identical`), which
+is `FUN_00429E10(figure, radius, this, 0)`.
+
+`cMillBldg` vtable `0x7B72C8` (RTTI `.?AVcMillBldg@@`): `+0x28`
+is the same `FUN_00429DF0`; **`+0x2C` = `0x42A210`** =
+`xor eax, eax; ret 8`. The mill visit callback does **not** write
+houses. Direct `E8` call xrefs to `0x5437B0` are none; the
+recovered market-delivery path is this vtable slot. That does
+**not** prove `0x5437B0` is the exhaustive unique normal writer
+of `cHouseInfo+0x36`.
+
+Walker cadence (`identical`): `FUN_004E7EB0` / `FUN_004E6D80`
+increment figure `+0x41`; when the byte is `> 0x13` they call
+`FUN_004EACD0` @ `0x4EACD0`. That function:
+
+- figure `+0x12 == 0x26` (38, Elite Couple) → return 0;
+- figure `+0x12 == 0x4F` (79, Player's Heroes) →
+  `FUN_00429E10(figure, 2, 0, &LAB_00515120)` (hero visit,
+  **not** `cMarket+0x2c`);
+- else home building from figure `+0x62` → vtable `+0x28(figure, 2)`.
+
+For a figure whose home object is `cMarket`, that is
+`FUN_00429DF0` → Chebyshev radius **2** → `cMarket+0x2c(figure,
+house)` = `0x5437B0`. Peddler (model 23) is the manual’s
+distributor (`inferred` that a live peddler’s `+0x62` is a
+`cMarket`; the code path itself does not test model 23). Whether
+marketplace buyer (24) or other market employees on
+`FUN_004E7EB0`/`FUN_004E6D80` also hit this writer is
+`unknown`.
+
+`0x5437B0` body (EN `.text`, `confirmed` bytes):
+
+1. `ebx = FUN_00515770(this)` = `*(cMarket+0x180)` (`identical`
+   getter). Treat as the market food-quality **dword** until every
+   writer of `+0x180` is closed. `FUN_00544F10` (`identical`)
+   save/loads that dword as 4 bytes.
+2. Residential gate: `FUN_005188B0(house+0x14)` types **2…17**
+   (`identical`). Empty houses (`house+0x20==0`) also need
+   `FUN_005188D0` (elite **11…17**).
+3. Elite: `FUN_00545100(ebx)`; if the 1…5 band is **`< 3`**
+   (raw quality `≤ 49`), a flag at `[esp+0x30]` is cleared and
+   the quality write is skipped.
+4. Inventory: `FUN_00447600(0x1c)` → slot 0; `cMarket+0x264(0x1c)`
+   is market Dinners stock. Add `min(need, stock)` into word
+   `[cHouseInfo + slot*2 + 0x12]`; deduct via `cMarket+0x298`.
+   If Dinners stock is then `≤ 0`, `FUN_00545140(0)` zeros
+   `cMarket+0x180` @ `0x5438FE`.
+5. Quality write @ **`0x543A09`**: `mov byte [cHouseInfo+0x36], bl`
+   after `call [house+0x1E4]`.
+   - If `ebx > 0` and `ebx >` current `+0x36`, **replace** with
+     market quality.
+   - Else if delivered amount `ebp > 0`, **blend** current `+0x36`
+     with market quality using `r = delivered/existingStock`
+     (`r = 10.0` if existing stock `≤ 0`). Float constants:
+     `DAT_007B7248 = 3.0`, `DAT_007ACA38 = 2.0`,
+     `DAT_007ACA3C = 0.5`, `DAT_007B7244 ≈ 0.33`. Branches use
+     `fcomp` / `test ah, 0x41` (not-greater). Signed integer
+     blends (`confirmed` identities):
+     `r > 3` → `(current + 3*market) / 4`;
+     `r > 2` → `(current + 2*market) / 3`;
+     `r > 0.5` → `(current + market) / 2`;
+     `r > ≈0.33` → `(2*current + market) / 3`;
+     else `(3*current + market) / 4`.
+     (`/3` is `imul 0x55555556`; `/4` is MSVC signed `sar 2`.)
+
+`FUN_00545140` @ `0x545140` (`identical`) is
+`*(this+0x180) = param_2`. Recovered callers besides the
+post-delivery zero: constructor/init zeros (`0x5435BB`,
+`0x544D18` when `FUN_00544340(0x1c)==0`), figure `+0x16c` raise
+(`0x5411EA`; `FUN_00541130` copies `FUN_00515770` onto
+figure `+0x16c` when building type `== 0x42` food shop), a
+float-round copy at `0x541858`, and `FUN_00511080` case 4
+(`identical`) which adds up to `0x14` then stores. The producer
+of `cMarket+0x180` (market / food-shop quality dword consumed by
+`0x5437B0`) is **not** closed. Do **not** assign that dword or
+its producer to `cMillBldg` unless a mill-object store is
+directly proven. Do **not** treat Native
+`OriginalFoodCatalog.quality(in:)` as that writer.
+
+##### Hero visit `0x5A` — unsplit `0x515120`, not `FUN_005149C0`
+
+`FUN_005149C0` / Ghidra name `Check_if_going_to_fire` @
+`0x5149C0` (`identical`) is a **constructor** that embeds the
+string “Check if going to fire” and returns around `0x51511E`.
+The `0x5A` store is in the **next**, unsplit function starting
+`0x515120` (`sub esp, 0xc`). **No** `compare-report.tsv` row.
+Do **not** cite `FUN_005149C0` @ `0x515259`. Do **not** use the
+Ghidra name as an original symbol.
+
+`0x515120` is the `FUN_004EACD0` hero callback
+(`&LAB_00515120`) for figure model `0x4F`. Switch on figure
+`+0x13` (hero-effect identity per `hero-effect-lifecycle.md`).
+**Case 4** @ `0x51522F`: if `house+0x92==0`, `inc word
+[cHouseInfo+0x12]` and set `house+0x92=1`; **always**
+`mov byte [cHouseInfo+0x36], 0x5A` @ `0x515259`. This is a
+hero house-visit effect (delicious = 90), **not** mill/peddler
+quality. Manual p.82 Zao Jun “delivers delicious food” is
+**supporting** player-facing prose for *a* hero delicious
+delivery; it does **not** prove identity `4` is Zao Jun
+(`hero-effect-lifecycle.md` identity `3` is Xi Wang Mu; the
+Eventmsg name list is a different numbering). Case-4 identity
+stays `unknown`. Do not treat this path as the recovered
+normal market-delivery writer.
+
+##### Store table (after `call [vtable+0x1E4]` unless noted)
+
+| site | value | class |
+| --- | --- | --- |
+| `FUN_00517190` | `0` | init, confirmed |
+| `FUN_00518690` @ `0x5187BF` | `0` when `cHouseInfo+0x12 < 1` | monthly food-slot drain, confirmed |
+| `FUN_00518690` @ `0x518721` | `0x14` (20) when `DAT_00C5CDA0 != 0` | debug/cheat path, confirmed |
+| `0x543A09` in `0x5437B0` | `bl` from `cMarket+0x180` (replace or ratio-blend) | recovered normal market-delivery store, confirmed; `cMarket+0x180` producer open; complete `+0x36` writer set not proven |
+| unsplit `0x515120` @ `0x515259` | `0x5A` (90) after optional `inc +0x12` | hero model 79 case 4, confirmed store; identity `unknown` |
+
+This pass does **not** claim those are the only writers. Further
+unencoded or indirect stores remain possible; the complete writer
+set is not proven.
 
 #### `house+0x5C` / `house+0x8C`
 
@@ -267,29 +458,49 @@ the empty-house `+0x8C = 0` write above. `FUN_0058A950` reads
 `house+0x8C / 10 < 7`; that is a confirmed read, not a recovered
 original name or a complete consumer set.
 
-#### Native mapping — do not implement
+#### Native mapping — not isomorphic; do not implement
 
-Native `FoodQuality` raw `0/20/30/50/70/90` matches the unit set
-of `cHouseInfo+0x36` and model column 8 (`confirmed` numeric
-correspondence only). `ResidentialUnit.lastSuppliedFoodQuality`
-update timing and source mapping onto that byte remain
-`unknown`. Native `foodQuality` / `foodSupplyAmount` are a
-parallel current-stock pair, not a recovered `+0x36` mapping
-(writer set incomplete; a confirmed gameplay store writes `90`).
-Native has no `house+0x5C` streak and no `house+0x8C` dword
-updated from columns 14/15 on this cadence. Do not substitute
+Numeric `FoodQuality` raw `0/20/30/50/70/90` matches
+`cHouseInfo+0x36`, model column 8, and the named mill table on
+manual p.48 (`confirmed` unit set only). Matching those enums does
+**not** make Native fields isomorphic. The recovered behaviors
+differ (`confirmed` mismatches):
+
+| Native `ResidentialUnit` | recovered original used here | verified behavioral mismatch |
+| --- | --- | --- |
+| `foodSupplyAmount` | word `cHouseInfo+0x12` (Dinners slot 0) | Native `consumeFood` requests `residents` when `foodQualityRequired > 0`. Original monthly drain is `(residents * 25) / 100` and only when model column 8 `> 0`. Cadence: Native settlement vs original `FUN_004AC650` month wrap |
+| `foodQualityRawValue` | live `cHouseInfo+0x36` | Native `addFoodSupply` **min**-blends and zeros quality whenever stock hits 0 on consume. Recovered market delivery **replaces** if market quality `>` current, else ratio-blends with floats 3/2/0.5/≈0.33. Original zeros `+0x36` on the monthly path when `+0x12 < 1`. Cheat writes `20`; hero case 4 writes `90` — they do **not** zero `+0x36` |
+| `lastSuppliedFoodQualityRawValue` | **no recovered original equivalent** in `cHouseInfo` or the `FUN_00590F30` consumer | Native `recordEvolutionSupplies` snapshots current quality iff `foodSupplyAmount >= residents`, else `.none`, on monthly market settlement. `FUN_00590F30` reads **live** `+0x36`. This is not an exhaustive proof that no original global snapshot exists. Do not substitute |
+| `suppliesByCommodityID` | `cHouseInfo+0x12` word array | Native consumes food through `foodSupplyAmount`, not a Dinners key in that dictionary. Original monthly food drain is Dinners slot 0 of the same word array as hemp/ceramics. Layout difference is supporting, not by itself proof of absence of an equivalent |
+
+Native has no `house+0x5C` streak and no `house+0x8C` dword from
+columns 14/15 on this cadence, no recovered hero `0x5A`
+house-visit, and no `(residents*25)/100` Dinners drain. The
+producer of `cMarket+0x180` (market / food-shop quality) is not
+closed. Swift `OriginalFoodCatalog.quality(in:)` matches **manual
+p.48**, not the recovered `+0x36` store. Do not substitute
 `lastSuppliedFoodQuality` for `FUN_00590F30`. Do not change
-Swift. Production stays `unsupportedOriginalProducer`.
+Swift. Production stays `unsupportedOriginalProducer`. **No
+gameplay implementation contract** until the `cMarket+0x180`
+producer, peddler-vs-buyer exclusivity, hero case-4 identity, and
+unencoded `+0x36` writer set required for fidelity are closed.
 
 #### CH/EN (`compare-report.tsv` rows only)
 
-`identical`: `FUN_00413B40`, `FUN_00426D10`, `FUN_00427430`,
-`FUN_0044CC80`, `FUN_005149C0`, `FUN_00516ED0`, `FUN_00517190`,
-`FUN_00518490`, `FUN_00518690`, `FUN_005188D0`, `FUN_00518910`,
-`FUN_00545100`, `FUN_00554C00`, `FUN_00590F30`, `FUN_005D16D0`.
-No `compare-report.tsv` row for `FUN_00517410` or `FUN_00416B50`;
-do **not** call them identical. `cHouseInfo` vtable `+8` @
-`0x517410` likewise has no row.
+`identical`: `FUN_00408B80`, `FUN_00413B40`, `FUN_00426D10`,
+`FUN_00426EA0`, `FUN_00427430`, `FUN_00429DF0`, `FUN_00429E10`,
+`FUN_0044CC80`, `FUN_00447600`, `FUN_004AC650`, `FUN_004E6D80`,
+`FUN_004E7EB0`, `FUN_004EACD0`, `FUN_00503E20`, `FUN_00510C20`,
+`FUN_00511080`, `FUN_005149C0` (constructor only; the `0x5A` store
+is not in this function), `FUN_00515770`, `FUN_00516ED0`,
+`FUN_00517190`, `FUN_00517330`, `FUN_00518490`, `FUN_00518690`,
+`FUN_005188B0`, `FUN_005188D0`, `FUN_00518910`, `FUN_00541130`,
+`FUN_00544340`, `FUN_00544F10`, `FUN_00545100`, `FUN_00545140`,
+`FUN_00554C00`, `FUN_00590F30`, `FUN_005D16D0`. No
+`compare-report.tsv` row for `FUN_00416B50`, unsplit `0x5437B0`,
+unsplit `0x515120`, or `cHouseInfo` vtable `+8` @ `0x517410`; do
+**not** call them identical. `FUN_005149C0` @ `0x5149C0` ends
+around `0x51511E`; `0x515120` is the next unsplit function.
 
 ### Monument matching (`FUN_0055AE30`) — control flow recovered; Native unwired
 
@@ -1271,10 +1482,15 @@ corpus. On-disk CH siblings that are **not** hash
 The original immigrant arrival state machine in §5 is recovered.
 That does **not** authorize enabling automatic migration. War,
 `house+0x24`, and `DAT_00D62408` writer/meaning remain
-unresolved. The `FUN_00590F30` walk is recovered in §3; Native
-`lastSuppliedFoodQuality` lifecycle/source mapping to
-`cHouseInfo+0x36` is not proven, so it must not be substituted
-and food stays a fail-closed producer input. The `FUN_0055AE30` walk is recovered in §3; Native
+unresolved. The `FUN_00590F30` walk is recovered in §3; the
+recovered normal market-delivery writer/path of `cHouseInfo+0x36`
+is `cMarket+0x2c` @ `0x5437B0` (complete writer set not proven).
+Current Native `ResidentialUnit` food consumption, blending, and
+cadence are confirmed non-isomorphic, so those fields must not be
+substituted. The producer of `cMarket+0x180` and the correct Native
+representation/mapping remain open, and food stays a fail-closed
+producer input.
+No food implementation contract. The `FUN_0055AE30` walk is recovered in §3; Native
 percent / object-vector / `+0xB4` / `goal+8` save mapping is
 not, so monument stays a fail-closed producer input.
 `DAT_01311FD0` init-zero and save/load are
@@ -1309,7 +1525,8 @@ original symbol name are not. Do not spawn walkers or call
 **Do not:**
 
 - fold figure `#11` travel into occupancy;
-- drive popularity from `lastSuppliedFoodQuality` or an invented
+- drive popularity from `lastSuppliedFoodQuality`,
+  `foodQualityRawValue`, `foodSupplyAmount`, or an invented
   shortage streak;
 - pass monument / war / mode as `0` and mark the producer supported;
 - upgrade `unsupportedOriginalProducer` saves to a supported tag;
@@ -1357,13 +1574,20 @@ original symbol name are not. Do not spawn walkers or call
   `0x560560` pointer identity (copy bytes themselves are §3).
   Why skip index 0 and the 1-vs-3 live-byte distinction remain
   `unknown`; do not guess.
-- `cHouseInfo+0x36` complete writer/lifecycle set (init `0`,
-  `FUN_00518690` `0` when `+0x12 < 1`, cheat `0x14`, serialize,
-  and the `0x515259` `0x5A` store are §3; switch/case of that
-  store and any writer not in the bounded `mov byte [reg+0x36]`
-  scan remain `unknown`). Native `lastSuppliedFoodQuality`
-  lifecycle/source mapping is not proven, so it must not be
-  substituted. Do not name `house+0x8C` `crimeRisk`.
+- Producer of `cMarket+0x180` (market / food-shop quality dword
+  consumed by `0x5437B0`; zeros, copies, `+0x14` bless, and a
+  float-round copy are §3; the computer that produces the
+  20/30/50/70/90 value is not closed). Do **not** assign that
+  dword to `cMillBldg` unless a mill-object store is directly
+  proven. Peddler (23) vs marketplace buyer (24) exclusivity on
+  `FUN_004EACD0` → `cMarket+0x2c`. Hero model-79 case-4 identity
+  for the `0x5A` store. Unencoded `+0x36` writers beyond §3; the
+  complete writer set is not proven. Current Native
+  `ResidentialUnit` food consumption, blending, and cadence are
+  confirmed non-isomorphic (§3), so those fields must not be
+  substituted. The correct Native representation/mapping remains
+  `unknown`. No gameplay implementation contract is authorized. Do not
+  name `house+0x8C` `crimeRisk`.
 - Complete constructor-zero set for `house+0x5C` / `house+0x8C`
   beyond the empty-house `+0x8C = 0` write and `FUN_00427430`
   save/load.
