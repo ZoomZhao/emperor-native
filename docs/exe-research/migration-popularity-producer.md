@@ -372,13 +372,12 @@ If the return **is** `1`:
    - `FUN_005188F0(house+0x14)` is true for `1 < type < 0xB`
      (models **2…10**, common housing);
    - if that is true **and** `DAT_00D62408 == 0`, call house vtable
-     `+0x230(3)`;
+     `+0x230(3)` (`FUN_00518DE0`; §5.10);
    - if that is false **and** `DAT_00D62408 == 0`, call
      `+0x230(0xD)`;
    - if `DAT_00D62408 != 0`, skip `+0x230`. Method identity and
-     `DAT_00D62408` meaning are **unknown** (no `.text` absolute
-     writer to `DAT_00D62408` was found; three reads only:
-     `FUN_0042D9A0`, `FUN_004ACD00`, this site).
+     this site’s skip polarity are §5.10. `DAT_00D62408` writer
+     and meaning remain **unknown**.
 4. `eax = house vtable +0x1E4()` (`FUN_00416B50`; §5.9). If
    `*(byte *)(eax + 0x3C) != 0`, **skip** the add/`FUN_00591900`
    pair. Original name of that `cHouseInfo` byte is **unknown**.
@@ -456,10 +455,16 @@ forbidden. The original write is this per-model immigrant
 think/state machine, not an assignment-tick side effect.
 Production still must not spawn walkers or enable the
 migration producer: food / monument / war / mode / `house+0x24` /
-`DAT_00D62408` remain unresolved. `cHouseInfo+0x3C` method identity
-and `FUN_004C9FD0` gate polarity are closed (§5.9); original
-semantic name, complete writer/lifecycle set, and Native mapping
-are not.
+`DAT_00D62408` writer and meaning remain unresolved.
+`cHouseInfo+0x3C` method identity and `FUN_004C9FD0` gate polarity
+are closed (§5.9); original semantic name, complete writer/lifecycle
+set, and Native mapping are not. House vtable `+0x230` method
+identity and empty-house skip polarity are closed (§5.10). The
+post-call pairs `(+0x14,+0x16)=(3,0)` and `(13,10)` map to Native
+`houseLevelID` 0 and 10. Original vacant types are building IDs 2
+and 11. Native `ResidentialUnit` representation/lifecycle of those
+two states, walker-arrival type-switch timing `2→3` / `11→13`,
+complete caller set, and original symbol name remain unclosed.
 
 `FUN_004ADC90` departure assignment walks occupied houses by
 `house+0x16` buckets and calls `FUN_004ADED0`. It does **not** read
@@ -674,6 +679,110 @@ CH/EN: `FUN_00517190`, `FUN_004681A0`, `FUN_00468420`,
 `FUN_004AC2B0` are `identical`. `FUN_00416B50` and `FUN_004C9FD0`
 are absent from `split-merged` / `compare-report.tsv`.
 
+### 5.10 House vtable `+0x230` / `DAT_00D62408` (2026-08-14)
+
+`HouseBldg` `0x7ABA38 + 0x230` @ `0x7ABC68` is **`FUN_00518DE0` @
+`0x518DE0`** (`confirmed` EN `.text`; corpus gap). `thiscall` /
+`ret 4`. `ecx` is the `HouseBldg`. The dword `0x518DE0` occurs
+once in the image, at that slot. No `E8` rel32 to it.
+
+`FUN_004C9FD0` state-8 empty-house gate (`confirmed` opcodes), after
+`house+0x20 == 0` @ `0x4CA1FC` and the capacity clamp, before
+`+0x1E4`. Execution order: `call FUN_005188F0` @ `0x4CA21C`;
+`test al, al` @ `0x4CA224`; `mov eax, [0xD62408]` @ `0x4CA226`
+(does not change flags); `je 0x4CA23F` @ `0x4CA22B`. The `JE`
+uses the common predicate from `0x4CA224`, not the DAT load.
+Common-true (`0x4CA22D`): `test eax, eax` / `jne 0x4CA24F`;
+`push 3`; `call [eax+0x230]` @ `0x4CA237`; `jmp 0x4CA24F`.
+Common-false (`0x4CA23F`): `test eax, eax` / `jne 0x4CA24F`;
+`push 0xD`; `call [edx+0x230]` @ `0x4CA249`. Nonzero
+`DAT_00D62408` **skips** both calls (`test eax` in each arm). The
+method’s `al` is unread. Occupied houses (`+0x20 != 0`) jump to
+`0x4CA24F` and never call it. Distinct from `house+0x24`,
+`house+9`, occupancy `+0x20`, remaining capacity `+0x22`, and
+`cHouseInfo+0x3C`.
+
+`FUN_00518DE0` (`confirmed` opcodes). Saves old `house+0x14` /
+`+0x16`. `bl = FUN_005188F0(old +0x14)` (common IDs **2…10**);
+elite flag `= FUN_005188D0(old +0x14)` (IDs **11…17**). Then
+`house+0x14 = param` and `house+0x16 = 0` if `param <= 3`, else
+`param - 3`. If `FUN_005188F0(new +0x14)`: require old-common else
+restore both words and `return 0`; else table
+`[new+0x16]*4 + 0x8232F8`. If new type is not common: require
+old-elite else restore and `return 0`; else table
+`[new+0x14]*4 + 0x85410C`. Success arms call `FUN_00408170` on that
+dword, optionally add `(*(byte *)(*(house+0x10) + 0xF1E780)) & 1`
+(skipped in the non-common arm when `+0x14 == 0xB`), then
+`FUN_004B72B0`, and `return 1`. Meaning of `0xF1E780` is
+**unknown**. `FUN_004B72B0` writes map cells including
+`DAT_00FC3750`; this pass does not name those helpers.
+
+**Authored cross-evidence (`confirmed` relationship, not a method
+name).** `GameData/Model/EmperorBuildingModels.txt` decimal ID 3
+(line 87) is “Shelter House”; ID 13 (`0xD`, line 97) is “Modest
+Elite”. `GameData/Audio/BuildingSounds.txt` rows 26 / 36 use the
+same IDs. `FUN_004C9FD0` passes those immediates into a method that
+writes `house+0x14` (the building-type word already used as
+`Unocc Elite` `0xB` / common 2…10). That associates the
+empty-house call with those model IDs. It does not name
+`FUN_00518DE0`. Original empty-house types are authored ID 2
+(line 86) “Vacant House” and ID 11 (line 95) “Unocc Elite”;
+`BuildingSounds.txt` rows 25 / 34 use the same names.
+`BuildingSpriteCatalog` already has vacant common/elite sprites.
+`GameData/Model/EmperorFigureModels.txt` decimal 3 / 13 are
+“zguy” / “homeless”; those are **not** this parameter.
+`EmperorBuildingModels.txt` `ALL HOUSES` “1: Shelter” is a
+1-based house-tier label; Native `houseLevelID` is 0-based, so
+tier 1 Shelter corresponds to Native level 0. That is not the
+building ID / `house+0x14` numbering.
+`EmperorText.txt` / event tables: this pass did not find a mapping
+for `DAT_00D62408` or for this method.
+
+**Native post-call values (`confirmed` relationship; not the whole
+original layout).** `ResidentialUnit.houseLevelID` and
+`BuildingSpriteCatalog.housingBuildingID(forHouseLevelID:)` use
+`buildingID = levelID + 3`. After `+0x230(3)`: `house+0x14 = 3`,
+`house+0x16 = 0` → Native `houseLevelID` 0 / building ID 3. After
+`+0x230(0xD)`: `house+0x14 = 13`, `house+0x16 = 10` → Native
+`houseLevelID` 10 / building ID 13. Do not extrapolate that formula
+to other `+0x14` / `+0x16` pairs. Original vacant type IDs 2 and
+11 are **confirmed**. Still unclosed: Native `ResidentialUnit` /
+simulation representation and lifecycle of those two pre-arrival
+states, walker-arrival type-switch timing `2→3` / `11→13`,
+complete `+0x230` caller set, and original symbol name.
+
+**`DAT_00D62408` (`confirmed` reads; writer/meaning `unknown`).**
+RVA `0x962408` sits in `.data` BSS (beyond the `0x7B000` raw
+range), so the image does not initialize it (loader zero). Whole
+file search for `08 24 D6 00` hit **three** `.text` disp32 bytes
+and **no** `.rdata` / initialized-`.data` address constant. The
+`mov` instruction starts are `mov eax, [0xD62408]` @ `0x42D9A0`
+(`FUN_0042D9A0`, skip its walk when **`== 1`**);
+`mov ecx, [0xD62408]` @ `0x4ACD00` (`FUN_004ACD00`, return `!= 0`);
+this site @ `0x4CA226` (skip `+0x230` when **`!= 0`**). The pattern
+hits at `0x42D9A1` / `0x4ACD02` / `0x4CA227` are the disp32, not
+the `mov` addresses. No absolute writer (`C7 05` / `A3` /
+`89 0D` and the same disp32) was found. Neighbor BSS dwords
+`DAT_00D62400` / `04` / `0C` have their own writers; they are
+**not** this dword. Register-indirect stores remain possible and
+**unknown**.
+
+**Same-identity extras (not a complete caller map).**
+`FUN_00519180` / `FUN_00519200` (`identical`) call `[this+0x230]`
+with `3` / `4` after `FUN_004ACD00` (nonzero DAT skips). They read
+`house+0x20` and `+0x1E4`. Other `[r+0x230]` opcode hits are **not**
+this method unless the object’s vfptr slot holds `0x518DE0`.
+
+**Rejected (`confirmed` negatives).** `cIndustrialBldg`
+`0x7B65E4+0x230` is `0x51CF40`, not `FUN_00518DE0`. Do not treat
+param `3` / `0xD` as figure types, `house+0x24`, `house+9`,
+capacity, occupancy, or `cHouseInfo+0x3C`.
+
+CH/EN: `FUN_005188F0`, `FUN_005188D0`, `FUN_00408170`,
+`FUN_004B72B0`, `FUN_004ACD00`, `FUN_0042D9A0`, `FUN_00519180`,
+`FUN_00519200` are `identical`. `FUN_00518DE0` and `FUN_004C9FD0`
+are absent from `split-merged` / `compare-report.tsv`.
+
 ## 6. Month rollover (confirmed)
 
 `FUN_004AC650` copies `DAT_01311FCC` → `DAT_01312604` and zeros
@@ -683,11 +792,18 @@ are absent from `split-merged` / `compare-report.tsv`.
 
 The original immigrant arrival state machine in §5 is recovered.
 That does **not** authorize enabling automatic migration. Food,
-monument, war, mode, `house+0x24`, and `DAT_00D62408` remain
-unresolved. `cHouseInfo+0x3C` method identity and `FUN_004C9FD0`
-gate polarity are closed (§5.9); original semantic name, complete
-writer/lifecycle set, and Native mapping are not. Do not spawn
-walkers or call `admitResidents` from the production tick.
+monument, war, mode, `house+0x24`, and `DAT_00D62408` writer/meaning
+remain unresolved. `cHouseInfo+0x3C` method identity and
+`FUN_004C9FD0` gate polarity are closed (§5.9); original semantic
+name, complete writer/lifecycle set, and Native mapping are not.
+House vtable `+0x230` method identity and empty-house skip polarity
+are closed (§5.10). The post-call pairs `(+0x14,+0x16)=(3,0)` and
+`(13,10)` map to Native `houseLevelID` 0 and 10. Original vacant
+types are building IDs 2 and 11. Native `ResidentialUnit`
+representation/lifecycle of those two states, walker-arrival
+type-switch timing `2→3` / `11→13`, complete caller set, and
+original symbol name are not. Do not spawn walkers or call
+`admitResidents` from the production tick.
 
 **Do:**
 
@@ -719,10 +835,14 @@ walkers or call `admitResidents` from the production tick.
 - Original semantic name of `cHouseInfo+0x3C`, complete
   writer/lifecycle set, and Native mapping (method identity and
   `FUN_004C9FD0` gate polarity are §5.9).
-- House vtable method used by `FUN_004C9FD0`: `+0x230` (empty-house
-  call with `3` or `0xD`).
+- Original method name of `FUN_00518DE0`, complete `+0x230` caller
+  set, Native `ResidentialUnit` representation/lifecycle of
+  pre-arrival vacant building IDs 2 and 11, and walker-arrival
+  type-switch timing `2→3` / `11→13` (method identity, empty-house
+  skip polarity, original vacant type IDs, and the two post-call
+  Native `houseLevelID` pairs are §5.10).
 - `DAT_00D62408` writer and meaning (empty-house `+0x230` skipped
-  when nonzero; no `.text` absolute writer found).
+  when nonzero; three absolute `.text` reads, no absolute writer).
 - `FUN_004BA6F0` neighbor-slot / terrain-flag meaning beyond the
   recovered reads and the `DAT_010C72AC` / `DAT_010C72A8` writes.
 - Whether `FUN_004C8B70` type-`0xB` death unlinks the spawn house
