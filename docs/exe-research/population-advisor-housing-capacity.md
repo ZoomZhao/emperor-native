@@ -443,9 +443,10 @@ accounted spawn count displayed by the renderer. The link is direct:
   admitted or removed. `CitySimulation.admitResidents` remains a loader/test
   fixture primitive and has no production caller.
 - A later attempt to fold `FUN_004ADE10` figure-`#11` travel into instant
-  occupancy, substitute `lastSuppliedFoodQuality` for `FUN_00590f30` food
-  fields, pass monument/war/mode as 0, and upgrade
-  `unsupportedOriginalProducer` saves was withdrawn: those gaps are still
+  occupancy, substitute `lastSuppliedFoodQuality` for `FUN_00590F30`,
+  pass monument/war/mode as 0, and upgrade
+  `unsupportedOriginalProducer` saves was withdrawn. The food walk
+  itself is recovered; Native mapping of `cHouseInfo+0x36` remains
   `unknown`. Confirmed tables live in
   `docs/exe-research/migration-popularity-producer.md`; they are not a public
   production API, and production ticks do not call them.
@@ -480,10 +481,14 @@ accounted spawn count displayed by the renderer. The link is direct:
   `docs/exe-research/migration-popularity-producer.md` §5. Native
   vacant-state / type-switch mapping (`ResidentialUnit` IDs 2/11 and
   walker-arrival `2→3` / `11→13`) remains `unknown`.
-- `FUN_00590f30` current-food byte (`vtable +0x1e4` result `+0x36`), house
-  streak byte `p+0x17` (`+0x5C`), and stock accumulator `p[0x23]` (`+0x8C`)
-  with model columns `0xE`/`0xF` — Native `lastSuppliedFoodQuality` is not an
-  equivalent field.
+- `FUN_00590F30` occupied-house walk is recovered
+  (`migration-popularity-producer.md` §3). Authored columns 8 /
+  14 / 15 are `EVO_FOOD_QUALITY` / `EVO_CRIME_INC` / `EVO_CRIME_BASE`,
+  not food-stock columns. Remaining unknown is the complete
+  `cHouseInfo+0x36` writer set and Native mapping of that raw
+  quality byte; `lastSuppliedFoodQuality` lifecycle/source mapping
+  remains `unknown`, so it must not be substituted. Do not name
+  `house+0x8C` `crimeRisk`.
 - `FUN_0055AE30` monument-object matching walk is recovered
   (`migration-popularity-producer.md` §3). Remaining unknown is Native
   mapping of `FUN_00565410` percent, the type-2 object vector,

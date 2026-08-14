@@ -10,8 +10,12 @@ This note records recovered constants and the remaining blockers. It does
 Production stays
 `AutomaticMigrationAvailability.unsupportedOriginalProducer`. The
 figure-`#11` / type-`0xB` arrival `house+0x20` write is recovered below
-(`FUN_004C9FD0` @ `0x4CA265`). Food, war, and several
-house-field semantics remain unresolved. The `FUN_0055AE30`
+(`FUN_004C9FD0` @ `0x4CA265`). War and several
+house-field semantics remain unresolved. The `FUN_00590F30` food
+walk is recovered in §3; Native `lastSuppliedFoodQuality`
+lifecycle/source mapping to `cHouseInfo+0x36` is not proven, so
+it must not be substituted and food stays a fail-closed producer
+input. The `FUN_0055AE30`
 monument walk is recovered in §3; Native mapping and save
 lifecycle are not, so monument stays a fail-closed producer
 input. `DAT_01311FD0` is **not**
@@ -144,33 +148,148 @@ Count of building type `0x7F` (Watchtower `#127`). If
 `population > 350` and `population ≤ count×500`, return
 `−min(4, (count×500)/population)`.
 
-### Food (`FUN_00590F30`) — partial; Native field unmapped
+### Food (`FUN_00590F30`) — walk recovered; Native `lastSuppliedFoodQuality` unwired
 
-Empty/unoccupied houses (`(short)p[8] == 0` at `house+0x20` residents)
-reset accumulator `p[0x23]` (`+0x8C`). Non-empty houses
-(`house+0x20 != 0`) may update it: if `FUN_00516ED0` returns `0`, add
-`FUN_0044CC80(model, 0xE) + (40 - popularity)/2`; column `0xF` is then
-a lower bound — if the accumulator is `<` col `0xF`, it is raised to
-col `0xF`; then values `>100` are capped at `100`. `FUN_00516ED0` /
-`FUN_005188D0` skips that stock update when building type is
-`11…17` (`confirmed` type window; role `inferred`).
+Canonical EN `.text` (`8a6d2df1…6753`). `FUN_00590F30` @ `0x590F30`
+returns the popularity food term. Empty building list
+(`FUN_00554C00` `this=0x8C7634`, `cmp eax, 1; jbe 0x59111F`) or an
+occupied-house set that never enters the average returns **0**
+(`confirmed`). Production stays `unsupportedOriginalProducer`. Do
+not drive that term from Native `lastSuppliedFoodQuality`.
 
-The popularity **average** uses model column 8
-(`FUN_0044CC80(..., 8)` = `foodQualityRequired`):
+#### Authored house columns (`FUN_0044CC80`)
 
-- required `0` → reset streak byte `*(p+0x17)` (`+0x5C`) and skip the
-  average;
-- else compare `*(byte *)((vtable +0x1E4)() + 0x36)` to required:
-  met → `+2` and streak `0`; else increment streak, cap `3`;
-  streak `1 → −1`, `2 → −2`, `≥3 → −3`.
-- mean of those per-house scores, rounded away from zero when
-  `|remainder| > counted/2`; negative mean zeroed while population
-  `<350` and `DAT_01312575 == 0`.
+`FUN_0044CC80` @ `0x44CC80` is
+`DAT_00A63BFC[column + row*0x18]` (`0x18` = 24 ints). Row is
+`sx(house+0x16)` (the same house-level index as capacity column
+`0x11`). `FUN_005D16D0` @ `0x5D16D0` fills `DAT_00A63BFC` from
+static `DAT_00870E04` plus `HOUSE MODS`, clamping each sum through
+`FUN_00445480(..., -99, 100)`. On-disk `DAT_00870E04` house 0
+matches `GameData/Model/EmperorBuildingModels.txt` `ALL HOUSES`
+“1: Shelter” (`confirmed`).
 
-Native `ResidentialUnit.lastSuppliedFoodQuality` is **not** the
-`+0x36` byte. Inventing a parallel shortage-streak map to drive
-gameplay is forbidden. Empty occupied-house set returns `0`
-(`confirmed`).
+The file’s own column comments (lines 30–53), not column position
+alone:
+
+| index | name in the model file | `FUN_00590F30` use |
+| ---: | --- | --- |
+| 8 | `EVO_FOOD_QUALITY` — “Food quality needed to evolve” | popularity average threshold |
+| 14 (`0xE`) | `EVO_CRIME_INC` — “Crime Risk Increment” | addend into `house+0x8C` |
+| 15 (`0xF`) | `EVO_CRIME_BASE` — “Crime Risk Base” | lower bound for `house+0x8C` |
+
+`ALL HOUSES` “1: Shelter”: col 8 `0`, col 14 `17`, col 15 `10`,
+capacity `7`. “3: Plain Cottage”: col 8 `20`, col 14 `15`,
+col 15 `5`, capacity `22`. Common-house col 8 is `0` (Shelter
+and Hut), then `20 / 30 / 50`; `70` is on later elite rows. Native `FoodQuality` raw values
+`0/20/30/50/70/90` are a **confirmed numeric correspondence**
+with that unit set (`Sources/EmperorCore/FoodSimulation.swift`).
+Native `lastSuppliedFoodQuality` lifecycle/source mapping to
+`cHouseInfo+0x36` is not proven, so it must not be substituted. `FUN_00545100` @ `0x545100` bands a byte as
+`>89→5, >69→4, >49→3, >29→2, >0→1, else 0`. `FUN_00590F30`
+compares the **raw** `cHouseInfo+0x36` quality byte to column 8,
+not that 1…5 band. `EmperorText` group 127 row 59 is the evolution
+`[food_quality]` sentence (`housing-evolution-reasons.md`); it is
+not this popularity walk’s input.
+
+Columns `0xE`/`0xF` are **not** food-stock columns. They feed
+`house+0x8C` in this walk. Do **not** name `house+0x8C`
+`crimeRisk`: the model-file labels name the columns, not the
+house dword; original field name and complete consumers are not
+closed. The popularity **return** does not use `+0x8C`.
+
+#### Occupied-house walk (confirmed EN sites)
+
+Same building vector as monument matching: `FUN_00413B40(1)`
+`this=0x8C7630` @ `0x590F4A`; index starts at **1**. Per house:
+
+| check | site | polarity |
+| --- | --- | --- |
+| Live | `FUN_00426D10` @ `0x590F8A` | `house+4` is 1 or 3 |
+| House class | vtable `+0xB8` @ `0x590F9B` | `house+9 != 0` (§5.8) |
+| Empty | `cmp word [esi+0x20], 0` @ `0x590FA9` | residents 0 → `house+0x8C = 0` @ `0x590FB0` and **skip** both the `+0x8C` update and the food average |
+| Elite skip of `+0x8C` only | `FUN_00516ED0(index)` cdecl @ `0x590FC0`; `this=0x8C7634` then `FUN_005188D0(building+0x14)` | true for types **11…17** inclusive (`cmp eax, 0xB` / `0x11` @ `0x5188D4`). Skips the `+0x8C` update; the food average still runs |
+| `+0x8C` update | @ `0x590FCC` | `+0x8C += col 0xE + (40-popularity)/2`; if `<` col `0xF`, raise to col `0xF`; if `>100`, cap `100` |
+| `(40-popularity)/2` | @ `0x590F3B` | popularity `DAT_0130F974` snapshotted once; signed toward-zero `/2` (`cdq; sub eax,edx; sar 1`) into `ebx` |
+| Average threshold | `FUN_0044CC80(house+0x16, 8)` @ `0x59102F` | required `0` → `house+0x5C = 0` @ `0x59109E` and **do not** count this house |
+| Quality compare | vtable `+0x1E4` @ `0x591046` then `movzx [eax+0x36]` @ `0x59104E` | `cHouseInfo+0x36` raw quality byte (object at `house+0xC8`, §5.9; same units as `FoodQuality` `0/20/30/50/70/90`). **`<` required**: increment streak byte `house+0x5C`, cap **3** (`jbe` @ `0x59106C`); streak `1→−1`, `2→−2`, `≥3→−3`. **`>=` required**: score `+2` and `house+0x5C = 0` @ `0x59105A` |
+
+Mean of those per-house scores: `sum / count` then round **away
+from zero** only when `abs(remainder) > count/2` (`cmp ebx, eax;
+jle` skip @ `0x5910F2`; exact half does **not** round). If the
+mean is `< 0` and `DAT_0130F988 < 0x15E` (350) and
+`DAT_01312575 == 0`, return `0` @ `0x591116`. Else return the
+mean (`mov eax, edi` @ `0x59111F`).
+
+#### `cHouseInfo+0x36` identity and bounded writers
+
+Object: `HouseBldg+0x1E4` = `FUN_00416B50` (`lea eax,[ecx+0xC8];
+ret`; corpus gap). Constructor `FUN_00517190` @ `0x517190` writes
+`+0x36 = 0`. House serialize `FUN_00518910` calls base
+`FUN_00427430` then `cHouseInfo` vtable `+8` @ `0x517410` (EN
+`.text`; **no** `compare-report.tsv` row). Save of `+0x36` is 1
+byte @ `0x517570`.
+
+Direct `.text` encodings of `mov byte [reg+0x36], imm8` / `r8`
+were scanned. Stores **proven** to follow `call [vtable+0x1E4]`:
+
+| site | value | class |
+| --- | --- | --- |
+| `FUN_00517190` | `0` | init, confirmed |
+| `FUN_00518690` @ `0x5187BF` | `0` when `cHouseInfo+0x12 < 1` | `+0x12` counter/quantity gate, confirmed |
+| `FUN_00518690` @ `0x518721` | `0x14` (20) when `DAT_00C5CDA0 != 0` | debug/cheat path, confirmed |
+| `FUN_005149C0` @ `0x515259` | `0x5A` (90) after `inc word [cHouseInfo+0x12]` | confirmed store; the heuristic Ghidra name `Check_if_going_to_fire` is **not** an original symbol; switch/case identity of this arm is **unknown** |
+
+`FUN_00518490` starts @ `0x518490` and **reads**
+`cHouseInfo+0x36` at `0x518510` (`cmp byte [eax+0x36], 0x14` /
+`jb`; unsigned `< 0x14` skips, i.e. `> 0x13`) to count
+residents. Do not cite `0x5184A0` as that read: it is not an
+instruction start (`0x51849F`/`0x5184A1` zero `DAT_0130F98C`). `FUN_00517330` **reads** it through `FUN_00545100`.
+This pass does **not** claim those are the only writers: vtable
+or unencoded stores remain possible. Do **not** treat Native
+`OriginalFoodCatalog.quality(in:)` as a recovered `+0x36` writer
+or a complete delivery mapping. The `0x515259` store’s
+switch/case meaning is `unknown`.
+
+`HouseBldg+0x36` is a **different** byte (`FUN_00427430` 1-byte
+field; `FUN_00518B70` writes `idiv 0x28` remainder there). Do not
+conflate it with `cHouseInfo+0x36`.
+
+#### `house+0x5C` / `house+0x8C`
+
+`house+0x5C` is the food-average streak byte (`p+0x17`).
+`house+0x8C` is the dword `p[0x23]` updated from columns 14/15
+and zeroed on empty houses. Do **not** name it `crimeRisk`.
+Both are copied by `FUN_00426EA0` and saved/loaded as 1 byte /
+4 bytes in `FUN_00427430` schema 4 (`0x427430` @ `+0x5C` /
+`+0x8C`; `FUN_00518910` uses that base serializer). Complete
+constructor-zero set for the two fields is **unknown** beyond
+the empty-house `+0x8C = 0` write above. `FUN_0058A950` reads
+`house+0x8C / 10 < 7`; that is a confirmed read, not a recovered
+original name or a complete consumer set.
+
+#### Native mapping — do not implement
+
+Native `FoodQuality` raw `0/20/30/50/70/90` matches the unit set
+of `cHouseInfo+0x36` and model column 8 (`confirmed` numeric
+correspondence only). `ResidentialUnit.lastSuppliedFoodQuality`
+update timing and source mapping onto that byte remain
+`unknown`. Native `foodQuality` / `foodSupplyAmount` are a
+parallel current-stock pair, not a recovered `+0x36` mapping
+(writer set incomplete; a confirmed gameplay store writes `90`).
+Native has no `house+0x5C` streak and no `house+0x8C` dword
+updated from columns 14/15 on this cadence. Do not substitute
+`lastSuppliedFoodQuality` for `FUN_00590F30`. Do not change
+Swift. Production stays `unsupportedOriginalProducer`.
+
+#### CH/EN (`compare-report.tsv` rows only)
+
+`identical`: `FUN_00413B40`, `FUN_00426D10`, `FUN_00427430`,
+`FUN_0044CC80`, `FUN_005149C0`, `FUN_00516ED0`, `FUN_00517190`,
+`FUN_00518490`, `FUN_00518690`, `FUN_005188D0`, `FUN_00518910`,
+`FUN_00545100`, `FUN_00554C00`, `FUN_00590F30`, `FUN_005D16D0`.
+No `compare-report.tsv` row for `FUN_00517410` or `FUN_00416B50`;
+do **not** call them identical. `cHouseInfo` vtable `+8` @
+`0x517410` likewise has no row.
 
 ### Monument matching (`FUN_0055AE30`) — control flow recovered; Native unwired
 
@@ -582,9 +701,10 @@ Folding walker travel into instant `admitResidents` remains
 forbidden. The original write is this per-model immigrant
 think/state machine, not an assignment-tick side effect.
 Production still must not spawn walkers or enable the
-migration producer: food / Native monument mapping / war / mode /
-`house+0x24` / `DAT_00D62408` writer and meaning remain unresolved.
-The `FUN_0055AE30` walk itself is §3.
+migration producer: Native food mapping / Native monument mapping /
+war / mode / `house+0x24` / `DAT_00D62408` writer and meaning remain
+unresolved. The `FUN_00590F30` and `FUN_0055AE30` walks themselves
+are §3.
 `cHouseInfo+0x3C` method identity and `FUN_004C9FD0` gate polarity
 are closed (§5.9); original semantic name, complete writer/lifecycle
 set, and Native mapping are not. House vtable `+0x230` method
@@ -1149,9 +1269,12 @@ corpus. On-disk CH siblings that are **not** hash
 ## 8. Native implementation contract (fail-closed)
 
 The original immigrant arrival state machine in §5 is recovered.
-That does **not** authorize enabling automatic migration. Food,
-war, `house+0x24`, and `DAT_00D62408` writer/meaning remain
-unresolved. The `FUN_0055AE30` walk is recovered in §3; Native
+That does **not** authorize enabling automatic migration. War,
+`house+0x24`, and `DAT_00D62408` writer/meaning remain
+unresolved. The `FUN_00590F30` walk is recovered in §3; Native
+`lastSuppliedFoodQuality` lifecycle/source mapping to
+`cHouseInfo+0x36` is not proven, so it must not be substituted
+and food stays a fail-closed producer input. The `FUN_0055AE30` walk is recovered in §3; Native
 percent / object-vector / `+0xB4` / `goal+8` save mapping is
 not, so monument stays a fail-closed producer input.
 `DAT_01311FD0` init-zero and save/load are
@@ -1234,9 +1357,16 @@ original symbol name are not. Do not spawn walkers or call
   `0x560560` pointer identity (copy bytes themselves are §3).
   Why skip index 0 and the 1-vs-3 live-byte distinction remain
   `unknown`; do not guess.
-- Original food-stock columns `0xE`/`0xF`, house `+0x8C` accumulator,
-  house `+0x5C` streak, and the `vtable +0x1E4` object `+0x36` food
-  byte versus Native `lastSuppliedFoodQuality`.
+- `cHouseInfo+0x36` complete writer/lifecycle set (init `0`,
+  `FUN_00518690` `0` when `+0x12 < 1`, cheat `0x14`, serialize,
+  and the `0x515259` `0x5A` store are §3; switch/case of that
+  store and any writer not in the bounded `mov byte [reg+0x36]`
+  scan remain `unknown`). Native `lastSuppliedFoodQuality`
+  lifecycle/source mapping is not proven, so it must not be
+  substituted. Do not name `house+0x8C` `crimeRisk`.
+- Complete constructor-zero set for `house+0x5C` / `house+0x8C`
+  beyond the empty-house `+0x8C = 0` write and `FUN_00427430`
+  save/load.
 - `DAT_01312214` runtime writers besides init (player wage buttons
   write `DAT_01312218`).
 - Native mapping of `house+0x24` (lifecycle and
