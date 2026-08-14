@@ -452,9 +452,10 @@ accounted spawn count displayed by the renderer. The link is direct:
   and cadence are confirmed non-isomorphic; the live `cStall+0x260`
   blend into `cMarket+0x180` is recovered, and mill-pickup cart
   `figure+0x13` is the mill `+0x2E4` selected recipe type-count
-  (not a recovered quality name). Peddler-vs-buyer `FUN_004EACD0`
-  exclusivity and the correct Native representation/mapping remain
-  open. Confirmed
+  (not a recovered quality name). Model-24 states 6/7 are confirmed
+  to reach `FUN_004EACD0` / `cMarket+0x2C`, so that writer is not
+  exclusive to peddlers; the correct Native representation/mapping
+  remain open. Confirmed
   tables live in
   `docs/exe-research/migration-popularity-producer.md`; they are not a public
   production API, and production ticks do not call them.
@@ -497,8 +498,9 @@ accounted spawn count displayed by the renderer. The link is direct:
   recipe type-count (the blend contribution is `20 * byte`; do
   not infer a 1…5 quality band merely from the product). Remaining
   unknown is the player-facing quality name and Native mapping of
-  that integer, whether buyers hit `FUN_004EACD0`
-  (spawn and think rows for 23 vs 24 are exclusive), the complete
+  that integer. Buyers in states 6/7 can hit `FUN_004EACD0`
+  (spawn and think rows for 23 vs 24 are exclusive; the house
+  writer is not). Remaining unknown is the complete
   `cHouseInfo+0x36` writer set, and the correct Native
   representation/mapping of that raw quality byte.
   Current Native `ResidentialUnit` food consumption, blending, and

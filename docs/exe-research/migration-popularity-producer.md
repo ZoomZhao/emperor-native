@@ -22,9 +22,10 @@ fields must not be substituted. The live `cStall+0x260` blend into
 `cMarket+0x180` is recovered. Mill-pickup cart `figure+0x13` is
 the mill vtable `+0x2E4` selected recipe type-count (§3); that is
 not a recovered player-facing quality name and is not Native
-`OriginalFoodCatalog.quality(in:)`. Peddler-vs-buyer
-`FUN_004EACD0` exclusivity and the correct Native
-representation/mapping remain open, and food stays a fail-closed
+`OriginalFoodCatalog.quality(in:)`. Peddler-vs-buyer spawn and
+think rows are exclusive; `FUN_004EACD0` / `cMarket+0x2C` is
+**not** exclusive to peddlers (§3). Native representation/mapping
+remain open, and food stays a fail-closed
 producer input. No implementation contract is authorized. The
 `FUN_0055AE30`
 monument walk is recovered in §3; Native mapping and save
@@ -344,8 +345,9 @@ recovered market-delivery path is this vtable slot. That does
 of `cHouseInfo+0x36`.
 
 Walker cadence (`identical`): `FUN_004E7EB0` / `FUN_004E6D80`
-increment figure `+0x41`; when the byte is `> 0x13` they call
-`FUN_004EACD0` @ `0x4EACD0`. That function:
+increment figure `+0x41`; EN `FUN_004E7EB0` @ `0x4E7EFE` is
+`cmp al, 0x14` / `jl` (call when the byte is `≥ 0x14` after
+`inc`). They call `FUN_004EACD0` @ `0x4EACD0`. That function:
 
 - figure `+0x12 == 0x26` (38, Elite Couple) → return 0;
 - figure `+0x12 == 0x4F` (79, Player's Heroes) →
@@ -356,8 +358,7 @@ increment figure `+0x41`; when the byte is `> 0x13` they call
 For a figure whose home object is `cMarket`, that is
 `FUN_00429DF0` → Chebyshev radius **2** → `cMarket+0x2c(figure,
 house)` = `0x5437B0`. `FUN_004EACD0` does **not** test model 23
-versus 24. Spawn, type-table think, and whether buyers actually
-enter this cadence are the next subsection.
+versus 24. Model-24 states 6/7 enter this cadence (§3 below).
 
 `0x5437B0` body (EN `.text`, `confirmed` bytes):
 
@@ -593,15 +594,16 @@ Spices 9, Dinners 28. `+0x184` is a market food-type **cap**
 (3 vs 5), not the mill’s current type count. The mill **selects**
 a type-count in that cap and copies it onto the cart.
 
-##### Peddler 23 vs buyer 24 — spawn and think rows exclusive; `FUN_004EACD0` not model-gated
+##### Peddler 23 vs buyer 24 — spawn/think exclusive; `FUN_004EACD0` shared
 
 Authored: `EmperorFigureModels.txt` 23 `peddler` range 60; 24
 `Marketplace buyer (Food/ Tea/ Hemp/ Bronzeware/ Lacquerware/ Silk/
-Ceramic)` range 50; 25 `Buyer's Servant` range 50. Buildings 53
-Mill, 59/60 Common/Grand Market Square, 66 Food Shop (`0x42`).
-Manual p.62 (supporting prose): right-click “current quality” is
-the food-shop quality distributed by **peddlers**; **buyers** fetch
-from the mill.
+Ceramic)` range 50; 25 `Buyer's Servant` range 50. Both 23 and
+24 have speed field `i` = **8**. Buildings 53 Mill, 59/60
+Common/Grand Market Square, 66 Food Shop (`0x42`). Manual p.62
+(supporting prose only; not a code gate): right-click “current
+quality” is the food-shop quality distributed by **peddlers**;
+**buyers** fetch from the mill.
 
 Spawn (`identical`):
 
@@ -614,6 +616,17 @@ Spawn (`identical`):
   `figure+0x40 = 6` (or **7** if dest checks fail), `+0x62 =
   market id`, `FUN_004EA8C0` destination (`figure vtable +0x20`),
   `+0x68 = dest building`, seven dwords of cargo plan.
+
+`FUN_004EA050` → `FUN_004E1420` (`identical`) default case
+(neither 23 nor 24 is a special `param_2` arm) →
+`FUN_004C71D0` (`identical`) sets vtable `0x7AFE60`. That
+vtable `+0x114` = unsplit `FUN_004C9310` @ `0x4C9310` (**no**
+`compare-report` row): `DAT_00A5F60C[type*18 + selector]`.
+Selector **8** is authored field `i` (speed). PE
+`DAT_0086ADF4` rows 23/24 already hold those model dwords
+(speed **8**); `FUN_005D1E20` (`identical`) copies them into
+`DAT_00A5F60C`. `FUN_004EB9C0` (`identical`) is
+`vtable+0x114(arg)`.
 
 Think trampoline (same table as §5.1): `FUN_004E27E0`
 (`identical`) → figure vtable `+0x28` `FUN_004C7580` →
@@ -629,19 +642,42 @@ Think trampoline (same table as §5.1): `FUN_004E27E0`
 states 1/2 → `FUN_004E6B70` / `FUN_004E47A0` → `FUN_004E7EB0` /
 `FUN_004E6D80` → `FUN_004EACD0`). Peddler home `+0x62` is the
 market id written at spawn (`confirmed`), so a live peddler on
-this think row is the recovered `0x5437B0` delivery walker.
+this think row is a recovered `0x5437B0` delivery walker.
 
 `0x4D1810` is a destination FSM on `figure+0x40 ∈ {4,5,6,7}`
-(jump table `0x4D1A64`). Spawn uses 6/7. States 6 and 7 call
-`FUN_004E47A0` (`identical`) with `FUN_004EB9C0(figure, 8)` =
-figure vtable `+0x114(8)`. `FUN_004E47A0` case 6 is
-`FUN_004E7EB0(..., 1)`, which **can** reach `FUN_004EACD0`.
-Whether model-24’s `+0x114(8)` selector actually takes that case
-is `unknown`. `FUN_004EACD0` still does not test 23 vs 24.
-**Spawn roles and type-table think rows are exclusive
-(`confirmed`). Exclusive use of `0x5437B0` by peddlers versus
-buyers is not proven.** Cart think `0x4D2970` is the recovered
-stall-deposit path, not house delivery.
+(`add eax, -4` / `cmp eax, 3` / `jmp [eax*4 + 0x4D1A64]`).
+Spawn uses 6/7. Prologue always `FUN_004EB9C0(figure, 8)` @
+`0x4D181D` into `ebx`. State 6 @ `0x4D1922`: if dest
+`building+4 == 1`, `FUN_004E47A0(id, ebx)` @ `0x4D196B`; else
+set `+0x40 = 7` and return. State 7 @ `0x4D1A0E`: always
+`FUN_004E47A0(id, ebx)` @ `0x4D1A15`. After state 6’s `47A0`,
+`+0x19 == 8` jumps to mill pickup `FUN_004E3C70` @ `0x4D19ED`.
+
+`FUN_004E47A0` (`identical`) `jmp [arg*4 + 0x4E4BBC]`. Speed 8
+is **case 8** @ `0x4E4921`, not case 6: if
+`figure+0x170 > 1` then `FUN_004E7EB0(id, 2)` @ `0x4E4B21`, else
+`FUN_004E7EB0(id, 1)` and `inc +0x170`. Case 6 @ `0x4E48E0` is
+unconditional `FUN_004E7EB0(id, 1)` (other speeds). Both cases
+enter `FUN_004E7EB0` with `param_2 ≥ 1`.
+
+`FUN_004E7EB0` (`identical`) @ `0x4E7F02` `call FUN_004EACD0`
+when `+0x41 ≥ 0x14` after `inc` (`cmp al, 0x14` / `jl`
+`0x4E7F52`). No model test. If `+0x42 < 1` and `+0x19 ≥ 8`
+(`cmp al, 8` / `jge 0x4E7F79`) the increment/ACD0 loop is
+skipped that tick (buyer standing at dest). Walking ticks
+(`+0x42 ≥ 1` or `+0x19 < 8`) run the loop. Ctor
+`FUN_004C72B0` zeros `+0x41`; peddler roam sets `0x14`, buyer
+spawn does not, so the buyer’s first ACD0 is after 20 `inc`s.
+
+`FUN_004EACD0` still does not test 23 vs 24. Buyer `+0x62` is
+the market id, so home `+0x28(figure, 2)` is `FUN_00429DF0` →
+`FUN_00429E10` Chebyshev 2 → `cMarket+0x2C` `0x5437B0`. That
+method has no 23-vs-24 test (EN `0x5437B0` body). **Spawn
+roles and type-table think rows are exclusive (`confirmed`).
+`FUN_004EACD0` / `cMarket+0x2C` is not exclusive to peddlers:
+model-24 states 6/7 can reach that writer (`confirmed`).**
+Manual p.62 does not override that path. Cart think `0x4D2970`
+remains the stall-deposit path, not house delivery.
 
 `cMarket+0x2C` remains the recovered normal house-delivery writer.
 Production stays `unsupportedOriginalProducer`. **No gameplay
@@ -725,10 +761,11 @@ type-count, not a recovered quality name and not Native
 p.48**, not the recovered `+0x36` or `+0x180` stores. Do not
 substitute `lastSuppliedFoodQuality` for `FUN_00590F30`. Do not
 change Swift. Production stays `unsupportedOriginalProducer`.
-**No gameplay implementation contract** until peddler-vs-buyer
-`FUN_004EACD0` exclusivity, Native representation/mapping of the
-recovered type-count→`20 * byte` blend, hero case-4 identity, and
-unencoded `+0x36` writer set required for fidelity are closed.
+**No gameplay implementation contract** until Native
+representation/mapping of the recovered type-count→`20 * byte`
+blend, hero case-4 identity, and unencoded `+0x36` writer set
+required for fidelity are closed. Peddler-vs-buyer
+`FUN_004EACD0` exclusivity is closed in §3 (not exclusive).
 
 #### CH/EN (`compare-report.tsv` rows only)
 
@@ -751,14 +788,16 @@ is not in this function), `FUN_00515770`, `FUN_00516ED0`,
 `FUN_00555F70`, `FUN_00590F30`, `FUN_005D16D0`, `FUN_005D3580`,
 `FUN_005DB4C0`, `FUN_004E3A80`, `FUN_004E3C70`, `FUN_004E44E0`,
 `FUN_004E47A0`, `FUN_004E6A70`, `FUN_004E6B70`, `FUN_004EA050`,
-`FUN_004EA8C0`, `FUN_004EB9C0`, `FUN_00515780`, `FUN_004C72B0`,
-`FUN_004C75C0`, `FUN_004C95F0`, `FUN_004E27E0`.
+`FUN_004EA8C0`, `FUN_004EB9C0`, `FUN_00515780`, `FUN_004C71D0`,
+`FUN_004C72B0`, `FUN_004C75C0`, `FUN_004C95F0`, `FUN_004E27E0`,
+`FUN_004E1420`, `FUN_005D1E20`.
 No `compare-report.tsv` row for `FUN_00416B50`, unsplit
 `0x5437B0`, unsplit `0x515120`, unsplit `0x541180`
 (`FUN_00541180`), unsplit `0x541760` (`FUN_00541760`), unsplit
 `0x4D0270` / `0x4D1810` / `0x4D2970` (figure type-table slot 0
 for models 23/24/25), unsplit mill `+0x2E4` `0x555330` /
-`+0x2E8` `0x555E40`, `FUN_004C7580`, or `cHouseInfo` vtable `+8`
+`+0x2E8` `0x555E40`, unsplit `FUN_004C9310` @ `0x4C9310`,
+`FUN_004C7580`, or `cHouseInfo` vtable `+8`
 @ `0x517410`; do **not** call them identical. `FUN_005149C0` @
 `0x5149C0` ends around `0x51511E`; `0x515120` is the next unsplit
 function.
@@ -1751,9 +1790,10 @@ cadence are confirmed non-isomorphic, so those fields must not be
 substituted. The live `cStall+0x260` blend/store into
 `cMarket+0x180` is recovered. Mill-pickup cart `figure+0x13` is
 the mill `+0x2E4` selected recipe type-count (§3); player-facing
-quality name, Native `quality(in:)` mapping, peddler-vs-buyer
-`FUN_004EACD0` exclusivity, and the correct Native
-representation/mapping remain open, and food
+quality name, Native `quality(in:)` mapping, and the correct Native
+representation/mapping remain open. Peddler-vs-buyer
+`FUN_004EACD0` exclusivity is closed in §3 (model 24 states 6/7
+can reach `cMarket+0x2C`). Food
 stays a fail-closed producer input.
 No food implementation contract. The `FUN_0055AE30` walk is recovered in §3; Native
 percent / object-vector / `+0xB4` / `goal+8` save mapping is
@@ -1849,8 +1889,8 @@ original symbol name are not. Do not spawn walkers or call
   `20 * type-count` vs Native `20/30/50/70/90` remain `unknown`.
   Do **not** assign the `cMarket+0x180` **store** to `cMillBldg`.
   Peddler (23) vs buyer (24) spawn and type-table think rows are exclusive
-  (`confirmed`); whether buyers on `FUN_004E47A0` actually hit
-  `FUN_004EACD0` → `cMarket+0x2c` remains `unknown`. Hero model-79
+  (`confirmed`); model-24 states 6/7 **can** reach
+  `FUN_004EACD0` → `cMarket+0x2c` (`confirmed`). Hero model-79
   case-4 identity for the `0x5A` store. Unencoded `+0x36` writers
   beyond §3; the complete writer set is not proven. Current Native
   `ResidentialUnit` food consumption, blending, and cadence are
