@@ -379,13 +379,10 @@ If the return **is** `1`:
      `DAT_00D62408` meaning are **unknown** (no `.text` absolute
      writer to `DAT_00D62408` was found; three reads only:
      `FUN_0042D9A0`, `FUN_004ACD00`, this site).
-4. `eax = house vtable +0x1E4()`; if `*(byte *)(eax + 0x3C) != 0`,
-   **skip** the add/`FUN_00591900` pair. The `+0x3C` byte’s semantic
-   name is **unknown**. One confirmed writer of that byte on the
-   `+0x1E4` object is `FUN_004681A0` (stores `param_2`; caller
-   `FUN_00468420` passes `2` while subtracting house residents). Do
-   not treat that as a complete `+0x3C` map.
-5. If `+0x3C == 0` (`0x4CA25C…0x4CA27E`):
+4. `eax = house vtable +0x1E4()` (`FUN_00416B50`; §5.9). If
+   `*(byte *)(eax + 0x3C) != 0`, **skip** the add/`FUN_00591900`
+   pair. Original name of that `cHouseInfo` byte is **unknown**.
+5. If `+0x3C == 0` (`0x4CA260…0x4CA27E`):
    - **`add word [house+0x20], movzx byte [figure+0x6e]` at
      `0x4CA265`**;
    - `house+0x22 = capacity - house+0x20`;
@@ -459,7 +456,10 @@ forbidden. The original write is this per-model immigrant
 think/state machine, not an assignment-tick side effect.
 Production still must not spawn walkers or enable the
 migration producer: food / monument / war / mode / `house+0x24` /
-`+0x3C` / `DAT_00D62408` semantics are unresolved.
+`DAT_00D62408` remain unresolved. `cHouseInfo+0x3C` method identity
+and `FUN_004C9FD0` gate polarity are closed (§5.9); original
+semantic name, complete writer/lifecycle set, and Native mapping
+are not.
 
 `FUN_004ADC90` departure assignment walks occupied houses by
 `house+0x16` buckets and calls `FUN_004ADED0`. It does **not** read
@@ -617,6 +617,63 @@ CH/EN: `FUN_0042D360`, `FUN_0042D480`, `FUN_005188B0`,
 `compare-report.tsv`. `FUN_0042DD40` and `FUN_004C9FD0` are absent
 from `split-merged` / `compare-report.tsv` (EN `.text` only).
 
+### 5.9 House vtable `+0x1E4` / `cHouseInfo+0x3C` (2026-08-14)
+
+`HouseBldg` `0x7ABA38 + 0x1E4` @ `0x7ABC1C` is **`FUN_00416B50` @
+`0x416B50`** (`confirmed` EN `.text`; corpus gap):
+`lea eax, [ecx+0xC8]; ret`. Returns the subobject constructed in
+`FUN_0042D480` (`lea ecx, [esi+0xC8]; call FUN_00517190`).
+
+That subobject’s vfptr is `0x7B5C44`. COL `0x7D3408` / type
+descriptor `0x854300` name `.?AVcHouseInfo@@` (`confirmed` RTTI).
+`cHouseInfo+0x3C` is `HouseBldg+0x104`, **not** `HouseBldg+0x3C`.
+
+`FUN_004C9FD0` state-8 arrival gate (`confirmed` opcodes), after the
+empty-house `+0x230` block and before the occupancy add:
+call `[eax+0x1E4]` @ `0x4CA253`; `mov cl, [eax+0x3C]` @ `0x4CA259`;
+`test cl, cl` @ `0x4CA25C`; `jne 0x4CA281` @ `0x4CA25E`.
+Nonzero **skips** `house+0x20 += figure+0x6e` @ `0x4CA265` and
+`FUN_00591900`. Zero falls through to that add. `house+0x32 = 0` at
+`0x4CA281` runs either way. Distinct from `house+0x24`, `house+9`,
+remaining capacity `+0x22`, and occupancy `+0x20`.
+
+**Writers of `cHouseInfo+0x3C` via this object (`confirmed`; not a
+complete map).** Constructor `FUN_00517190` @ `0x51724F` /
+`0x51725E`: `lea ecx, [esi+0x3C]`; `mov byte [ecx], 0`.
+`FUN_004681A0` after `+0x1E4()`: call `FUN_00591920(count)` on the
+converted count, then subtract the same count from `house+0x20`,
+then write `cHouseInfo+0x3C = param_2` and `house+0x98`
+(`p[0x26]`) `= 0x20`. Proven caller `FUN_00468420` passes `2`.
+After `FUN_004681A0(param_1, 2)`, `FUN_00468420` loops three times
+calling `FUN_004EA050(..., 0x12, ...)`.
+`GameData/Model/EmperorFigureModels.txt` decimal ID 18 (`0x12`) is
+“Disease Carrier”. Confirmed relationship: the value-`2` path
+subsequently generates three Disease Carriers. That associates
+`cHouseInfo+0x3C` with disease-carrier handling; it does not name
+the byte, recover a threshold, or close its semantics. Calendar
+case `6` (`FUN_004AC2B0`) calls `FUN_005185C0`: live `+0xB8` houses
+with `+0x3C != 0` and `+0x98 > 0` decrement `+0x98` and write
+`+0x3C = 0` when residents are 0 or the counter hits 0.
+
+**Same-identity readers (`confirmed`, not a name).**
+`FUN_004AD3D0` (capacity totals use current residents instead of
+model capacity when `+0x3C != 0`); `FUN_00519F30`; `FUN_0058C420`
+(`+0xB8` then `+0x3C != 0` sets a status bit). Overlay
+`Not_over_a_building.c` prints other `+0x1E4` bytes (`+0x2A…+0x38`)
+and has **no** label for `+0x3C`. This pass did not find a mapping
+in authored house columns. Do not ship `cHouseInfo` or
+“needs-object” as a Native field identifier for this byte.
+
+**Rejected (`confirmed` negatives).** `FUN_004C9C80` writes figure
+`+0x3C`. `FUN_00426EA0` copies `HouseBldg+0x3C` as a short, not
+`cHouseInfo+0x3C`. `cIndustrialBldg` `0x7B65E4+0x1E4` is
+`0x40E630`, not `FUN_00416B50`.
+
+CH/EN: `FUN_00517190`, `FUN_004681A0`, `FUN_00468420`,
+`FUN_005185C0`, `FUN_004AD3D0`, `FUN_00519F30`, `FUN_0058C420`,
+`FUN_004AC2B0` are `identical`. `FUN_00416B50` and `FUN_004C9FD0`
+are absent from `split-merged` / `compare-report.tsv`.
+
 ## 6. Month rollover (confirmed)
 
 `FUN_004AC650` copies `DAT_01311FCC` → `DAT_01312604` and zeros
@@ -626,9 +683,11 @@ from `split-merged` / `compare-report.tsv` (EN `.text` only).
 
 The original immigrant arrival state machine in §5 is recovered.
 That does **not** authorize enabling automatic migration. Food,
-monument, war, mode, `house+0x24`, needs-object `+0x3C`, and
-`DAT_00D62408` remain unresolved. Do not spawn walkers or call
-`admitResidents` from the production tick.
+monument, war, mode, `house+0x24`, and `DAT_00D62408` remain
+unresolved. `cHouseInfo+0x3C` method identity and `FUN_004C9FD0`
+gate polarity are closed (§5.9); original semantic name, complete
+writer/lifecycle set, and Native mapping are not. Do not spawn
+walkers or call `admitResidents` from the production tick.
 
 **Do:**
 
@@ -657,11 +716,11 @@ monument, war, mode, `house+0x24`, needs-object `+0x3C`, and
 - Original semantic name of `HouseBldg+9` (the byte `FUN_0042DD40`
   tests; complete writer set is not recovered). House vtable
   `+0xB8` itself is §5.8.
-- House vtable methods used by `FUN_004C9FD0`: `+0x1E4` (object
-  whose `+0x3C` gates the add), `+0x230` (empty-house call with `3`
-  or `0xD`).
-- Semantic name of that `+0x3C` byte (gate is confirmed; complete
-  writer set is not).
+- Original semantic name of `cHouseInfo+0x3C`, complete
+  writer/lifecycle set, and Native mapping (method identity and
+  `FUN_004C9FD0` gate polarity are §5.9).
+- House vtable method used by `FUN_004C9FD0`: `+0x230` (empty-house
+  call with `3` or `0xD`).
 - `DAT_00D62408` writer and meaning (empty-house `+0x230` skipped
   when nonzero; no `.text` absolute writer found).
 - `FUN_004BA6F0` neighbor-slot / terrain-flag meaning beyond the
