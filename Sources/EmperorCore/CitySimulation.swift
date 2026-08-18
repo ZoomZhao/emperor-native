@@ -35,6 +35,19 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
     public var desirability: Int
     public var lastSuppliedFoodQualityRawValue: Int
     public var lastSuppliedCommodityIDs: Set<Int>
+    /// Original `cHouseInfo+0x3C` post-removal settling lock (values `0`/`2`)
+    /// with the `house+0x98` countdown (`FUN_004681A0` sets both; the daily
+    /// `FUN_005185C0` walk decrements and clears — §10.6). While nonzero, the
+    /// immigrant arrival occupancy write is skipped.
+    public private(set) var settlingLock: Int
+    public private(set) var settlingLockRemainingSteps: Int
+    /// Original vacant-house building ID (`2` Vacant House / `11` Unocc Elite)
+    /// before the first immigrant arrival converts the house (`+0x230`
+    /// contract, §5.10): common stays level 0, elite jumps 8 → 10.
+    public private(set) var vacantTypeID: Int?
+    /// Original `house+0x5C` food-shortage streak byte consumed by the
+    /// popularity food walk `FUN_00590F30` (§3): `1→−1, 2→−2, ≥3→−3`.
+    public private(set) var foodShortageStreak: Int
 
     public init(
         id: Int,
@@ -51,7 +64,11 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
         serviceCoverage: Set<WalkerServiceKind> = [],
         desirability: Int = 0,
         lastSuppliedFoodQualityRawValue: Int = FoodQuality.none.rawValue,
-        lastSuppliedCommodityIDs: Set<Int> = []
+        lastSuppliedCommodityIDs: Set<Int> = [],
+        settlingLock: Int = 0,
+        settlingLockRemainingSteps: Int = 0,
+        vacantTypeID: Int? = nil,
+        foodShortageStreak: Int = 0
     ) {
         self.id = id
         self.houseLevelID = houseLevelID
@@ -68,6 +85,10 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
         self.desirability = desirability
         self.lastSuppliedFoodQualityRawValue = lastSuppliedFoodQualityRawValue
         self.lastSuppliedCommodityIDs = lastSuppliedCommodityIDs
+        self.settlingLock = max(0, settlingLock)
+        self.settlingLockRemainingSteps = max(0, settlingLockRemainingSteps)
+        self.vacantTypeID = vacantTypeID
+        self.foodShortageStreak = min(3, max(0, foodShortageStreak))
     }
 
     public func capacity(using models: BuildingModelTable) -> Int {
@@ -101,12 +122,39 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
 
     public mutating func addFoodSupply(amount: Int, quality: FoodQuality) {
         guard amount > 0 else { return }
-        if foodSupplyAmount == 0 {
-            foodQualityRawValue = quality.rawValue
+        let marketQuality = quality.rawValue
+        // Elite houses (11…17) skip the quality write when the market quality
+        // band is below 3 (`FUN_005188D0` gate in `FUN_00543B20`/§10.10); the
+        // food itself is still added.
+        if houseLevelID >= 8, marketQuality <= 49 {
+            foodSupplyAmount += amount
+            return
+        }
+        let currentQuality = foodQualityRawValue
+        if marketQuality > currentQuality {
+            // Original `0x543A09` write: a better market delivery **replaces**
+            // the house quality byte (§10.10).
+            foodQualityRawValue = marketQuality
         } else {
-            // Mixing a new delivery cannot make the existing food better than
-            // its weakest component, matching the market's minimum-quality rule.
-            foodQualityRawValue = min(foodQualityRawValue, quality.rawValue)
+            // Otherwise blend current quality with the market quality using
+            // the recovered five-ratio table (`r = delivered/existingStock`,
+            // `DAT_007B7248/…`, integer divisions per the confirmed `sar`/
+            // `imul` identities).
+            let existing = Double(foodSupplyAmount)
+            let ratio = existing <= 0 ? 10.0 : Double(amount) / existing
+            let blended: Int
+            if ratio > 3 {
+                blended = (currentQuality + 3 * marketQuality) / 4
+            } else if ratio > 2 {
+                blended = (currentQuality + 2 * marketQuality) / 3
+            } else if ratio > 0.5 {
+                blended = (currentQuality + marketQuality) / 2
+            } else if ratio > 0.33 {
+                blended = (2 * currentQuality + marketQuality) / 3
+            } else {
+                blended = (3 * currentQuality + marketQuality) / 4
+            }
+            foodQualityRawValue = blended
         }
         foodSupplyAmount += amount
     }
@@ -128,6 +176,50 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
         return consumed
     }
 
+    /// Original `FUN_004681A0` / `FUN_00468420` resident-removal setter
+    /// (`+0x3C = 2`, `house+0x98 = 32`; §10.6). The lock suppresses immigrant
+    /// occupancy writes while it runs.
+    public mutating func startSettlingLock(steps: Int = 32) {
+        settlingLock = 2
+        settlingLockRemainingSteps = max(1, steps)
+    }
+
+    /// Daily `FUN_005185C0` equivalent: an empty house clears immediately;
+    /// otherwise the countdown decrements and the lock clears at zero (§10.6).
+    public mutating func advanceSettlingLock() {
+        guard settlingLock != 0 else { return }
+        if residents == 0 {
+            settlingLock = 0
+            settlingLockRemainingSteps = 0
+            return
+        }
+        settlingLockRemainingSteps -= 1
+        if settlingLockRemainingSteps <= 0 {
+            settlingLock = 0
+            settlingLockRemainingSteps = 0
+        }
+    }
+
+    /// Original `FUN_00518DE0` / house vtable `+0x230` type switch on first
+    /// occupancy (§5.10): vacant common `2 → 3` (level stays 0), vacant elite
+    /// `11 → 13` (Native level 8 → 10). Clears the vacant marker.
+    public mutating func activateVacantHouse() {
+        guard residents == 0, let vacant = vacantTypeID else { return }
+        if vacant == 11 {
+            houseLevelID = 10
+        }
+        vacantTypeID = nil
+    }
+
+    /// Original `house+0x5C` streak update in the food walk (§3).
+    public mutating func recordFoodQualityScore(_ satisfied: Bool) {
+        if satisfied {
+            foodShortageStreak = 0
+        } else {
+            foodShortageStreak = min(3, foodShortageStreak + 1)
+        }
+    }
+
     private enum CodingKeys: String, CodingKey {
         case id, houseLevelID, residents, hasTaxCoverage, footprintMultiplier, location
         case orientation
@@ -135,6 +227,9 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
         case foodSupplyAmount, foodQualityRawValue
         case serviceCoverage, desirability
         case lastSuppliedFoodQualityRawValue, lastSuppliedCommodityIDs
+        case settlingLock, settlingLockRemainingSteps
+        case vacantTypeID
+        case foodShortageStreak
     }
 
     public init(from decoder: Decoder) throws {
@@ -173,6 +268,22 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
             Set<Int>.self,
             forKey: .lastSuppliedCommodityIDs
         ) ?? []
+        settlingLock = max(
+            0,
+            try container.decodeIfPresent(Int.self, forKey: .settlingLock) ?? 0
+        )
+        settlingLockRemainingSteps = max(
+            0,
+            try container.decodeIfPresent(Int.self, forKey: .settlingLockRemainingSteps) ?? 0
+        )
+        vacantTypeID = try container.decodeIfPresent(Int.self, forKey: .vacantTypeID)
+        foodShortageStreak = min(
+            3,
+            max(
+                0,
+                try container.decodeIfPresent(Int.self, forKey: .foodShortageStreak) ?? 0
+            )
+        )
     }
 }
 
@@ -259,6 +370,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
     private var simulationClockState: SimulationClockState?
     private var monthlyServiceCoverageState: MonthlyServiceCoverageAccumulator?
     private var migrationState: DeterministicMigrationState?
+    /// Optional so saves written before the producer context existed decode.
+    private var migrationContextState: CampaignMigrationContext?
     // Internal so the campaign-event extension can mutate it while the public
     // API remains read-only and save compatible.
     var campaignEventState: CampaignCityEventState?
@@ -300,6 +413,7 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         simulationClockState = SimulationClockState()
         monthlyServiceCoverageState = MonthlyServiceCoverageAccumulator()
         migrationState = DeterministicMigrationState()
+        migrationContextState = CampaignMigrationContext()
         campaignEventState = CampaignCityEventState()
         self.taxBandID = taxBandID
         self.difficulty = difficulty
@@ -355,6 +469,34 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
     }
     public var migration: DeterministicMigrationState {
         migrationState ?? DeterministicMigrationState()
+    }
+
+    public var migrationContext: CampaignMigrationContext {
+        migrationContextState ?? CampaignMigrationContext()
+    }
+
+    /// Runtime sets this at mission start and each monthly advance (wage,
+    /// debt months, monument goals).
+    public mutating func setMigrationContext(_ context: CampaignMigrationContext) {
+        migrationContextState = context
+    }
+
+    /// Fixture/verification switch for the recovered producer. Production
+    /// stays on `.unsupportedOriginalProducer` until the playthrough gates
+    /// pass end-to-end.
+    public mutating func setAutomaticMigrationAvailability(
+        _ availability: AutomaticMigrationAvailability
+    ) {
+        var migration = migrationState ?? DeterministicMigrationState()
+        migration.setAutomaticMigrationAvailability(availability)
+        migrationState = migration
+    }
+
+    /// Fixture/verification setter for the recovered popularity seed.
+    public mutating func setMigrationPopularity(_ value: Int) {
+        var migration = migrationState ?? DeterministicMigrationState()
+        migration.setPopularity(value)
+        migrationState = migration
     }
 
     /// The single labor snapshot used by production, storage, markets and
@@ -529,16 +671,13 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             )
         }
         for placement in placedBuildings {
-            let predicate: Bool?
-            switch placement.buildingID {
-            case 3...17,
-                 36,
-                 54, 56, 58,
-                 OriginalGrandCanalLayoutCatalog.phaseLaborProviderBuildingID:
-                predicate = false
-            default:
-                predicate = nil
-            }
+            // Every placed building blocks movement unless a recovered branch
+            // says otherwise; `+0xCC == false` is confirmed for the housing/
+            // storage/service families and is the conservative default for the
+            // remaining non-walkable buildings. The still-unclassified
+            // TRUE-predicate branch keeps throwing (fail-closed), so no cell
+            // silently becomes passable through an unverified building.
+            let predicate: Bool? = false
             try insert(
                 Occupancy(
                     buildingID: placement.buildingID,
@@ -552,7 +691,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             try insert(
                 Occupancy(
                     buildingID: part.buildingID,
-                    currentMonumentSubBuildingPhase: part.currentSubBuildingPhase
+                    currentMonumentSubBuildingPhase: part.currentSubBuildingPhase,
+                    genericFootprintPredicate: false
                 ),
                 at: canalFootprint.points(at: part.worldOrigin)
             )
@@ -1436,6 +1576,7 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             footprintMultiplier: footprintMultiplier,
             location: location,
             orientation: orientation,
+            vacantTypeID: constructionBuildingID == 11 ? 11 : 2,
             models: rules.models.buildings
         )
     }
@@ -1493,6 +1634,7 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         footprintMultiplier: Int = 1,
         location: GridPoint? = nil,
         orientation: IsometricBuildingOrientation = .northSouth,
+        vacantTypeID: Int? = nil,
         models: BuildingModelTable
     ) -> Int? {
         guard let model = models[houseLevelID: levelID],
@@ -1507,7 +1649,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             hasTaxCoverage: hasTaxCoverage,
             footprintMultiplier: multiplier,
             location: location,
-            orientation: orientation
+            orientation: orientation,
+            vacantTypeID: vacantTypeID
         ))
         return id
     }
@@ -1525,6 +1668,429 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             remaining -= admitted
         }
         return requested - remaining
+    }
+
+    /// Original immigrant arrival write at `0x4CA265` (§5.3): skips while the
+    /// settling lock is set, converts a vacant house on first occupancy, and
+    /// adds the people count clamped to capacity. Population is derived from
+    /// house residents, so no separate counter is needed.
+    @discardableResult
+    public mutating func applyImmigrantArrival(
+        _ arrival: ImmigrantArrival,
+        models: BuildingModelTable
+    ) -> Bool {
+        guard let index = houses.firstIndex(where: { $0.id == arrival.houseID }) else {
+            return false
+        }
+        guard houses[index].settlingLock == 0 else { return false }
+        houses[index].activateVacantHouse()
+        let capacity = houses[index].capacity(using: models)
+        let admitted = min(arrival.peopleCount, max(0, capacity - houses[index].residents))
+        guard admitted > 0 else { return false }
+        houses[index].residents += admitted
+        return true
+    }
+
+    /// Arms the original post-removal settling lock on a house
+    /// (`FUN_004681A0` contract, §10.6). The production resident-removal path
+    /// calls this; the arrival write skips while it is set.
+    @discardableResult
+    public mutating func startHouseSettlingLock(houseID: Int, steps: Int = 32) -> Bool {
+        guard let index = houses.firstIndex(where: { $0.id == houseID }) else { return false }
+        houses[index].startSettlingLock(steps: steps)
+        return true
+    }
+
+    /// Spawns a physical immigrant figure (model 11) from the authored land
+    /// entry toward `houseID`. The producer is unsupported, so production
+    /// never calls this; fixtures use it to exercise the arrival chain.
+    /// `houseWaitOffset` is the recovered `house+0x51` term (semantics not
+    /// closed; defaults to 0 and is recorded as an inference).
+    @discardableResult
+    public mutating func spawnImmigrant(
+        houseID: Int,
+        peopleCount: Int,
+        houseWaitOffset: Int = 0,
+        grids: OriginalGrandCanalLayoutCatalog.WorkerRoutingGrids
+    ) -> Int? {
+        var migration = migrationState ?? DeterministicMigrationState()
+        let result = spawnImmigrant(
+            houseID: houseID,
+            peopleCount: peopleCount,
+            houseWaitOffset: houseWaitOffset,
+            grids: grids,
+            into: &migration
+        )
+        migrationState = migration
+        return result
+    }
+
+    @discardableResult
+    private mutating func spawnImmigrant(
+        houseID: Int,
+        peopleCount: Int,
+        houseWaitOffset: Int = 0,
+        grids: OriginalGrandCanalLayoutCatalog.WorkerRoutingGrids,
+        into migration: inout DeterministicMigrationState
+    ) -> Int? {
+        guard let house = houses.first(where: { $0.id == houseID }),
+              let location = house.location,
+              let entry = terrain?.authoredPoints?.landEntry,
+              let destination = DeterministicMigration.houseRoadAccessPoint(
+                houseLocation: location,
+                vacantBuildingID: house.vacantTypeID ?? (house.houseLevelID == 10 ? 11 : 2),
+                roadNetwork: roadNetwork
+              ) else {
+            return nil
+        }
+        migration.advanceImmigrantWaitGlobal()
+        let waitSteps = (houseWaitOffset & 0xFF7F) + migration.immigrantWaitGlobal
+        guard let walker = DeterministicMigration.spawnImmigrant(
+            id: migration.nextImmigrantWalkerID,
+            houseID: houseID,
+            peopleCount: peopleCount,
+            entryPoint: entry,
+            destination: destination,
+            waitSteps: waitSteps,
+            primaryValues: grids.primaryPassability,
+            fallbackValues: grids.fallbackCellClass,
+            width: grids.width,
+            height: grids.height
+        ) else {
+            return nil
+        }
+        let walkerID = walker.id
+        migration.registerImmigrantWalker(walker)
+        return walkerID
+    }
+
+    /// Complete monument roots for the popularity term (§10.8): legacy
+    /// projects, phased 77/84, palace 82, canal 83, and Great Wall layout
+    /// roots whose sub-index-0 part is at its final phase.
+    public var completeMonumentRootBuildingIDs: Set<Int> {
+        var roots = aesthetics.completedMonumentBuildingIDs
+        for project in aesthetics.phasedMonumentProjects where project.isComplete {
+            roots.insert(project.buildingID)
+        }
+        if let palace = aesthetics.largePalaceProject, palace.isComplete {
+            roots.insert(LargePalaceProjectRuntime.buildingID)
+        }
+        // Executable-confirmed per-kind phase counts: wall 11, tower 12,
+        // gate 2, road 3; a root (sub-index 0) is complete at `count - 1`
+        // (§10.8 / great-wall-map-state.md).
+        let finalPhaseByKind: [OriginalGreatWallLayoutCatalog.SubBuildingKind: Int] = [
+            .wall: 10, .tower: 11, .gate: 1, .road: 2,
+        ]
+        for part in aesthetics.greatWallMapPartStates
+        where part.subBuildingIndex == 0 {
+            if let kind = OriginalGreatWallLayoutCatalog.subBuildingKind(
+                buildingID: part.buildingID,
+                subBuildingIndex: 0
+            ), let finalPhase = finalPhaseByKind[kind] {
+                if part.currentSubBuildingPhase >= finalPhase {
+                    roots.insert(part.buildingID)
+                }
+            }
+        }
+        return roots
+    }
+
+    /// Recovered `FUN_00590F30` food term (§3): mean of per-house scores
+    /// (`+2` when raw quality ≥ required, else `−streak`), rounded
+    /// away-from-zero only when `abs(remainder) > count/2`; a negative mean
+    /// returns 0 while population < 350 and the city never exceeded 349.
+    mutating func migrationFoodTerm(
+        rules: EconomyRulesEngine,
+        neverExceeded349: Bool
+    ) -> Int {
+        let population = self.population
+        var sum = 0
+        var count = 0
+        for index in houses.indices.sorted(by: { houses[$0].id < houses[$1].id }) {
+            let house = houses[index]
+            guard house.residents > 0,
+                  let required = rules.models.buildings[houseLevelID: house.houseLevelID]?
+                    .foodQualityRequired,
+                  required > 0 else { continue }
+            let satisfied = house.foodQualityRawValue >= required
+            houses[index].recordFoodQualityScore(satisfied)
+            if satisfied {
+                sum += 2
+            } else {
+                sum -= max(1, houses[index].foodShortageStreak)
+            }
+            count += 1
+        }
+        guard count > 0 else { return 0 }
+        let mean = sum / count
+        let remainder = abs(sum % count)
+        let rounded = remainder * 2 > count ? mean + (sum < 0 ? -1 : 1) : mean
+        if rounded < 0, population < 350, !neverExceeded349 {
+            return 0
+        }
+        return rounded
+    }
+
+    /// Recovered `FUN_00591200` popularity update (§2–§3). Runs on the two
+    /// slice days (1 and 16) of each Native month.
+    public mutating func updateMigrationPopularity(rules: EconomyRulesEngine) {
+        let population = self.population
+        var migration = migrationState ?? DeterministicMigrationState()
+        if population > 349 {
+            migration.setNeverExceeded349()
+        }
+
+        // Tax (coverage < 10% forces the None row).
+        let taxedPopulation = houses
+            .filter(\.hasTaxCoverage)
+            .reduce(0) { $0 + $1.residents }
+        let hasMeaningfulCoverage = population > 0 && taxedPopulation * 10 >= population
+        var tax = rules.taxSentiment(
+            bandID: taxBandID,
+            difficulty: difficulty,
+            hasMeaningfulCoverage: hasMeaningfulCoverage
+        ) ?? 0
+        var wage = DeterministicMigration.wageEffect(
+            currentWage: migrationContext.normalAnnualWage
+        )
+        let workforce = workforceSnapshot(models: rules.models.buildings)
+        let unemploymentPercent = workforce.availableWorkers > 0
+            ? workforce.unemployedWorkers * 100 / workforce.availableWorkers
+            : 0
+        var employment = DeterministicMigration.employmentEffect(
+            unemploymentPercent: unemploymentPercent
+        )
+        let suppressNegatives = population < 350 && !migration.neverExceeded349
+        if suppressNegatives {
+            if tax < 0 { tax = 0 }
+            if wage < 0 { wage = 0 }
+            if employment < 0 { employment = 0 }
+        }
+
+        var food = migrationFoodTerm(
+            rules: rules,
+            neverExceeded349: migration.neverExceeded349
+        )
+        if food < 0, suppressNegatives { food = 0 }
+        let debt = DeterministicMigration.debtEffect(
+            debtYears: migrationContext.consecutiveDebtMonths / 12,
+            treasuryIsNegative: economy.treasury < 0
+        )
+        let feng = DeterministicMigration.fengShuiEffect(
+            population: population,
+            harmonyPercent: fengShuiSummary(models: rules.models.buildings).harmonyPercent
+        )
+        let watchtowers = placedBuildings.filter { $0.buildingID == 127 }.count
+        let repression = DeterministicMigration.repressionEffect(
+            population: population,
+            watchtowerCount: watchtowers
+        )
+        let monument = DeterministicMigration.monumentPopularityTerm(
+            goalBuildingIDs: migrationContext.monumentGoalBuildingIDs,
+            completeRootBuildingIDs: completeMonumentRootBuildingIDs
+        )
+        let sum = feng + repression + 1 + monument + debt + food + wage + employment + tax
+        let delta = DeterministicMigration.dampedPopularityDelta(
+            current: migration.popularity,
+            factorSum: sum
+        )
+        migration.setPopularity(migration.popularity + delta)
+
+        // DAT_01312514 worst-factor blame (1 food … 8 repression).
+        var blame = 0
+        var worst = Int.max
+        let candidates: [(Int, Int)] = [
+            (1, food), (2, employment), (3, tax), (4, wage),
+            (5, debt), (6, 0), (7, feng), (8, repression),
+        ]
+        for (index, value) in candidates where value < worst {
+            worst = value
+            blame = index
+        }
+        migration.setFactorBlame(blame)
+        migrationState = migration
+    }
+
+    /// Recovered daily `FUN_004AD4A0` pressure/request/assignment pass
+    /// (§4–§5). Departure requests are recorded but not yet dispatched
+    /// (emigration walkers fail-closed, documented).
+    public mutating func dailyMigrationAssignment(rules: EconomyRulesEngine) {
+        var migration = migrationState ?? DeterministicMigrationState()
+        migration.advanceImmigrantWaitGlobal()
+        let population = self.population
+        var pressure = DeterministicMigration.pressureBand(popularity: migration.popularity)
+        if population > 199_999 {
+            pressure = 0
+        } else if warCount >= 4, pressure > 0 {
+            pressure = 0
+        }
+        migration.setPressure(pressure)
+        migration.setArrivalRequest(0)
+        migration.setDepartureRequest(0)
+        if pressure > 0 {
+            if migration.arrivalCooldown != 0 {
+                migration.setArrivalCooldown(migration.arrivalCooldown - 1)
+            } else {
+                migration.setArrivalRequest(
+                    DeterministicMigration.requestSize(forAbsolutePressure: pressure)
+                )
+                migration.setDepartureCooldown(2)
+            }
+        } else if pressure < 0 {
+            if migration.departureCooldown != 0 {
+                migration.setDepartureCooldown(migration.departureCooldown - 1)
+            } else if population >= 101 {
+                migration.setDepartureRequest(
+                    DeterministicMigration.requestSize(forAbsolutePressure: -pressure)
+                )
+                migration.setArrivalCooldown(2)
+            }
+        }
+
+        migration.setAssignedToday(0)
+        var pending = migration.pendingArrival
+        let request = migration.arrivalRequest
+        if request > 0 {
+            if request < 6 {
+                pending += request
+                if pending > 5 {
+                    _ = assignImmigrantRequests(pending, migration: &migration, rules: rules)
+                    pending = 0
+                }
+            } else {
+                _ = assignImmigrantRequests(request, migration: &migration, rules: rules)
+                pending = migration.pendingArrival
+            }
+        }
+        migration.setPendingArrival(pending)
+        migration.setPendingDeparture(
+            migration.pendingDeparture + migration.departureRequest
+        )
+        migration.setArrivalRequest(0)
+        migration.setDepartureRequest(0)
+        migrationState = migration
+    }
+
+    /// Recovered `FUN_004ADA10` house walk (§5): spawns immigrant figures for
+    /// up to `request` people across flood-reachable houses. Returns the
+    /// unassigned remainder and updates the assignment accounting.
+    @discardableResult
+    mutating func assignImmigrantRequests(
+        _ request: Int,
+        migration: inout DeterministicMigrationState,
+        rules: EconomyRulesEngine
+    ) -> Int {
+        guard request > 0 else { return 0 }
+        guard let terrain, let entry = terrain.authoredPoints?.landEntry else {
+            migration.setUnfulfilledArrivalCarry(
+                migration.unfulfilledArrivalCarry + request
+            )
+            return request
+        }
+        let grids = (try? grandCanalWorkerRoutingGrids()) ?? .init(
+            width: terrain.width,
+            height: terrain.height,
+            primaryPassability: [UInt16](repeating: 0, count: terrain.width * terrain.height),
+            fallbackCellClass: [UInt32](repeating: 0, count: terrain.width * terrain.height)
+        )
+        let flood = DeterministicMigration.landEntryFloodDepths(
+            width: grids.width,
+            height: grids.height,
+            primaryPassability: grids.primaryPassability,
+            seed: entry
+        )
+        var remaining = request
+
+        func floodReachability(of house: ResidentialUnit) -> Bool {
+            guard let location = house.location,
+                  let access = DeterministicMigration.houseRoadAccessPoint(
+                    houseLocation: location,
+                    vacantBuildingID: house.vacantTypeID ?? (house.houseLevelID == 10 ? 11 : 2),
+                    roadNetwork: roadNetwork
+                  ) else { return false }
+            let index = access.y * grids.width + access.x
+            return flood.indices.contains(index) && flood[index] != nil
+        }
+
+        // Pass 1: vacant houses (residents 0, capacity > 0), chunks ≤ 6,
+        // skipping houses with a live in-flight immigrant (the original
+        // `FUN_004ADA10` links `house+0x32` and skips while the figure is
+        // alive).
+        for index in houses.indices.sorted(by: { houses[$0].id < houses[$1].id }) {
+            guard remaining > 0 else { break }
+            let house = houses[index]
+            guard floodReachability(of: house), house.residents == 0,
+                  house.capacity(using: rules.models.buildings) != 0,
+                  !migration.immigrantWalkers.contains(where: { $0.houseID == house.id })
+            else { continue }
+            let count = min(remaining, 6)
+            _ = spawnImmigrant(
+                houseID: house.id,
+                peopleCount: count,
+                grids: grids,
+                into: &migration
+            )
+            remaining -= count
+        }
+        // Pass 2: capacity > 11 with no in-flight immigrant.
+        for index in houses.indices.sorted(by: { houses[$0].id < houses[$1].id }) {
+            guard remaining > 0 else { break }
+            let house = houses[index]
+            guard floodReachability(of: house),
+                  house.capacity(using: rules.models.buildings) > 11,
+                  !migration.immigrantWalkers.contains(where: { $0.houseID == house.id })
+            else { continue }
+            let count = min(remaining, 6)
+            _ = spawnImmigrant(
+                houseID: house.id,
+                peopleCount: count,
+                grids: grids,
+                into: &migration
+            )
+            remaining -= count
+        }
+        // Pass 3: remaining capacity with no in-flight immigrant.
+        for index in houses.indices.sorted(by: { houses[$0].id < houses[$1].id }) {
+            guard remaining > 0 else { break }
+            let house = houses[index]
+            guard floodReachability(of: house),
+                  !migration.immigrantWalkers.contains(where: { $0.houseID == house.id })
+            else { continue }
+            let capacity = house.capacity(using: rules.models.buildings)
+            guard capacity > 0 else { continue }
+            let count = min(remaining, capacity)
+            _ = spawnImmigrant(
+                houseID: house.id,
+                peopleCount: count,
+                grids: grids,
+                into: &migration
+            )
+            remaining -= count
+        }
+
+        let assigned = request - remaining
+        migration.setAssignedToday(migration.assignedToday + assigned)
+        migration.addAssignedThisMonth(migration.assignedToday)
+        if remaining == request, remaining > 0 {
+            migration.setUnfulfilledArrivalCarry(
+                migration.unfulfilledArrivalCarry + remaining
+            )
+        }
+        return remaining
+    }
+
+    /// War count `DAT_01312564` (§10.7): live enemy figures whose model is in
+    /// {58…62, 78}. Native maps enemy units as forces; the Qin Nomad Camps
+    /// currently map to Xiongnu Infantry (6), which is outside the gate, so
+    /// the Qin count is 0 (documented inference, §10.7).
+    public var warCount: Int {
+        let gate: Set<Int> = [58, 59, 60, 61, 62, 78]
+        return military.enemyForces.reduce(0) { total, force in
+            guard force.status != .repelled, gate.contains(force.enemyTypeID) else {
+                return total
+            }
+            return total + force.soldierCount
+        }
     }
 
     public mutating func setTaxCoverage(_ covered: Bool, houseID: Int) {
@@ -3667,15 +4233,48 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             }
         }
 
+        // Original daily `FUN_005185C0` settling-lock walk (§10.6): runs in
+        // the calendar before the migration/assignment case.
+        for index in houses.indices {
+            houses[index].advanceSettlingLock()
+        }
+
+        // Advance live immigrant figures by today's original-step budget and
+        // apply arrivals (§5.3). Walkers only exist when the producer is
+        // enabled or a fixture explicitly spawns one.
+        var migrationBefore = migrationState ?? DeterministicMigrationState()
+        let arrivals = migrationBefore.advanceImmigrantWalkers(
+            originalStepsInDay: DeterministicMigration.originalStepsInDay(clock.day)
+        )
+        for arrival in arrivals {
+            applyImmigrantArrival(arrival, models: rules.models.buildings)
+        }
+        if !arrivals.isEmpty {
+            migrationBefore.recordArrivals(
+                count: arrivals.reduce(0) { $0 + $1.peopleCount }
+            )
+        }
+        let migrated = arrivals.reduce(0) { $0 + $1.peopleCount }
+        migrationState = migrationBefore
+
         let assessment = DeterministicMigration.observeHousing(
             houses: houses,
             roadNetwork: roadNetwork,
             models: rules.models.buildings
         )
-        let migrated = 0
-        var migration = migrationState ?? DeterministicMigrationState()
-        migration.recordUnsupportedDay(assessment: assessment)
-        migrationState = migration
+        if migrationBefore.automaticMigrationAvailability == .supportedOriginalProducer {
+            // Popularity update on the two original slice days (1 and 16) of
+            // the Native month (§2), then the daily pressure/request/
+            // assignment pass (case 0x17, §4–§5).
+            if clock.day == 1 || clock.day == 16 {
+                updateMigrationPopularity(rules: rules)
+            }
+            dailyMigrationAssignment(rules: rules)
+        } else {
+            var migration = migrationState ?? DeterministicMigrationState()
+            migration.recordUnsupportedDay(assessment: assessment)
+            migrationState = migration
+        }
 
         let activeWorkforce: WorkforceMonthlySettlement?
         if workforceEnabled {

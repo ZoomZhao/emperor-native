@@ -2271,16 +2271,17 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(city.houses[0].desirability, 4)
         XCTAssertEqual(city.lastHousingSettlement?.evolvedCount, 1)
 
+        // The original gates each evolution on the **target** level's authored
+        // food requirement: a Hut (food 0) cannot become a Plain Cottage
+        // (food 20) without food, so water alone stops at level 1.
         _ = city.advanceMonth(rules: rules)
-        XCTAssertEqual(city.houses[0].houseLevelID, 2)
-        XCTAssertEqual(city.lastHousingSettlement?.changes.first?.fromLevelID, 1)
-        XCTAssertEqual(city.lastHousingSettlement?.changes.first?.toLevelID, 2)
+        XCTAssertEqual(city.houses[0].houseLevelID, 1)
+        XCTAssertEqual(city.lastHousingSettlement?.evolvedCount, 0)
 
         _ = city.advanceMonth(rules: rules)
-        XCTAssertEqual(city.houses[0].houseLevelID, 2)
+        XCTAssertEqual(city.houses[0].houseLevelID, 1)
         let missing = try XCTUnwrap(city.lastHousingSettlement?.evaluations.first)
             .missingEvolutionRequirements
-        XCTAssertTrue(missing.contains(.service(.ancestor)))
         XCTAssertTrue(missing.contains(.foodQuality(current: 0, required: 20)))
         let liveEvaluation = try XCTUnwrap(DeterministicHousingEvolution.evaluate(
             house: city.houses[0],
@@ -2359,7 +2360,10 @@ final class EmperorCoreTests: XCTestCase {
                 houseLevelID: 3,
                 residents: 20,
                 location: GridPoint(x: 2, y: 1),
-                serviceCoverage: [.water, .ancestor],
+                // The original gates evolution on the **target** level's
+                // requirements: Spacious Dwelling (level 4) needs water,
+                // herbalist, music, food 30 and hemp.
+                serviceCoverage: [.water, .ancestor, .herbalist, .music],
                 desirability: 20
             )
         ]

@@ -174,7 +174,14 @@ public enum DeterministicHousingEvolution {
             return nil
         }
         let next = nextLevel(after: house.houseLevelID)
-        var evolutionMissing = requirementsMissing(model: current, house: house)
+        // The original evolves a house when it satisfies the **target**
+        // level's authored requirements (food quality, services, goods), not
+        // the current level's. Checking the current level would let a Hut
+        // (food 0) evolve into a Plain Cottage (food 20) without food.
+        var evolutionMissing: [HouseEvolutionRequirement] = []
+        if let next, let nextModel = models[houseLevelID: next] {
+            evolutionMissing = requirementsMissing(model: nextModel, house: house)
+        }
         let evolveThreshold = threshold(
             current.evolveDesirability,
             fieldIndex: 1,
@@ -232,6 +239,12 @@ public enum DeterministicHousingEvolution {
                     houses[index].houseLevelID = previousLevel
                     let capacity = houses[index].capacity(using: models)
                     houses[index].residents = min(oldResidents, capacity)
+                    if oldResidents > houses[index].residents {
+                        // Original `FUN_00468420` eviction path sets the
+                        // `cHouseInfo+0x3C` settling lock with a 32-step
+                        // countdown after residents are removed (§10.6).
+                        houses[index].startSettlingLock()
+                    }
                     changes.append(HouseEvolutionChange(
                         houseID: houses[index].id,
                         fromLevelID: currentLevel,

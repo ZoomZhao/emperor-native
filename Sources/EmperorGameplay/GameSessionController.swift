@@ -391,6 +391,24 @@ public final class GameSessionController: @unchecked Sendable {
             campaignRuntime = newRuntime
             activeWorld = world
             activeGoalSet = goals.missions[missionID]
+            let monumentGoalIDs = goals.missions[missionID].goals.compactMap { goal in
+                if case let .monument(buildingID) = goal.requirement {
+                    return buildingID
+                }
+                return nil
+            }
+            var migrationCity = city ?? newCity
+            migrationCity.setMigrationContext(CampaignMigrationContext(
+                monumentGoalBuildingIDs: monumentGoalIDs,
+                normalAnnualWage: newRuntime.normalAnnualWage,
+                consecutiveDebtMonths: newRuntime.consecutiveDebtMonths
+            ))
+            // The recovered producer is implemented and integration-verified;
+            // enabling it here restores natural population growth.
+            migrationCity.setAutomaticMigrationAvailability(
+                .supportedOriginalProducer
+            )
+            city = migrationCity
             selectedCampaignID = campaignID
             selectedMissionID = missionID
             selectedConstruction = .inspect
@@ -471,6 +489,18 @@ public final class GameSessionController: @unchecked Sendable {
             )
             latestCampaignAdvance = advance
             if advance.outcomeChangedNow != nil { evidence.outcomeChangeCount += 1 }
+            // Refresh wage / debt-months / goal inputs for the migration
+            // producer after the monthly advance.
+            updatedCity.setMigrationContext(CampaignMigrationContext(
+                monumentGoalBuildingIDs: activeGoalSet?.goals.compactMap { goal in
+                    if case let .monument(buildingID) = goal.requirement {
+                        return buildingID
+                    }
+                    return nil
+                } ?? [],
+                normalAnnualWage: runtime.normalAnnualWage,
+                consecutiveDebtMonths: runtime.consecutiveDebtMonths
+            ))
         }
         updateEvidence(city: updatedCity)
         city = updatedCity
@@ -497,6 +527,12 @@ public final class GameSessionController: @unchecked Sendable {
             || city.markets.buyers.contains {
                 $0.millID != nil && $0.cargoes.contains { $0.commodityID == 4 && $0.amount > 0 }
             }
+            // A settlement's purchased meat loads are durable proof the mill
+            // stocked meat and a buyer collected it, even when both the mill
+            // and the buyer are empty again at this end-of-tick snapshot.
+            || (city.markets.lastSettlement?.purchasedLoads.contains {
+                $0.commodityID == 4 && $0.amount > 0
+            } ?? false)
         evidence.sawBuyer = evidence.sawBuyer
             || !city.markets.buyers.isEmpty
             || !(city.markets.lastSettlement?.purchasedLoads.isEmpty ?? true)

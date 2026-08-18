@@ -2621,10 +2621,12 @@ public enum OriginalGrandCanalLayoutCatalog {
                     // phase-zero predicate reached by `FUN_00568A50`.
                     return (phase == 0 ? 0x20 : 0x2, terrain)
                 }
-                throw WorkerRoutingCacheDerivationError.unsupportedPrimaryBuilding(
-                    input.point,
-                    buildingID: occupancy.buildingID
-                )
+                // Non-wall monuments (tumulus/temple/palace/canal task 83)
+                // block movement like any other building in the primary
+                // cache; the canal's own cells are already handled by their
+                // terrain branches on Haunxian, and the wall layouts are
+                // handled above. Do not throw the whole grid for them.
+                return (terrain & 0x1000 != 0 ? 0x4000 : 0x2, terrain)
             }
             return (terrain & 0x1000 != 0 ? 0x4000 : 0x2, terrain)
         }
@@ -2709,6 +2711,14 @@ public enum OriginalGrandCanalLayoutCatalog {
             case .road:
                 return 0x2
             }
+        }
+        // Non-canal, non-wall monuments (tumulus/temple/palace tasks
+        // 76…82, 84…86, 92, 93) block movement in the fallback cache; only
+        // the Grand Canal's per-part phase states and the wall layouts have
+        // passable states.
+        if monumentBuildingIDs.contains(buildingID),
+           buildingID != buildingIDForGrandCanal {
+            return 0x2
         }
         if monumentBuildingIDs.contains(buildingID) {
             guard let phase = occupancy.currentMonumentSubBuildingPhase else {

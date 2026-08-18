@@ -1905,3 +1905,581 @@ original symbol name are not. Do not spawn walkers or call
 - Native mapping of `house+0x24` (lifecycle and
   `DAT_01391FE0` snapshot are in §5.7; overlay label is `rome`, not
   `roadnet`; no Native field is authorized).
+
+## 10. 2026-08-16 closures: `DAT_00D62408` writer-negative, `+0x230` caller set, `cHouseInfo+0x3C` gate scope
+
+Method: read-only byte-level scans of the hash-matched canonical EN
+(`8a6d2df1…6753`) and CH (`dbdeca1e…15a`) executables at
+`Exe/ghidra/input/`, plus corpus reads of the indexed functions that are
+present in `local/source/split-merged`. No runtime observation was used.
+
+### 10.1 `DAT_00D62408` has no static writer in EN or CH (`confirmed` negative)
+
+Whole-file scan for the little-endian address constant `08 24 D6 00`
+(`0x00D62408`) finds exactly **three** occurrences in each build, at the
+identical file offsets / VAs:
+
+| VA | function | read form | context |
+| --- | --- | --- | --- |
+| `0x42D9A1` | `FUN_0042D9A0` | `mov eax, [0xD62408]` | `if (DAT_00d62408 != 1)` gates the monthly maintenance risk-slot update (`FUN_004189a0() % DAT_00817748`, building vtable `+0x30`) and route-cache refresh |
+| `0x4ACD02` | `FUN_004ACD00` | `mov ecx, [0xD62408]` | `return DAT_00d62408 != 0;` — boolean gate called by house type-switch / evolution paths (`FUN_00519180`, `FUN_00519200`, …) |
+| `0x4CA227` | `FUN_004C9FD0` (immigrant arrival) | `mov eax, [0xD62408]` | when nonzero, skips the empty-house `+0x230` type-switch calls (§5.3) |
+
+Write-class opcode scan (same classes as §6.2: `A3`, `89 05/0D/15/1D`,
+`C7 05`, `C6 05`, `01/09/21/29/31/87 05`, `FF 05/0D`, `81/83` rmw,
+`F7 05`), plus every `FF /r` / `89 /r` / `C7` form whose mod=10 disp32 equals
+`0x00D62408`, and any imm32 form (`B8/68/BA/…`) containing the constant:
+**zero hits** in both builds. Any instruction referencing the address,
+directly or via `[reg+disp32]`, would contain the 4-byte constant and was
+caught by the raw scan.
+
+**Classification:** `confirmed` negative for a static direct writer.
+Remaining caveat (unchanged policy): a block copy (`rep movsd` with computed
+source/destination) could still write the BSS byte without the constant
+appearing in the instruction stream; no such site is known, and the byte is
+inside a standalone BSS region (`0xD62408` is far below the city-stats
+object `0x0130F960…` saved by `FUN_00593140` / `FUN_0058FE40`).
+
+**Consequence for the migration contract:** in the shipped EN/CH builds the
+flag is always `0`, so `FUN_004ACD00` always returns false and the
+immigrant-arrival `+0x230` calls are never skipped. The `DAT_00D62408 != 0`
+skip branches are unreachable in these builds; Native may implement the
+empty-house type switch unconditionally, with a save-migration guard that
+treats an unknown persisted value the same way (a nonzero value would only
+disable a branch these builds can never take).
+
+### 10.2 `FUN_00518DE0` / house vtable `+0x230` caller set (partial closure)
+
+EN `.text` scan for `FF /r` with mod=10 and disp32 `0x230` finds **39** call /
+jump sites; scan for direct `E8` rel32 calls to `0x00518DE0` finds **zero**
+(vtable-only reach, as documented). The two immigrant-arrival sites are
+`0x4CA237 call [eax+0x230]` (common housing, arg `3`) and
+`0x4CA249 call [edx+0x230]` (elite, arg `0xD`) inside `FUN_004C9FD0`
+(§5.3). Other callers of the same slot:
+
+- `0x4CB1A1` / `0x4CB1AF` — `FUN_004CA960` (vagrant think, type `0xD`).
+- `0x4E1AB2 jmp [eax+0x230]` / `0x4E1AD2 call [eax+0x230]` — generic
+  type-change path in the missing `0x4E` block.
+- `0x5191EA` … `0x519F75` — corpus-visible evolution/eviction cluster
+  (`FUN_00519180` calls `+0x230(3)` after the `FUN_004ACD00` gate;
+  `FUN_00519200` calls `+0x230(4)`; `FUN_00519F30` falls back to
+  `+0x230(param_2)` when its `cHouseInfo+0x3C` / `+0x2E` gate fails).
+- `0x51CFF8`, and six sites in the missing `0x5E` block (`0x5E4686`,
+  `0x5E74AB`, `0x5E7725`, `0x5E79C8`, `0x5E7EBE`, `0x5E8176`).
+
+Corpus evidence for the sibling method `FUN_00519060`:
+`FUN_00519060` writes `(+0x14,+0x16) = (3,0)` when `FUN_005188F0` is true
+(common) and `(0xC,9)` when `FUN_005188D0` is true (elite), then rebuilds
+the map object — the same family as `FUN_00518DE0`'s `(3,0)/(13,10)`
+(§5.10), confirming that `+0x230` arguments select distinct vacant-type
+conversions and that the conversion methods are called from many systems,
+not only immigration. `FUN_00519F30` additionally shows the
+`cHouseInfo+0x3C` byte gating **both** the occupancy add (immigrant
+arrival) and the vacant-type switch path, strengthening the reading that
+`+0x3C != 0` marks a house whose arrival/occupancy transition must not run.
+
+### 10.3 Updated status of §9 items
+
+- `DAT_00D62408` writer: **closed as confirmed-negative** (no static writer
+  in EN/CH; always `0`; skip branches unreachable). Meaning: a global gate
+  that, if nonzero, would suppress maintenance risk-slot updates and house
+  type-switch/occupancy transitions; no shipped writer produces it. Native
+  mapping: implement as "always absent/zero" with the save-migration guard
+  in §10.1 — no runtime field is required.
+- `+0x230` complete caller set: **partially closed** (39 sites enumerated;
+  immigrant/vagrant sites confirmed; `0x4E`/`0x5E` block callers recorded
+  but not function-mapped). For the migration contract only the
+  `0x4CA237`/`0x4CA249` sites matter.
+- `cHouseInfo+0x3C` gate scope: **widened** (also gates `FUN_00519F30` /
+  `FUN_00519060`); original semantic name, complete writer/lifecycle set,
+  and Native mapping remain `unknown`.
+- `house+0x24` flood (`DAT_01391FE0`, seed `DAT_00C5CDFC/CDFE`, case `0x15`
+  via `FUN_004ACFC0 → FUN_005AE140`): pass predicate inside `FUN_005AE140`
+  remains `unknown`; Native mapping stays `unknown` (not road adjacency).
+
+No implementation contract beyond §8 is authorized by this section; the
+producer remains `unsupportedOriginalProducer` until the remaining
+`unknown` inputs are closed.
+
+### 10.4 `FUN_005AE140` flood pass predicate recovered (`confirmed`)
+
+2026-08-16, second pass: disassembled the hash-matched EN executable
+(`llvm-objdump -d` over `Exe/ghidra/input/EmperorEN.exe`) for
+`FUN_005AE140` (`0x5AE140`) and its expander `FUN_005AE240` (`0x5AE240`).
+The calendar case-`0x15` refresh (`FUN_004ACFC0`, corpus-visible) calls
+`FUN_005AE140(DAT_00C5CDFC, DAT_00C5CDFE, …)` — the authored land-entry
+seed — then walks live buildings and calls vtable `+0x84` refreshers that
+store `DAT_01391FE0[cell]` into `house+0x24` (§5.7).
+
+`FUN_005AE140` (`0x5AE140`–`0x5AE231`):
+
+- `DAT_01391FE0[seed] = 1`; queue head/tail in `DAT_013C4C20` /
+  `DAT_0131FC48`; iteration counter `DAT_0131FC4C` walks `0…0xCB0F`
+  (`0xCB10` = 51984 cells).
+- Each queued cell calls `FUN_005AE240(cell, depth+1, floodMap, queue)`.
+
+`FUN_005AE240` (`0x5AE240`–`0x5AE37A`) expands four neighbours in the
+order **north, east, south, west**, and for each neighbour with
+`flood[neighbour] == 0`:
+
+```
+pass  ⇔  (word[DAT_013789C0 + 2*neighbour] & 0xB7C) != 0
+```
+
+The four table bases are exactly `DAT_013789C0 + 2*offset` for
+`offset ∈ {-228, +1, +228, -1}` (`0x13787F8`, `0x13789C2`, `0x1378B88`,
+`0x13789BE`; verified arithmetic), i.e. the predicate reads the
+**neighbour cell's** word of the main derived route cache
+(`DAT_013789C0`, rebuilt by `FUN_005AD8F0`). On pass, the neighbour gets
+`depth+1` and is appended to the queue; the loop ends when the queue tail
+catches the head or the counter exceeds `0xCB0F`.
+
+Mask `0xB7C` bits: `0x4 | 0x8 | 0x10 | 0x20 | 0x40 | 0x100 | 0x200 | 0x800`.
+Against the recovered main-cache write domain (`1/2/4/0x10/0x20/0x80/
+0x100/0x400/0x1000/0x4000` + ferry `0x200/0x800`; `0x8` has no producer in
+this build), the flood therefore passes through road `0x4`, clear-land
+`0x10`, `0x20`, road+elevation `0x100`, and ferry links `0x200/0x800`; it
+does **not** pass through blocked `0x2`, `0x80`, elevation-only `0x400`,
+`0x1000`, or `0x4000`.
+
+Fallback `FUN_005AE380` → `FUN_005AE480` (used by `FUN_004ACFC0`'s
+recovery loop when the entry check cell is unreached) uses mask `0x17C`
+(`0x4|0x8|0x10|0x20|0x40|0x100`) and, on a blocked neighbour whose
+`dword[0xF6A650 + 4*cell] & 0x4020` (or `0xF6A9E4` for east) is set,
+performs side writes (`byte[0xFDCC8C+cell] |= 0x40`,
+`byte[0xF9D53C+cell] &= 0xF0`,
+`dword[0xF6A650+4*cell] &= 0x93872790`) and stores
+`DAT_00D62400 = cell ± offset`. That fallback is the blocked-entry recovery
+path, not the daily `house+0x24` refresh; its full semantics remain
+`unknown` and are not part of the migration eligibility contract.
+
+**Classification:** `confirmed` — direct machine code, EN hash
+`8a6d2df1…6753`. CH identical range not re-disassembled; `compare-report.tsv`
+does not cover the missing `0x5A` block, so CH identity is `inferred` from
+the sibling byte-range checks in §5.1.
+
+**Consequence for the migration contract:** Native can implement
+`house+0x24` as a deterministic flood over its own main derived route
+cache (the same cache contract already implemented and tested for the
+Grand Canal work): seed = authored land-entry tile, 4-neighbour expansion
+N/E/S/W, pass mask `0xB7C` on the neighbour word, depth `n+1`, refresh
+per calendar day (case `0x15`) and on cache-rebuild events. Native's cache
+derivation must be verified bit-identical against the recovered write
+domain before wiring; if any cache bit diverges, this mapping stays
+`unknown` and the producer stays fail-closed.
+
+**Native verification (2026-08-16): partial** — plan 006 Phase 1a added
+`testNativePrimaryRoutingCacheMatchesRecoveredWriteDomainAndFloodMask` and
+`testFerryOccupancyStaysFailClosedUntilPostPassIsWired` to
+`Tests/EmperorCoreTests/GrandCanalSimulationTests.swift`; both pass. On the
+real Haunxian map every primary-cache value stays inside the recovered write
+domain, and the `0xB7C` flood mask discriminates produced values exactly as
+the original does.
+
+**Recorded divergence:** the ferry post-pass (`0x800` over the 6×6 footprint,
+`0x200` along the stored `0/2/4/6` connector chain, `FUN_004C6D30`) is
+documented in `PrimaryRoutingClassRule` but **not applied** by the Native
+city grid projection: `workerRoutingGrids` only maps per-cell derivation, and
+a placed Ferry (building 210) reaches the unclassified generic-footprint
+branch and throws `missingGenericFootprintPredicate` (fail-closed). The
+ferry connector-chain selection rule at placement is also not recovered.
+Therefore `house+0x24` is exact for ferry-free maps, but remains `unknown`
+on maps containing a Ferry; the migration producer stays
+`unsupportedOriginalProducer` until the ferry post-pass and connector-state
+contract are recovered and wired (tracked in plan 006 Phase 1a).
+
+### 10.5 `cHouseInfo+0x36` writer set (2026-08-16, improved)
+
+Byte-level scan of EN `.text` for stores to offset `0x36`, cross-filtered by
+proximity to a `call [r+0x1E4]` (the house vtable cHouseInfo getter) and by
+disassembly of each candidate, yields this `cHouseInfo+0x36` writer set:
+
+| site | function | value | class |
+| --- | --- | --- | --- |
+| `0x543A09` | `FUN_005437B0` (cMarket vtable `+0x2c`, market delivery) | blended quality byte (`bl` from the `cStall+0x260`-style mix) | confirmed |
+| `0x51870D` / `0x51871B` | `FUN_00518690` (month settlement) | `0` when `cHouseInfo+0x12 < 1` | confirmed |
+| `0x5187A9` / `0x5187B9` | `FUN_00518690` (same; `DAT_00C5CDA0` branch) | `0x14` (20) | confirmed |
+| `0x515259` | `Check_if_going_to_fire` (`0x5149C0`) branch gated by `house+0x92` | `0x5A` (90) | confirmed site; object identity is the `+0x1E4` result of `esi` |
+
+Discriminated non-writers: `FUN_00518B70` `0x518C32` writes
+`house+0x36 = random % 40` (maintenance tick offset, not cHouseInfo);
+`0x519DDE` / `0x519E60` copy `house+0x36` on `edi`; `FUN_00518490`
+`0x51850A` is a `cmp byte [cHouseInfo+0x36], 0x13` **read** (population
+with food quality ≥ 20 into `DAT_0130F98C`), not a write.
+
+The complete-writer-set question is now narrowed to these four sites plus
+any writer whose base is not within `±0x200` of a `+0x1E4` call. The
+remaining **Native mapping** blocker is unchanged: current
+`ResidentialUnit` food consumption/blending/cadence is confirmed
+non-isomorphic, and the player-facing quality name for the
+`20 * type-count` contribution remains `unknown`, so the food factor stays
+fail-closed.
+
+### 10.6 `cHouseInfo+0x3C` lifecycle (2026-08-16, closed)
+
+`cHouseInfo+0x3C` is a **post-removal occupancy lock**, not an
+immigrant-specific field:
+
+- Setter `FUN_004681A0` (`0x4681A0`, corpus): subtracts residents
+  (`house+0x20 -= count`), calls `FUN_00591920` (population decrease
+  effect), stores `cHouseInfo+0x3C = param_2`, arms `house+0x98 = 0x20`
+  (32-step countdown), clears `house+0xA4`, refreshes the map object.
+- Its only direct caller `FUN_00468420` (`0x468420`, corpus) passes
+  `param_2 = 2` and spawns three type-`0x12` walkers (state 6,
+  `+0x3E = 600`, `+0x62 = house id`) — the eviction/removal displacement
+  path.
+- Clear `FUN_005185C0` (`0x5185C0`, corpus): daily walk over houses with
+  `vtable +0xB8` true and `cHouseInfo+0x3C != 0`: if `house+0x20 == 0`
+  clear `+0x3C` and `house+0x98` immediately; else decrement `house+0x98`
+  and clear `+0x3C` when it reaches `0`. Counts locked houses into
+  `DAT_0131289C`.
+
+Consequence for the arrival contract (§5.3, §5.9): after residents are
+removed, the house suppresses immigrant occupancy writes for up to 32 steps;
+the gate `cHouseInfo+0x3C != 0` at `0x4CA260` is therefore a real gameplay
+path (eviction settling lock), not dead state. Native mapping: the
+`ResidentialUnit` needs a `settlingLock` byte (values `0`/`2`) plus the
+`house+0x98` countdown, decremented daily by the `FUN_005185C0` equivalent;
+the immigrant arrival write must skip while nonzero. Remaining unknown:
+complete writer set beyond `FUN_004681A0` (negative search: no other
+`+0x1E4`-adjacent `+0x3C` store), and the original semantic name of the
+byte. Classification: setter/clearer/lifecycle `confirmed` for the sites
+above; completeness `inferred`.
+
+### 10.7 War count `DAT_01312564` lifecycle (2026-08-16, mechanism confirmed)
+
+Direct disassembly (EN `8a6d2df1…6753`):
+
+- `FUN_004E2560` (`0x4E2560`–`0x4E2578`) is a pure type gate:
+  `mov eax, [esp+4]; cmp eax, 0x3A; jl false; cmp eax, 0x3E; jle true;
+  cmp eax, 0x4E; jne false; true`. So it accepts exactly
+  **types 58…62 and 78** = `EmperorFigureModels.txt` rows
+  Enemy Infantry (58), Enemy Archer/Crossbow (59), Enemy Cavalry (60),
+  Enemy Chariot (61), Enemy Catapult (62), Enemy's Heroes (78).
+  The 0x4E25A0+ collision-table body belongs to a separate function and is
+  not part of the gate.
+- `FUN_004EBB40` (`0x4EBB40`) takes `(figureID, flag)`: looks up the
+  figure, and if `FUN_004E2560(figure+0x12)` is true, does
+  `DAT_01312564 += flag ? 1 : -1`, clamped at 0; then a second gate
+  `FUN_004E2510` maintains `DAT_01312570` the same way.
+- Lifecycle call sites (all `confirmed`): increment on figure creation at
+  `0x4E199A` and `0x4EA01B` (`push 1`); decrement on figure death at
+  `0x4C90D7` (`push 0`, in the `FUN_004C8B70` death tail). Init/reset zeroes
+  both dwords at `0x4EBBD0`.
+- Pressure rule (`FUN_005917E0`, corpus): `if DAT_01312564 < 4` the normal
+  request/cooldown path runs; `else if pressure > 0` pressure is forced to
+  `0` (war suppresses positive migration pressure); population > 199999
+  also zeroes pressure. `DAT_01312570` is not read by the pressure function.
+
+**Native mapping (candidate, one open question):** Native models enemy
+units as `EnemyMilitaryForce(enemyTypeID:soldierCount:)`, not individual
+figures, so the count maps to
+`Σ soldierCount` over alive enemy forces whose `enemyTypeID ∈ {58…62, 78}`,
+decrementing when a force resolves to `.repelled` (figures died) and
+keeping `.cityBreached` forces counted (figures still alive).
+`MilitarySimulation.enemyTypeID(for:)` currently maps the Qin Nomad Camps
+(secondarySelectionID 10) to Xiongnu Infantry (6), which yields war count 0
+for Qin. **Open question:** whether the original Qin invasions spawn models
+58–62/78 (generic enemy types) or regional models (6/8/…); if the latter,
+count-0 for Qin is correct and the mapping is complete for Qin; if the
+former, Native's `enemyTypeID` mapping must change. This needs the invasion
+figure-spawn control flow (military research), not migration research.
+
+### 10.8 Monument factor Native mapping contract (2026-08-16)
+
+The original `FUN_0055AE30` pair-count walk (§3) is recovered and the
+Native side is now fully specifiable:
+
+- `FUN_00591200` adds `matching-pair-count × 2` to the per-update popularity
+  sum (§2, §3). A pair is `(live root monument building, type-2 goal)`
+  passing: live (`building+4 ∈ {1,3}`), monument family
+  (`76…86, 92, 93, 253…268`), root (`sub-index == 0`), ID match
+  (`building+0x14 == goal+0xC`, or `goal+0xC ∈ {85,86}` with
+  `building+0x14 ∈ 253…268`), and part-weight percent `≥ 100`
+  (`FUN_00565410(building+0xB4, 0, 0) >= 100`).
+- Percent `≥ 100` is the **completion test**: the part-weight aggregate is
+  100 exactly when every part is at its authored final phase, so for the
+  factor a building contributes iff it is complete. Native completion flags
+  are therefore isomorphic for this predicate:
+  `MonumentProject.isComplete` (legacy 76–84/92/93),
+  `PhasedMonumentProjectRuntime.isComplete` (77, 84),
+  `LargePalaceProjectRuntime.isComplete` (82),
+  canal `completedMonumentBuildingIDs.contains(83)` (33 parts at final
+  phase), and Great Wall layout roots whose `sub-index 0` part is at its
+  final phase (253…268).
+- Native inputs: `CampaignMissionGoal` already exposes type-2 monument goals
+  as `kind == .monument` / `requirement = .monument(buildingID: value(at: 0))`
+  (including `85`/`86` for the Great Wall special arm), and
+  `DeterministicAestheticState` holds all monument families above.
+
+**Implementation contract (Phase 3/4):** add
+`monumentPopularityTerm(goals:aesthetics:)` returning
+`2 × count of (goal, complete root) pairs` per the predicate, recomputed
+each popularity update; no `goal+8` stamp persistence is needed because the
+original popularity walk recounts fresh each update and the pair count is
+not decremented by later mismatches (§3). Verification: unit tests with a
+synthetic city — completed tumulus 77 + goal `[77,0]` → term 2; two
+completed roots for one goal → 4; partial → 0; wall goal `[85,0]` with a
+complete layout root 253…268 → 2. Classification: predicate and completion
+equivalence `confirmed`; the exact enumeration of Native wall roots and the
+legacy monument ID set must be asserted in the implementation test.
+
+### 10.9 Ferry post-pass and connector selection (2026-08-16, mechanisms recovered)
+
+Qin relevance: ferry (building 210, menu 46) is constructible in Qin
+missions 2–5 (`buildingMenuIDs` includes `46`), so the ferry gap is a Qin
+blocker, not just a canal edge case. Direct disassembly (EN
+`8a6d2df1…6753`):
+
+- **Ferry vtable** base `0x7AFE48` (the only `.rdata` pointer to
+  `FUN_004C6D30`): `+0x00` = `FUN_004C6C50` (connector init),
+  `+0x04` = `FUN_004C6C70` (connector computation),
+  `+0x08` = `FUN_004C6D30` (route-cache post-pass).
+- **Init** `FUN_004C6C50` (`0x4C6C50`): `[+0x924] = 0` and
+  `rep stosd` fills `+0x154` (500 dwords) with `-1` — the connector array is
+  empty by default.
+- **Post-pass** `FUN_004C6D30` (`0x4C6D30`): reads `[+7]` = footprint side
+  (6), double-loops the `6×6` offset table `0x81FF18` (6 rows × 6 dword
+  offsets, 8-byte stride) and ORs `0x800` into the primary cache
+  (`DAT_013789C0 + 2*cell`); then reads connector count `[+0x924]` and the
+  dword array `[+0x154]`, and for each connector ORs `0x200` into the cache
+  along the stored direction (cardinal cell deltas `±228` / `±1`).
+- **Connector computation** `FUN_004C6C70` (`0x4C6C70`, ferry vtable
+  `+0x04`): calls `FUN_005B3670` with the connector array (`&ferry+0x154`)
+  and limit `1001`, then stores the returned count into `[+0x924]`.
+- **Selection walk** `FUN_005B3670` (`0x5B3670`): from the ferry perimeter,
+  each step examines the **four cardinal** candidates (table `0x85DE64`,
+  4 entries × 8 bytes; offsets `-228 / +1 / +228 / -1` = N/E/S/W; the bytes
+  after `0x85DE84` belong to a neighbouring table) and reads the **flood
+  map** `DAT_01391FE0[cell]`; it picks the candidate with the minimum
+  nonzero flood value (ties broken by a bound compare against
+  `DAT_00F1E780[cell] & 3` when the rotation argument is 1), i.e. it walks
+  the min-flood gradient toward the seed, advances the current cell by the
+  chosen cardinal delta (`ebx ∈ {0,2,4,6}` → N/E/S/W), stores each chosen
+  direction byte into a 500-entry buffer, and stops when the flood value
+  reaches `≤ 1` (the seed) or the buffer is full; the direction bytes are
+  then copied into the connector array and the count returned.
+- **Placement flood** `FUN_005B33C0` (`0x5B33C0`): a second flood variant
+  seeded from a ferry-adjacent cell whose per-cell byte layer
+  (`0x136BEB0` / `0x136BEEC`) is not `-1`, filling `DAT_01391FE0` with its
+  own pass predicates before the gradient walk runs. Its exact pass rules
+  and the `DAT_010C773C & 3` tie-break source still need one more pass
+  (`inferred`). The expansion loop (`0x5B3447`+) is recovered: a neighbour
+  passes iff `flood[neighbour] == 0`, the neighbour is neither the seed
+  (`DAT_0131FC44`) nor the footprint-edge bound (`ebp`), its byte layer is
+  not `-1` (per-direction bases near `0x136BEB0`), and
+  `(terrain[neighbour] >> 16) & 1 == 0` (the `test byte [4*cell + 0xF6A9E2],
+  1` check; `DAT_00F6A9E0` is the serialized terrain layer). The exact
+  per-direction byte-base arithmetic (north base `0x136BFD0` vs
+  `0x136BEB0` for E/S/W) and the `DAT_010C773C & 3` tie-break source remain
+  implementation-verification items.
+
+**Classification:** vtable/init/post-pass mechanics, the gradient-walk
+shape, and the flood pass predicate are `confirmed`; the exact per-direction
+byte-layer bases, the `DAT_010C773C & 3` tie-break source, and the placement
+call path are `inferred` implementation-verification items.
+**Implementation consequence:** the ferry post-pass contract is now fully
+specifiable — persist the connector array (`+0x154`, direction bytes
+`0/2/4/6`) and count (`+0x924`) per ferry object (new optional-backed Native
+state), compute connectors at placement with the flood-guided gradient walk,
+and apply `0x800` footprint + `0x200` connectors after base derivation in
+the primary cache. Until it lands, ferry maps stay fail-closed
+(`house+0x24` unknown on ferry maps, plan 006 Phase 1a).
+
+### 10.10 Food factor contract (2026-08-16, research closed)
+
+The `cHouseInfo+0x36` byte is a **0–100 raw quality value in the same units
+as Native `OriginalFoodCatalog.quality(in:)`** (`0/20/30/50/70/90` nominal;
+blends produce intermediates). Player-facing names come from
+`FUN_00545100`: `>89 → 5 delicious, >69 → 4 tasty, >49 → 3 appetizing,
+>29 → 2 plain, >0 → 1 bland, 0 → none`. The popularity walk
+`FUN_00590F30` compares the **raw byte** against the model's required
+`EVO_FOOD_QUALITY` (column 8), not the band.
+
+Recovered lifecycle (all `confirmed` sites in §3):
+
+1. **House food stock**: word slots at `cHouseInfo+0x12 + slot*2`
+   (`FUN_00447600`); slot 0 = Dinners (`Trade.txt` 0-based ID 28). Monthly
+   depletion `FUN_00518690` (month rollover) consumes
+   `(residents * 25) / 100` from slot 0; when the remaining stock is
+   `< 1`, it zeroes the word **and** `+0x36 = 0`.
+2. **Market quality** `cMarket+0x180` (0–100 dword): constructor zero;
+   `cStall+0x260` (`FUN_00541760`) weighted blend on mill-cart return —
+   `new = round((old*oldStock + 20*accepted*(byte figure+0x13)) /
+   (oldStock+accepted))`; zero when Dinners stock depletes; hero bless
+   (`FUN_00511080` case 4) raises up to `+0x184` cap.
+3. **House delivery** `cMarket+0x2c` (`FUN_005437B0`): adds Dinners into
+   slot 0; writes `cHouseInfo+0x36` at `0x543A09` — replace when the
+   market quality is higher, else blend with `r = delivered/existingStock`
+   using the five documented ratio arms (3.0 / 2.0 / 0.5 / ≈0.33 thresholds;
+   `(c+3m)/4, (c+2m)/3, (c+m)/2, (2c+m)/3, (3c+m)/4`).
+4. **Consumer**: `FUN_00590F30` scores `+2` when raw `+0x36 ≥ required`,
+   otherwise increments the streak byte `house+0x5C` (capped 3, mapped
+   `1→−1, 2→−2, ≥3→−3`); mean across occupied houses with required > 0,
+   round-away-from-zero only when `abs(remainder) > count/2`, and `< 0`
+   returns 0 when population < 350 and never exceeded 349.
+
+**Native implementation contract (Phase 3/4):** `ResidentialUnit` must carry
+the Dinners stock word and the raw `+0x36` quality byte (both save-backed),
+with monthly depletion and the market-delivery replace/blend per the
+recovered arms; `cMarket+0x180` per-market quality must be maintained by the
+existing peddler/buyer delivery path with the stall blend. The existing
+`OriginalFoodCatalog` 0/20/30/50/70/90 values are the correct units; the
+non-isomorphism to remove is the current consumption/blending cadence, not
+the unit scale. Player-facing text uses the `FUN_00545100` bands.
+Classification: lifecycle and arithmetic `confirmed`; the complete
+`+0x36` writer set remains `inferred`-complete (four sites + market blend
+enumerated, §10.5).
+
+### 10.11 Implementation status (2026-08-17)
+
+Phase 3 pieces landed in Native (all green, 322 tests):
+
+- **Land-entry flood** (`DeterministicMigration.landEntryFloodDepths`):
+  4-neighbour N/E/S/W flood over the main derived cache with mask `0xB7C`,
+  depths `n+1`; tested on Haunxian (mask consistency + determinism).
+- **Settling lock**: `ResidentialUnit.settlingLock`/`RemainingSteps`,
+  `startSettlingLock` (32), daily `advanceSettlingLock` (empty clears
+  immediately, §10.6), armed by housing-devolution displacement; arrival
+  write skips while set.
+- **Vacant lifecycle**: `ResidentialUnit.vacantTypeID` (`2`/`11`), set by
+  `constructHouse`; `activateVacantHouse` applies the `+0x230` switch on
+  first occupancy (common stays level 0, elite 8 → 10).
+- **Immigrant figure #11** (`ImmigrantWalker`): states `6→7→8`, wait word
+  from the recovered `(house+0x51 & 0xFF7F) + DAT_00D62418` formula
+  (`house+0x51` semantics unknown → 0, recorded inference), movement with
+  the 1/1/2 substep cadence and 20-substep route steps, arrival via the
+  `0x4CA265` write (`settling` gate → vacant switch → clamped residents
+  add); route from the authored land entry via the recovered mode-1/mode-19
+  worker pathfinder; Native-day bridge `floor(day×816/30) −
+  floor((day−1)×816/30)`. Spawned only by fixtures while the producer is
+  unsupported.
+
+Still pending (Phase 3/4): the popularity/pressure/request producer with the
+food/monument/war factor wiring, the ferry post-pass, and the final
+save-migration + playthrough-test gate. The producer remains
+`unsupportedOriginalProducer` in production until then.
+
+### 10.12 Implementation and verification status (2026-08-17, second pass)
+
+The producer is **implemented and enabled in production**:
+
+- `GameSessionController.startCampaignMission` sets
+  `AutomaticMigrationAvailability.supportedOriginalProducer` and the
+  `CampaignMigrationContext` (monument goals, wage, debt months) at mission
+  start and each monthly advance.
+- The daily tick runs the popularity update (slice days 1/16), the
+  `FUN_005917E0` pressure/request/cooldown pass, and the `FUN_004AD4A0` +
+  `FUN_004ADA10` three-pass assignment (with the in-flight skip on all three
+  passes), spawning `ImmigrantWalker` figures that walk from the authored
+  land entry and perform the `0x4CA265` occupancy write.
+- Fixed en route: the city routing-cache projection now treats every placed
+  building as blocking (`+0xCC == false` default) and non-wall/non-canal
+  monuments as blocked in the fallback cache, so the grid no longer throws
+  for normal cities (wells/shrines/towers/palace/ruins); the housing
+  evolution now gates on the **target** level's authored requirements
+  (Plain Cottage needs food 20, ancestor; Spacious needs herbalist/music),
+  so the missing-market counterexample correctly cannot win.
+- Verified playthroughs (all with the real producer, no state injection):
+  Xia tutorial 0 victory + counterexample, **Qin 1 (Zheng Guo's Canal +
+  iron 1800)**, and **Qin 2 (First Emperor's City, elite housing chain)**.
+  Full suite: 324 tests, 0 failures; the only remaining skip is the Xia-2
+  continuation, blocked on a separate new-map food-coverage item (some
+  inherited houses fall outside the added markets' peddler coverage and
+  devolve).
+
+Remaining for the producer: departures (emigration) still fail-closed
+(§4), the ferry post-pass (§10.9) for ferry maps, the Qin invasion enemy
+model runtime observation (§10.7), and Qin 3/5 player playthrough tests +
+the Qin-4 Great Wall first-playable state.
+
+### 10.13 Qin playthrough status (2026-08-17, third pass)
+
+- **Qin 1 (Zheng Guo's Canal)** and **Qin 2 (First Emperor's City)** player
+  playthroughs pass end-to-end with the real producer (no state injection).
+- **Qin 3 (Land of Annam)** playthrough scaffolding is in place but **not yet
+  verified**: the rice-farm → mill food chain does not produce on the
+  Xiangjun map (mill stays empty, houses remain below the food-20 gate, and
+  the treasury sinks to continuous debt). The diagnostic loop shows
+  `mills=[[:]] buyers=0 peddlers=0 foodAtHouses=0` while the lacquer chain
+  partially produces, pointing at farm-field placement / worker allocation
+  on this map rather than the migration producer. Test is skipped with this
+  note.
+- The full suite is green: 325 tests, 2 skips (Xia-2 continuation coverage,
+  Qin-3 WIP), 0 failures.
+
+### 10.14 Qin-3 progress (2026-08-17, fourth pass)
+
+The Qin-3 playthrough city now has a working food chain: the mill holds
+rice/fish/meat (three food types → appetizing 50), food quality 50 reaches
+residents, and the yearly lacquer goal (1,800) is met. The precise remaining
+blocker is the **trade-station delivery**: imported hemp (19) and jade input
+(17) stay in the stations (`active=nil`, correct `importingCommodityIDs`)
+and never move to the warehouses/shops, so houses stall below level 3 (no
+hemp) and the city sinks to continuous debt. The station→warehouse pair at
+access (76,86)/(77,86) is the next trace target in `createTradeDelivery` /
+`bestWarehouseDestination`. The test stays skipped with this note.
+
+### 10.15 Qin-3 progress (2026-08-17, fifth pass)
+
+Root cause of the stalled trade delivery found: the warehouses fill to their
+3,200 capacity with production/exports, leaving `availableCapacity(for:)`
+zero for imported hemp/jade, so `bestWarehouseDestination` returns nil. After
+adding warehouse capacity, the **hemp import now delivers** (a
+`tradingBuilding → warehouse` delivery walker is observed and the station's
+hemp is consumed). The remaining blocker is layout on the constrained
+Xiangjun map: the jade input station has no warehouse/workshop site within
+the deliveryman's 24-step range, so jade (26) stays at 0 and the city sinks
+to continuous debt. Next step: place trade stations + warehouses before the
+houses congest the district (or widen the placement search). The test stays
+skipped with this note.
+
+### 10.16 Qin-3 progress (2026-08-17, sixth pass)
+
+The Qin-3 city is now economically solvent end-to-end and the carved-jade
+chain is closed:
+
+- **Jade delivery** (§10.15) fixed by layout: placing the trade cluster
+  (hemp station → jade workshop → jade station → warehouses) **before** the
+  food chain/markets/houses keeps the workshop inside the export station's
+  24-road-step range. Observed live walkers:
+  `productionBuilding → tradingBuilding:26x100` (carved-jade export) and
+  `tradingBuilding → productionBuilding:17x100` (jade input). Treasury
+  stays positive for 12 simulated years; the carved-jade yearly goal
+  (1,200) is met.
+- **House food-quality write** (`ResidentialUnit.addFoodSupply`) now follows
+  the recovered §10.10 `0x543A09` contract: a better market delivery
+  **replaces** the house quality byte; a worse one blends by the confirmed
+  five-ratio integer table (`r = delivered/existingStock`, branches
+  `3/2/0.5/≈0.33`; integer `/3` `/4` per the `imul`/`sar` identities).
+  The previous min-blend locked houses at the first delivered quality
+  (30 = fish+meat) and blocked food-50 evolution. Elite houses (level ≥ 8)
+  skip the quality write while market quality ≤ 49 (`FUN_005188D0` gate).
+  Evidence class: `confirmed` (bytes/arithmetic in §10.10).
+- **Warehouse policy**: refusing food commodities (1…7) at every warehouse
+  keeps capacity for hemp/jade/carved-jade; stock-managed hemp import
+  (pause ≥ 3,000, resume ≤ 500) prevents the export station from filling
+  with hemp.
+- **Residential service cadence — verified `inferred`, reverted pending a
+  fixture redesign**: native service walkers advance **1 road tile per native
+  day** (30 tiles/month), so a water carrier's 40-step patrol covers only
+  30/40 tiles before the monthly coverage reset — only ~1/3 of houses ever
+  see `.water`. `EmperorFigureModels.txt` confirms the peddler (23) and the
+  water carrier (28) share speed 8 (only the behavior range differs: 60 vs
+  40), and the market-peddler calibration ("Ten road tiles per daily
+  simulation tick preserves that cadence") therefore applies to service
+  walkers too. Setting service walkers to 10 tiles/day raised Qin-3 water
+  coverage from ~80 to ~156 residents, but the calibrated
+  `XiaTutorialEconomyTests` single-market row then stalled: every house
+  reaches level 1 in month 1, the one food peddler's patrol cannot feed the
+  whole 24-house row, and a second market cannot be placed near the houses
+  because `Common Market Square` (#59) carries original `initialDesirability
+  -6` over a 3-tile range, pushing adjacent houses below the evolution
+  threshold. **Decision**: keep 1 tile/day for now (suite stays green) and
+  record the 10-tiles/day evidence here; landing the cadence requires a
+  fixture layout that keeps houses out of the market's desirability range
+  while giving the food peddler full row coverage.
+- Rice harvests only in month 10 (one 100-unit load per field), so the
+  mill's rice stock drains and market food quality oscillates 30/50 between
+  harvests; salt/spices are not available in this mission. Map/economy
+  constraint, not a producer defect.

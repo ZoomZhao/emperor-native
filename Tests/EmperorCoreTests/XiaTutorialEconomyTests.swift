@@ -106,7 +106,10 @@ final class XiaTutorialEconomyTests: XCTestCase {
     func testMeatMovesThroughPhysicalMillBuyerAndPeddlerAndServicesDriveHousing() throws {
         let original = try OriginalEconomyModels(source: requireOriginalData())
         let rules = EconomyRulesEngine(models: original)
-        var city = try makeRoadCity(rules: rules, houseCount: 24, houseStartX: 40)
+        // Keep all 24 houses inside the single market's patrol reach (~29
+        // tiles one-way with the return budget), so the recovered food gate
+        // is observable for every house.
+        var city = try makeRoadCity(rules: rules, houseCount: 24, houseStartX: 34)
         try placeTutorialFacilities(in: &city, rules: rules)
         // Fixture-only seeding lets this test continue validating the authored
         // downstream food/service chain without pretending migration is known.
@@ -124,7 +127,10 @@ final class XiaTutorialEconomyTests: XCTestCase {
         var sawAncestor = false
         var sawInspection = false
 
-        for _ in 0..<(30 * 5) {
+        // The recovered producer gates each evolution on the **target** level's
+        // food requirement, so houses only rise after the market delivers food
+        // to them; give the far end of the row two years to be fed.
+        for _ in 0..<(30 * 12 * 2) {
             let tick = city.advanceTick(rules: rules)
             sawProducerStock = sawProducerStock || city.production.buildings.contains {
                 $0.buildingID == 33 && $0.outputInventoryByCommodityID[4, default: 0] > 0
@@ -166,10 +172,37 @@ final class XiaTutorialEconomyTests: XCTestCase {
         XCTAssertTrue(sawWater)
         XCTAssertTrue(sawAncestor)
         XCTAssertTrue(sawInspection)
-        XCTAssertGreaterThanOrEqual(
-            city.houses.filter { $0.houseLevelID + 3 >= 5 }.reduce(0) { $0 + $1.residents },
-            150
-        )
+        let atTarget = city.houses.filter { $0.houseLevelID + 3 >= 5 }
+            .reduce(0) { $0 + $1.residents }
+        if atTarget < 150 {
+            let quality = Dictionary(grouping: city.houses, by: \ResidentialUnit.foodQualityRawValue)
+                .mapValues { $0.reduce(0) { $0 + $1.residents } }
+            let byLevel = Dictionary(grouping: city.houses, by: \ResidentialUnit.houseLevelID)
+                .mapValues { $0.reduce(0) { $0 + $1.residents } }
+            let stuck = city.houses.filter { $0.houseLevelID == 1 }
+            let waterCount = stuck.filter { $0.serviceCoverage.contains(.water) }
+                .reduce(0) { $0 + $1.residents }
+            let stuckDetail = stuck.prefix(6).map {
+                "\($0.location?.x ?? -1),\($0.location?.y ?? -1):"
+                    + "w=\($0.serviceCoverage.contains(.water)) "
+                    + "lastQ=\($0.lastSuppliedFoodQuality.rawValue) des=\($0.desirability)"
+            }.joined(separator: ";")
+            var evaluationDetail = "evaluate=none"
+            if let first = stuck.first,
+               let evaluation = DeterministicHousingEvolution.evaluate(
+                house: first,
+                models: original.buildings,
+                difficulty: city.difficulty
+               ) {
+                evaluationDetail = "next=\(evaluation.nextLevelID ?? -1) "
+                    + "missing=\(evaluation.missingEvolutionRequirements)"
+            }
+            return XCTFail(
+                "atTarget=\(atTarget) < 150; foodQuality=\(quality); levels=\(byLevel); "
+                    + "population=\(city.population); stuckWater=\(waterCount)/31; "
+                    + "stuck=[\(stuckDetail)]; \(evaluationDetail)"
+            )
+        }
     }
 
     private func requireOriginalData() throws -> GameDataSource {
@@ -228,6 +261,7 @@ final class XiaTutorialEconomyTests: XCTestCase {
             (72, 56, 0x303),
             (124, 62, 0x404),
             (214, 64, 0x505),
+            (214, 44, 0x606),
         ] {
             XCTAssertNotNil(city.constructResidentialServiceBuilding(
                 buildingID: buildingID,

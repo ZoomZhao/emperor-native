@@ -323,10 +323,60 @@ final class Qin2PlayerPlaythroughTests: XCTestCase {
             let evaluations = try XCTUnwrap(controller.city).lastHousingSettlement?
                 .evaluations.filter { $0.levelID >= 8 }
                 .map(\.missingEvolutionRequirements) ?? []
+            let eliteDetail = try XCTUnwrap(controller.city).houses.filter {
+                $0.houseLevelID >= 8
+            }.prefix(3).map { "level=\($0.houseLevelID) des=\($0.desirability)" }
+            let cityForDiag = try XCTUnwrap(controller.city)
+            let commonResidents = Dictionary(grouping: cityForDiag.houses.filter {
+                $0.houseLevelID < 8
+            }, by: \.residents).mapValues(\.count)
+            let walkerDetail = cityForDiag.migration.immigrantWalkers.prefix(3).map {
+                "house=\($0.houseID) state=\($0.state.rawValue) route=\($0.route.count)"
+                    + " idx=\($0.routeIndex) wait=\($0.waitStepsRemaining)"
+                    + " substep=\($0.substepProgress)@\($0.substepPatternIndex)"
+            }.joined(separator: ";")
+            var gridDiag = "grid=ok"
+            if let entry = cityForDiag.terrain?.authoredPoints?.landEntry {
+                do {
+                    let grids = try cityForDiag.grandCanalWorkerRoutingGrids()
+                    let flood = DeterministicMigration.landEntryFloodDepths(
+                        width: grids.width,
+                        height: grids.height,
+                        primaryPassability: grids.primaryPassability,
+                        seed: entry
+                    )
+                    let eliteReachable = cityForDiag.houses.filter { $0.houseLevelID >= 9 }
+                        .filter { house in
+                            guard let location = house.location,
+                                  let access = DeterministicMigration.houseRoadAccessPoint(
+                                    houseLocation: location,
+                                    vacantBuildingID: 11,
+                                    roadNetwork: cityForDiag.roadNetwork
+                                  ) else { return false }
+                            let index = access.y * grids.width + access.x
+                            return flood.indices.contains(index) && flood[index] != nil
+                        }.count
+                    gridDiag = "grid=ok; entry=\(entry); floodReached="
+                        + "\(flood.compactMap { $0 }.count); eliteReachable=\(eliteReachable)"
+                } catch {
+                    gridDiag = "gridError=\(error)"
+                }
+            } else {
+                gridDiag = "noEntry"
+            }
             return XCTFail(
                 "elite housing did not open for migration: count=\(earlyElite.count),"
                     + "residents=\(earlyElite.reduce(0) { $0 + $1.residents }),"
                     + "assessment=\(String(describing: controller.city?.migration.lastAssessment)),"
+                    + "elite=[\(eliteDetail.joined(separator: ";"))]; "
+                    + "mig(pop=\(cityForDiag.migration.popularity), "
+                    + "pres=\(cityForDiag.migration.pressure), "
+                    + "arrReq=\(cityForDiag.migration.arrivalRequest), "
+                    + "unfulfilled=\(cityForDiag.migration.unfulfilledArrivalCarry), "
+                    + "walkers=\(cityForDiag.migration.immigrantWalkers.count), "
+                    + "common=\(commonResidents), "
+                    + "walker=[\(walkerDetail)]); "
+                    + "\(gridDiag); "
                     + "evaluations=\(evaluations)"
             )
         }
@@ -349,9 +399,7 @@ final class Qin2PlayerPlaythroughTests: XCTestCase {
     }
 
     private func requireAutomaticMigrationProducer() throws {
-        throw XCTSkip(
-            "BLOCKED BY UNKNOWN: original popularity/factor migration producer is not implemented"
-        )
+        // The recovered producer is implemented and integration-verified.
     }
 
     private func startedController() throws -> GameSessionController {

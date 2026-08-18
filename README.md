@@ -10,21 +10,34 @@ macOS application.
 
 ## Verified playability scope
 
-The release gate exercises representative player-command vertical slices directly from the shipping campaign
-data. Xia tutorial mission 0, “Shelter and Sustenance”, is completed in a bounded replay that builds roads,
-houses, a hunting camp, mill, common market, wells, ancestral shrine and inspector tower; the test observes
-natural migration, workforce assignment, physical meat delivery, market distribution, residential services,
-housing evolution and exactly one victory transition. A missing-market and broken-road replay is required not
-to win.
+**Current blocker:** the original automatic-immigration producer is not yet
+implemented (`AutomaticMigrationAvailability.unsupportedOriginalProducer`).
+The immigrant figure-`#11` arrival write chain (`FUN_004C9FD0` →
+`house+0x20`) and the house vacant-type switch (`2→3` / `11→13`) are
+recovered, but Native still lacks the vacant-house lifecycle, the
+`house+0x24` land-entry-flood mapping, the food-quality byte mapping, and
+the war/monument factor inputs (see `docs/exe-research/migration-popularity-producer.md`).
+Consequently the four positive player playthrough tests (Xia 0/1, Qin 1/2)
+are skipped with `BLOCKED BY UNKNOWN`, `scripts/release-gate.sh` currently
+fails on that skip (by design), and the Xia UI-smoke victory leg cannot
+complete until the producer lands. This replaces the earlier
+“natural migration … exactly one victory transition” claim.
 
-Coverage now continues into later systems instead of stopping at the first tutorial: Xia mission 1 inherits
-the winning city and proves millet farming, delivery, milling, food distribution and further housing growth;
-Qin mission 0 completes the Zheng Guo Canal and its iron-production victory goal using player commands; Qin
-mission 1 builds and operates the elite food, hemp, ceramics, lacquerware, silk, service, tax and monument
-supply chains; and Qin mission 3 builds an infantry fort and sends its formation to a player-selected rally
-point through the same command boundary used by the city UI. Combat, walls, gates, towers, multi-formation
-orders and authored invasions have deterministic core coverage, but no claim is made that every original
-mission is already a fully directed player-completion replay.
+The release gate exercises representative player-command vertical slices directly from the shipping campaign
+data. Xia tutorial mission 0, “Shelter and Sustenance”, has a deterministic bounded replay that builds roads,
+houses, a hunting camp, mill, common market, wells, ancestral shrine and inspector tower; the counterexample
+replays prove a missing-market and broken-road city cannot win. The positive playthrough is gated on the
+migration producer above.
+
+Engine coverage continues into later systems instead of stopping at the first tutorial: Xia mission 1
+settings/inheritance and millet farming, delivery, milling, food distribution and housing growth paths are
+covered (the full playthrough is likewise migration-gated); Qin mission 0 completes the Zheng Guo Canal and
+its iron-production victory goal from original archives; Qin missions 1–5 have campaign baselines covering
+the elite food, hemp, ceramics, lacquerware, silk, service, tax and monument supply chains; and Qin mission 3
+builds an infantry fort and sends its formation to a player-selected rally point through the same command
+boundary used by the city UI. Combat, walls, gates, towers, multi-formation orders and authored invasions
+have deterministic core coverage, but no claim is made that every original mission is already a fully
+directed player-completion replay.
 
 The same mutation boundary is used by SwiftUI and the headless gate. Mission outcomes now have save-compatible
 running, victory and continuous-debt defeat states; payroll can create debt, 36 consecutive negative months
@@ -33,10 +46,10 @@ permanent buildings and key walkers resolve to original SG3 sprites with determi
 
 The real Accessibility + CGEvent replay in `scripts/xia1-ui-smoke.sh` selects the shipping campaign and
 mission, verifies the classic objectives, world-map and bottom-message interactions, issues 85
-coordinate-verified construction clicks, selects 3× speed and waits for the native victory overlay. The run
-saves message-panel, built-city, live-city and victory images plus the complete command log under
-`tmp/ui-smoke/`. `scripts/qin1-ui-smoke.sh` separately guards the original mission treasury, zodiac HUD,
-category order, availability ordering, scrolling catalog and fixed-width classic city shell.
+coordinate-verified construction clicks and selects 3× speed; the victory-wait leg is migration-gated as
+above (the last recorded victory screenshots under `tmp/ui-smoke/` predate the 2026-08-14 fail-closed
+change). `scripts/qin1-ui-smoke.sh` separately guards the original mission treasury, zodiac HUD, category
+order, availability ordering, scrolling catalog and fixed-width classic city shell.
 
 ## Engine coverage
 

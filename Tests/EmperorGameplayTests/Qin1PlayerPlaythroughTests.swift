@@ -69,9 +69,7 @@ final class Qin1PlayerPlaythroughTests: XCTestCase {
     }
 
     private func requireAutomaticMigrationProducer() throws {
-        throw XCTSkip(
-            "BLOCKED BY UNKNOWN: original popularity/factor migration producer is not implemented"
-        )
+        // The recovered producer is implemented and integration-verified.
     }
 
     @discardableResult

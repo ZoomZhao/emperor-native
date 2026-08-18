@@ -267,6 +267,93 @@ final class GrandCanalSimulationTests: XCTestCase {
         ).isEmpty)
     }
 
+    /// Plan 006 Phase 1a: the Native primary cache must stay inside the
+    /// recovered `FUN_005AD440` write domain, and the recovered immigrant
+    /// flood pass mask `0xB7C` (`FUN_005AE240`) must discriminate the
+    /// produced values exactly as the original does.
+    func testNativePrimaryRoutingCacheMatchesRecoveredWriteDomainAndFloodMask() throws {
+        let mapURL = GameDataSource.defaultRoot
+            .appendingPathComponent("Cities/Haunxian.map")
+        guard FileManager.default.fileExists(atPath: mapURL.path) else {
+            throw XCTSkip("Original Emperor map data is not installed")
+        }
+        let city = DeterministicCityState(
+            year: -246,
+            treasury: 15_000,
+            map: try EmperorMap(url: mapURL)
+        )
+        let grids = try city.grandCanalWorkerRoutingGrids()
+
+        // Recovered primary write domain (DESIGN.md; migration-popularity-producer.md
+        // §10.4): base values 1/2/4/0x10/0x20/0x80/0x100/0x400/0x1000/0x4000 plus
+        // the ferry post-pass masks 0x200/0x800.
+        let baseDomain: UInt16 =
+            0x1 | 0x2 | 0x4 | 0x10 | 0x20 | 0x80 | 0x100 | 0x400 | 0x1000 | 0x4000
+        let ferryPostProcessMasks: UInt16 = 0x200 | 0x800
+        let writeDomain = baseDomain | ferryPostProcessMasks
+
+        var produced = Set<UInt16>()
+        for (index, value) in grids.primaryPassability.enumerated() {
+            XCTAssertEqual(
+                value & ~writeDomain,
+                0,
+                "primary cache produced a bit outside the recovered write domain "
+                    + "at cell \(index): 0x\(String(value, radix: 16))"
+            )
+            produced.insert(value)
+        }
+
+        // `FUN_005AE240`: a neighbour passes the flood iff its main-cache word
+        // has a nonzero intersection with 0xB7C.
+        let floodMask: UInt16 = 0xB7C
+        let passing = produced.filter { $0 & floodMask != 0 }
+        let blocking = produced.filter { $0 & floodMask == 0 }
+        XCTAssertFalse(passing.isEmpty, "expected some produced cells to be flood-passable")
+        XCTAssertFalse(blocking.isEmpty, "expected some produced cells to block the flood")
+        // Bits 0x8/0x40 are in the mask but have no producer in this build; every
+        // passing value must carry at least one effectively-produced bit.
+        let effectiveProducedBits: UInt16 = 0x4 | 0x10 | 0x20 | 0x100 | 0x200 | 0x800
+        for value in passing {
+            XCTAssertNotEqual(
+                value & effectiveProducedBits,
+                0,
+                "flood-passing value 0x\(String(value, radix: 16)) lacks an "
+                    + "effectively-produced bit"
+            )
+        }
+
+        // Recorded divergence (migration-popularity-producer.md §10.4): the ferry
+        // post-pass is documented in `PrimaryRoutingClassRule` but not applied by
+        // the city grid projection, so ferry masks cannot be produced today. This
+        // assertion flips when the post-pass lands.
+        XCTAssertTrue(
+            produced.isDisjoint(with: [UInt16(0x200), UInt16(0x800)]),
+            "ferry masks are produced; update this test and §10.4 once the post-pass lands"
+        )
+    }
+
+    /// Plan 006 Phase 1a: a placed Ferry (building 210) currently reaches the
+    /// unclassified generic-footprint branch and must fail closed instead of
+    /// inventing a footprint predicate. Flip this when the ferry post-pass
+    /// (0x800 footprint / 0x200 connector chain) is wired.
+    func testFerryOccupancyStaysFailClosedUntilPostPassIsWired() throws {
+        XCTAssertThrowsError(
+            try OriginalGrandCanalLayoutCatalog.workerRoutingCellValues(
+                from: .init(
+                    point: GridPoint(x: 10, y: 10),
+                    terrainRawValue: 0x8008,
+                    occupancy: .init(buildingID: 210)
+                )
+            )
+        ) { error in
+            guard case OriginalGrandCanalLayoutCatalog.WorkerRoutingCacheDerivationError
+                .missingGenericFootprintPredicate = error else {
+                XCTFail("expected missingGenericFootprintPredicate, got \(error)")
+                return
+            }
+        }
+    }
+
     func testCanalRoutingCacheChangesAtRecoveredPhaseBoundary() throws {
         let point = GridPoint(x: 4, y: 68)
         let inactive = try OriginalGrandCanalLayoutCatalog.workerRoutingCellValues(

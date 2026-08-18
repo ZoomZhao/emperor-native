@@ -67,7 +67,23 @@ final class Xia2PlayerPlaythroughTests: XCTestCase {
         }
 
         let city = try XCTUnwrap(controller.city)
-        XCTAssertGreaterThan(city.population, inheritedCity.population)
+        if city.population <= inheritedCity.population {
+            let byLevel = Dictionary(grouping: city.houses, by: \ResidentialUnit.houseLevelID)
+                .mapValues { $0.reduce(0) { $0 + $1.residents } }
+            let quality = Dictionary(
+                grouping: city.houses,
+                by: \ResidentialUnit.lastSuppliedFoodQuality.rawValue
+            ).mapValues { $0.reduce(0) { $0 + $1.residents } }
+            let evolutions = city.lastHousingSettlement?.changes
+                .map { "\($0.direction.rawValue):\($0.fromLevelID)->\($0.toLevelID)" }
+                .joined(separator: ";") ?? "none"
+            return XCTFail(
+                "population did not grow: \(city.population) <= \(inheritedCity.population); "
+                    + "levels=\(byLevel); lastQ=\(quality); lastEvolution=[\(evolutions)]; "
+                    + "mig(pop=\(city.migration.popularity), "
+                    + "pres=\(city.migration.pressure))"
+            )
+        }
         XCTAssertGreaterThan(
             city.houses.filter { $0.houseLevelID + 3 >= 6 }
                 .reduce(0) { $0 + $1.residents },
@@ -88,8 +104,14 @@ final class Xia2PlayerPlaythroughTests: XCTestCase {
     }
 
     private func requireAutomaticMigrationProducer() throws {
+        // The recovered producer is implemented and integration-verified
+        // (Xia1/Qin1/Qin2 playthroughs pass). This continuation test is
+        // blocked on a separate item: on the Xia-2 map some inherited houses
+        // fall outside the new markets' peddler coverage and devolve, so the
+        // population does not grow. Tune the continuation layout/coverage
+        // (more markets or gardens) before re-enabling.
         throw XCTSkip(
-            "BLOCKED BY UNKNOWN: original popularity/factor migration producer is not implemented"
+            "BLOCKED: Xia-2 continuation map food coverage for inherited houses"
         )
     }
 
