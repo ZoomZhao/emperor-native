@@ -177,6 +177,48 @@ final class GameSessionControllerTests: XCTestCase {
         XCTAssertTrue(placedCity.roadNetwork.contains(roadPoint))
     }
 
+    func testCropFarmProducerPlacementUsesRecoveredFootprintAndSprites() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let controller = try GameSessionController()
+        let campaignID = try XCTUnwrap(
+            controller.campaignID(fileName: "1 Xia Dynasty - Tutorials.pak")
+        )
+        // Xia 2 "Seeds of Civilization" allows millet (resource 5), so the
+        // farmhouse producer #193 is placeable; the two-stage farm-then-fields
+        // flow must work now that the producer footprint and sprite were
+        // recovered from the exe table.
+        let start = controller.perform(
+            .startCampaignMission(campaignID: campaignID, missionID: 1)
+        )
+        XCTAssertTrue(start.wasApplied, start.message)
+        XCTAssertTrue(controller.perform(.selectAgriculturalCrop(.millet)).wasApplied)
+        XCTAssertTrue(controller.perform(.selectConstruction(.cropFarm)).wasApplied)
+        let city = try XCTUnwrap(controller.city)
+        let roads = city.roadNetwork.points.sorted { ($0.y, $0.x) < ($1.y, $1.x) }
+        XCTAssertGreaterThan(roads.count, 0)
+        var placed = false
+        for road in roads {
+            let neighbours = [
+                GridPoint(x: road.x, y: road.y - 1),
+                GridPoint(x: road.x + 1, y: road.y),
+                GridPoint(x: road.x, y: road.y + 1),
+                GridPoint(x: road.x - 1, y: road.y),
+            ]
+            for origin in neighbours {
+                if controller.constructionPreview(at: origin, orientation: .northSouth).isValid {
+                    let result = controller.perform(
+                        .placeSelectedConstruction(at: origin, orientation: .northSouth)
+                    )
+                    if result.wasApplied { placed = true; break }
+                }
+            }
+            if placed { break }
+        }
+        XCTAssertTrue(placed, "crop farm must be placeable on the Xia map")
+    }
+
     private func controllerWithXiaOne() throws -> GameSessionController {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")

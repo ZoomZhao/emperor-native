@@ -32,8 +32,8 @@ final class BuildingSpriteCatalogTests: XCTestCase {
         for levelID in 0...14 {
             XCTAssertNotNil(OriginalBuildingSpriteCatalog.housingSprite(forHouseLevelID: levelID))
         }
-        XCTAssertEqual(OriginalBuildingSpriteCatalog.buildingSprite(forBuildingID: 33)?.imageID, 825)
-        XCTAssertEqual(OriginalBuildingSpriteCatalog.buildingSprite(forBuildingID: 124)?.imageID, 1_704)
+        XCTAssertEqual(OriginalBuildingSpriteCatalog.buildingSprite(forBuildingID: 33)?.imageID, 708)
+        XCTAssertEqual(OriginalBuildingSpriteCatalog.buildingSprite(forBuildingID: 124)?.imageID, 1_618)
         XCTAssertEqual(OriginalBuildingSpriteCatalog.buildingSprite(forBuildingID: 126)?.imageID, 2_046)
     }
 
@@ -47,7 +47,7 @@ final class BuildingSpriteCatalogTests: XCTestCase {
         )
         XCTAssertEqual(
             OriginalBuildingSpriteCatalog.constructionCatalogSprite(forBuildingID: 33)?.imageID,
-            825
+            708
         )
     }
 
@@ -95,10 +95,11 @@ final class BuildingSpriteCatalogTests: XCTestCase {
             38: 2_726,
             39: 2_697,
             40: 2_698,
-            42: 2_750,
+            42: 2_788,
+            43: 2_810,
             46: 2_832,
-            237: 812,
-            238: 840,
+            237: 840,
+            238: 812,
         ]
         for (buildingID, imageID) in expectedImageIDs {
             XCTAssertEqual(
@@ -114,6 +115,47 @@ final class BuildingSpriteCatalogTests: XCTestCase {
         )
     }
 
+    /// Primary-sprite keys recovered from the executable building table
+    /// (DAT_008235a0, docs/exe-research/building-sprite-key-table.md). The
+    /// wheat/millet and cabbage/soybean field families were swapped before.
+    func testFieldCropsAndFarmsteadsUseExecutableRecoveredSprites() {
+        XCTAssertEqual(
+            OriginalBuildingSpriteCatalog.agriculturalPlotImageID(for: .wheat),
+            2_422
+        )
+        XCTAssertEqual(
+            OriginalBuildingSpriteCatalog.agriculturalPlotImageID(for: .millet),
+            2_410
+        )
+        XCTAssertEqual(
+            OriginalBuildingSpriteCatalog.agriculturalPlotImageID(for: .cabbage),
+            2_434
+        )
+        XCTAssertEqual(
+            OriginalBuildingSpriteCatalog.agriculturalPlotImageID(for: .soybeans),
+            2_446
+        )
+        XCTAssertEqual(
+            OriginalBuildingSpriteCatalog.agriculturalPlotImageID(for: .hemp),
+            2_458
+        )
+        XCTAssertEqual(
+            OriginalBuildingSpriteCatalog.agriculturalPlotImageID(for: .rice),
+            2_506
+        )
+        // Farmstead producers now have sprites and footprints.
+        XCTAssertEqual(OriginalBuildingSpriteCatalog.buildingSprite(forBuildingID: 192)?.imageID, 825)
+        XCTAssertEqual(OriginalBuildingSpriteCatalog.buildingSprite(forBuildingID: 193)?.imageID, 793)
+        XCTAssertEqual(
+            OriginalBuildingFootprintCatalog.footprint(forBuildingID: 192),
+            BuildingFootprint(width: 2, height: 2)
+        )
+        XCTAssertEqual(
+            OriginalBuildingFootprintCatalog.footprint(forBuildingID: 193),
+            BuildingFootprint(width: 3, height: 3)
+        )
+    }
+
     func testAestheticAndWatchtowerBuildingsUseVerifiedOriginalImages() {
         let expectedImageIDs = [
             115: 201,
@@ -121,7 +163,7 @@ final class BuildingSpriteCatalogTests: XCTestCase {
             117: 225,
             118: 241,
             119: 250,
-            127: 1_618,
+            127: 1_680,
         ]
         for (buildingID, imageID) in expectedImageIDs {
             XCTAssertEqual(

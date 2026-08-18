@@ -257,6 +257,16 @@ public enum OriginalBuildingSpriteCatalog {
         return grandCanalPhaseZeroTerrainBaseImageID + Int(terrainVariation % 9)
     }
 
+    /// Rock-family terrain sprite for non-elevation rock cells (terrain 0x2).
+    /// Resource key 0x606 resolves to China_Terrain group 6 (first frame #458,
+    /// 14 authored frames) via the executable image-table formula
+    /// (docs/exe-research/building-sprite-key-table.md). The map's variation
+    /// byte selects the frame within the family, mirroring the canal phase-0
+    /// `% 9` frame choice.
+    public static func chinaTerrainRockFamilyImageID(variation: UInt8) -> Int {
+        458 + Int(variation % 14)
+    }
+
     /// The road crossing is a second, transparent draw over the 4x4 canal
     /// body. These IDs are direct resource-key resolutions: C08+2 -> #236 for
     /// phases 1/2, and C07+2 -> #240 for phases 3/4.
@@ -357,7 +367,7 @@ public enum OriginalBuildingSpriteCatalog {
         77, 82, 84,
         110, 124, 125,
         115, 116, 117, 118, 119, 126, 127, 129, 130, 131,
-        194, 195, 196, 197, 198, 199, 203,
+        192, 193, 194, 195, 196, 197, 198, 199, 203,
         207, 208, 209, 211, 212, 213, 214, 215, 216, 217, 218, 219,
         220, 221, 223, 224,
         226, 233, 235, 236, 237, 238,
@@ -376,11 +386,16 @@ public enum OriginalBuildingSpriteCatalog {
     }
 
     public static func agriculturalPlotImageID(for crop: AgriculturalCrop) -> Int {
+        // Primary-sprite keys from the hash-identified executable's building
+        // table (DAT_008235a0; see docs/exe-research/building-sprite-key-table.md):
+        // wheat (195) -> group 46 (#2422), millet (196) -> group 44 (#2410),
+        // cabbage (198) -> group 47 (#2434), soybeans (199) -> group 48 (#2446).
+        // The earlier wheat/millet and cabbage/soybean assignments were swapped.
         switch crop {
-        case .wheat: 2_410
-        case .millet: 2_422
-        case .soybeans: 2_434
-        case .cabbage: 2_446
+        case .wheat: 2_422
+        case .millet: 2_410
+        case .soybeans: 2_446
+        case .cabbage: 2_434
         case .hemp: 2_458
         case .tea: 2_470
         case .mulberry: 2_482
@@ -454,14 +469,14 @@ public enum OriginalBuildingSpriteCatalog {
         case 27: imageID = agriculturalPlotImageID(for: .lacquer)
         case 28: imageID = agriculturalPlotImageID(for: .mulberry)
         case 31: imageID = 721   // Fishing quay
-        case 33: imageID = 825   // Hunter's tent, China_Husbandry SG3 group 1791
+        case 33: imageID = 708   // Hunter's tent, China_Husbandry group 55 (not #825: that is the hemp farm)
         case 35: imageID = 2_789 // Clay pit
         case 36: imageID = 2_741 // Stoneworks
         case 38: imageID = 2_726 // Logging shed
         case 39: imageID = 2_697 // Bronze smelter
         case 40: imageID = 2_698 // Iron smelter
-        case 42: imageID = 2_750 // Bronzeware maker
-        case 43: imageID = 2_788 // Kiln
+        case 42: imageID = 2_788 // Bronzeware maker (group 71; #2750 belongs to lacquerware maker #44)
+        case 43: imageID = 2_810 // Kiln (group 73)
         case 46: imageID = 2_832 // Jade carver's studio
         case 52: imageID = 2_310 // Carpenters' guild
         case 53: imageID = 647   // Mill
@@ -471,12 +486,14 @@ public enum OriginalBuildingSpriteCatalog {
         case 117: imageID = 225 // Ornate sculpture
         case 118: imageID = 241 // Flowering tree
         case 119: imageID = 250 // Wayside pavilion
-        case 124: imageID = 1_704 // Inspector's tower, China_Safety logical group 137
+        case 124: imageID = 1_618 // Inspector's tower, China_Safety group 134 (not #1704)
         case 126: imageID = 2_046 // One-tile roadblock sign, China_Government2 logical group 146
-        case 127: imageID = 1_618 // Watchtower, China_Safety logical group 134
+        case 127: imageID = 1_680 // Watchtower, China_Safety group 136
         case 129: imageID = orientation == .northSouth ? 892 : 917 // City wall
         case 131: imageID = 879 // Staffed city-wall tower
         case 125: imageID = 1_908 // Tax office
+        case 192: imageID = 825 // Hemp farm, China_Husbandry group 173
+        case 193: imageID = 793 // Farmhouse, China_Husbandry group 58
         case 207: imageID = 1_580 // Herbalist's stall
         case 208: imageID = 1_593 // Acupuncturist's clinic
         case 211: imageID = 589   // Music school
@@ -493,8 +510,8 @@ public enum OriginalBuildingSpriteCatalog {
         case 233: imageID = 2_373 // Laborers' camp
         case 235: imageID = 2_331 // Masons' guild
         case 236: imageID = 2_352 // Ceramists' guild
-        case 237: imageID = 812 // Tea curing shed
-        case 238: imageID = 840 // Lacquer refinery
+        case 237: imageID = 840 // Tea curing shed, China_Husbandry group 59
+        case 238: imageID = 812 // Lacquer refinery, China_Husbandry group 61
         case 194: imageID = agriculturalPlotImageID(for: .hemp)
         case 195: imageID = agriculturalPlotImageID(for: .wheat)
         case 196: imageID = agriculturalPlotImageID(for: .millet)

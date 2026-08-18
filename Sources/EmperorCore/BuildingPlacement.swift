@@ -117,8 +117,16 @@ public enum OriginalBuildingFootprintCatalog {
         case 26...28, 194...199, 203:
             BuildingFootprint(width: 1, height: 1)
 
+        // Farmstead producers: hemp farm #192 is 2×2, farmhouse #193 is 3×3
+        // (footprint dwords from the executable building table
+        // DAT_008235a0; docs/exe-research/building-sprite-key-table.md).
+        case 192:
+            BuildingFootprint(width: 2, height: 2)
+        case 193:
+            BuildingFootprint(width: 3, height: 3)
+
         // Extraction and light industry.
-        case 31, 33, 35, 36, 38, 42...47, 192, 193, 226, 237...239:
+        case 31, 33, 35, 36, 38, 42...47, 226, 237...239:
             BuildingFootprint(width: 2, height: 2)
         case 37, 39...41:
             BuildingFootprint(width: 3, height: 3)

@@ -1542,7 +1542,7 @@ final class EmperorCoreTests: XCTestCase {
     func testOriginalPlacedBuildingSpriteCatalogAndCompositeGeometry() {
         let primaryImageIDs = [
             35: 2_789,
-            43: 2_788,
+            43: 2_810,
             53: 647,
             72: 1_559,
             125: 1_908,
@@ -2652,8 +2652,8 @@ final class EmperorCoreTests: XCTestCase {
             mapWidth: 7,
             mapHeight: 5
         )
-        _ = city.buildRoad((0...6).map { GridPoint(x: $0, y: 2) }, rules: rules)
-        let plotPoint = GridPoint(x: 3, y: 1)
+        _ = city.buildRoad((0...6).map { GridPoint(x: $0, y: 3) }, rules: rules)
+        let plotPoint = GridPoint(x: 4, y: 1)
 
         XCTAssertFalse(city.canConstructAgriculturalPlot(crop: .rice, at: plotPoint))
         let producerID = try XCTUnwrap(city.constructAgriculturalProducer(
@@ -2727,11 +2727,11 @@ final class EmperorCoreTests: XCTestCase {
             mapHeight: 5
         )
         city.workforceEnabled = true
-        _ = city.buildRoad((0...6).map { GridPoint(x: $0, y: 2) }, rules: rules)
+        _ = city.buildRoad((0...6).map { GridPoint(x: $0, y: 3) }, rules: rules)
         for x in 0..<3 {
             XCTAssertNotNil(city.addHouse(
                 levelID: 0,
-                location: GridPoint(x: x, y: 3),
+                location: GridPoint(x: x, y: 4),
                 models: original.buildings
             ))
         }
@@ -2742,7 +2742,7 @@ final class EmperorCoreTests: XCTestCase {
         ))
         XCTAssertNotNil(city.constructAgriculturalPlot(
             crop: .millet,
-            at: GridPoint(x: 3, y: 1),
+            at: GridPoint(x: 4, y: 1),
             rules: rules
         ))
 
@@ -2773,7 +2773,7 @@ final class EmperorCoreTests: XCTestCase {
             mapWidth: 10,
             mapHeight: 6
         )
-        _ = city.buildRoad((0..<10).map { GridPoint(x: $0, y: 4) }, rules: rules)
+        _ = city.buildRoad((0..<10).map { GridPoint(x: $0, y: 5) }, rules: rules)
         let olderFarmID = try XCTUnwrap(city.constructAgriculturalProducer(
             crop: .rice,
             at: GridPoint(x: 1, y: 2),
@@ -2781,7 +2781,7 @@ final class EmperorCoreTests: XCTestCase {
         ))
         let newerFarmID = try XCTUnwrap(city.constructAgriculturalProducer(
             crop: .rice,
-            at: GridPoint(x: 6, y: 2),
+            at: GridPoint(x: 5, y: 2),
             rules: rules
         ))
 

@@ -338,6 +338,33 @@ extension CityCanvas {
             return true
         }
 
+        // Rock cells (terrain 0x2, non-elevation) use the original runtime's
+        // rock family instead of the authored per-cell image: the key-based
+        // family (resource key 0x606 → China_Terrain group 6, first frame
+        // #458) was recovered from the executable's image-table formula
+        // (docs/exe-research/building-sprite-key-table.md). The variation byte
+        // picks the authored frame within the 14-frame family, mirroring the
+        // original renderer's flag-based rebuild (FUN_0053EC90 dispatch: rock
+        // before grass before bare).
+        if terrain?.contains(.rock) == true {
+            let variation = originalMap.map.terrainVisualVariationValue(
+                x: point.x,
+                y: point.y
+            ) ?? 0
+            let localImageID = OriginalBuildingSpriteCatalog
+                .chinaTerrainRockFamilyImageID(variation: variation)
+            if let sprite = originalMap.terrainSprite(localImageID: localImageID) {
+                drawOriginalSprite(
+                    sprite,
+                    center: center,
+                    tileWidth: tileWidth,
+                    tileHeight: tileHeight,
+                    context: &context
+                )
+            }
+            return true
+        }
+
         // Clearing vegetation must not redraw the authored tree object.
         if originalTerrain?.intersection([.tree, .scrub]).isEmpty == false,
            terrain?.intersection([.tree, .scrub]).isEmpty == true {
