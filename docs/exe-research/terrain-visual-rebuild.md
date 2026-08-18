@@ -43,10 +43,19 @@ sprites.
 
 - `confirmed`: the clear-and-rebuild pipeline, the flag→family keys, dispatch
   order, and the "keep elevation authored sprite" rule.
+- `confirmed` (correction to earlier draft): the `0x603 = #247` claim is a
+  misreading — DESIGN.md line 345 restores canal phase-0 cells to `China_Terrain
+  #247` as a raw image ID, it does not resolve runtime key `0x603`. The road
+  anchor `#782` sits in INDEX group 30 and DESIGN.md calls it group 30, so
+  INDEX group number == logical group number. Therefore key `0x603` →
+  logical group 2 → China_Terrain `#202` (not `#247`); the family keys would
+  map to groups 1/2/3/4/5/13/25/26/27 (`#201/#202/#247/#336/#386/#1440/
+  #1443/#574/#736`) **only if** China_Terrain is archive index 3 — which is
+  still unverified, so the family→image assignment remains `unknown`.
 - `unknown`: the exact archive-index table that resolves keys `0x602…0x61c` to
-  `China_Terrain` image IDs in native coordinates; the variation-byte mapping
-  for multi-cell families; the height-slope overwrite (`FUN_0053EAE0` sets
-  `0x200` + vegetation `0x601` on lower cells adjacent to higher ground).
+  an archive; the variation-byte mapping for multi-cell families; the
+  height-slope overwrite (`FUN_0053EAE0` sets `0x200` + vegetation `0x601` on
+  lower cells adjacent to higher ground).
 
 Implementation of the flag→family dispatch is deferred until the archive-index
 table and variation mapping are recovered; native keeps authored-image
