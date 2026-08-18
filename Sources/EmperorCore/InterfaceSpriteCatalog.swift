@@ -139,17 +139,28 @@ public enum OriginalInterfaceChromeSpriteCatalog {
 /// Standalone city-interface / tool artwork that is not stored as a four-state
 /// category-button family.
 ///
-/// - #1275/#1279/#1283/#1287: the road, inspection, shovel and red removal
-///   actions visible in the original city utility strip above the minimap
-/// - #1291: help star used as the strip's trailing entry (messages stay on the
-///   bottom navigation bar; the message family is not yet verified)
-/// - Player-built world roads still use the authored China_Terrain connection
-///   family (`roadTerrainLocalID`), not the Great Wall category button (#1319)
+/// The original city utility strip above the minimap has exactly five buttons;
+/// `GameData/EmperorText.txt` group lists them in order as
+/// `修路 / 路障 / 清除 / 撤销 / 查看最后事件` (rows 3694–3698, matching the
+/// manual's Build Roads / Place Roadblocks / Clear Item / Undo Last Action /
+/// View Last Event). The shipped `China_Interface_New_parts` sheet stores the
+/// five four-state families as:
+///
+/// - #1275 (`group 133`): dirt-road tile — 修路 / Build Roads
+/// - #1279 (`group 134`): roadblock sign on a roadside — 路障 / Place Roadblocks
+/// - #1283 (`group 135`): clearing shovel in grass — 清除 / Clear Item
+/// - #1287 (`group 136`): red removal mark — 撤销 / Undo Last Action
+///   (the same family as `OriginalInterfaceSpriteCatalog .undo`)
+/// - #1291 (`group 115`): scroll/event mark — 查看最后事件 / View Last Event
+///
+/// Native keeps `.demolish` as the item-removal tool under its own label and
+/// reuses the #1287 family; the messages entry stays in the bottom navigation
+/// bar, so `.help` is retained for the strip's trailing message button.
 public enum OriginalInterfaceUtilityIcon: String, CaseIterable, Sendable, Hashable {
-    case inspect
+    case road
+    case roadblock
     case clearLand
     case demolish
-    case road
     case help
 }
 
@@ -193,9 +204,9 @@ public enum OriginalInterfaceUtilitySpriteCatalog {
     }
 
     private static let interfaceImageIDs: [OriginalInterfaceUtilityIcon: Int] = [
-        // Road tile, city inspection, shovel, red removal, then help star.
+        // 修路, 路障, 清除, 撤销, 查看最后事件 — original utility-strip order.
         .road: 1_275,
-        .inspect: 1_279,
+        .roadblock: 1_279,
         .clearLand: 1_283,
         .demolish: 1_287,
         .help: 1_291,

@@ -89,9 +89,19 @@ public struct FigureSpriteAnimation: Sendable, Equatable, Hashable {
         self.archiveBaseName = archiveBaseName
         self.sourceBitmapName = sourceBitmapName
         self.logicalGroupID = logicalGroupID
+        // The original SG3 figure sheets are frame-major: each animation
+        // frame is a block of eight direction images, so
+        // `imageID = firstImageID + sheetDirection + frame * 8`. The sheet is
+        // rotated one step from the movement direction byte (the exact
+        // horizontal mirrors NE↔NW, E↔W, SE↔SW sit at sheet positions
+        // (0,6), (1,5), (2,4) and the self-mirror N/S at (3,7)), matching
+        // `FUN_004cb910` / `FUN_0051d0c0` in the hash-identified executable:
+        // `sprite = direction + base + frameByte * 8`.
         framesByDirection = FigureMovementDirection.allCases.map { direction in
-            let start = firstImageID + direction.rawValue * framesPerDirection
-            return Array(start..<(start + framesPerDirection))
+            let sheetDirection = (direction.rawValue - 1 + 8) % 8
+            return (0..<framesPerDirection).map { frame in
+                firstImageID + sheetDirection + frame * 8
+            }
         }
     }
 

@@ -152,6 +152,31 @@ final class GameSessionControllerTests: XCTestCase {
         XCTAssertEqual(controller.city?.markets.markets.first?.shopBuildingIDs, [66])
     }
 
+    func testRoadblockToolSelectPreviewAndPlaceOnXiaOneMap() throws {
+        let controller = try controllerWithXiaOne()
+        let city = try XCTUnwrap(controller.city)
+        XCTAssertTrue(city.isBuildingAvailableInCampaign(126))
+
+        let validPoints = city.roadNetwork.points
+            .sorted { ($0.y, $0.x) < ($1.y, $1.x) }
+            .filter { city.canConstructRoadBlock(at: $0) }
+        XCTAssertGreaterThan(validPoints.count, 0, "Xia Banpo map must contain placeable road tiles")
+        let roadPoint = validPoints[0]
+
+        XCTAssertTrue(controller.perform(.selectConstruction(.roadblock)).wasApplied)
+        XCTAssertEqual(controller.selectedConstruction, .roadblock)
+        XCTAssertTrue(controller.constructionPreview(at: roadPoint).isValid)
+        let placed = controller.perform(
+            .placeSelectedConstruction(at: roadPoint, orientation: .northSouth)
+        )
+        XCTAssertTrue(placed.wasApplied, placed.message)
+        let placedCity = try XCTUnwrap(controller.city)
+        XCTAssertTrue(placedCity.placedBuildings.contains { $0.buildingID == 126 })
+        XCTAssertTrue(placedCity.roadblockPoints.contains(roadPoint))
+        // The road stays in the network and the tile remains road-passable.
+        XCTAssertTrue(placedCity.roadNetwork.contains(roadPoint))
+    }
+
     private func controllerWithXiaOne() throws -> GameSessionController {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")

@@ -575,12 +575,6 @@ extension CityCanvas {
         blocked.formUnion(city.houses.compactMap(\.location))
         blocked.formUnion(city.placedBuildings.flatMap(\.occupiedPoints))
 
-        let offsets = [
-            GridPoint(x: 0, y: 0), GridPoint(x: 1, y: 0),
-            GridPoint(x: 1, y: 1), GridPoint(x: 0, y: 1),
-            GridPoint(x: -1, y: 1), GridPoint(x: -1, y: 0),
-            GridPoint(x: -1, y: -1), GridPoint(x: 0, y: -1)
-        ]
         func isAvailable(_ point: GridPoint) -> Bool {
             terrain.isClearLand(point) && !blocked.contains(point)
         }
@@ -594,16 +588,32 @@ extension CityCanvas {
         let maximumBirds = terrain.width * terrain.height >= 300 ? 3 : 1
         let centerX = terrain.width / 2
         let centerY = terrain.height / 2
+        // Original prey roam range comes from the shipped figure model:
+        // every animal row 69…77 in EmperorFigureModels.txt carries
+        // behaviorRange 24, and native service walkers already consume that
+        // field as their roam budget. A pheasant therefore walks a
+        // deterministic clear-land walk of that many steps away from its
+        // anchor and returns along the same path (a closed loop), instead of
+        // pacing the old hard-coded 3×3 tile box.
+        let roamSteps = max(
+            8,
+            models.figures[figureID: OriginalFigureSpriteCatalog.pheasantAnimation.figureID]?
+                .behaviorRange ?? 24
+        )
         var candidates: [(distance: Int, score: Int, route: [GridPoint])] = []
         for y in stride(from: 2, to: terrain.height - 2, by: 2) {
             for x in stride(from: 2, to: terrain.width - 2, by: 2) {
                 let start = GridPoint(x: x, y: y)
-                let route = offsets.map {
-                    GridPoint(x: start.x + $0.x, y: start.y + $0.y)
-                }
-                guard route.allSatisfy(isAvailable), score(start) % 17 == 0 else {
+                guard isAvailable(start), score(start) % 17 == 0 else {
                     continue
                 }
+                let route = ambientPheasantLoop(
+                    from: start,
+                    stepCount: roamSteps,
+                    seed: score(start),
+                    isAvailable: isAvailable
+                )
+                guard route.count >= 8 else { continue }
                 let distance = abs(start.x - centerX) + abs(start.y - centerY)
                 candidates.append((distance: distance, score: score(start), route: route))
             }
@@ -615,6 +625,48 @@ extension CityCanvas {
             }
             .prefix(maximumBirds)
             .map(\.route)
+    }
+
+    /// Deterministic closed clear-land roam for one ambient bird. The walk
+    /// prefers moving on from the previous tile, bounces off unavailable
+    /// neighbours, and finally retraces the outbound path so the phase wrap
+    /// never teleports the sprite. Consecutive route points are always
+    /// orthogonally adjacent, keeping the 8-direction sprite interpolation
+    /// valid.
+    private func ambientPheasantLoop(
+        from start: GridPoint,
+        stepCount: Int,
+        seed: Int,
+        isAvailable: (GridPoint) -> Bool
+    ) -> [GridPoint] {
+        let directions = [
+            GridPoint(x: 0, y: -1),
+            GridPoint(x: 1, y: 0),
+            GridPoint(x: 0, y: 1),
+            GridPoint(x: -1, y: 0),
+        ]
+        var outbound = [start]
+        var current = start
+        var previous = start
+        var state = UInt64(bitPattern: Int64(seed &* 0x9E37_79B9 &+ 1))
+        for _ in 0..<stepCount {
+            let neighbors = directions
+                .map { GridPoint(x: current.x + $0.x, y: current.y + $0.y) }
+                .filter { $0 != previous && isAvailable($0) }
+            let pool = neighbors.isEmpty
+                ? directions
+                    .map { GridPoint(x: current.x + $0.x, y: current.y + $0.y) }
+                    .filter(isAvailable)
+                : neighbors
+            guard !pool.isEmpty else { break }
+            state = state &* 6_364_136_223 &+ 1_442_695_077
+            let pick = Int((state >> 33) % UInt64(pool.count))
+            previous = current
+            current = pool[pick]
+            outbound.append(current)
+        }
+        guard outbound.count > 1 else { return outbound }
+        return outbound + outbound.dropLast().reversed()
     }
 
     /// Straight wall pieces automatically follow their live neighbours. This

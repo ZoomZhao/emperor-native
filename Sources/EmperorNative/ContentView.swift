@@ -803,6 +803,7 @@ private struct ClassicConstructionSubmenuView: View {
                     .opacity(isUnsupported(choice) ? 0.42 : 1)
                     .allowsHitTesting(!isUnsupported(choice))
                     .onTapGesture { onSelect(choice) }
+                    .help(submenuChoiceHelp(choice))
                     .accessibilityElement(children: .ignore)
                     .accessibilityAddTraits(.isButton)
                     .accessibilityIdentifier("construction-submenu-\(choice.id)")
@@ -839,6 +840,24 @@ private struct ClassicConstructionSubmenuView: View {
     private func isUnsupported(_ choice: ClassicConstructionChoice) -> Bool {
         if case .unsupported = choice { return true }
         return false
+    }
+
+    /// Original-style hover hint for one submenu row. Shops must not fall back
+    /// to the generic "占地 X×Y，必须邻接道路" wording, so their instruction
+    /// explains the market-interior placement rule.
+    private func submenuChoiceHelp(_ choice: ClassicConstructionChoice) -> String {
+        switch choice {
+        case let .tool(tool):
+            constructionInstruction(tool, orientation: .northSouth)
+        case let .cropProducer(crop, _):
+            "\(crop.localizedTitle)农场：占地 2×2，须临路清地；建成后再选农田铺设田块"
+        case let .cropPlot(crop):
+            "\(crop.fieldTitle)：在同类农场耕作范围内点击或拖动种植"
+        case let .tradePartner(partner):
+            "\(ClassicTextLocalization.cityName(partner.name))：放置\(partner.routeKind == .land ? "贸易站" : "贸易码头")；右键取消"
+        case .unsupported:
+            "本关暂未开放"
+        }
     }
 
     @ViewBuilder
@@ -1746,11 +1765,14 @@ private struct ClassicControlPanel: View {
         )
     }
 
-    /// Always-visible road / clear / demolish strip modeled on the original
-    /// city panel tool row above the minimap.
+    /// Always-visible road / roadblock / clear / demolish strip modeled on the
+    /// original city panel tool row above the minimap. The original row is
+    /// `修路 / 路障 / 清除 / 撤销 / 查看最后事件` (EmperorText rows 3694–3698);
+    /// Native maps 撤销 to the item-removal tool and keeps the trailing
+    /// message entry, so roadblocks remain reachable exactly like the original.
     private var constructionUtilityStrip: some View {
         let tools: [NativeConstructionTool] = [
-            .road, .inspect, .clearLand, .demolish,
+            .road, .roadblock, .clearLand, .demolish,
         ]
         return HStack(spacing: 0) {
             ForEach(tools) { tool in
@@ -1965,8 +1987,8 @@ private struct ClassicControlPanel: View {
         for tool: NativeConstructionTool
     ) -> RenderedTerrainSprite? {
         switch tool {
-        case .inspect:
-            if let imageID = OriginalInterfaceUtilitySpriteCatalog.imageID(for: .inspect) {
+        case .roadblock:
+            if let imageID = OriginalInterfaceUtilitySpriteCatalog.imageID(for: .roadblock) {
                 return library.interfaceSprites[imageID]
             }
             return nil

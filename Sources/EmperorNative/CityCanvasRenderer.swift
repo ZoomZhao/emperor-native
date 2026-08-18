@@ -228,6 +228,14 @@ extension CityCanvas {
             return
         }
         for origin in origins {
+            if constructionTool == .road {
+                drawRoadPlacementPreview(
+                    previewPoints: origins,
+                    context: &context,
+                    metrics: metrics
+                )
+                continue
+            }
             let isValid = placementIsValid(at: origin)
             let color = isValid ? EmperorTheme.success : EmperorTheme.error
             let highlightedPoints: [GridPoint]
@@ -236,8 +244,18 @@ extension CityCanvas {
             } else if constructionTool.marketShopBuildingID != nil,
                       let marketPlacement = city.placedBuildings.first(where: {
                           $0.category == .market && $0.occupiedPoints.contains(origin)
-                      }) {
-                highlightedPoints = marketPlacement.occupiedPoints
+                      }),
+                      let market = city.markets.markets.first(where: {
+                          $0.id == marketPlacement.instanceID
+                      }),
+                      market.remainingShopCapacity > 0,
+                      let bayOrigin = nextMarketShopBayOrigin(
+                          marketPlacement: marketPlacement,
+                          market: market
+                      ) {
+                // Feedback covers only the 2×2 bay the shop will occupy, not
+                // the whole market shell.
+                highlightedPoints = BuildingFootprint(width: 2, height: 2).points(at: bayOrigin)
             } else if let buildingID = activeConstructionBuildingID,
                let footprint = OriginalBuildingFootprintCatalog.footprint(
                 forBuildingID: buildingID,
@@ -278,25 +296,133 @@ extension CityCanvas {
         }
     }
 
+    /// Road drag preview uses the real authored road-tile family with
+    /// connection masks computed over committed roads plus the preview points,
+    /// tinted green/red like the original placement feedback. A plain diamond
+    /// rectangle is not a faithful road preview (DESIGN.md).
+    func drawRoadPlacementPreview(
+        previewPoints: [GridPoint],
+        context: inout GraphicsContext,
+        metrics: RenderMetrics
+    ) {
+        let previewSet = Set(previewPoints)
+        for mapPoint in previewPoints {
+            let isValid = placementIsValid(at: mapPoint)
+            guard metrics.viewport.contains(mapPoint) else { continue }
+            let center = point(
+                at: mapPoint,
+                tileWidth: metrics.tileWidth,
+                tileHeight: metrics.tileHeight,
+                origin: metrics.origin,
+                viewport: metrics.viewport
+            )
+            let diamond = tileDiamond(
+                center: center,
+                tileWidth: metrics.tileWidth,
+                tileHeight: metrics.tileHeight
+            )
+            context.fill(
+                diamond,
+                with: .color(
+                    (isValid ? EmperorTheme.success : EmperorTheme.error)
+                        .opacity(0.20)
+                )
+            )
+            context.stroke(
+                diamond,
+                with: .color(isValid ? EmperorTheme.success : EmperorTheme.error),
+                lineWidth: 1.5
+            )
+            // Neighbours include committed roads and the other preview tiles.
+            let neighborMask: Int = [
+                GridPoint(x: mapPoint.x, y: mapPoint.y - 1),
+                GridPoint(x: mapPoint.x + 1, y: mapPoint.y),
+                GridPoint(x: mapPoint.x, y: mapPoint.y + 1),
+                GridPoint(x: mapPoint.x - 1, y: mapPoint.y),
+            ].enumerated().reduce(0) { mask, entry in
+                city.roadNetwork.contains(entry.element)
+                    || previewSet.contains(entry.element)
+                    ? mask | (1 << entry.offset)
+                    : mask
+            }
+            guard let sprite = originalMap?.roadSprite(connectionMask: neighborMask) else {
+                continue
+            }
+            let scale = metrics.tileWidth / 80
+            let drawWidth = CGFloat(sprite.width) * scale
+            let drawHeight = CGFloat(sprite.height) * scale
+            var tileContext = context
+            tileContext.opacity = isValid ? 0.72 : 0.48
+            tileContext.addFilter(
+                .colorMultiply(
+                    isValid
+                        ? Color(red: 0.64, green: 1.0, blue: 0.70)
+                        : Color(red: 1.0, green: 0.54, blue: 0.48)
+                )
+            )
+            tileContext.draw(
+                Image(decorative: sprite.image, scale: 1),
+                in: CGRect(
+                    x: center.x - drawWidth * 0.5,
+                    y: center.y + metrics.tileHeight * 0.5 - drawHeight,
+                    width: drawWidth,
+                    height: drawHeight
+                )
+            )
+        }
+    }
+
     func constructionPreviewComponents(
         at origin: GridPoint
     ) -> [BuildingSpriteComponent] {
+        // Market shops have no standalone footprint or building ID: the ghost
+        // is the shop's own sprite sitting on the market's next free 2×2 bay.
+        if let shopBuildingID = constructionTool.marketShopBuildingID,
+           let imageID = OriginalBuildingSpriteCatalog.shopImageIDByBuildingID[shopBuildingID],
+           let marketPlacement = city.placedBuildings.first(where: {
+               $0.category == .market && $0.occupiedPoints.contains(origin)
+           }),
+           let market = city.markets.markets.first(where: { $0.id == marketPlacement.instanceID }),
+           market.remainingShopCapacity > 0 {
+            let bayIndex = market.shopBuildingIDs.count
+            let bayOrigins = OriginalBuildingSpriteCatalog.marketShopOrigins(
+                forBuildingID: marketPlacement.buildingID
+            )
+            guard bayOrigins.indices.contains(bayIndex) else { return [] }
+            let bayOrigin = bayOrigins[bayIndex]
+            return [BuildingSpriteComponent(
+                sprite: BuildingSpriteReference(
+                    archiveBaseName: OriginalBuildingSpriteCatalog.generalArchiveBaseName,
+                    imageID: imageID
+                ),
+                tileOffsetX: marketPlacement.origin.x + bayOrigin.x - origin.x,
+                tileOffsetY: marketPlacement.origin.y + bayOrigin.y - origin.y,
+                footprint: BuildingFootprint(width: 2, height: 2)
+            )]
+        }
         guard let buildingID = activeConstructionBuildingID else { return [] }
-        if constructionTool == .house,
+        if constructionTool == .house || constructionTool == .eliteHouse,
            let footprint = OriginalBuildingFootprintCatalog.footprint(
             forBuildingID: buildingID,
             orientation: constructionOrientation
-           ),
-           let sprite = OriginalBuildingSpriteCatalog.housingSprite(
-            forHouseLevelID: 0,
-            orientation: constructionOrientation
            ) {
-            return [BuildingSpriteComponent(
-                sprite: sprite,
-                tileOffsetX: 0,
-                tileOffsetY: 0,
-                footprint: footprint
-            )]
+            let sprite = constructionTool == .eliteHouse
+                ? OriginalBuildingSpriteCatalog.housingSprite(
+                    forBuildingID: 11,
+                    orientation: constructionOrientation
+                )
+                : OriginalBuildingSpriteCatalog.housingSprite(
+                    forHouseLevelID: 0,
+                    orientation: constructionOrientation
+                )
+            if let sprite {
+                return [BuildingSpriteComponent(
+                    sprite: sprite,
+                    tileOffsetX: 0,
+                    tileOffsetY: 0,
+                    footprint: footprint
+                )]
+            }
         }
         if constructionTool == .market || constructionTool == .grandMarket {
             return OriginalBuildingSpriteCatalog.buildingComponents(
@@ -363,6 +489,24 @@ extension CityCanvas {
                 )
             )
         }
+    }
+
+    /// The market origin offset of the next free shop bay, or `nil` when the
+    /// square has no remaining capacity. Mirrors `marketComponents` so the
+    /// preview ghost lands exactly where the placed shop will render.
+    private func nextMarketShopBayOrigin(
+        marketPlacement: PlacedBuilding,
+        market: MarketSquare
+    ) -> GridPoint? {
+        let bayIndex = market.shopBuildingIDs.count
+        let origins = OriginalBuildingSpriteCatalog.marketShopOrigins(
+            forBuildingID: marketPlacement.buildingID
+        )
+        guard origins.indices.contains(bayIndex) else { return nil }
+        return GridPoint(
+            x: marketPlacement.origin.x + origins[bayIndex].x,
+            y: marketPlacement.origin.y + origins[bayIndex].y
+        )
     }
 
     func placementIsValid(at point: GridPoint) -> Bool {

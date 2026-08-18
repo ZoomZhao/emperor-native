@@ -541,6 +541,13 @@ final class LibraryModel: ObservableObject {
             saveStatus = "清理树木：点击或拖动一片区域清除树木与灌木；右键取消"
         } else if tool == .road {
             saveStatus = "道路工具：在清地上点击或拖动铺路，每格使用原版造价；右键取消"
+        } else if tool == .roadblock {
+            saveStatus = "路障工具：放在既有道路上；阻止漫游人员，放行采购、运输和移民；右键取消"
+        } else if tool.marketShopBuildingID != nil {
+            // Market shops have no standalone footprint: they are installed
+            // inside an existing market square, so the generic
+            // "占地 X×Y，必须邻接道路" hint must not be shown.
+            saveStatus = "\(tool.title)：点击仍有空铺位的市场内部；同类商铺可以重复建造；右键取消"
         } else if tool == .rally {
             saveStatus = "部队集结：点击军队标记选择编队，再点击可通行地面下令；右键取消"
         } else if tool == .house {

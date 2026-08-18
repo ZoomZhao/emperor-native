@@ -100,8 +100,10 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
             OriginalInterfaceUtilitySpriteCatalog.imageID(for: .road),
             1_275
         )
+        // 修路 / 路障 / 清除 / 撤销 / 查看最后事件 (EmperorText 3694–3698);
+        // #1279 is the roadblock sign family, not an inspection hand.
         XCTAssertEqual(
-            OriginalInterfaceUtilitySpriteCatalog.imageID(for: .inspect),
+            OriginalInterfaceUtilitySpriteCatalog.imageID(for: .roadblock),
             1_279
         )
         XCTAssertEqual(
@@ -111,6 +113,10 @@ final class InterfaceSpriteCatalogTests: XCTestCase {
         XCTAssertEqual(
             OriginalInterfaceUtilitySpriteCatalog.imageID(for: .demolish),
             1_287
+        )
+        XCTAssertEqual(
+            OriginalInterfaceUtilitySpriteCatalog.imageID(for: .help),
+            1_291
         )
         XCTAssertEqual(
             OriginalInterfaceUtilitySpriteCatalog.roadTerrainLocalID,

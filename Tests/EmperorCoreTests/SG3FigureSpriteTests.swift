@@ -101,7 +101,7 @@ final class SG3FigureSpriteTests: XCTestCase {
             XCTAssertEqual(animation.archiveBaseName, archiveName)
             XCTAssertEqual(animation.sourceBitmapName, bitmapName)
             XCTAssertEqual(animation.logicalGroupID, logicalGroup)
-            XCTAssertEqual(animation.framesByDirection.first?.first, firstImageID)
+            XCTAssertEqual(animation.framesByDirection.first?.first, firstImageID + 7)
             XCTAssertEqual(Int(archive.groupImageIDs[logicalGroup]), firstImageID)
             XCTAssertEqual(archive.images[firstImageID].spriteCount, 12)
             XCTAssertTrue(animation.framesByDirection.allSatisfy { $0.count == 12 })
@@ -127,7 +127,7 @@ final class SG3FigureSpriteTests: XCTestCase {
             )
             XCTAssertEqual(animation.sourceBitmapName, "Laborer")
             XCTAssertEqual(animation.logicalGroupID, logicalGroup)
-            XCTAssertEqual(animation.framesByDirection.first?.first, firstImageID)
+            XCTAssertEqual(animation.framesByDirection.first?.first, firstImageID + 7)
             XCTAssertEqual(Int(archive.groupImageIDs[logicalGroup]), firstImageID)
             XCTAssertEqual(archive.images[firstImageID].spriteCount, frameCount)
             XCTAssertTrue(animation.framesByDirection.allSatisfy {
@@ -152,7 +152,7 @@ final class SG3FigureSpriteTests: XCTestCase {
             )
             XCTAssertEqual(animation.archiveBaseName, "SprMain2")
             XCTAssertEqual(animation.logicalGroupID, group.logicalGroup)
-            XCTAssertEqual(animation.framesByDirection.first?.first, group.firstImageID)
+            XCTAssertEqual(animation.framesByDirection.first?.first, group.firstImageID + 7)
             XCTAssertTrue(animation.framesByDirection.allSatisfy { $0.count == 12 })
         }
     }
@@ -164,7 +164,7 @@ final class SG3FigureSpriteTests: XCTestCase {
         XCTAssertEqual(animation.archiveBaseName, "SprMain")
         XCTAssertEqual(animation.sourceBitmapName, "pheasant")
         XCTAssertEqual(animation.logicalGroupID, 42)
-        XCTAssertEqual(animation.framesByDirection.first?.first, 2_657)
+        XCTAssertEqual(animation.framesByDirection.first?.first, 2_657 + 7)
         XCTAssertEqual(animation.framesByDirection.count, 8)
         XCTAssertTrue(animation.framesByDirection.allSatisfy { $0.count == 12 })
         XCTAssertTrue(
@@ -180,7 +180,7 @@ final class SG3FigureSpriteTests: XCTestCase {
         XCTAssertEqual(animation.archiveBaseName, "China_Xiongnu")
         XCTAssertEqual(animation.sourceBitmapName, "Xiongnu_Infantry")
         XCTAssertEqual(animation.logicalGroupID, 0)
-        XCTAssertEqual(animation.framesByDirection.first?.first, 1)
+        XCTAssertEqual(animation.framesByDirection.first?.first, 1 + 7)
         XCTAssertTrue(animation.framesByDirection.allSatisfy { $0.count == 12 })
         XCTAssertNil(OriginalFigureSpriteCatalog.animation(forEnemyTypeID: 0))
     }
@@ -200,9 +200,19 @@ final class SG3FigureSpriteTests: XCTestCase {
                 OriginalFigureSpriteCatalog.animation(forFigureID: figureID)
             )
             XCTAssertEqual(animation.logicalGroupID, group.logicalGroup)
-            XCTAssertEqual(animation.framesByDirection.first?.first, group.firstImageID)
+            // Sheets are frame-major with the direction byte rotated one step:
+            // direction 0 (north) starts at the sheet's last position.
+            XCTAssertEqual(
+                animation.framesByDirection.first?.first,
+                group.firstImageID + 7
+            )
             XCTAssertEqual(animation.framesByDirection.count, 8)
             XCTAssertTrue(animation.framesByDirection.allSatisfy { $0.count == 12 })
+            // Image sets remain exactly the group's authored range.
+            XCTAssertEqual(
+                animation.imageIDs,
+                Set(group.firstImageID..<(group.firstImageID + 12 * 8))
+            )
         }
     }
 
@@ -251,7 +261,14 @@ final class SG3FigureSpriteTests: XCTestCase {
                 OriginalFigureSpriteCatalog.deliveryAnimation(forCommodityID: commodityID)
             )
             XCTAssertEqual(cargo.logicalGroupID, expected.group, "commodity \(commodityID)")
-            XCTAssertEqual(cargo.framesByDirection.first?.first, expected.first)
+            // Frame-major sheet: north (direction 0) starts at base + 7.
+            XCTAssertEqual(
+                cargo.framesByDirection.first?.first,
+                expected.first + 7,
+                "commodity \(commodityID)"
+            )
+            // South (direction 4) uses the full-pusher frames base+3, base+11.
+            XCTAssertEqual(cargo.framesByDirection[4], [expected.first + 3, expected.first + 11])
         }
     }
 
@@ -313,9 +330,14 @@ final class SG3FigureSpriteTests: XCTestCase {
         for animation in OriginalFigureSpriteCatalog.animations {
             let archive = try XCTUnwrap(archives[animation.archiveBaseName])
             let pixels = try XCTUnwrap(pixelData[animation.archiveBaseName])
-            let firstImageID = try XCTUnwrap(animation.framesByDirection.first?.first)
-            XCTAssertEqual(Int(archive.groupImageIDs[animation.logicalGroupID]), firstImageID)
-            XCTAssertEqual(archive.images[firstImageID].spriteCount, animation.framesByDirection[0].count)
+            // Frame-major sheets are rotated one step from the movement byte:
+            // the group's first authored record is the NE (direction 1) frame.
+            let groupFirstImageID = Int(archive.groupImageIDs[animation.logicalGroupID])
+            XCTAssertEqual(groupFirstImageID, animation.framesByDirection[1].first)
+            XCTAssertEqual(
+                archive.images[groupFirstImageID].spriteCount,
+                animation.framesByDirection[0].count
+            )
             XCTAssertTrue(archive.bitmapNames.contains(animation.sourceBitmapName))
             for imageID in animation.imageIDs.sorted() {
                 XCTAssertTrue(archive.images.indices.contains(imageID), "\(animation.role) #\(imageID)")

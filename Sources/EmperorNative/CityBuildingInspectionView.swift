@@ -152,7 +152,7 @@ struct BuildingInfoPopup: View {
                 if let mill = city.logistics.mills.first(where: { $0.id == placement.instanceID }) {
                     Divider()
                     settingHeader
-                    Text("磨坊订单与存储（每格 4 担）")
+                    Text("磨坊订单与存储（8 储位 × 4 担；存量以单位显示，上限以担显示）")
                         .font(EmperorTheme.labelSmall)
                         .foregroundStyle(EmperorTheme.onSurfaceMuted)
                     ScrollView(.vertical, showsIndicators: true) {
@@ -166,7 +166,12 @@ struct BuildingInfoPopup: View {
                                     VStack(alignment: .leading, spacing: 1) {
                                         Text(ClassicTextLocalization.commodityName(commodity.name))
                                             .lineLimit(1)
-                                        Text("\(amount / 100)/\(limit / 100) 担")
+                                        // The original mill dialog shows stock
+                                        // in units and limits in loads (100
+                                        // units per load): manual p.57
+                                        // "Indicates Stock in units" /
+                                        // "Stock Limits (in loads)".
+                                        Text("库存 \(amount) 单位 · 上限 \(limit / 100) 担")
                                             .font(EmperorTheme.labelSmall)
                                             .foregroundStyle(EmperorTheme.onSurfaceMuted)
                                     }
@@ -193,10 +198,11 @@ struct BuildingInfoPopup: View {
                                     }
                                     .buttonStyle(ClassicInspectorGlyphButtonStyle())
                                     Menu {
+                                        // Original order: 接受/拒收/清空/获取.
                                         millPolicyButton("接受", policy: .accept, millID: placement.instanceID, commodityID: commodity.id)
                                         millPolicyButton("拒收", policy: .doNotAccept, millID: placement.instanceID, commodityID: commodity.id)
-                                        millPolicyButton("获取", policy: .get, millID: placement.instanceID, commodityID: commodity.id)
                                         millPolicyButton("清空", policy: .empty, millID: placement.instanceID, commodityID: commodity.id)
+                                        millPolicyButton("获取", policy: .get, millID: placement.instanceID, commodityID: commodity.id)
                                     } label: {
                                         Text(millOrderTitle(mill.policy(for: commodity.id)))
                                             .frame(width: 42, alignment: .trailing)
@@ -460,7 +466,7 @@ struct BuildingInfoPopup: View {
             }
         case .mill:
             if let mill = city.logistics.mills.first(where: { $0.id == placement.instanceID }) {
-                rows.append(InfoRow(label: "磨坊储粮", value: "\(mill.storedAmount / 100)/\(mill.capacity / 100) 担"))
+                rows.append(InfoRow(label: "磨坊储粮", value: "\(mill.storedAmount) 单位（\(mill.storedAmount / 100)/\(mill.capacity / 100) 担）"))
                 rows.append(InfoRow(label: "食物品质", value: mill.foodQuality.displayName))
                 let stocked = mill.inventoryByCommodityID
                     .filter { $0.value > 0 }
@@ -469,7 +475,7 @@ struct BuildingInfoPopup: View {
                         let name = models.trade[commodityID: id]
                             .map { ClassicTextLocalization.commodityName($0.name) }
                             ?? "商品 #\(id)"
-                        return "\(name) \(amount / 100)/\(mill.storageLimit(for: id) / 100) 担"
+                        return "\(name) \(amount) 单位/上限 \(mill.storageLimit(for: id) / 100) 担"
                     }
                 if !stocked.isEmpty {
                     rows.append(InfoRow(label: "存量", value: stocked.joined(separator: "、")))
