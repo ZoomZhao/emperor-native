@@ -436,18 +436,21 @@ extension CityCanvas {
         }
 
         for walker in city.walkers.walkers {
-            let previous = walker.route.indices.contains(walker.routeIndex - 1)
+            let interpolatesMovement = walker.movedOnLastSimulationStep
+            let previous = interpolatesMovement && walker.route.indices.contains(walker.routeIndex - 1)
                 ? walker.route[walker.routeIndex - 1] : nil
             append(
                 figureID: walker.figureID,
                 stableID: 100_000 + walker.id,
                 point: walker.currentPoint,
-                previous: previous
+                previous: previous,
+                interpolatesMovement: interpolatesMovement
             )
         }
         for walker in city.logistics.deliveryWalkers {
             guard let point = walker.currentPoint else { continue }
-            let previous = walker.route.indices.contains(walker.routeIndex - 1)
+            let interpolatesMovement = walker.movedOnLastSimulationStep
+            let previous = interpolatesMovement && walker.route.indices.contains(walker.routeIndex - 1)
                 ? walker.route[walker.routeIndex - 1] : nil
             append(
                 figureID: walker.figureID,
@@ -456,7 +459,8 @@ extension CityCanvas {
                 previous: previous,
                 animation: OriginalFigureSpriteCatalog.deliveryAnimation(
                     forCommodityID: walker.cargo.commodityID
-                )
+                ),
+                interpolatesMovement: interpolatesMovement
             )
         }
         for buyer in city.markets.buyers {
@@ -546,10 +550,9 @@ extension CityCanvas {
         }
         // The original map model reserves BUILD_MAP_PREY_POINT for ambient
         // animals. The native city state does not yet persist those editor
-        // points, so use deterministic clear-land loops until that map layer
-        // is decoded. This keeps the visible behavior data-driven (terrain,
-        // roads and occupied footprints) instead of placing birds over roads
-        // or buildings at arbitrary screen coordinates.
+        // points, so do not synthesize a roaming route from arbitrary clear
+        // land. The bird sprite catalog remains available for the authored
+        // spawn-point implementation once that map layer is decoded.
         for (index, route) in ambientPheasantRoutes().enumerated() {
             guard !route.isEmpty else { continue }
             let routeLength = UInt64(route.count)
@@ -563,110 +566,18 @@ extension CityCanvas {
                 stableID: 800_000 + index,
                 point: route[currentIndex],
                 previous: route[previousIndex],
-                animation: OriginalFigureSpriteCatalog.pheasantAnimation
+                animation: OriginalFigureSpriteCatalog.pheasantAnimation,
+                interpolatesMovement: tickSequence > 0 && tickSequence % 3 == 0
             )
         }
         return items
     }
 
     private func ambientPheasantRoutes() -> [[GridPoint]] {
-        guard let terrain = city.terrain else { return [] }
-        var blocked = Set(city.roadNetwork.points)
-        blocked.formUnion(city.houses.compactMap(\.location))
-        blocked.formUnion(city.placedBuildings.flatMap(\.occupiedPoints))
-
-        func isAvailable(_ point: GridPoint) -> Bool {
-            terrain.isClearLand(point) && !blocked.contains(point)
-        }
-        func score(_ point: GridPoint) -> Int {
-            let value = point.x &* 73_856_093
-                &+ point.y &* 19_349_663
-                &+ terrain.width &* 834_927
-            return value & 0x7FFF_FFFF
-        }
-
-        let maximumBirds = terrain.width * terrain.height >= 300 ? 3 : 1
-        let centerX = terrain.width / 2
-        let centerY = terrain.height / 2
-        // Original prey roam range comes from the shipped figure model:
-        // every animal row 69…77 in EmperorFigureModels.txt carries
-        // behaviorRange 24, and native service walkers already consume that
-        // field as their roam budget. A pheasant therefore walks a
-        // deterministic clear-land walk of that many steps away from its
-        // anchor and returns along the same path (a closed loop), instead of
-        // pacing the old hard-coded 3×3 tile box.
-        let roamSteps = max(
-            8,
-            models.figures[figureID: OriginalFigureSpriteCatalog.pheasantAnimation.figureID]?
-                .behaviorRange ?? 24
-        )
-        var candidates: [(distance: Int, score: Int, route: [GridPoint])] = []
-        for y in stride(from: 2, to: terrain.height - 2, by: 2) {
-            for x in stride(from: 2, to: terrain.width - 2, by: 2) {
-                let start = GridPoint(x: x, y: y)
-                guard isAvailable(start), score(start) % 17 == 0 else {
-                    continue
-                }
-                let route = ambientPheasantLoop(
-                    from: start,
-                    stepCount: roamSteps,
-                    seed: score(start),
-                    isAvailable: isAvailable
-                )
-                guard route.count >= 8 else { continue }
-                let distance = abs(start.x - centerX) + abs(start.y - centerY)
-                candidates.append((distance: distance, score: score(start), route: route))
-            }
-        }
-        return candidates
-            .sorted {
-                if $0.distance != $1.distance { return $0.distance < $1.distance }
-                return $0.score < $1.score
-            }
-            .prefix(maximumBirds)
-            .map(\.route)
-    }
-
-    /// Deterministic closed clear-land roam for one ambient bird. The walk
-    /// prefers moving on from the previous tile, bounces off unavailable
-    /// neighbours, and finally retraces the outbound path so the phase wrap
-    /// never teleports the sprite. Consecutive route points are always
-    /// orthogonally adjacent, keeping the 8-direction sprite interpolation
-    /// valid.
-    private func ambientPheasantLoop(
-        from start: GridPoint,
-        stepCount: Int,
-        seed: Int,
-        isAvailable: (GridPoint) -> Bool
-    ) -> [GridPoint] {
-        let directions = [
-            GridPoint(x: 0, y: -1),
-            GridPoint(x: 1, y: 0),
-            GridPoint(x: 0, y: 1),
-            GridPoint(x: -1, y: 0),
-        ]
-        var outbound = [start]
-        var current = start
-        var previous = start
-        var state = UInt64(bitPattern: Int64(seed &* 0x9E37_79B9 &+ 1))
-        for _ in 0..<stepCount {
-            let neighbors = directions
-                .map { GridPoint(x: current.x + $0.x, y: current.y + $0.y) }
-                .filter { $0 != previous && isAvailable($0) }
-            let pool = neighbors.isEmpty
-                ? directions
-                    .map { GridPoint(x: current.x + $0.x, y: current.y + $0.y) }
-                    .filter(isAvailable)
-                : neighbors
-            guard !pool.isEmpty else { break }
-            state = state &* 6_364_136_223 &+ 1_442_695_077
-            let pick = Int((state >> 33) % UInt64(pool.count))
-            previous = current
-            current = pool[pick]
-            outbound.append(current)
-        }
-        guard outbound.count > 1 else { return outbound }
-        return outbound + outbound.dropLast().reversed()
+        // BUILD_MAP_PREY_POINT is not yet decoded from the authored map.
+        // Returning no route is intentional: a guessed route changes the
+        // original spawn location and movement semantics.
+        return []
     }
 
     /// Straight wall pieces automatically follow their live neighbours. This

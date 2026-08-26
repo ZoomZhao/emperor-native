@@ -48,10 +48,11 @@ public struct DecodedSprite: @unchecked Sendable {
         return DecodedSprite(width: width, height: height, rgba: Data(pixels))
     }
 
-    /// Original figure sheets encode their projected ground shadow with the
-    /// RGB555 pure-red marker (0x7C00). The Windows renderer treated that
-    /// marker as a translucent shadow; drawing it literally produces the
-    /// bright red puddle visible under the water bearer.
+    /// Figure sheets contain an unresolved RGB555 pure-red marker (0x7C00) in
+    /// the projected ground area. The exact original shadow compositor is not
+    /// recovered; retaining the marker or converting it to black creates a
+    /// visible red/grey block on native terrain. Keep the marker transparent
+    /// until the original shadow path is closed instead of inventing a shape.
     public func correctingFigureShadow() -> DecodedSprite {
         var pixels = [UInt8](rgba)
         for offset in stride(from: 0, to: pixels.count, by: 4)
@@ -62,7 +63,7 @@ public struct DecodedSprite: @unchecked Sendable {
             pixels[offset] = 0
             pixels[offset + 1] = 0
             pixels[offset + 2] = 0
-            pixels[offset + 3] = 72
+            pixels[offset + 3] = 0
         }
         return DecodedSprite(width: width, height: height, rgba: Data(pixels))
     }

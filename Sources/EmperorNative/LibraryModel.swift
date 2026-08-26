@@ -2130,6 +2130,13 @@ final class LibraryModel: ObservableObject {
                        }) {
                         localIDs.formUnion(927..<945)
                     }
+                    // Rock cells are rebuilt from the original 0x606 family
+                    // rather than their per-cell image IDs. Keep all 14
+                    // frames resident or an unresolved rock becomes the
+                    // plain grey diamond bed drawn by drawGround().
+                    if descriptor.baseName == "China_Terrain" {
+                        localIDs.formUnion(458..<472)
+                    }
                     // Toolbar / player-built roads reuse the dirt-road family.
                     if descriptor.baseName == "China_Terrain" {
                         // SB_CANAL phase zero normally restores logical

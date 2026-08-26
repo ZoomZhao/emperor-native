@@ -4396,8 +4396,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
                     workforce: activeWorkforce
                 )
             )
-            logisticsMovement = logistics.advanceDeliveries(
-                roadStepsPerWalker: 1,
+            logisticsMovement = logistics.advanceOriginalDeliveries(
+                originalStepsPerWalker: originalWalkerSteps,
                 production: &production,
                 trade: &trade,
                 activeDeliveryWalkerIDs: activeDeliveryWalkerIDs(

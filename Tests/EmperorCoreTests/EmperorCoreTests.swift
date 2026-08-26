@@ -19,13 +19,13 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(white.alpha, 255)
     }
 
-    func testFigureShadowMarkerBecomesTranslucentBlack() {
+    func testFigureShadowMarkerRemainsTransparentUntilShadowCompositorIsRecovered() {
         let sprite = DecodedSprite(
             width: 2,
             height: 1,
             rgba: Data([255, 0, 0, 255, 255, 0, 8, 255])
         ).correctingFigureShadow()
-        XCTAssertEqual(Array(sprite.rgba.prefix(4)), [0, 0, 0, 72])
+        XCTAssertEqual(Array(sprite.rgba.prefix(4)), [0, 0, 0, 0])
         XCTAssertEqual(Array(sprite.rgba.suffix(4)), [255, 0, 8, 255])
     }
 
@@ -2426,6 +2426,45 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(water.walkers[0].currentPoint, points[4])
     }
 
+    func testWalkerPresentationMovesOnlyWhenItsRoutePositionChanges() {
+        let points = (0..<10).map { GridPoint(x: $0, y: 0) }
+        let road = RoadNetwork(width: 10, height: 1, points: Set(points))
+        var state = DeterministicWalkerState()
+        XCTAssertNotNil(state.addWalker(
+            figureID: 28,
+            service: .water,
+            origin: points[0],
+            maximumRoadSteps: 40,
+            replaySeed: 1,
+            roadNetwork: road
+        ))
+        var houses: [ResidentialUnit] = []
+
+        var movementStep: Int?
+        for step in 1...60 {
+            _ = state.advanceRecoveredOriginalSteps(
+                1,
+                houses: &houses,
+                roadNetwork: road,
+                workerPercentByWalkerID: [:]
+            )
+            if state.walkers[0].movedOnLastSimulationStep {
+                movementStep = step
+                break
+            }
+        }
+        XCTAssertNotNil(movementStep)
+        XCTAssertTrue(state.walkers[0].movedOnLastSimulationStep)
+
+        _ = state.advanceRecoveredOriginalSteps(
+            1,
+            houses: &houses,
+            roadNetwork: road,
+            workerPercentByWalkerID: [:]
+        )
+        XCTAssertFalse(state.walkers[0].movedOnLastSimulationStep)
+    }
+
     func testRecoveredServiceCoverageWritesDecayIndependently() {
         var house = ResidentialUnit(id: 1, houseLevelID: 0, residents: 7)
 
@@ -2988,7 +3027,33 @@ final class EmperorCoreTests: XCTestCase {
         for _ in 0..<8 { _ = city.advanceTick(rules: rules) }
         XCTAssertEqual(city.logistics.mills[0].inventoryByCommodityID[7, default: 0], 100)
         XCTAssertEqual(city.production[commodityID: 7], 100)
-        XCTAssertTrue(city.logistics.deliveryWalkers.isEmpty)
+        XCTAssertEqual(city.logistics.deliveryWalkers.count, 1)
+    }
+
+    func testDeliveryCartUsesRecoveredTwentySubstepRouteCadence() {
+        let points = (0..<4).map { GridPoint(x: $0, y: 0) }
+        var walker = DeliveryWalker(
+            id: 1,
+            figureID: 22,
+            source: .productionBuilding(1),
+            destination: .mill(2),
+            cargo: DeliveryCargo(commodityID: 4, amount: 100),
+            outboundPath: points
+        )
+
+        for _ in 0..<19 {
+            XCTAssertFalse(walker.advanceOriginalSimulationStep())
+        }
+        XCTAssertEqual(walker.currentPoint, points[0])
+        XCTAssertFalse(walker.movedOnLastSimulationStep)
+
+        XCTAssertTrue(walker.advanceOriginalSimulationStep())
+        XCTAssertEqual(walker.currentPoint, points[1])
+        XCTAssertTrue(walker.movedOnLastSimulationStep)
+
+        walker.beginSimulationStep()
+        XCTAssertFalse(walker.advanceOriginalSimulationStep())
+        XCTAssertFalse(walker.movedOnLastSimulationStep)
     }
 
     func testCropSpecificAgriculturalPlotCreatesVisibleLinkedPlacement() throws {

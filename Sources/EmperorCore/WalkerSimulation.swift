@@ -47,10 +47,14 @@ public struct RoadServiceWalker: Identifiable, Sendable, Equatable, Codable {
     private var originalReturnRouteState: [GridPoint]?
     private var originalReturnIndexState: Int?
     private var originalProviderBuildingIDState: Int?
+    private var movedOnLastSimulationStepState: Bool?
 
     public var originalPhase: OriginalRoamerPhase { originalPhaseState ?? .outbound }
     public var originalSpawnCounter: Int { originalSpawnCounterState ?? 0 }
     public var originalProviderBuildingID: Int? { originalProviderBuildingIDState }
+    public var movedOnLastSimulationStep: Bool {
+        movedOnLastSimulationStepState ?? false
+    }
     public var supportsRecoveredResidentialRoam: Bool {
         figureID == 27 || figureID == 28 || figureID == 30 || figureID == 31 || figureID == 35
     }
@@ -120,6 +124,7 @@ public struct RoadServiceWalker: Identifiable, Sendable, Equatable, Codable {
         originalReturnRouteState = nil
         originalReturnIndexState = nil
         originalProviderBuildingIDState = providerBuildingID
+        movedOnLastSimulationStepState = false
     }
 
     mutating func originalSpawn(workerPercent: Int) {
@@ -188,6 +193,7 @@ public struct RoadServiceWalker: Identifiable, Sendable, Equatable, Codable {
         junctionVisitScores: inout [GridPoint: Int],
         visit: (GridPoint, WalkerServiceKind) -> Void
     ) -> Int {
+        movedOnLastSimulationStepState = false
         guard supportsRecoveredResidentialRoam, originalPhase != .dormant else { return 0 }
         let movementCode = figureID == 28 ? 8 : 6
         // Figure-model selector 15 multiplies the authored behavior range by
@@ -227,6 +233,7 @@ public struct RoadServiceWalker: Identifiable, Sendable, Equatable, Codable {
             for _ in 0..<originalSubsteps(movementCode: movementCode) {
                 moved += advanceOriginalReturnSubstep()
             }
+            movedOnLastSimulationStepState = moved > 0
             return moved
         }
 
@@ -244,12 +251,14 @@ public struct RoadServiceWalker: Identifiable, Sendable, Equatable, Codable {
             // Generic `0x51D0C0` changes to return state 9 but still executes
             // that update's trailing `0x4E6B70(..., 6)` roaming micro-step.
             originalMovementBudgetState = (originalMovementBudgetState ?? 0) + movementCode
-            return advanceOriginalRoamSubstep(
+            let moved = advanceOriginalRoamSubstep(
                 on: roadNetwork,
                 barrierPoints: barrierPoints,
                 junctionVisitScores: &junctionVisitScores,
                 visit: visit
             )
+            movedOnLastSimulationStepState = moved > 0
+            return moved
         }
 
         if originalPhase == .outbound {
@@ -269,6 +278,7 @@ public struct RoadServiceWalker: Identifiable, Sendable, Equatable, Codable {
                 )
             }
         }
+        movedOnLastSimulationStepState = moved > 0
         return moved
     }
 
@@ -499,6 +509,7 @@ public struct RoadServiceWalker: Identifiable, Sendable, Equatable, Codable {
         on roadNetwork: RoadNetwork,
         barrierPoints: Set<GridPoint> = []
     ) -> Bool {
+        movedOnLastSimulationStepState = false
         guard maximumRoadSteps > 0, roadNetwork.contains(origin) else { return false }
         if route.isEmpty || !route.allSatisfy(roadNetwork.contains) {
             rebuildRoute(on: roadNetwork, barrierPoints: barrierPoints)
@@ -513,6 +524,7 @@ public struct RoadServiceWalker: Identifiable, Sendable, Equatable, Codable {
         }
 
         routeIndex = min(routeIndex + 1, route.count - 1)
+        movedOnLastSimulationStepState = true
         if routeIndex == route.count - 1 {
             completedTrips += 1
             rebuildRoute(on: roadNetwork, barrierPoints: barrierPoints)

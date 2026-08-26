@@ -57,6 +57,17 @@ sprites.
   height-slope overwrite (`FUN_0053EAE0` sets `0x200` + vegetation `0x601` on
   lower cells adjacent to higher ground).
 
-Implementation of the flag→family dispatch is deferred until the archive-index
-table and variation mapping are recovered; native keeps authored-image
-rendering (fail-closed) rather than approximating the families.
+The confirmed rock-family portion is implemented for the player canvas. Other
+flag→family branches remain fail-closed until their archive-index and
+variation mappings are recovered.
+
+## 5. Rock-family preload correction (2026-08-26)
+
+The player renderer already had the confirmed non-elevation rock dispatch:
+`China_Terrain` group 6, local images `#458...#471`, selected by the terrain
+variation byte. `LibraryModel.loadRenderedMap` did not preload that family,
+however. When a rock cell selected one of those IDs, the renderer returned
+`true` without a sprite and the gray terrain-bed diamond from `drawGround`
+remained visible. The loader now retains all 14 IDs. This is a confirmed
+presentation-only omission; it is separate from the unresolved prey marker and
+movement contracts.
