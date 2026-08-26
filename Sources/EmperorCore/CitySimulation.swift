@@ -4288,7 +4288,10 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         var walkerMovement = WalkerMovementSummary.empty
         if var state = walkerState, !state.walkers.isEmpty {
             walkerMovement = state.advance(
-                roadStepsPerWalker: 1,
+                // Figure #28 (water carrier) and market peddler #23 share
+                // original speed 8 and the ordinary roaming movement chain.
+                // Keep their Native-day cadence aligned; see DESIGN.md.
+                roadStepsPerWalker: 10,
                 houses: houses,
                 roadNetwork: roadNetwork,
                 activeWalkerIDs: activeServiceWalkerIDs(workforce: activeWorkforce),

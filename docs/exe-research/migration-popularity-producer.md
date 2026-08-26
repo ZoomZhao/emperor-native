@@ -2460,8 +2460,8 @@ chain is closed:
   keeps capacity for hemp/jade/carved-jade; stock-managed hemp import
   (pause ≥ 3,000, resume ≤ 500) prevents the export station from filling
   with hemp.
-- **Residential service cadence — verified `inferred`, reverted pending a
-  fixture redesign**: native service walkers advance **1 road tile per native
+- **Residential service cadence — verified `inferred`, implementation
+  contract**: native service walkers previously advanced **1 road tile per native
   day** (30 tiles/month), so a water carrier's 40-step patrol covers only
   30/40 tiles before the monthly coverage reset — only ~1/3 of houses ever
   see `.water`. `EmperorFigureModels.txt` confirms the peddler (23) and the
@@ -2475,10 +2475,24 @@ chain is closed:
   whole 24-house row, and a second market cannot be placed near the houses
   because `Common Market Square` (#59) carries original `initialDesirability
   -6` over a 3-tile range, pushing adjacent houses below the evolution
-  threshold. **Decision**: keep 1 tile/day for now (suite stays green) and
-  record the 10-tiles/day evidence here; landing the cadence requires a
-  fixture layout that keeps houses out of the market's desirability range
-  while giving the food peddler full row coverage.
+  threshold. **Decision (2026-08-26 update)**: use the shared 10-tiles/day
+  cadence for service walkers and redesign the affected fixtures so houses
+  stay out of the market's desirability range while the food peddler retains
+  full-row coverage. The exact Native-day conversion remains `inferred`; the
+  shared original speed/model evidence does not upgrade it to `confirmed`.
+  The Xia downstream fixture now uses two legal common markets and two legal
+  hunting camps outside the occupied housing row; all 150 residents again
+  satisfy the authored housing-code-5 goal under the corrected cadence.
+- **Qin 3 player-replay boundary (2026-08-26)**: a map-aware, player-command-only
+  layout anchored on the largest clear authored-groundwater district closes
+  three-food delivery and raises housing through levels 0...3. It reaches the
+  1,200-unit carved-jade goal, but Native's current patrols service only 27 of
+  40 houses, housing oscillates below level 6, population ends at 278, and the
+  best lacquer year remains 1,200/1,600. Further layout tuning is not evidence
+  of original behavior. The full Qin-3 playthrough therefore remains skipped
+  and fail-closed until the original roamer junction choice and service-reset
+  lifecycle are recovered; this unknown is separate from the now-supported
+  10-tiles/day cadence.
 - Rice harvests only in month 10 (one 100-unit load per field), so the
   mill's rice stock drains and market food quality oscillates 30/50 between
   harvests; salt/spices are not available in this mission. Map/economy

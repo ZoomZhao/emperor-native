@@ -2291,6 +2291,40 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(liveEvaluation, city.lastHousingSettlement?.evaluations.first)
     }
 
+    func testDailyServiceWalkerCadenceMatchesSharedOriginalRoamerSpeed() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let rules = EconomyRulesEngine(models: original)
+
+        // Authored figure data gives the market peddler and water carrier the
+        // same speed and both use the ordinary roaming movement chain. Native
+        // therefore applies the peddler's calibrated ten-road-step daily
+        // cadence to residential service walkers as an inferred conversion.
+        XCTAssertEqual(original.figures[figureID: 23]?.speed, 8)
+        XCTAssertEqual(original.figures[figureID: 28]?.speed, 8)
+
+        var city = DeterministicCityState(
+            year: 1600,
+            treasury: 1_000,
+            mapWidth: 16,
+            mapHeight: 5
+        )
+        let roads = (0..<16).map { GridPoint(x: $0, y: 2) }
+        XCTAssertEqual(city.buildRoad(roads, rules: rules), roads.count)
+        XCTAssertNotNil(city.constructResidentialServiceBuilding(
+            buildingID: 72,
+            serviceRoadStart: roads[0],
+            replaySeed: 0x5345_5256_4943_45,
+            rules: rules
+        ))
+
+        let tick = city.advanceTick(rules: rules)
+        XCTAssertEqual(tick.movement.walkers.requestedRoadSteps, 10)
+        XCTAssertEqual(tick.movement.walkers.movedRoadSteps, 10)
+    }
+
     func testVacantEliteHousingCanEvolveBeforeItsFirstResidentsArrive() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")

@@ -11,16 +11,16 @@ final class Qin3PlayerPlaythroughTests: XCTestCase {
     private var lastFarmOrigin: GridPoint?
 
     func testPlayerCommandsCompleteQinMissionThreeLandOfAnnam() throws {
-        throw XCTSkip(
-            "WIP: economy/exports/jade are closed (treasury positive 12 years, "
-                + "carved-jade yearly goal met) and food quality 50 reaches "
-                + "houses, but the housing chain stalls at level 0-1: service "
-                + "coverage gaps (7 water, 7 ancestor) plus 6 low-desirability "
-                + "houses near the industrial edge block level-2 evolution, "
-                + "and 1 inspector tower cannot stop late fire damage. "
-                + "Population plateaus ~289 vs the 1,800 goal. Next: relocate "
-                + "the housing district away from industry and densify "
-                + "well/shrine patrol coverage."
+        try skipUntilOriginalRoamerRoutingIsRecovered(
+            "BLOCKED BY INCOMPLETE ORIGINAL ROUTING EVIDENCE: the map-aware "
+                + "player-command replay now establishes three-food delivery, "
+                + "partial water/service coverage, housing levels 0-3, and the "
+                + "1,200-unit yearly carved-jade goal. Native patrol routing "
+                + "still reaches only 27 of 40 houses and housing then oscillates "
+                + "below level 6; the player replay's best lacquer year remains "
+                + "1,200/1,600. Recover the original roamer junction selection "
+                + "and service-reset lifecycle before changing the route or "
+                + "tuning another layout; Qin 3 must remain fail-closed."
         )
         let controller = try startedController()
         try connectEntryToRoads(with: controller)
@@ -55,7 +55,7 @@ final class Qin3PlayerPlaythroughTests: XCTestCase {
             to: hempStation,
             with: controller
         )
-        let jadeStation = try importCommodity(17, near: jadeWorkshopOrigin, with: controller)
+        _ = try importCommodity(17, near: jadeWorkshopOrigin, with: controller)
         try placeClosest(.warehouse, to: jadeWorkshopOrigin, with: controller)
         try placeClosest(.warehouse, to: jadeWorkshopOrigin, with: controller)
 
@@ -66,14 +66,36 @@ final class Qin3PlayerPlaythroughTests: XCTestCase {
         // Eight rice fields keep the mill stocked with rice alongside fish and
         // meat so market deliveries reach food quality 50 (3 food types).
         for _ in 0..<8 { try placeNext(.farmland, with: controller) }
-        let marketOrigin = try placeNext(.market, with: controller)
-        try placeNext(.foodShop, with: controller)
+        // Anchor the residential district on authored groundwater first, so
+        // the water carrier and food peddlers share one compact road graph.
+        let primaryWell = try placeWellInLargestClearDistrict(with: controller)
+        for _ in 0..<30 {
+            try extendRoad(near: primaryWell, with: controller)
+        }
+        let wellOrigins = [
+            primaryWell,
+            try placeClosest(.well, to: primaryWell, with: controller),
+        ]
+        var marketOrigins = [try placeClosest(
+            .market,
+            to: wellOrigins[0],
+            with: controller
+        )]
+        try place(.foodShop, at: marketOrigins[0], with: controller)
         // One food peddler per market caps monthly household food at ~500
         // units; 1800 residents need at least 3 markets worth of capacity.
-        try placeNext(.market, with: controller)
-        try placeNext(.foodShop, with: controller)
-        try placeNext(.market, with: controller)
-        try placeNext(.foodShop, with: controller)
+        try marketOrigins.append(placeClosest(
+            .market,
+            to: marketOrigins[0],
+            with: controller
+        ))
+        try place(.foodShop, at: marketOrigins[1], with: controller)
+        try marketOrigins.append(placeClosest(
+            .market,
+            to: marketOrigins[0],
+            with: controller
+        ))
+        try place(.foodShop, at: marketOrigins[2], with: controller)
         try placeNext(.clayPit, with: controller)
         try placeNext(.kiln, with: controller)
 
@@ -84,53 +106,60 @@ final class Qin3PlayerPlaythroughTests: XCTestCase {
         for _ in 0..<6 { try placeNext(.farmland, with: controller) }
         try placeCrop(.lacquer, with: controller)
         for _ in 0..<6 { try placeNext(.farmland, with: controller) }
+        try placeCrop(.lacquer, with: controller)
+        for _ in 0..<6 { try placeNext(.farmland, with: controller) }
+        let reserveLacquerFarmID = try XCTUnwrap(
+            controller.city?.production.buildings.last?.id
+        )
+        XCTAssertTrue(controller.perform(.setProductionEnabled(
+            buildingInstanceID: reserveLacquerFarmID,
+            enabled: false
+        )).wasApplied)
 
-        // Housing district stays next to the market so food deliveries reach
-        // every house.
+        // Reserve one compact, staffable service cluster before housing
+        // consumes every road-adjacent footprint. Wells use the global
+        // authored-groundwater search and are joined to this road component
+        // before the simulation starts.
+        let housingAnchor = marketOrigins[0]
+        try placeClosest(.inspectorTower, to: housingAnchor, with: controller)
+        try placeClosest(.herbalist, to: housingAnchor, with: controller)
+        for _ in 0..<2 {
+            try placeClosest(.ancestralShrine, to: housingAnchor, with: controller)
+        }
+        try placeClosest(.musicSchool, to: housingAnchor, with: controller)
+        try placeClosest(.taxOffice, to: housingAnchor, with: controller)
+        let secondaryServiceAnchor = marketOrigins[1]
+        try placeClosest(.well, to: secondaryServiceAnchor, with: controller, required: false)
+        try placeClosest(.inspectorTower, to: secondaryServiceAnchor, with: controller)
+        try placeClosest(.ancestralShrine, to: secondaryServiceAnchor, with: controller)
+        try placeClosest(.herbalist, to: secondaryServiceAnchor, with: controller)
+        try placeClosest(.musicSchool, to: secondaryServiceAnchor, with: controller)
+
+        // Grow a compact local road mesh before placing houses. The generic
+        // row-major extender follows the industrial spine and produces long
+        // patrol branches that food and service roamers never visit.
+        for _ in 0..<12 {
+            try extendRoad(near: housingAnchor, with: controller)
+        }
+
+        // Build all houses around the clustered food markets. The helper keeps houses
+        // outside the market square's confirmed three-tile desirability
+        // penalty while remaining well inside the peddler's authored range.
         var houseOrigins: [GridPoint] = []
-        for _ in 0..<30 {
-            try houseOrigins.append(placeHouse(near: marketOrigin, with: controller))
+        for _ in 0..<40 {
+            try houseOrigins.append(placeHouse(near: housingAnchor, with: controller))
         }
 
-        // Water is the evolution gate for the whole ring, so wells must be
-        // spread around the houses, not clustered at the market.
-        let sortedByAngle = houseOrigins.sorted {
-            atan2(Double($0.y - marketOrigin.y), Double($0.x - marketOrigin.x))
-                < atan2(Double($1.y - marketOrigin.y), Double($1.x - marketOrigin.x))
-        }
-        // The inspector patrol covers the ring and the nearby industrial
-        // cluster; placing it before the wells keeps its tower site free.
-        try placeClosest(.inspectorTower, to: sortedByAngle[2], with: controller)
-        let wellStep = max(1, sortedByAngle.count / 10)
-        for offset in 0..<10 {
-            let anchor = sortedByAngle[(offset * wellStep) % sortedByAngle.count]
-            try placeClosest(.well, to: anchor, with: controller)
-        }
-        for _ in 0..<2 { try placeClosest(.herbalist, to: marketOrigin, with: controller) }
-        try placeClosest(.ancestralShrine, to: sortedByAngle[3], with: controller)
-        try placeClosest(.ancestralShrine, to: sortedByAngle[11], with: controller)
-        try placeClosest(.ancestralShrine, to: sortedByAngle[19], with: controller)
-        try placeClosest(.ancestralShrine, to: sortedByAngle[27], with: controller)
         // Low-desirability houses near the industrial edge need decoration to
         // clear the evolution threshold.
-        for index in [4, 12, 20, 28] {
+        for index in stride(from: 0, to: houseOrigins.count, by: 5) {
             try placeClosest(
                 .decorativeSculpture,
-                to: sortedByAngle[index],
+                to: houseOrigins[index],
                 with: controller,
                 required: false
             )
         }
-        try placeClosest(
-            .musicSchool,
-            to: sortedByAngle[sortedByAngle.count / 2],
-            with: controller
-        )
-        try placeClosest(
-            .taxOffice,
-            to: sortedByAngle[sortedByAngle.count * 3 / 4],
-            with: controller
-        )
 
         // Level 6 also needs ceramics (local kiln + clay) and hemp (imported).
         // A common market has only two peddler slots; each commodity shop
@@ -148,9 +177,18 @@ final class Qin3PlayerPlaythroughTests: XCTestCase {
         // Every producer/mill/warehouse must share one connected road network
         // for the delivery walkers (range 24). Join the road components.
         try connectAllRoads(with: controller)
-        try probeWorkshopSites(with: controller)
+        try growCity(years: 2, with: controller)
 
-        try growCity(years: 12, with: controller)
+        // Expand only after the first district is staffed. This keeps the
+        // startup workforce from being consumed by dormant late-game
+        // services while still creating enough level-six capacity for the
+        // authored 1,800-person goal.
+        XCTAssertTrue(controller.perform(.setProductionEnabled(
+            buildingInstanceID: reserveLacquerFarmID,
+            enabled: true
+        )).wasApplied)
+        try connectAllRoads(with: controller)
+        try growCity(years: 10, with: controller)
 
         guard case .victory? = controller.campaignRuntime?.outcome else {
         let city = try XCTUnwrap(controller.city)
@@ -263,7 +301,7 @@ final class Qin3PlayerPlaythroughTests: XCTestCase {
             let jade = city.production.buildings.first { $0.buildingID == 46 }
             let jadeDiag = jade.map {
                 "workers=\($0.assignedWorkers) enabled=\($0.isEnabled)"
-                    + " input=\($0.inputInventoryByCommodityID ?? [:])"
+                    + " input=\($0.inputInventoryByCommodityID)"
                     + " output=\($0.outputInventoryByCommodityID)"
                     + " access=\(String(describing: $0.roadAccessPoint))"
             } ?? "none"
@@ -386,7 +424,7 @@ final class Qin3PlayerPlaythroughTests: XCTestCase {
         }
         // Land station #58, sea quay #56.
         let buildingID = partner.routeKind == .sea ? 56 : 58
-        let footprint = try XCTUnwrap(
+        _ = try XCTUnwrap(
             OriginalBuildingFootprintCatalog.footprint(forBuildingID: buildingID)
         )
         let candidate = try XCTUnwrap(
@@ -429,6 +467,10 @@ final class Qin3PlayerPlaythroughTests: XCTestCase {
             )).wasApplied)
         }
         return candidate
+    }
+
+    private func skipUntilOriginalRoamerRoutingIsRecovered(_ reason: String) throws {
+        throw XCTSkip(reason)
     }
 
     private func startedController() throws -> GameSessionController {
@@ -788,8 +830,8 @@ final class Qin3PlayerPlaythroughTests: XCTestCase {
                 ? ($0.y == $1.y ? $0.x < $1.x : $0.y < $1.y)
                 : left < right
         }
+        XCTAssertTrue(controller.perform(.selectConstruction(tool)).wasApplied)
         for point in candidates where controller.constructionPreview(at: point).isValid {
-            XCTAssertTrue(controller.perform(.selectConstruction(tool)).wasApplied)
             let result = controller.perform(
                 .placeSelectedConstruction(at: point, orientation: .northSouth)
             )
@@ -822,6 +864,136 @@ final class Qin3PlayerPlaythroughTests: XCTestCase {
             .placeSelectedConstruction(at: point, orientation: .northSouth)
         )
         XCTAssertTrue(result.wasApplied, result.message)
+    }
+
+    private func extendRoad(
+        near target: GridPoint,
+        with controller: GameSessionController
+    ) throws {
+        let city = try XCTUnwrap(controller.city)
+        let terrain = try XCTUnwrap(city.terrain)
+        let point = try XCTUnwrap(
+            Set(city.roadNetwork.points.flatMap(RoadServiceCoverage.orthogonalNeighbors(of:)))
+                .filter {
+                    city.roadNetwork.isInside($0)
+                        && !city.roadNetwork.contains($0)
+                        && !city.occupiedBuildingPoints.contains($0)
+                        && terrain.isClearLand($0)
+                }
+                .sorted {
+                    let left = abs($0.x - target.x) + abs($0.y - target.y)
+                    let right = abs($1.x - target.x) + abs($1.y - target.y)
+                    if left != right { return left < right }
+                    return $0.y == $1.y ? $0.x < $1.x : $0.y < $1.y
+                }
+                .first,
+            "no clear road extension near \(target)"
+        )
+        XCTAssertTrue(controller.perform(.selectConstruction(.road)).wasApplied)
+        let result = controller.perform(
+            .placeSelectedConstruction(at: point, orientation: .northSouth)
+        )
+        XCTAssertTrue(result.wasApplied, result.message)
+    }
+
+    private func placeWellInLargestClearDistrict(
+        with controller: GameSessionController
+    ) throws -> GridPoint {
+        let city = try XCTUnwrap(controller.city)
+        let terrain = try XCTUnwrap(city.terrain)
+        let occupied = city.occupiedBuildingPoints
+        let roads = city.roadNetwork.points
+        let wellFootprint = try XCTUnwrap(
+            OriginalBuildingFootprintCatalog.footprint(forBuildingID: 72)
+        )
+
+        func roadPath(to well: GridPoint) -> [GridPoint]? {
+            let wellPoints = Set(wellFootprint.points(at: well))
+            let destinations = Set(
+                wellPoints.flatMap(RoadServiceCoverage.orthogonalNeighbors(of:)).filter {
+                    city.roadNetwork.isInside($0)
+                        && !wellPoints.contains($0)
+                        && terrain.isClearLand($0)
+                        && !occupied.contains($0)
+                }
+            )
+            guard !destinations.isEmpty else { return nil }
+            var queue = roads.sorted { $0.y == $1.y ? $0.x < $1.x : $0.y < $1.y }
+            var cursor = 0
+            var visited = Set(queue)
+            var parent: [GridPoint: GridPoint] = [:]
+            var found: GridPoint?
+            while cursor < queue.count {
+                let point = queue[cursor]
+                cursor += 1
+                if destinations.contains(point) {
+                    found = point
+                    break
+                }
+                for next in RoadServiceCoverage.orthogonalNeighbors(of: point) {
+                    guard city.roadNetwork.isInside(next), !wellPoints.contains(next),
+                          !visited.contains(next), terrain.isClearLand(next),
+                          !occupied.contains(next) else { continue }
+                    visited.insert(next)
+                    parent[next] = point
+                    queue.append(next)
+                }
+            }
+            guard let found else { return nil }
+            var path: [GridPoint] = []
+            var point = found
+            while !roads.contains(point) {
+                path.append(point)
+                guard let previous = parent[point] else { return nil }
+                point = previous
+            }
+            return path.reversed()
+        }
+
+        let candidates = (0..<city.roadNetwork.height).flatMap { y in
+            (0..<city.roadNetwork.width).compactMap { x -> (GridPoint, Int)? in
+                let point = GridPoint(x: x, y: y)
+                let footprintPoints = wellFootprint.points(at: point)
+                guard footprintPoints.allSatisfy(city.roadNetwork.isInside),
+                      footprintPoints.allSatisfy(terrain.isClearLand),
+                      footprintPoints.allSatisfy({ !occupied.contains($0) }),
+                      footprintPoints.allSatisfy({
+                          terrain.terrain(at: $0)?.contains(.groundwater) == true
+                      })
+                else { return nil }
+                let radius = 10
+                let clearCount = (max(0, y - radius)...min(
+                    city.roadNetwork.height - 1,
+                    y + radius
+                )).reduce(0) { partial, sampleY in
+                    partial + (max(0, x - radius)...min(
+                        city.roadNetwork.width - 1,
+                        x + radius
+                    )).count { sampleX in
+                        let sample = GridPoint(x: sampleX, y: sampleY)
+                        return terrain.isClearLand(sample) && !occupied.contains(sample)
+                    }
+                }
+                return (point, clearCount)
+            }
+        }.sorted {
+            if $0.1 != $1.1 { return $0.1 > $1.1 }
+            return $0.0.y == $1.0.y ? $0.0.x < $1.0.x : $0.0.y < $1.0.y
+        }
+
+        for (candidate, _) in candidates {
+            guard let path = roadPath(to: candidate) else { continue }
+            for point in path where !(controller.city?.roadNetwork.contains(point) ?? false) {
+                try place(.road, at: point, with: controller)
+            }
+            XCTAssertTrue(controller.perform(.selectConstruction(.well)).wasApplied)
+            let result = controller.perform(
+                .placeSelectedConstruction(at: candidate, orientation: .northSouth)
+            )
+            guard result.wasApplied else { continue }
+            return candidate
+        }
+        throw NSError(domain: "Qin3PlayerPlaythrough", code: 3, userInfo: nil)
     }
 
     private func connectAllRoads(with controller: GameSessionController) throws {
@@ -955,7 +1127,10 @@ final class Qin3PlayerPlaythroughTests: XCTestCase {
                     : left < right
             }
             XCTAssertTrue(controller.perform(.selectConstruction(.house)).wasApplied)
-            for point in candidates where controller.constructionPreview(at: point).isValid {
+            for point in candidates {
+                let marketDistance = abs(point.x - target.x) + abs(point.y - target.y)
+                guard marketDistance >= 10,
+                      controller.constructionPreview(at: point).isValid else { continue }
                 let result = controller.perform(
                     .placeSelectedConstruction(at: point, orientation: .northSouth)
                 )

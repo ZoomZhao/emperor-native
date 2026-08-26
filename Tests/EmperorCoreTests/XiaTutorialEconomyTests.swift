@@ -106,9 +106,9 @@ final class XiaTutorialEconomyTests: XCTestCase {
     func testMeatMovesThroughPhysicalMillBuyerAndPeddlerAndServicesDriveHousing() throws {
         let original = try OriginalEconomyModels(source: requireOriginalData())
         let rules = EconomyRulesEngine(models: original)
-        // Keep all 24 houses inside the single market's patrol reach (~29
-        // tiles one-way with the return budget), so the recovered food gate
-        // is observable for every house.
+        // Keep all 24 houses between two original common markets. A single
+        // peddler's 60-step route cannot cover every occupied address once
+        // the corrected service cadence evolves the whole row together.
         var city = try makeRoadCity(rules: rules, houseCount: 24, houseStartX: 34)
         try placeTutorialFacilities(in: &city, rules: rules)
         // Fixture-only seeding lets this test continue validating the authored
@@ -200,6 +200,7 @@ final class XiaTutorialEconomyTests: XCTestCase {
             return XCTFail(
                 "atTarget=\(atTarget) < 150; foodQuality=\(quality); levels=\(byLevel); "
                     + "population=\(city.population); stuckWater=\(waterCount)/31; "
+                    + "markets=\(city.markets.markets.map { ($0.id, $0.inventoryByCommodityID) }); "
                     + "stuck=[\(stuckDetail)]; \(evaluationDetail)"
             )
         }
@@ -249,9 +250,19 @@ final class XiaTutorialEconomyTests: XCTestCase {
             at: GridPoint(x: 2, y: 18),
             rules: rules
         ))
-        XCTAssertNotNil(city.constructMill(at: GridPoint(x: 6, y: 15), rules: rules))
+        XCTAssertNotNil(city.constructProductionBuilding(
+            buildingID: 33,
+            at: GridPoint(x: 6, y: 18),
+            rules: rules
+        ))
+        XCTAssertNotNil(city.constructMill(at: GridPoint(x: 12, y: 15), rules: rules))
         XCTAssertNotNil(city.constructMarket(
             at: GridPoint(x: 30, y: 16),
+            shopBuildingIDs: [OriginalFoodCatalog.foodShopBuildingID],
+            rules: rules
+        ))
+        XCTAssertNotNil(city.constructMarket(
+            at: GridPoint(x: 60, y: 16),
             shopBuildingIDs: [OriginalFoodCatalog.foodShopBuildingID],
             rules: rules
         ))
@@ -259,8 +270,8 @@ final class XiaTutorialEconomyTests: XCTestCase {
             (72, 40, 0x101),
             (72, 48, 0x202),
             (72, 56, 0x303),
-            (124, 62, 0x404),
-            (214, 64, 0x505),
+            (124, 38, 0x404),
+            (214, 67, 0x505),
             (214, 44, 0x606),
         ] {
             XCTAssertNotNil(city.constructResidentialServiceBuilding(
@@ -268,7 +279,7 @@ final class XiaTutorialEconomyTests: XCTestCase {
                 at: GridPoint(x: x, y: 18),
                 replaySeed: UInt64(seed),
                 rules: rules
-            ))
+            ), "service \(buildingID) at x=\(x)")
         }
     }
 }

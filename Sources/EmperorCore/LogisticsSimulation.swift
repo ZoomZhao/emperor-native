@@ -435,12 +435,6 @@ public struct DeterministicLogisticsState: Sendable, Hashable, Codable {
         let stockedIDs = mills[index].inventoryByCommodityID.keys
             .filter { OriginalFoodCatalog.isMillCommodity($0) && mills[index].inventoryByCommodityID[$0, default: 0] > 0 }
             .sorted()
-        FileHandle.standardError.write(
-            Data((
-                "DEBUG takeFoodBundle mill=\(mills[index].inventoryByCommodityID) "
-                    + "stocked=\(stockedIDs)\n"
-            ).utf8)
-        )
         var remaining = min(maximumAmount, mills[index].storedAmount)
         var amounts: [Int: Int] = [:]
 
