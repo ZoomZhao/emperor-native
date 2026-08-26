@@ -1,4 +1,4 @@
-import EmperorCore
+@testable import EmperorCore
 import XCTest
 
 final class EmperorCoreTests: XCTestCase {
@@ -2291,19 +2291,20 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(liveEvaluation, city.lastHousingSettlement?.evaluations.first)
     }
 
-    func testDailyServiceWalkerCadenceMatchesSharedOriginalRoamerSpeed() throws {
+    func testServiceWalkerUsesRecoveredOriginalStepAndSpawnPhases() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")
         }
         let original = try OriginalEconomyModels(source: .openDefault())
         let rules = EconomyRulesEngine(models: original)
 
-        // Authored figure data gives the market peddler and water carrier the
-        // same speed and both use the ordinary roaming movement chain. Native
-        // therefore applies the peddler's calibrated ten-road-step daily
-        // cadence to residential service walkers as an inferred conversion.
+        // The model supplies speed 8/range 40. Figure-model selector 15 turns
+        // that range into a 40 * 96 outbound budget; the executable
+        // independently fixes 816 figure updates per month and runs the
+        // building-spawn slice at scheduler phase 0x1f.
         XCTAssertEqual(original.figures[figureID: 23]?.speed, 8)
         XCTAssertEqual(original.figures[figureID: 28]?.speed, 8)
+        XCTAssertEqual(original.figures[figureID: 28]?.behaviorRange, 40)
 
         var city = DeterministicCityState(
             year: 1600,
@@ -2320,9 +2321,325 @@ final class EmperorCoreTests: XCTestCase {
             rules: rules
         ))
 
-        let tick = city.advanceTick(rules: rules)
-        XCTAssertEqual(tick.movement.walkers.requestedRoadSteps, 10)
-        XCTAssertEqual(tick.movement.walkers.movedRoadSteps, 10)
+        let first = city.advanceTick(rules: rules)
+        XCTAssertEqual(first.movement.walkers.requestedRoadSteps, 27)
+        XCTAssertEqual(first.movement.walkers.movedRoadSteps, 0)
+        XCTAssertEqual(city.walkers.walkers.first?.originalPhase, .dormant)
+
+        _ = city.advanceTick(rules: rules)
+        _ = city.advanceTick(rules: rules)
+        let fourth = city.advanceTick(rules: rules)
+        XCTAssertEqual(fourth.movement.walkers.requestedRoadSteps, 27)
+        XCTAssertFalse(fourth.movement.walkers.visitedRoadPoints.isEmpty)
+        XCTAssertEqual(
+            fourth.movement.walkers.completedTrips,
+            0,
+            "range 40 is scaled to 3840 budget units, not exhausted as 40 raw units"
+        )
+    }
+
+    func testGenericServiceReturnBuildsModeZeroRouteOnTheFollowingUpdate() {
+        let road = RoadNetwork(
+            width: 3,
+            height: 1,
+            points: [
+                GridPoint(x: 0, y: 0),
+                GridPoint(x: 1, y: 0),
+                GridPoint(x: 2, y: 0),
+            ]
+        )
+        var state = DeterministicWalkerState()
+        XCTAssertNotNil(state.addWalker(
+            figureID: 27,
+            service: .tax,
+            origin: GridPoint(x: 0, y: 0),
+            maximumRoadSteps: 2,
+            replaySeed: 7,
+            roadNetwork: road,
+            startsDormant: false
+        ))
+        var houses: [ResidentialUnit] = []
+        let outbound = state.advanceRecoveredOriginalSteps(
+            33,
+            houses: &houses,
+            roadNetwork: road,
+            workerPercentByWalkerID: [:],
+            primaryReturnPassability: [0x4, 0x10, 0x4],
+            barrierPoints: []
+        )
+        XCTAssertEqual(state.walkers[0].originalPhase, .returning)
+        XCTAssertEqual(state.walkers[0].completedTrips, 0)
+        XCTAssertNotEqual(state.walkers[0].currentPoint, state.walkers[0].origin)
+        XCTAssertFalse(outbound.visitedRoadPoints.isEmpty)
+
+        _ = state.advanceRecoveredOriginalSteps(
+            1,
+            houses: &houses,
+            roadNetwork: road,
+            workerPercentByWalkerID: [:],
+            primaryReturnPassability: [0x4, 0x10, 0x4],
+            barrierPoints: []
+        )
+        XCTAssertEqual(state.walkers[0].currentPoint, state.walkers[0].origin)
+        XCTAssertEqual(state.walkers[0].originalPhase, .dormant)
+        XCTAssertEqual(state.walkers[0].completedTrips, 1)
+    }
+
+    func testWaterServiceUsesRecoveredOneOneTwoSubstepCadence() {
+        let points = (0..<10).map { GridPoint(x: $0, y: 0) }
+        let road = RoadNetwork(width: 10, height: 1, points: Set(points))
+        var generic = DeterministicWalkerState()
+        var water = DeterministicWalkerState()
+        XCTAssertNotNil(generic.addWalker(
+            figureID: 27,
+            service: .tax,
+            origin: points[0],
+            maximumRoadSteps: 40,
+            replaySeed: 1,
+            roadNetwork: road
+        ))
+        XCTAssertNotNil(water.addWalker(
+            figureID: 28,
+            service: .water,
+            origin: points[0],
+            maximumRoadSteps: 40,
+            replaySeed: 1,
+            roadNetwork: road
+        ))
+        var genericHouses: [ResidentialUnit] = []
+        var waterHouses: [ResidentialUnit] = []
+        let genericMovement = generic.advanceRecoveredOriginalSteps(
+            60,
+            houses: &genericHouses,
+            roadNetwork: road,
+            workerPercentByWalkerID: [:]
+        )
+        let waterMovement = water.advanceRecoveredOriginalSteps(
+            60,
+            houses: &waterHouses,
+            roadNetwork: road,
+            workerPercentByWalkerID: [:]
+        )
+        XCTAssertEqual(genericMovement.movedRoadSteps, 3)
+        XCTAssertEqual(waterMovement.movedRoadSteps, 4)
+        XCTAssertEqual(generic.walkers[0].currentPoint, points[3])
+        XCTAssertEqual(water.walkers[0].currentPoint, points[4])
+    }
+
+    func testRecoveredServiceCoverageWritesDecayIndependently() {
+        var house = ResidentialUnit(id: 1, houseLevelID: 0, residents: 7)
+
+        house.applyOriginalServiceVisit(.water)
+        house.applyOriginalServiceVisit(.ancestor)
+        house.applyOriginalServiceVisit(.tax)
+        XCTAssertEqual(house.serviceCoverageRemainingSlices[.water], 0x60)
+        XCTAssertEqual(house.serviceCoverageRemainingSlices[.ancestor], 0x28)
+        XCTAssertEqual(house.taxCoverageRemainingSlices, 0x32)
+
+        for _ in 0..<39 { house.advanceOriginalOrdinaryServiceSlice() }
+        XCTAssertEqual(house.serviceCoverageRemainingSlices[.ancestor], 1)
+        XCTAssertTrue(house.serviceCoverage.contains(.ancestor))
+        XCTAssertEqual(house.serviceCoverageRemainingSlices[.water], 57)
+
+        house.advanceOriginalOrdinaryServiceSlice()
+        XCTAssertNil(house.serviceCoverageRemainingSlices[.ancestor])
+        XCTAssertFalse(house.serviceCoverage.contains(.ancestor))
+        XCTAssertTrue(house.serviceCoverage.contains(.water))
+
+        for _ in 0..<49 { house.advanceOriginalTaxServiceSlice() }
+        XCTAssertEqual(house.taxCoverageRemainingSlices, 1)
+        XCTAssertTrue(house.hasTaxCoverage)
+        house.advanceOriginalTaxServiceSlice()
+        XCTAssertEqual(house.taxCoverageRemainingSlices, 0)
+        XCTAssertFalse(house.hasTaxCoverage)
+
+        for _ in 0..<56 { house.advanceOriginalOrdinaryServiceSlice() }
+        XCTAssertNil(house.serviceCoverageRemainingSlices[.water])
+        XCTAssertFalse(house.serviceCoverage.contains(.water))
+    }
+
+    func testRecoveredServiceCallbacksPreservePopulationAndEliteHousingGates() {
+        let origin = GridPoint(x: 0, y: 0)
+        let vacantCommon = ResidentialUnit(
+            id: 1,
+            houseLevelID: 0,
+            residents: 0,
+            location: GridPoint(x: 1, y: 0),
+            vacantTypeID: 2
+        )
+        XCTAssertTrue(OriginalResidentialServiceCoverage.houseIndices(
+            servicedFrom: origin,
+            service: .water,
+            providerBuildingID: 72,
+            houses: [vacantCommon],
+            blockerPoints: []
+        ).isEmpty)
+
+        let vacantElite = ResidentialUnit(
+            id: 2,
+            houseLevelID: 10,
+            residents: 0,
+            location: GridPoint(x: 1, y: 0),
+            vacantTypeID: 11
+        )
+        XCTAssertEqual(OriginalResidentialServiceCoverage.houseIndices(
+            servicedFrom: origin,
+            service: .ancestor,
+            providerBuildingID: 214,
+            houses: [vacantElite],
+            blockerPoints: []
+        ), [0])
+
+        let populatedCommon = ResidentialUnit(
+            id: 3,
+            houseLevelID: 0,
+            residents: 8,
+            location: GridPoint(x: 1, y: 0)
+        )
+        XCTAssertTrue(OriginalResidentialServiceCoverage.houseIndices(
+            servicedFrom: origin,
+            service: .confucian,
+            providerBuildingID: 219,
+            houses: [populatedCommon],
+            blockerPoints: []
+        ).isEmpty)
+        XCTAssertEqual(OriginalResidentialServiceCoverage.houseIndices(
+            servicedFrom: origin,
+            service: .confucian,
+            providerBuildingID: 219,
+            houses: [vacantElite],
+            blockerPoints: []
+        ), [0])
+    }
+
+    func testRecoveredCoverageUsesWholeHouseFootprintAndSixteenSectorOcclusion() {
+        let origin = GridPoint(x: 0, y: 0)
+        let residentialWall = PlacedBuilding(
+            category: .aesthetic,
+            instanceID: 1,
+            buildingID: 89,
+            origin: GridPoint(x: 1, y: 0),
+            orientation: .northSouth,
+            footprint: BuildingFootprint(width: 1, height: 2),
+            roadAccessPoint: origin
+        )
+        let ordinaryService = PlacedBuilding(
+            category: .residentialService,
+            instanceID: 2,
+            buildingID: 125,
+            origin: GridPoint(x: -1, y: 0),
+            orientation: .northSouth,
+            footprint: BuildingFootprint(width: 2, height: 2),
+            roadAccessPoint: origin
+        )
+        XCTAssertEqual(
+            OriginalResidentialServiceCoverage.blockerPoints(
+                placements: [residentialWall, ordinaryService]
+            ),
+            Set(residentialWall.occupiedPoints)
+        )
+
+        let house = ResidentialUnit(
+            id: 1,
+            houseLevelID: 0,
+            residents: 8,
+            location: GridPoint(x: 2, y: 0)
+        )
+        XCTAssertEqual(OriginalResidentialServiceCoverage.houseIndices(
+            servicedFrom: origin,
+            service: .tax,
+            providerBuildingID: 125,
+            houses: [house],
+            blockerPoints: []
+        ), [0])
+
+        XCTAssertTrue(OriginalResidentialServiceCoverage.houseIndices(
+            servicedFrom: origin,
+            service: .tax,
+            providerBuildingID: 125,
+            houses: [house],
+            blockerPoints: [GridPoint(x: 1, y: 0), GridPoint(x: 1, y: 1)]
+        ).isEmpty)
+    }
+
+    func testRecoveredVisitFieldsAgeEveryEighthSchedulerSlice() {
+        var state = DeterministicWalkerState()
+        var houses: [ResidentialUnit] = []
+        let roads = RoadNetwork(width: 1, height: 1, points: [])
+
+        _ = state.advanceRecoveredOriginalSteps(
+            352,
+            houses: &houses,
+            roadNetwork: roads,
+            workerPercentByWalkerID: [:]
+        )
+        XCTAssertEqual(state.originalVisitDecayCounter, 7)
+
+        _ = state.advanceRecoveredOriginalSteps(
+            51,
+            houses: &houses,
+            roadNetwork: roads,
+            workerPercentByWalkerID: [:]
+        )
+        XCTAssertEqual(state.originalVisitDecayCounter, 0)
+    }
+
+    func testRecoveredServiceSaveReplayPreservesSchedulerAndRoamerState() throws {
+        let roadPoints = Set((0..<6).map { GridPoint(x: $0, y: 0) })
+        let roads = RoadNetwork(width: 6, height: 1, points: roadPoints)
+        var uninterrupted = DeterministicWalkerState()
+        XCTAssertNotNil(uninterrupted.addWalker(
+            figureID: 27,
+            service: .tax,
+            origin: GridPoint(x: 0, y: 0),
+            maximumRoadSteps: 2,
+            replaySeed: 0x5341_5645,
+            roadNetwork: roads,
+            startsDormant: false,
+            providerBuildingID: 125
+        ))
+        var uninterruptedHouses = [ResidentialUnit(
+            id: 1,
+            houseLevelID: 0,
+            residents: 8,
+            location: GridPoint(x: 2, y: 0)
+        )]
+        _ = uninterrupted.advanceRecoveredOriginalSteps(
+            117,
+            houses: &uninterruptedHouses,
+            roadNetwork: roads,
+            workerPercentByWalkerID: [1: 100]
+        )
+
+        var restored = try JSONDecoder().decode(
+            DeterministicWalkerState.self,
+            from: JSONEncoder().encode(uninterrupted)
+        )
+        var restoredHouses = try JSONDecoder().decode(
+            [ResidentialUnit].self,
+            from: JSONEncoder().encode(uninterruptedHouses)
+        )
+        XCTAssertEqual(restored, uninterrupted)
+        XCTAssertEqual(restoredHouses, uninterruptedHouses)
+
+        let passability = [UInt16](repeating: 0x4, count: 6)
+        let first = uninterrupted.advanceRecoveredOriginalSteps(
+            150,
+            houses: &uninterruptedHouses,
+            roadNetwork: roads,
+            workerPercentByWalkerID: [1: 100],
+            primaryReturnPassability: passability
+        )
+        let second = restored.advanceRecoveredOriginalSteps(
+            150,
+            houses: &restoredHouses,
+            roadNetwork: roads,
+            workerPercentByWalkerID: [1: 100],
+            primaryReturnPassability: passability
+        )
+        XCTAssertEqual(second, first)
+        XCTAssertEqual(restored, uninterrupted)
+        XCTAssertEqual(restoredHouses, uninterruptedHouses)
     }
 
     func testVacantEliteHousingCanEvolveBeforeItsFirstResidentsArrive() throws {
@@ -4837,7 +5154,7 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertNil(city.operations.lastSettlement)
     }
 
-    func testStaffedInspectorPatrolRepairsBuildingRisk() throws {
+    func testInspectorFSMStaysFailClosedUntilItsOriginalHandlerIsRecovered() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")
         }
@@ -4866,29 +5183,14 @@ final class EmperorCoreTests: XCTestCase {
             replaySeed: 0x494E_5350_4543_54,
             rules: rules
         ))
-        for _ in 0..<12 { _ = city.advanceMonth(rules: rules) }
+        _ = city.advanceTick(rules: rules)
         XCTAssertTrue(city.production.buildings.contains { $0.id == kilnID })
         XCTAssertTrue(city.residentialServiceBuildings.contains { $0.id == inspectorID })
-        let kilnKey = OperationalBuildingKey(category: .production, instanceID: kilnID)
-        XCTAssertTrue(city.operations.lastSettlement?.inspectedBuildingKeys.contains(kilnKey) == true)
-        XCTAssertGreaterThan(city.operations.lastSettlement?.repairedRiskByBuildingKey[kilnKey] ?? 0, 0)
-        let kilnRisk = city.operations.risks.first { $0.key == kilnKey }
-        XCTAssertEqual(kilnRisk?.fireRisk, 0)
-        XCTAssertEqual(kilnRisk?.damageRisk, 0)
-        let houseKey = OperationalBuildingKey(
-            category: .residential,
-            instanceID: residentHouseID
-        )
+        let walker = try XCTUnwrap(city.walkers.walkers.first { $0.figureID == 39 })
+        XCTAssertFalse(walker.supportsRecoveredResidentialRoam)
+        XCTAssertEqual(walker.originalPhase, .dormant)
+        XCTAssertNil(city.operations.lastSettlement)
         XCTAssertTrue(city.houses.contains { $0.id == residentHouseID })
-        XCTAssertTrue(city.operations.lastSettlement?.inspectedBuildingKeys.contains(houseKey) == true)
-        XCTAssertEqual(city.operations.risks.first { $0.key == houseKey }?.fireRisk, 0)
-        XCTAssertEqual(city.operations.risks.first { $0.key == houseKey }?.damageRisk, 0)
-        XCTAssertEqual(
-            city.operations.lastSettlement?.workforce.assignments.first {
-                $0.key == kilnKey
-            }?.assignedWorkers,
-            original.buildings[buildingID: 43]?.employees
-        )
         XCTAssertEqual(
             try JSONDecoder().decode(
                 DeterministicCityState.self,
@@ -4948,7 +5250,7 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(protectedHouses[0].residents, 10)
     }
 
-    func testWatchtowerGuardProvidesPhysicalCrimeCoverage() throws {
+    func testWatchtowerGuardFSMStaysFailClosedUntilItsOriginalHandlerIsRecovered() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")
         }
@@ -4974,8 +5276,11 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertTrue(city.residentialServiceBuildings.contains {
             $0.id == towerID && $0.figureID == 29 && $0.service == .constable
         })
-        XCTAssertTrue(city.houses.first { $0.id == houseID }?.serviceCoverage.contains(.constable) == true)
-        XCTAssertTrue(city.publicHealthSafety.lastSettlement?.protectedHouseIDs.contains(houseID) == true)
+        let walker = try XCTUnwrap(city.walkers.walkers.first { $0.figureID == 29 })
+        XCTAssertFalse(walker.supportsRecoveredResidentialRoam)
+        XCTAssertEqual(walker.originalPhase, .dormant)
+        XCTAssertFalse(city.houses.first { $0.id == houseID }?.serviceCoverage.contains(.constable) == true)
+        XCTAssertFalse(city.publicHealthSafety.lastSettlement?.protectedHouseIDs.contains(houseID) == true)
         XCTAssertEqual(
             try JSONDecoder().decode(
                 DeterministicCityState.self,

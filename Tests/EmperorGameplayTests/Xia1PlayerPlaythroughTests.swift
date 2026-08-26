@@ -91,7 +91,9 @@ final class Xia1PlayerPlaythroughTests: XCTestCase {
         }
         XCTAssertTrue(evidence.sawWaterService)
         XCTAssertTrue(evidence.sawAncestorService)
-        XCTAssertTrue(evidence.sawInspectionService)
+        // Inspector figure 39 uses its own unrecovered `0x4CD230` FSM. The
+        // generic residential-roamer bridge must not manufacture inspection.
+        XCTAssertFalse(evidence.sawInspectionService)
         XCTAssertEqual(evidence.outcomeChangeCount, 1)
         XCTAssertEqual(controller.speed, 0)
         XCTAssertFalse(controller.perform(.setSpeed(3)).wasApplied)

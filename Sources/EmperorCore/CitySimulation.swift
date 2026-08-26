@@ -32,6 +32,12 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
     public var foodSupplyAmount: Int
     public var foodQualityRawValue: Int
     public var serviceCoverage: Set<WalkerServiceKind>
+    /// Original house-service countdown bytes. Health/entertainment callbacks
+    /// write `0x60`; religion writes `0x28`; the original day-slice walk
+    /// decrements them independently.
+    public private(set) var serviceCoverageRemainingSlices: [WalkerServiceKind: Int]
+    /// Tax officials use the house-building byte at `+0x52`, written as `0x32`.
+    public private(set) var taxCoverageRemainingSlices: Int
     public var desirability: Int
     public var lastSuppliedFoodQualityRawValue: Int
     public var lastSuppliedCommodityIDs: Set<Int>
@@ -62,6 +68,8 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
         foodSupplyAmount: Int = 0,
         foodQualityRawValue: Int = FoodQuality.none.rawValue,
         serviceCoverage: Set<WalkerServiceKind> = [],
+        serviceCoverageRemainingSlices: [WalkerServiceKind: Int] = [:],
+        taxCoverageRemainingSlices: Int = 0,
         desirability: Int = 0,
         lastSuppliedFoodQualityRawValue: Int = FoodQuality.none.rawValue,
         lastSuppliedCommodityIDs: Set<Int> = [],
@@ -82,6 +90,15 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
         self.foodSupplyAmount = max(0, foodSupplyAmount)
         self.foodQualityRawValue = foodQualityRawValue
         self.serviceCoverage = serviceCoverage
+        var recoveredCoverage = serviceCoverageRemainingSlices.mapValues { max(0, $0) }
+        for service in serviceCoverage where recoveredCoverage[service] == nil {
+            recoveredCoverage[service] = Self.originalCoverageWrite(for: service)
+        }
+        self.serviceCoverageRemainingSlices = recoveredCoverage
+        self.taxCoverageRemainingSlices = max(
+            0,
+            taxCoverageRemainingSlices > 0 ? taxCoverageRemainingSlices : (hasTaxCoverage ? 0x32 : 0)
+        )
         self.desirability = desirability
         self.lastSuppliedFoodQualityRawValue = lastSuppliedFoodQualityRawValue
         self.lastSuppliedCommodityIDs = lastSuppliedCommodityIDs
@@ -102,6 +119,53 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
     public mutating func addSupply(commodityID: Int, amount: Int) {
         guard amount > 0 else { return }
         suppliesByCommodityID[commodityID, default: 0] += amount
+    }
+
+    public mutating func applyOriginalServiceVisit(_ service: WalkerServiceKind) {
+        if service == .tax {
+            hasTaxCoverage = true
+            taxCoverageRemainingSlices = 0x32
+        } else {
+            serviceCoverage.insert(service)
+            serviceCoverageRemainingSlices[service] = Self.originalCoverageWrite(for: service)
+        }
+    }
+
+    public mutating func resetOriginalServiceCoverage() {
+        serviceCoverage.removeAll()
+        serviceCoverageRemainingSlices.removeAll()
+    }
+
+    public mutating func clearOriginalTaxCoverage() {
+        hasTaxCoverage = false
+        taxCoverageRemainingSlices = 0
+    }
+
+    public mutating func advanceOriginalOrdinaryServiceSlice() {
+        for service in Array(serviceCoverageRemainingSlices.keys) {
+            let remaining = max(0, serviceCoverageRemainingSlices[service, default: 0] - 1)
+            if remaining == 0 {
+                serviceCoverageRemainingSlices.removeValue(forKey: service)
+                serviceCoverage.remove(service)
+            } else {
+                serviceCoverageRemainingSlices[service] = remaining
+            }
+        }
+    }
+
+    public mutating func advanceOriginalTaxServiceSlice() {
+        guard taxCoverageRemainingSlices > 0 else { return }
+        taxCoverageRemainingSlices -= 1
+        if taxCoverageRemainingSlices == 0 { hasTaxCoverage = false }
+    }
+
+    private static func originalCoverageWrite(for service: WalkerServiceKind) -> Int {
+        switch service {
+        case .ancestor, .confucian, .daoistOrBuddhist:
+            return 0x28
+        default:
+            return 0x60
+        }
     }
 
     public var foodQuality: FoodQuality {
@@ -225,7 +289,7 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
         case orientation
         case suppliesByCommodityID, commodityShortageMonths
         case foodSupplyAmount, foodQualityRawValue
-        case serviceCoverage, desirability
+        case serviceCoverage, serviceCoverageRemainingSlices, taxCoverageRemainingSlices, desirability
         case lastSuppliedFoodQualityRawValue, lastSuppliedCommodityIDs
         case settlingLock, settlingLockRemainingSteps
         case vacantTypeID
@@ -259,6 +323,17 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
             Set<WalkerServiceKind>.self,
             forKey: .serviceCoverage
         ) ?? []
+        serviceCoverageRemainingSlices = try container.decodeIfPresent(
+            [WalkerServiceKind: Int].self,
+            forKey: .serviceCoverageRemainingSlices
+        ) ?? Dictionary(
+            uniqueKeysWithValues: serviceCoverage.map { ($0, Self.originalCoverageWrite(for: $0)) }
+        )
+        taxCoverageRemainingSlices = max(
+            0,
+            try container.decodeIfPresent(Int.self, forKey: .taxCoverageRemainingSlices)
+                ?? (hasTaxCoverage ? 0x32 : 0)
+        )
         desirability = try container.decodeIfPresent(Int.self, forKey: .desirability) ?? 0
         lastSuppliedFoodQualityRawValue = try container.decodeIfPresent(
             Int.self,
@@ -3663,7 +3738,9 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             maximumRoadSteps: figure.behaviorRange,
             replaySeed: replaySeed,
             roadNetwork: roadNetwork,
-            barrierPoints: roadblockPoints
+            barrierPoints: roadblockPoints,
+            startsDormant: true,
+            providerBuildingID: buildingID
         ) else { return nil }
         var buildings = residentialServiceBuildingState ?? []
         // Ruins deliberately keep their placement after the operational
@@ -3996,7 +4073,11 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             barrierPoints: roadblockPoints
         )
         for index in houses.indices {
-            houses[index].hasTaxCoverage = coveredIDs.contains(houses[index].id)
+            if coveredIDs.contains(houses[index].id) {
+                houses[index].applyOriginalServiceVisit(.tax)
+            } else {
+                houses[index].clearOriginalTaxCoverage()
+            }
         }
         return coveredIDs.count
     }
@@ -4007,19 +4088,15 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
     ) {
         if resetExisting {
             for index in houses.indices {
-                houses[index].hasTaxCoverage = false
-                houses[index].serviceCoverage.removeAll()
+                houses[index].clearOriginalTaxCoverage()
+                houses[index].resetOriginalServiceCoverage()
             }
         }
         for index in houses.indices {
             let houseID = houses[index].id
             for (service, coveredIDs) in movement.servicedHouseIDsByService where
                 coveredIDs.contains(houseID) {
-                if service == .tax {
-                    houses[index].hasTaxCoverage = true
-                } else {
-                    houses[index].serviceCoverage.insert(service)
-                }
+                houses[index].applyOriginalServiceVisit(service)
             }
         }
     }
@@ -4113,18 +4190,22 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         return (covered, max(0, models[buildingID: 124]?.riskReducer ?? 0))
     }
 
-    private func activeServiceWalkerIDs(
+    private func serviceWorkerPercentByWalkerID(
         workforce: WorkforceMonthlySettlement?
-    ) -> Set<Int>? {
-        guard let workforce else { return nil }
-        let staffedKeys = Set(workforce.assignments.compactMap {
-            $0.key.category == .residentialService && $0.isFullyStaffed ? $0.key : nil
-        })
-        return Set(residentialServiceBuildings.compactMap { building in
-            staffedKeys.contains(OperationalBuildingKey(
-                category: .residentialService,
-                instanceID: building.id
-            )) ? building.walkerID : nil
+    ) -> [Int: Int] {
+        guard let workforce else {
+            return Dictionary(uniqueKeysWithValues: residentialServiceBuildings.map { ($0.walkerID, 100) })
+        }
+        let assignments = Dictionary(uniqueKeysWithValues: workforce.assignments.map { ($0.key, $0) })
+        return Dictionary(uniqueKeysWithValues: residentialServiceBuildings.map { building in
+            let key = OperationalBuildingKey(category: .residentialService, instanceID: building.id)
+            guard let assignment = assignments[key], assignment.requiredWorkers > 0 else {
+                return (building.walkerID, 0)
+            }
+            return (
+                building.walkerID,
+                min(100, max(0, assignment.assignedWorkers * 100 / assignment.requiredWorkers))
+            )
         })
     }
 
@@ -4224,15 +4305,6 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         var accumulatedCoverage = monthlyServiceCoverageState
             ?? MonthlyServiceCoverageAccumulator()
 
-        if clock.day == 1, accumulatedCoverage.isEmpty {
-            for index in houses.indices {
-                houses[index].serviceCoverage.removeAll()
-            }
-            if walkers.walkers.contains(where: { $0.service == .tax }) {
-                for index in houses.indices { houses[index].hasTaxCoverage = false }
-            }
-        }
-
         // Original daily `FUN_005185C0` settling-lock walk (§10.6): runs in
         // the calendar before the migration/assignment case.
         for index in houses.indices {
@@ -4285,22 +4357,26 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             activeWorkforce = nil
         }
 
-        var walkerMovement = WalkerMovementSummary.empty
-        if var state = walkerState, !state.walkers.isEmpty {
-            walkerMovement = state.advance(
-                // Figure #28 (water carrier) and market peddler #23 share
-                // original speed 8 and the ordinary roaming movement chain.
-                // Keep their Native-day cadence aligned; see DESIGN.md.
-                roadStepsPerWalker: 10,
-                houses: houses,
-                roadNetwork: roadNetwork,
-                activeWalkerIDs: activeServiceWalkerIDs(workforce: activeWorkforce),
-                barrierPoints: roadblockPoints
-            )
-            accumulatedCoverage.merge(walkerMovement)
-            applyServiceCoverage(walkerMovement, resetExisting: false)
-            walkerState = state
-        }
+        var state = walkerState ?? DeterministicWalkerState()
+        let originalWalkerSteps = DeterministicMigration.originalStepsInDay(clock.day)
+        let primaryReturnPassability = state.requiresOriginalReturnPassability(
+            withinOriginalSteps: originalWalkerSteps
+        ) ? (try? grandCanalWorkerRoutingGrids().primaryPassability) : nil
+        let walkerMovement = state.advanceRecoveredOriginalSteps(
+            originalWalkerSteps,
+            houses: &houses,
+            roadNetwork: roadNetwork,
+            workerPercentByWalkerID: serviceWorkerPercentByWalkerID(
+                workforce: activeWorkforce
+            ),
+            primaryReturnPassability: primaryReturnPassability,
+            coverageBlockerPoints: OriginalResidentialServiceCoverage.blockerPoints(
+                placements: placedBuildings
+            ),
+            barrierPoints: roadblockPoints
+        )
+        accumulatedCoverage.merge(walkerMovement)
+        walkerState = state
 
         var logisticsMovement = DeliveryMovementSummary.empty
         if var logistics = logisticsState {

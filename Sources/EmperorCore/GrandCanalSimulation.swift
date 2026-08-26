@@ -3031,6 +3031,37 @@ public enum OriginalGrandCanalLayoutCatalog {
         )
     }
 
+    /// Common residential-service return routing from `FUN_004E83E0` mode 0.
+    /// `FUN_005AE740` floods north/east/south/west over primary-cache cells
+    /// intersecting `0x0B1D`; `FUN_005B18B0(..., 8, ...)` then reconstructs
+    /// the saved route with the original eight-direction arbitration.
+    public static func residentialServiceReturnRoute(
+        primaryValues: [UInt16],
+        width: Int,
+        height: Int,
+        from start: GridPoint,
+        to destination: GridPoint
+    ) -> WorkerRoute? {
+        guard width > 0, height > 0,
+              primaryValues.count == width * height else { return nil }
+        guard let result = route(
+            width: width,
+            height: height,
+            from: start,
+            to: destination,
+            reconstructionDirections: Array(0..<8),
+            maximumExpansions: nil,
+            isPassable: {
+                primaryValues[$0.y * width + $0.x] & 0x0B1D != 0
+            }
+        ) else { return nil }
+        return WorkerRoute(
+            grid: .primaryPassability,
+            points: result.points,
+            directionCodes: result.directionCodes
+        )
+    }
+
     private static let directionDeltas = [
         GridPoint(x: 0, y: -1),
         GridPoint(x: 1, y: -1),

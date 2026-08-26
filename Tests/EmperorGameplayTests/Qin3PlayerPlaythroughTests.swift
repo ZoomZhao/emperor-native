@@ -11,16 +11,13 @@ final class Qin3PlayerPlaythroughTests: XCTestCase {
     private var lastFarmOrigin: GridPoint?
 
     func testPlayerCommandsCompleteQinMissionThreeLandOfAnnam() throws {
-        try skipUntilOriginalRoamerRoutingIsRecovered(
-            "BLOCKED BY INCOMPLETE ORIGINAL ROUTING EVIDENCE: the map-aware "
-                + "player-command replay now establishes three-food delivery, "
-                + "partial water/service coverage, housing levels 0-3, and the "
-                + "1,200-unit yearly carved-jade goal. Native patrol routing "
-                + "still reaches only 27 of 40 houses and housing then oscillates "
-                + "below level 6; the player replay's best lacquer year remains "
-                + "1,200/1,600. Recover the original roamer junction selection "
-                + "and service-reset lifecycle before changing the route or "
-                + "tuning another layout; Qin 3 must remain fail-closed."
+        try skipUntilIndependentQinThreeContractsAreRecovered(
+            "BLOCKED AFTER RECOVERED GENERIC ROAMER REPLAY: the 120-month "
+                + "player-command run still reaches only 27/40 initial houses and "
+                + "ends below level 6. The remaining live requirements include "
+                + "music (figure #34 uses separate 0x48A9A0), water's distinct "
+                + "house fields, market-peddler coverage, and desirability. Do not "
+                + "tune the layout or route around those unrecovered contracts."
         )
         let controller = try startedController()
         try connectEntryToRoads(with: controller)
@@ -469,7 +466,9 @@ final class Qin3PlayerPlaythroughTests: XCTestCase {
         return candidate
     }
 
-    private func skipUntilOriginalRoamerRoutingIsRecovered(_ reason: String) throws {
+    private func skipUntilIndependentQinThreeContractsAreRecovered(
+        _ reason: String
+    ) throws {
         throw XCTSkip(reason)
     }
 

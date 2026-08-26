@@ -2751,6 +2751,38 @@ final class GrandCanalSimulationTests: XCTestCase {
         }
     }
 
+    func testResidentialServiceReturnUsesRecoveredModeZeroMaskAndRouteOrder() throws {
+        let accepted: [UInt16] = [0x1, 0x4, 0x8, 0x10, 0x100, 0x200, 0x800]
+        for value in accepted {
+            let route = try XCTUnwrap(
+                OriginalGrandCanalLayoutCatalog.residentialServiceReturnRoute(
+                    primaryValues: [0x4, value, 0x4],
+                    width: 3,
+                    height: 1,
+                    from: .init(x: 0, y: 0),
+                    to: .init(x: 2, y: 0)
+                )
+            )
+            XCTAssertEqual(route.grid, .primaryPassability)
+            XCTAssertEqual(route.points, [
+                .init(x: 0, y: 0), .init(x: 1, y: 0), .init(x: 2, y: 0),
+            ])
+            XCTAssertEqual(route.directionCodes, [2, 2])
+        }
+
+        for value: UInt16 in [0x2, 0x20, 0x40, 0x80, 0x400, 0x1000] {
+            XCTAssertNil(
+                OriginalGrandCanalLayoutCatalog.residentialServiceReturnRoute(
+                    primaryValues: [0x4, value, 0x4],
+                    width: 3,
+                    height: 1,
+                    from: .init(x: 0, y: 0),
+                    to: .init(x: 2, y: 0)
+                )
+            )
+        }
+    }
+
     func testPhaseTwoCarrierMovementUsesOriginalSpeedAndArrivalBoundary() throws {
         var convoy = OriginalGrandCanalLayoutCatalog.PhaseTwoCarrierConvoyRuntime(
             carrierFigureID: 800,

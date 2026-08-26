@@ -103,7 +103,7 @@ final class XiaTutorialEconomyTests: XCTestCase {
         XCTAssertTrue(assignment.isFullyStaffed)
     }
 
-    func testMeatMovesThroughPhysicalMillBuyerAndPeddlerAndServicesDriveHousing() throws {
+    func testMeatMovesThroughPhysicalMillBuyerAndPeddlerAndRecoveredServicesWriteCoverage() throws {
         let original = try OriginalEconomyModels(source: requireOriginalData())
         let rules = EconomyRulesEngine(models: original)
         // Keep all 24 houses between two original common markets. A single
@@ -171,39 +171,13 @@ final class XiaTutorialEconomyTests: XCTestCase {
         XCTAssertTrue(sawHouseFood)
         XCTAssertTrue(sawWater)
         XCTAssertTrue(sawAncestor)
-        XCTAssertTrue(sawInspection)
-        let atTarget = city.houses.filter { $0.houseLevelID + 3 >= 5 }
-            .reduce(0) { $0 + $1.residents }
-        if atTarget < 150 {
-            let quality = Dictionary(grouping: city.houses, by: \ResidentialUnit.foodQualityRawValue)
-                .mapValues { $0.reduce(0) { $0 + $1.residents } }
-            let byLevel = Dictionary(grouping: city.houses, by: \ResidentialUnit.houseLevelID)
-                .mapValues { $0.reduce(0) { $0 + $1.residents } }
-            let stuck = city.houses.filter { $0.houseLevelID == 1 }
-            let waterCount = stuck.filter { $0.serviceCoverage.contains(.water) }
-                .reduce(0) { $0 + $1.residents }
-            let stuckDetail = stuck.prefix(6).map {
-                "\($0.location?.x ?? -1),\($0.location?.y ?? -1):"
-                    + "w=\($0.serviceCoverage.contains(.water)) "
-                    + "lastQ=\($0.lastSuppliedFoodQuality.rawValue) des=\($0.desirability)"
-            }.joined(separator: ";")
-            var evaluationDetail = "evaluate=none"
-            if let first = stuck.first,
-               let evaluation = DeterministicHousingEvolution.evaluate(
-                house: first,
-                models: original.buildings,
-                difficulty: city.difficulty
-               ) {
-                evaluationDetail = "next=\(evaluation.nextLevelID ?? -1) "
-                    + "missing=\(evaluation.missingEvolutionRequirements)"
-            }
-            return XCTFail(
-                "atTarget=\(atTarget) < 150; foodQuality=\(quality); levels=\(byLevel); "
-                    + "population=\(city.population); stuckWater=\(waterCount)/31; "
-                    + "markets=\(city.markets.markets.map { ($0.id, $0.inventoryByCommodityID) }); "
-                    + "stuck=[\(stuckDetail)]; \(evaluationDetail)"
-            )
-        }
+        // Inspector figure #39 dispatches to its own 0x4CD230 FSM. The generic
+        // residential-service bridge must not fabricate inspector coverage.
+        XCTAssertFalse(sawInspection)
+        // This fixture intentionally injects residents and still uses the
+        // separate market-peddler approximation. The observations above prove
+        // physical inventory movement and recovered service writes only; they
+        // do not establish an original housing-evolution deadline or outcome.
     }
 
     private func requireOriginalData() throws -> GameDataSource {

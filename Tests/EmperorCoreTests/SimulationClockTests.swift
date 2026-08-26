@@ -105,7 +105,7 @@ final class SimulationClockTests: XCTestCase {
         XCTAssertEqual(threeAtATime, oneAtATime)
     }
 
-    func testServiceWalkerConsumesTenAdjacentRoadStepsPerTick() throws {
+    func testServiceWalkerWaitsForRecoveredSpawnSliceThenUsesOriginalUpdates() throws {
         let original = try installedModels()
         let rules = EconomyRulesEngine(models: original)
         var city = DeterministicCityState(
@@ -133,18 +133,23 @@ final class SimulationClockTests: XCTestCase {
             abs(next.x - current.x) + abs(next.y - current.y) == 1
         })
 
-        let result = city.advanceTick(rules: rules)
-        let after = try XCTUnwrap(city.walkers.walkers.first?.currentPoint)
+        let first = city.advanceTick(rules: rules)
+        XCTAssertEqual(first.movement.walkers.requestedRoadSteps, 27)
+        XCTAssertEqual(first.movement.walkers.movedRoadSteps, 0)
+        XCTAssertNil(first.movement.walkers.visitedRoadPointsByService[.water])
 
-        XCTAssertEqual(result.movement.walkers.requestedRoadSteps, 10)
-        XCTAssertEqual(result.movement.walkers.movedRoadSteps, 10)
+        _ = city.advanceTick(rules: rules)
+        _ = city.advanceTick(rules: rules)
+        let fourth = city.advanceTick(rules: rules)
+        let after = try XCTUnwrap(city.walkers.walkers.first?.currentPoint)
+        XCTAssertEqual(fourth.movement.walkers.requestedRoadSteps, 27)
         XCTAssertTrue(city.roadNetwork.contains(after))
         XCTAssertEqual(
-            result.movement.walkers.visitedRoadPointsByService[.water],
-            Set(roads)
+            fourth.movement.walkers.visitedRoadPointsByService[.water],
+            [roads[0], roads[1]]
         )
-        XCTAssertNil(result.movement.walkers.visitedRoadPointsByService[.inspection])
-        XCTAssertNil(result.monthlySettlement)
+        XCTAssertNil(fourth.movement.walkers.visitedRoadPointsByService[.inspection])
+        XCTAssertNil(fourth.monthlySettlement)
     }
 
     func testLegacyCityWithoutContinuousClockFieldsStartsAtDayOne() throws {

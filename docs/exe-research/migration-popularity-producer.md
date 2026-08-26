@@ -2460,39 +2460,33 @@ chain is closed:
   keeps capacity for hemp/jade/carved-jade; stock-managed hemp import
   (pause ≥ 3,000, resume ≤ 500) prevents the export station from filling
   with hemp.
-- **Residential service cadence — verified `inferred`, implementation
-  contract**: native service walkers previously advanced **1 road tile per native
-  day** (30 tiles/month), so a water carrier's 40-step patrol covers only
-  30/40 tiles before the monthly coverage reset — only ~1/3 of houses ever
-  see `.water`. `EmperorFigureModels.txt` confirms the peddler (23) and the
-  water carrier (28) share speed 8 (only the behavior range differs: 60 vs
-  40), and the market-peddler calibration ("Ten road tiles per daily
-  simulation tick preserves that cadence") therefore applies to service
-  walkers too. Setting service walkers to 10 tiles/day raised Qin-3 water
-  coverage from ~80 to ~156 residents, but the calibrated
-  `XiaTutorialEconomyTests` single-market row then stalled: every house
-  reaches level 1 in month 1, the one food peddler's patrol cannot feed the
-  whole 24-house row, and a second market cannot be placed near the houses
-  because `Common Market Square` (#59) carries original `initialDesirability
-  -6` over a 3-tile range, pushing adjacent houses below the evolution
-  threshold. **Decision (2026-08-26 update)**: use the shared 10-tiles/day
-  cadence for service walkers and redesign the affected fixtures so houses
-  stay out of the market's desirability range while the food peddler retains
-  full-row coverage. The exact Native-day conversion remains `inferred`; the
-  shared original speed/model evidence does not upgrade it to `confirmed`.
-  The Xia downstream fixture now uses two legal common markets and two legal
-  hunting camps outside the occupied housing row; all 150 residents again
-  satisfy the authored housing-code-5 goal under the corrected cadence.
+- **Residential service cadence — superseded by recovered control flow
+  (2026-08-26)**: the one-road-tile/day and ten-road-tiles/day models were both
+  Native inferences and are withdrawn. The executable closes the original
+  month as 816 scheduler/figure steps, with service spawning at scheduler
+  phase `0x1F`, coverage decay at `0x23/0x30`, one movement micro-step per
+  figure update for the recovered code-6/code-8 paths, finite outbound range,
+  and a non-covering return path. Coverage uses independent countdown bytes,
+  not a monthly reset. Native now distributes the exact 816-step month over
+  its 30-day compatibility calendar. Full addresses, provider-specific worker
+  thresholds, selector-15 range scaling, coverage constants, junction fields,
+  provider exit-heading persistence, and unsupported figure FSMs are recorded in
+  `residential-service-roamer-lifecycle.md`. Any Qin/Xia fixture conclusion
+  derived specifically from the former ten-tiles/day cadence is no longer
+  fidelity evidence and must be revalidated against the recovered lifecycle.
 - **Qin 3 player-replay boundary (2026-08-26)**: a map-aware, player-command-only
   layout anchored on the largest clear authored-groundwater district closes
-  three-food delivery and raises housing through levels 0...3. It reaches the
-  1,200-unit carved-jade goal, but Native's current patrols service only 27 of
-  40 houses, housing oscillates below level 6, population ends at 278, and the
-  best lacquer year remains 1,200/1,600. Further layout tuning is not evidence
-  of original behavior. The full Qin-3 playthrough therefore remains skipped
-  and fail-closed until the original roamer junction choice and service-reset
-  lifecycle are recovered; this unknown is separate from the now-supported
-  10-tiles/day cadence.
+  three-food delivery and raises housing through levels 0...3. After the full
+  generic roamer recovery (including `0x4E71D0` signed fallback rotation,
+  coverage eligibility and sixteen-sector occlusion), a fresh 120-month run
+  still services only 27 of the initial 40 houses and ends with population 265,
+  no level-6 residents, lacquer 1,200/1,600 and carved jade 1,200/1,200. Its
+  final live missing requirements include water and music; music figure `#34`
+  uses the separate `0x48A9A0` venue FSM, while the water `+0x32/+0x34` split,
+  market-peddler coverage, and desirability chain remain outside the closed
+  generic bridge. Further layout tuning is not evidence of original behavior.
+  The full Qin-3 playthrough therefore remains fail-closed/skipped. The closed
+  generic lifecycle is tracked in `residential-service-roamer-lifecycle.md`.
 - Rice harvests only in month 10 (one 100-unit load per field), so the
   mill's rice stock drains and market food quality oscillates 30/50 between
   harvests; salt/spices are not available in this mission. Map/economy
