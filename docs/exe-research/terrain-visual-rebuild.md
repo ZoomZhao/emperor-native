@@ -15,9 +15,11 @@ sprite corners.
 - `FUN_0053EAA0` (city-load) **clears the authored per-cell image** for
   non-elevation cells after loading (`DAT_00FE9880`), so the original does not
   render most terrain from the .map's authored image IDs.
-- `FUN_0053EAC0` re-derives the visual from the terrain flag word + variation
+- `FUN_0053EC90` re-derives the visual from the terrain flag word + variation
   bytes + multi-cell footprints:
-  - rock `0x2` → rock family key `0x606`
+  - rock `0x2` → rock family key `0x606`, `0x607`, or `0x608` according to
+    the `0x300002` subtype mask; the renderer tries 3×3, then 2×2, then
+    single-cell fallback
   - sand `0x80000000` → key `0x60e`
   - bare → key `0x603`
   - grass → `0x602` / `0x604`
@@ -43,6 +45,9 @@ sprites.
 
 - `confirmed`: the clear-and-rebuild pipeline, the flag→family keys, dispatch
   order, and the "keep elevation authored sprite" rule.
+- `confirmed`: rock subtype selection, 3×3 → 2×2 → single-cell order, and
+  the 8/4/2 frame partition are recorded in
+  [rock-terrain-detail.md](./rock-terrain-detail.md).
 - `confirmed` (correction to earlier draft): the `0x603 = #247` claim is a
   misreading — DESIGN.md line 345 restores canal phase-0 cells to `China_Terrain
   #247` as a raw image ID, it does not resolve runtime key `0x603`. The road
@@ -50,24 +55,29 @@ sprites.
   INDEX group number == logical group number. Therefore key `0x603` →
   logical group 2 → China_Terrain `#202` (not `#247`); the family keys would
   map to groups 1/2/3/4/5/13/25/26/27 (`#201/#202/#247/#336/#386/#1440/
-  #1443/#574/#736`) **only if** China_Terrain is archive index 3 — which is
-  still unverified, so the family→image assignment remains `unknown`.
-- `unknown`: the exact archive-index table that resolves keys `0x602…0x61c` to
-  an archive; the variation-byte mapping for multi-cell families; the
+  #1443/#574/#736`) in `China_Terrain` archive index 3. The archive index and
+  rock-family image assignment are now confirmed by the SG3 group table; the
+  variation-byte mapping for non-rock multi-cell families and the
   height-slope overwrite (`FUN_0053EAE0` sets `0x200` + vegetation `0x601` on
-  lower cells adjacent to higher ground).
+  lower cells adjacent to higher ground) remain `unknown`.
 
-The confirmed rock-family portion is implemented for the player canvas. Other
-flag→family branches remain fail-closed until their archive-index and
-variation mappings are recovered.
+The player canvas currently implements only a partial rock-family lookup. The
+multi-cell rebuild, ore families, and related cache/rotation state remain
+unsupported pending the detailed contract in
+[rock-terrain-detail.md](./rock-terrain-detail.md). Other flag→family branches
+remain fail-closed until their archive-index and variation mappings are
+recovered.
 
-## 5. Rock-family preload correction (2026-08-26)
+## 5. Rock-family preload correction (2026-08-26; incomplete after detail pass)
 
-The player renderer already had the confirmed non-elevation rock dispatch:
+The player renderer already had a partial non-elevation rock dispatch:
 `China_Terrain` group 6, local images `#458...#471`, selected by the terrain
 variation byte. `LibraryModel.loadRenderedMap` did not preload that family,
 however. When a rock cell selected one of those IDs, the renderer returned
 `true` without a sprite and the gray terrain-bed diamond from `drawGround`
-remained visible. The loader now retains all 14 IDs. This is a confirmed
-presentation-only omission; it is separate from the unresolved prey marker and
-movement contracts.
+remained visible. The loader now retains those 14 IDs, but the detailed pass
+found that the original has three families (`#458...#471`, `#472...#485`,
+`#486...#499`) and that each family contains 8 single-cell, 4 2×2, and 2 3×3
+frames. The existing preload/catalog/render path is therefore still
+incomplete; see [rock-terrain-detail.md](./rock-terrain-detail.md). This is
+separate from the unresolved prey marker and movement contracts.

@@ -76,7 +76,10 @@ newly added native footprints; the farmstead producers are now placeable.
 ## 4. Terrain families (unlocks the mountain fix)
 
 Keys `0x60x` (archive 3 = China_Terrain) resolve to: rock `0x606` → group 6
-(first #458, 14 frames); bare `0x603` → group 3 (#247, 59 frames); grass
+(#458…#471, 14 frames), copper rock `0x607` → group 7 (#472…#485, 14
+frames), and the second ore rock `0x608` → group 8 (#486…#499, 14 frames);
+each rock family is partitioned into 8 single-cell, 4 2×2, and 2 3×3 frames.
+Bare `0x603` → group 3 (#247, 59 frames); grass
 `0x602/0x604` → groups 2/4 (#202/#336); water `0x605` → group 5 (#386);
 sand `0x60e` → group 14 (#1138); water variants `0x61a…0x61c` → groups 26–28.
 `CityCanvasTerrainRenderer` now draws the rock family for non-elevation rock
