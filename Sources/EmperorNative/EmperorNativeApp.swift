@@ -10,20 +10,18 @@ struct EmperorNativeApp: App {
 
     init() {
         usesFixedSmokeWindow = ProcessInfo.processInfo.arguments.contains("--ui-smoke-fixed-window")
-        if usesFixedSmokeWindow, let visibleSize = NSScreen.main?.visibleFrame.size {
-            defaultWidth = max(1_120, min(1_240, visibleSize.width - 60))
-            defaultHeight = max(680, min(700, visibleSize.height - 60))
-        } else {
-            defaultWidth = 1_240
-            defaultHeight = 760
-        }
+        defaultWidth = EmperorTheme.classicViewportSize.width
+        defaultHeight = EmperorTheme.classicViewportSize.height
         NativeDiagnostics.record("Emperor Native 1.0.0 starting")
     }
 
     var body: some Scene {
         WindowGroup("皇帝：龙之崛起") {
             ContentView(library: library)
-                .frame(minWidth: 1_120, minHeight: 680)
+                .frame(
+                    minWidth: EmperorTheme.classicViewportSize.width,
+                    minHeight: EmperorTheme.classicViewportSize.height
+                )
                 .background(
                     FixedWindowConfigurator(
                         contentSize: usesFixedSmokeWindow
@@ -76,94 +74,88 @@ private struct EmperorAppCommands: Commands {
         }
 
         CommandMenu("游戏") {
-            Button(library.gameSpeed == 0 ? "继续时间" : "暂停时间") {
-                library.setGameSpeed(library.gameSpeed == 0 ? 1 : 0)
-            }
-            .keyboardShortcut(.space, modifiers: [])
-            .disabled(library.section != .city)
-            Button("暂停／继续（P）") {
-                library.setGameSpeed(library.gameSpeed == 0 ? 1 : 0)
-            }
-            .keyboardShortcut("p", modifiers: [])
-            .disabled(library.section != .city)
+            if library.frontEndStage == .play, library.section == .city {
+                Button(library.gameSpeed == 0 ? "继续时间" : "暂停时间") {
+                    library.setGameSpeed(library.gameSpeed == 0 ? 1 : 0)
+                }
+                .keyboardShortcut(.space, modifiers: [])
 
-            Divider()
+                Button("暂停／继续（P）") {
+                    library.setGameSpeed(library.gameSpeed == 0 ? 1 : 0)
+                }
+                .keyboardShortcut("p", modifiers: [])
 
-            Button("暂停") {
-                library.setGameSpeed(0)
-            }
-            .keyboardShortcut("0", modifiers: [])
-            .disabled(library.section != .city)
-            Button("一倍速度") {
-                library.setGameSpeed(1)
-            }
-            .keyboardShortcut("1", modifiers: [])
-            .disabled(library.section != .city)
-            Button("二倍速度") {
-                library.setGameSpeed(2)
-            }
-            .keyboardShortcut("2", modifiers: [])
-            .disabled(library.section != .city)
-            Button("三倍速度") {
-                library.setGameSpeed(3)
-            }
-            .keyboardShortcut("3", modifiers: [])
-            .disabled(library.section != .city)
+                Divider()
 
-            Divider()
+                Button("暂停") {
+                    library.setGameSpeed(0)
+                }
+                .keyboardShortcut("0", modifiers: [])
 
-            Button("浏览工具") {
-                library.selectConstructionTool(.inspect)
-            }
-            .keyboardShortcut("b", modifiers: [])
-            .disabled(library.section != .city)
-            Button("住宅工具") {
-                library.selectConstructionTool(.house)
-            }
-            .keyboardShortcut("h", modifiers: [])
-            .disabled(library.section != .city)
-            Button("道路工具") {
-                library.selectConstructionTool(.road)
-            }
-            .keyboardShortcut("g", modifiers: [])
-            .disabled(library.section != .city)
-            Button("清理树木") {
-                library.selectConstructionTool(.clearLand)
-            }
-            .keyboardShortcut("c", modifiers: [])
-            .disabled(library.section != .city)
-            Button("拆除工具") {
-                library.selectConstructionTool(.demolish)
-            }
-            .keyboardShortcut("x", modifiers: [])
-            .disabled(library.section != .city)
-            Button("旋转建筑") {
-                library.rotateConstructionTool()
-            }
-            .keyboardShortcut("r", modifiers: [])
-            .disabled(
-                library.section != .city
-                    || !library.constructionTool.supportsRotation
-            )
-            Button("取消当前操作") {
-                library.cancelCurrentInteraction()
-            }
-            .keyboardShortcut(.escape, modifiers: [])
-            .disabled(
-                library.section != .city
-                    || (
-                        library.constructionTool == .inspect
-                            && library.selectedMilitaryUnitIDs.isEmpty
-                    )
-            )
+                Button("一倍速度") {
+                    library.setGameSpeed(1)
+                }
+                .keyboardShortcut("1", modifiers: [])
 
-            Divider()
+                Button("二倍速度") {
+                    library.setGameSpeed(2)
+                }
+                .keyboardShortcut("2", modifiers: [])
 
-            Button("返回战役大厅") {
-                library.returnToCampaignList()
+                Button("三倍速度") {
+                    library.setGameSpeed(3)
+                }
+                .keyboardShortcut("3", modifiers: [])
+
+                Divider()
+
+                Button("浏览工具") {
+                    library.selectConstructionTool(.inspect)
+                }
+                .keyboardShortcut("b", modifiers: [])
+
+                Button("住宅工具") {
+                    library.selectConstructionTool(.house)
+                }
+                .keyboardShortcut("h", modifiers: [])
+
+                Button("道路工具") {
+                    library.selectConstructionTool(.road)
+                }
+                .keyboardShortcut("g", modifiers: [])
+
+                Button("清理树木") {
+                    library.selectConstructionTool(.clearLand)
+                }
+                .keyboardShortcut("c", modifiers: [])
+
+                Button("拆除工具") {
+                    library.selectConstructionTool(.demolish)
+                }
+                .keyboardShortcut("x", modifiers: [])
+
+                Button("旋转建筑") {
+                    library.rotateConstructionTool()
+                }
+                .keyboardShortcut("r", modifiers: [])
+                .disabled(!library.constructionTool.supportsRotation)
+
+                Button("取消当前操作") {
+                    library.cancelCurrentInteraction()
+                }
+                .keyboardShortcut(.escape, modifiers: [])
+                .disabled(
+                    library.constructionTool == .inspect
+                        && library.selectedMilitaryUnitIDs.isEmpty
+                )
+
+                Divider()
+
+                Button("返回战役大厅") {
+                    library.returnToCampaignList()
+                }
+                .keyboardShortcut("m", modifiers: [.command, .shift])
             }
-            .keyboardShortcut("m", modifiers: [.command, .shift])
-            .disabled(library.section != .city)
         }
     }
 }

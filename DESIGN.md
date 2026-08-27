@@ -1,324 +1,517 @@
 ---
-version: alpha
-name: Imperial Bronze Chronicle
-description: "Emperor Native 的经典中国古代城市营造界面系统：地图优先、铜褐器物感、金色信息层级与清晰的 macOS 原生交互。"
-colors:
+version: reproduction-alpha
+name: Emperor Original Application Reproduction
+description: "Emperor Native 的玩家界面以复刻《皇帝：龙之崛起》原版应用为核心目标；原版素材、构图、尺寸、状态和交互优先于重新设计。"
+goal:
+  player-ui: "faithful-reproduction"
+  diagnostics-ui: "native-development-surface"
+reference-artifacts:
+  original-executable:
+    name: "Emperor[EN].exe"
+    sha256: "8a6d2df1015cb75d797546d117da5f82b86fd08726090c2a13d853b9009d6753"
+    pe-timestamp: "2003-02-15T00:40:52"
+    use: "development-only-static-behavior-verification"
+    limitations: "locally installed proprietary binary, never a runtime or test dependency"
+  widescreen-chinese-executable:
+    name: "Emperor[CH].exe"
+    sha256: "dbdeca1ec2720f2387e1673bfbb901e9bad832179355ea897cfa7536e17ac15a"
+    use: "development-only-cross-build-static-verification"
+    limitations: "repacked widescreen variant with four extra packer functions and patched display constants; never the classic geometry baseline or a runtime/test dependency"
+  static-analysis-corpus:
+    path: "local/source"
+    generated-at: "2026-08-12"
+    generator: "Ghidra 12.1.2 headless plus deterministic split, rename, reorganize, compare, and merge scripts"
+    inputs: "the two hash-identified executables above"
+    merged-output-sha256: "ed16d59e6ebda8b967a7c4b03c2c0cce42e1d4b605db9f7cb916b52d6aa90056"
+    functions-index-sha256: "d668e032f70d5eb12f31b7f1c34a6231a5635dd10a3fc80dea03c700641eb4e7"
+    strings-index-sha256: "a650c52b5eb08527551422100f658fa3f5d2034ad8d9e75fda524ba9ffb83113"
+    coverage: "26064 shared identical functions, 16 differing addresses retained as paired variants, and 4 CH-only packer functions"
+    use: "development-only indexed control-flow research after authored data is exhausted"
+    limitations: "generated decompiler output; inferred types, heuristic local names and topic paths; ignored local artifact, never original source code or a runtime/test dependency"
+  behavior-video:
+    path: "local/BV1uau26gEVV.mp4"
+    sha256: "c02126617dffa148c231d3031de4ba8ce043ccfa8f054b3d1ed23a870e5035be"
+    duration: "380.553s"
+    encoded-size: "1920x1076"
+    use: "behavior-and-state-only"
+    limitations: "widescreen-patched-canvas, fixed-art-scaling-or-cropping, video-compression, uploader-watermark"
+  extended-playthrough-video:
+    path: "local/BV1W4411971F_p2.mp4"
+    source: "https://www.bilibili.com/video/BV1W4411971F/?p=2"
+    sha256: "1c1468623f91a5df8737f1ef6427621b12677571c0b88b0dcf7aaa7fd54c7f9d"
+    duration: "608.433s"
+    encoded-size: "1920x1080"
+    use: "behavior-and-state-only"
+    limitations: "widescreen-patched-canvas, video-compression, uploader-watermark, commentary-overlay"
+  maintenance-and-siege-video:
+    path: "local/BV1Au4y1T78t.mp4"
+    source: "https://www.bilibili.com/video/BV1Au4y1T78t/"
+    sha256: "f18fd8394f3d32ae7a2893d115a4a6d2b0825425d43917ff3c0620e5bcb1e6b3"
+    duration: "1053.440s"
+    encoded-size: "1920x1080"
+    use: "building-maintenance-failure-and-invasion-behavior"
+    limitations: "widescreen-patched-canvas, video-compression, uploader-watermark, commentary-overlay, edited-playthrough"
+  original-user-manual:
+    path: "GameData/EmperorManual.pdf"
+    use: "original interaction and capacity rules"
+    limitations: "scanned manual screenshots and text describe the Windows build; they are not a pixel baseline for the macOS canvas"
+reference-order:
+  - original-runtime-assets
+  - hash-identified-original-program-behavior
+  - hash-identified-static-control-flow
+  - undistorted-original-application-screenshots
+  - original-behavior-and-data
+  - platform-compatibility
+  - temporary-fallbacks
+geometry:
+  classic-logical-width: 1024px
+  classic-logical-height: 768px
+  window-min-width: 1024px
+  window-min-height: 768px
+  window-default-width: 1024px
+  window-default-height: 768px
+  city-map-column-width: 800px
+  control-panel-width: 224px
+  top-interface-height: 40px
+  top-roof-trim-height: 12px
+  control-panel-header-height: 34px
+  category-rail-width: 54px
+  panel-content-width: 170px
+  construction-slot-width: 54px
+  construction-slot-height: 53px
+  construction-submenu-row-height: 24px
+  construction-submenu-panel-gap: 89px
+  construction-submenu-fallback-width: 194px
+  population-advisor-height: 280px
+  command-row-height: 36px
+  minimap-width: 138px
+  minimap-height: 138px
+  bottom-navigation-height: 40px
+  map-message-panel-height: 116px
+fallback-colors:
   background-app: "#0E110E"
   surface: "#381F11"
   surface-deep: "#1B1109"
   surface-raised: "#4A2611"
   surface-control: "#4D2E18"
-  primary: "#F0BA40"
-  on-primary: "#261409"
-  secondary: "#A66329"
-  tertiary: "#C72E1A"
-  on-surface: "#FFF8E8"
-  on-surface-muted: "#C8B9A3"
-  success: "#6FAF68"
-  warning: "#E58B2A"
-  error: "#C72E1A"
+  highlight-gold: "#F0BA40"
+  border-bronze: "#A66329"
+  text-light: "#FFF8E8"
+  warning-gold: "#E58B2A"
+  danger-red: "#C72E1A"
   placement-valid: "rgba(85, 185, 106, 0.58)"
   placement-invalid: "rgba(217, 65, 50, 0.62)"
-  overlay-scrim: "rgba(0, 0, 0, 0.62)"
-typography:
-  display:
-    fontFamily: "SarasaTermSCNerd-Bold"
-    fontSize: 28px
-    fontWeight: 700
-    lineHeight: 1.15
-    letterSpacing: -0.01em
-  headline-lg:
-    fontFamily: "SarasaTermSCNerd-Bold"
-    fontSize: 20px
-    fontWeight: 700
-    lineHeight: 1.2
-  headline-md:
-    fontFamily: "SarasaTermSCNerd-Bold"
-    fontSize: 17px
-    fontWeight: 700
-    lineHeight: 1.25
-  headline-sm:
-    fontFamily: "SarasaTermSCNerd-SemiBold"
-    fontSize: 14px
-    fontWeight: 600
-    lineHeight: 1.3
-  body-md:
-    fontFamily: "SarasaTermSCNerd-Regular"
-    fontSize: 13px
-    fontWeight: 400
-    lineHeight: 1.45
-  body-sm:
-    fontFamily: "SarasaTermSCNerd-Regular"
-    fontSize: 12px
-    fontWeight: 400
-    lineHeight: 1.4
-  label-md:
-    fontFamily: "SarasaTermSCNerd-SemiBold"
-    fontSize: 11px
-    fontWeight: 600
-    lineHeight: 1.25
-  label-sm:
-    fontFamily: "SarasaTermSCNerd-SemiBold"
-    fontSize: 10px
-    fontWeight: 600
-    lineHeight: 1.2
-  caption:
-    fontFamily: "SarasaTermSCNerd-Regular"
-    fontSize: 9px
-    fontWeight: 500
-    lineHeight: 1.25
-  metric:
-    fontFamily: "SarasaTermSCNerd-Bold"
-    fontSize: 12px
-    fontWeight: 700
-    lineHeight: 1.2
-rounded:
-  none: 0px
-  subtle: 2px
-  dialog: 4px
-  native-card: 12px
-  native-modal: 22px
-  full: 9999px
-spacing:
-  none: 0px
-  base: 4px
-  xs: 4px
-  sm: 8px
-  md: 12px
-  lg: 16px
-  xl: 24px
-  xxl: 32px
-  window-min-width: 1120px
-  window-min-height: 680px
-  window-default-width: 1240px
-  window-default-height: 760px
-  hud-height: 48px
-  panel-width: 286px
-  panel-header-height: 34px
-  category-rail-width: 54px
-  command-row-height: 36px
-  minimap-width: 156px
-  minimap-height: 112px
-components:
-  imperial-hud:
-    backgroundColor: "{colors.surface-raised}"
-    textColor: "{colors.primary}"
-    typography: "{typography.label-md}"
-    rounded: "{rounded.none}"
-    height: "{spacing.hud-height}"
-    padding: "{spacing.md}"
-  control-panel:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.on-surface}"
-    rounded: "{rounded.none}"
-    width: "{spacing.panel-width}"
-    padding: "{spacing.none}"
-  panel-header:
-    backgroundColor: "{colors.surface-deep}"
-    textColor: "{colors.primary}"
-    typography: "{typography.headline-sm}"
-    rounded: "{rounded.none}"
-    height: "{spacing.panel-header-height}"
-    padding: "10px"
-  button-primary:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.label-md}"
-    rounded: "{rounded.none}"
-    padding: "{spacing.sm}"
-  button-secondary:
-    backgroundColor: "{colors.surface-control}"
-    textColor: "{colors.on-surface}"
-    typography: "{typography.label-md}"
-    rounded: "{rounded.none}"
-    padding: "{spacing.sm}"
-  button-selected:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.on-primary}"
-    typography: "{typography.label-md}"
-    rounded: "{rounded.none}"
-    padding: "{spacing.sm}"
-  map-hint:
-    backgroundColor: "{colors.surface-deep}"
-    textColor: "{colors.on-surface}"
-    typography: "{typography.body-sm}"
-    rounded: "{rounded.none}"
-    padding: "9px"
-  mission-dialog:
-    backgroundColor: "{colors.surface-raised}"
-    textColor: "{colors.on-surface}"
-    typography: "{typography.body-md}"
-    rounded: "{rounded.dialog}"
-    padding: "{spacing.xl}"
-    width: "620px"
-  minimap:
-    backgroundColor: "{colors.surface-deep}"
-    rounded: "{rounded.none}"
-    width: "{spacing.minimap-width}"
-    height: "{spacing.minimap-height}"
 ---
 
-# Emperor Native Design System
+# Emperor Native 原版应用复刻规范
 
-## Overview
+## 核心目标
 
-Emperor Native 是面向 macOS 的《皇帝：龙之崛起》原生重实现。界面应让玩家感觉自己在使用一套古代中国城市治理器具，而不是现代 SaaS 仪表盘：地图和原版运行时素材是主角，界面像包围地图的铜木框架，信息密集但秩序清楚。
+Emperor Native 的玩家界面不是受《皇帝：龙之崛起》启发的现代重设计，也不是一套可自由扩展的“古风设计系统”。它的核心目标是：在 macOS 上尽可能忠实地复刻原版应用，包括画面构图、逻辑尺寸、原版素材、控件密度、状态反馈、信息层级、交互顺序和视觉节奏。
 
-设计气质来自参考截图中的四个稳定特征：
+判断一个玩家界面改动是否正确时，首要问题不是“它是否更现代、更整洁或更符合一般 SwiftUI 习惯”，而是：
 
-- **地图优先：** 城市地图或叙事插画占据最大面积，控制面板停靠在边缘，不以浮动卡片遮挡主要内容。
-- **铜册质感：** 面板使用深褐、赭石和低对比度纹理；一像素金铜色线条组织层级。
-- **帝王金强调：** 标题、数值重点和选中态使用金色，红色只用于危险、破坏、失败或少量品牌时刻。
-- **古典框架、原生行为：** 外观向经典游戏致敬，文字、焦点、键盘操作、菜单和辅助功能仍遵循现代 macOS 习惯。
+1. 原版在同一状态下显示什么？
+2. 它位于哪里、占多大、使用哪张素材和哪种状态？
+3. 操作后是否产生与原版相同的可见反馈？
+4. 在不破坏复刻的前提下，是否保留 macOS 必需的输入、窗口和无障碍能力？
 
-界面分为两个层级：
+除非功能在原版中确实不存在且为完成原生移植所必需，否则不得自行重组玩家界面、增加常驻控件、替换信息层级或创造新的视觉语言。开发便利、个人审美和通用设计经验不能凌驾于原版证据。
 
-1. **玩家界面**包括战役选择、任务说明、城市地图、建造栏、任务结果和存档流程。它必须使用本文件的经典铜册语言，优先使用方角、边框和色块组织信息。
-2. **资料与诊断界面**包括地图/战役数据浏览、解析状态和开发诊断。它可以使用 `NavigationSplitView`、系统菜单和原生控件，也可以使用 `native-card`、`native-modal` 圆角；但色彩、排版和信息层级应与玩家界面保持亲缘关系。
+## 范围边界
 
-参考图片位于开发机的 `/Users/zoomzhao/Downloads/emperor/`，用于观察构图、色彩和交互密度。可运行的游戏素材（地图、战役、精灵、音频等）解压在仓库根目录 `GameData`，供本地开发与测试，并由打包脚本复制到应用包 Resources。
+界面分为两个明确隔离的范围：
 
-当文字规则与 YAML token 冲突时，以 token 为准。实现中的集中式主题值应引用这些 token 的等价值，避免在各个 View 中继续增加零散颜色和尺寸。
+- **玩家界面：严格复刻。** 主菜单、帐号与游戏模式、战役流程、任务说明、城市画面、右侧控制栏、世界地图、消息、目标、存档以及结果界面，都以原版应用为目标。这里不使用现代卡片式重设计。
+- **资料与诊断界面：可以原生。** 地图浏览、解析结果、开发诊断和内部工具可以使用 `NavigationSplitView`、系统表格、原生菜单和标准 macOS 控件，但不得改变玩家界面的构图或混入游戏画面。
 
-## Colors
+原版行为与 macOS 平台规则冲突时，功能正确性、可访问性和系统安全规则优先；这种偏差必须保持最小，并在代码或本文件中说明原因。
 
-配色以深铜褐为骨架，以暖金为信息高光。界面不能大面积使用纯白或系统蓝；地图本身的草地、水体、建筑和人物颜色应保持真实，不套统一棕色滤镜。
+## 证据与优先级
 
-- **Primary / Imperial Gold (`#F0BA40`)：** 标题、当前工具、当前分类、关键数字和焦点状态。一个局部区域通常只保留一个最强金色焦点。
-- **Surface Brown (`#381F11`)：** 右侧面板、工具栏和经典对话框的基础面。
-- **Deep Ink Brown (`#1B1109`)：** 地图提示、凹陷列表、迷你地图底槽和强分隔区域。
-- **Raised Bronze (`#4A2611`)：** 顶栏渐变的亮端、对话框和轻微抬升的区域。
-- **Control Brown (`#4D2E18`)：** 未选中的按钮和工具格。
-- **Border Bronze (`#A66329`)：** 1px 分隔线和控件描边；可按上下文降到约 72% 不透明度。
-- **Text Ivory (`#FFF8E8`)：** 深色表面上的主文字。辅助文字使用 `on-surface-muted`，不要仅依赖低透明度导致不可读。
-- **Imperial Red (`#C72E1A`)：** 拆除、失败、严重告警和危险态；不可作为普通按钮的第二主色。
-- **State colors：** `success` 表示达成或合法，`warning` 表示资源/条件受限，`error` 表示失败或非法。状态必须同时使用图标或文字，不能只靠颜色。
+实现和评审按以下顺序使用证据：
 
-资源图层可保留与地图语义一致的颜色：食物/水为青色、木材为绿色、石材为灰色、黏土为橙色。覆盖层应半透明，必须让地形和格子边界仍可辨认。
+1. **原版运行时素材与数据。** 仓库根目录 `GameData` 中的界面精灵、地形、建筑、人物、调色信息、文本和音频是第一手来源。
+2. **原版程序行为与控制流。** 对本机合法安装的原版程序进行只读运行观察；数据仍不足时，可按上方哈希核对可执行文件，并使用 `local/source/` 的索引化反编译语料做静态调用流验证。原版程序及其反编译语料不得复制进仓库跟踪内容、应用包或测试夹具。
+3. **原版应用截图。** 截图用于确认组合方式、坐标、层级、裁切、状态和视觉密度。开发机参考集位于 `/Users/zoomzhao/Downloads/emperor/capcap-*.png`。
+4. **原版可观察行为与数据关系。** 当静态截图不能说明交互时，以原版运行结果、数据表和连续状态截图为依据。
+5. **macOS 兼容需求。** 窗口、键盘、文件选择、权限、辅助功能和系统错误可以采用原生机制，但玩家可见的游戏表面仍应接近原版。
+6. **临时替代。** 只有在原版证据尚未解析时才能使用占位实现，并明确标记为待替换；占位样式不能反过来成为新规范。
 
-## Typography
+禁止根据单张截图中不可见的内容自由补完。遇到证据冲突时，记录截图状态、资源 ID、游戏版本和推断，不把推断写成已确认事实。
 
-界面统一使用 `Sarasa Term SC Nerd`（[laishulu/Sarasa-Term-SC-Nerd](https://github.com/laishulu/Sarasa-Term-SC-Nerd)）。正文使用 Regular，层级标题与标签分别使用 SemiBold/Bold；数值直接利用该字体的中英文严格等宽特性。应用按字体的 PostScript 名称选择字重，字体不可用时回退到相同字号和字重的 macOS 系统字体，不能因字体缺失阻断启动或降低辅助功能可用性。
+参考截图只用于开发和比对，不得成为运行时文件依赖。打包后的可运行素材必须来自应用 Resources 中的 `GameData`。
 
-该字体采用 SIL Open Font License 1.1。当前工程不复制字体二进制；开发与运行环境需要单独安装字体。若发行包以后嵌入字体，必须同时包含上游版权声明及完整 OFL 许可证。
+### 本地静态控制流语料 `local/source`
 
-- **Display：** 仅用于任务胜利/失败、重大章节标题和少量空状态。
-- **Headline：** 面板名称、任务名称和对话框标题；金色标题通常使用 `headline-sm` 或 `headline-md`。
-- **Body：** 任务说明、事件详情和帮助信息。连续中文正文不得低于 `body-md`。
-- **Labels：** 紧凑 HUD、工具名称、分类和次要操作。7.5–9pt 的遗留微型标签只能用于空间固定且有 tooltip/辅助标签的图标格，新界面默认不低于 `label-sm`。
-- **Metrics：** 国库、人口、日期、速度和坐标等使用 Bold；Sarasa Term SC Nerd 本身为等宽字体，因此无需叠加另一套数字字体。
+`local/source/` 是 2026-08-12 由 Ghidra 12.1.2 headless 生成的开发期只读研究语料，输入严格绑定页首两个 SHA-256 已记录的可执行文件。它不是泄露或恢复出的原始源码，也不是本项目实现可直接移植的代码库；它的用途是在 `GameData`、手册和运行观察仍不能说明原版控制流时，定位原版函数、常量、分支和调用关系。
 
-标题采用简洁的中文，不使用全大写英文。正文行宽控制在约 34–48 个中文字符；长任务说明使用左对齐和 1.4–1.5 行高。省略文字时必须通过 tooltip、详情面板或辅助功能名称提供完整内容。
+当前语料包含：
 
-## Layout
+- `decompiled-en.c` / `decompiled-ch.c`：两版完整反编译输出，文件头记录输入哈希；EN 有约 26,080 个函数，CH 有约 26,084 个函数。
+- `merged.c` 与 `split-merged/`：按地址合并的可搜索函数树；26,064 个函数在两版之间相同，16 个地址保留 `_en.c` / `_ch.c` 双变体，另有 4 个 CH 打包器相关函数。
+- `split-merged/functions-index.csv`：由函数地址和名称定位文件；`strings-index.csv`：由字符串定位引用函数。主题目录、文件 slug 和局部变量名均由后处理启发式生成。
+- `compare-report.tsv`：CH/EN 地址级比较。当前差异主要覆盖 `1024 × 768` 到 `1920 × 1080` 的显示常量补丁、一个字体字重差异及打包入口差异；因此 EN 版仍是经典几何的规范基准。
 
-主城市界面采用固定框架的 **Map-first Docked Shell**：
+研究顺序固定为：先在 `GameData`/手册中找常量和语义；字符串问题查 `strings-index.csv`，地址问题查 `functions-index.csv`；再读取目标函数的调用者、被调用者和相关全局写入路径；若地址位于比较报告中，同时核对 EN/CH 两个变体；最后用合法运行观察或原版数据交叉验证。不得对整个 164 MB 语料做无目的通读，也不得在已有索引可回答时重新进行泛化 PE 字符串/立即数扫描。
 
-- 窗口最小内容尺寸为 `1120 × 680`，默认 `1240 × 760`。
-- 顶部 `48px` HUD 横跨窗口；地图占据剩余空间；右侧面板固定 `286px`，不压缩地图高度。
-- HUD 从左到右依次为文件/选项/帮助、任务与城市身份、弹性空白、国库/人口/日期、情境徽记。高频指标必须单行可扫读。
-- 右侧面板按“上下文标题 → 当前任务提示 → 分类轨道与建造目录 → 常驻工具条（浏览/道路/清理/拆除）→ 资源图层 → 命令/速度 → 迷你地图”排列。
-- 分类轨道宽 `54px`；建造目录使用两列紧凑网格。固定宽面板内不得再嵌套横向滚动。
-- 常驻工具条始终可见，使用原版道路图块与清除/拆除图标；不要把长城分类按钮当作修路入口。
-- 迷你地图保持 `156 × 112` 的核心画面，并与方向控制共同停靠在面板底部。
-- 地图上的临时提示贴近左上安全边距 `8px`，只展示当前工具和一句可执行指令。
+反编译器恢复出的 C 类型、参数边界、结构体含义和表达式可能不精确；`src`、`dst`、`idx` 等局部变量名以及 `ui/`、`building/` 等目录归类只是可读性提示，不是原始符号或原始模块边界。只有明确地址上的字面量、字符串引用、分支、数据访问与调用关系，在检查上下文并获得交叉佐证后，才可形成 `confirmed` 结论。单个函数看起来“像某机制”、文件名含有某主题、或两版反编译文本相同，都不足以独立证明完整行为。
 
-使用 4px 基线节奏。面板内部常用 8px，顶栏与较大组合使用 12px，叙事/诊断页面的大区块使用 16–24px。紧凑不等于拥挤：不同任务域之间用边框或 12px 以上空间明确分组。
+所有准备影响实现或测试的静态结论必须先沉淀到 `docs/exe-research/`：写明二进制哈希和版本、函数地址/变体、相关调用链、原始常量或资源 ID、数据/手册/运行佐证、`confirmed` / `inferred` / `unknown` 分类以及仍未恢复的控制流。实现应以这份可审阅的研究记录为合同，独立编写 Mac Native 代码；不得逐句翻译或复制反编译函数。由于 `local/` 被 git 忽略且可能在其他机器不存在，源代码、构建、测试、回放和应用 Resources 均不得读取该目录。
 
-战役和任务选择页沿用参考图的“双册页”逻辑：左侧为可选择列表，右侧为插画/说明/目标。大幅背景图仅在有合法运行时素材时使用；否则用深色渐变和地图预览，不制造仿原版插画。
+### 视频证据的使用边界
 
-窗口变窄时保持 HUD、右侧面板和地图的职责，不把所有内容改造成纵向卡片流。资料与诊断页则可以随窗口宽度在三栏、两栏之间响应式变化。
+仓库本地参考视频为 `local/BV1uau26gEVV.mp4`，SHA-256 为 `c02126617dffa148c231d3031de4ba8ce043ccfa8f054b3d1ed23a870e5035be`，时长约 `06:20.553`。它连续展示了玩家帐号/模式页面、历史战役选择、任务设置与说明、进入城市、道路拖拽、建造分类切换、建筑合法/非法预览、落成、居民和行人出现等状态，因此是当前交互顺序和反馈节奏的重要证据。
 
-## Elevation & Depth
+但该文件不能作为本项目的画布尺寸或像素颜色基准：它来自高清/宽屏发行环境，画面编码为 `1920 × 1076`。城内状态会扩展地图可视范围并把经典控制栏固定在最右侧，而固定插画前台可能被单独缩放或裁切；这不是本项目已核定的原版 `1024 × 768` 构图。视频还包含压缩噪声、录制缩放和右上角上传者/Bilibili 水印。复刻时必须排除这些发行/捕获层差异，也不得直接复刻视频画幅。经典几何、字体、颜色、裁切和原始素材仍以 `GameData` 与未变形的原版截图为准。
 
-经典界面的层级主要由**色调、凹槽和边框**表达，而不是阴影：
+下列时间段只作为定位索引，边界允许因转场有约 1 秒误差：
 
-- `surface-raised` → `surface` → `surface-deep` 表示从抬升到凹陷。
-- 面板边界和按钮使用 1px `secondary` 描边；内部网格线可以降至 0.5–0.8px 或较低不透明度。
-- 铜褐纹理必须低对比、低频率，只为消除大面积纯色的塑料感；不得影响文字阅读，也不得在每个小控件中使用不同纹理。
-- 地图与控制栏之间使用明确分隔线，不使用大片投影。
-- 只有模态任务结果、系统弹窗或需要阻断地图交互的浮层可使用阴影。背景同时覆盖 `overlay-scrim`，让焦点层级明确。
+| 时间段 | 可观察状态 | 用途 |
+| --- | --- | --- |
+| `00:00–00:04` | 玩家帐号选择；整屏手绘背景上叠中央赭褐面板 | 前台构图、帐号列表与操作层级 |
+| `00:04–00:16` | 历史战役浏览；左侧列表、右上插画、右下说明 | 战役选择的信息分区与选中反馈 |
+| `00:16–00:36` | 玩家模式页与战役浏览之间往返 | 返回/继续层级、背景随页面切换 |
+| `00:36–00:51` | 任务设置、难度与任务说明；整屏人物插画上叠矩形面板 | 模态层级、按钮顺序、启动流程 |
+| `00:51–02:50` | 空地图开局、相机移动、长距离道路连续铺设 | 固定 HUD/右栏、拖拽预览、合法/非法端点 |
+| `02:50–04:20` | 住宅及其他建筑选择、预览、落成、顾问消息面板 | 实际等角精灵预览、占地、提示与建造后状态 |
+| `04:20–06:20` | 多分类切换、更多服务/行政建筑、居民和行人出现 | 目录不重排、模拟反馈、地图/迷你地图同步 |
 
-编织/回纹边框可以抽象为简洁的一像素双线或重复几何纹理；需要原版边框位图时，使用已打包的运行时素材，而不是额外描摹参考截图。
+视频帧只应提取到临时目录用于分析。除非专门建立经授权的参考基线，不将视频或衍生帧加入应用 Resources，也不让测试依赖其存在。
 
-## Shapes
+第二份连续通关参考为 `local/BV1W4411971F_p2.mp4`，对应夏朝第 1 关第 2 段，时长约 `10:08.433`。它补充确认了农业生产链、风水覆盖层、建筑信息窗和任务胜利结算；与首份视频一样，只用于行为、状态和信息层级分析，不作为像素、色彩或宽屏画布基准。
 
-玩家界面的形状语言是**建筑式方正**：
+| 时间段 | 可观察状态 | 用途 |
+| --- | --- | --- |
+| `00:00–00:12` | 任务说明矩形面板与进入城市 | 任务前台层级、按钮密度 |
+| `00:12–02:30` | 城市运行、分类切换、地区吸引力与风水查看 | 固定 HUD、覆盖层入口与全建筑着色 |
+| `02:31–03:20` | 农业生产建筑选址、预览与落成 | 农场本体、道路入口、建设顺序 |
+| `03:20–04:25` | 围绕农场连续铺设独立田块，超范围田块变红 | 田块服务半径、容量、合法/非法反馈 |
+| `04:25–08:15` | 城市持续运行、运输与供给链成熟 | 模拟反馈、暂停建造、目录保持 |
+| `08:16–08:55` | 仓储与生产建筑信息窗 | 左上直角信息面板、表格密度、确认入口 |
+| `09:28–10:08` | 达成目标后显示胜利结果 | 中央直角结算面板、目标摘要与后续操作 |
 
-- HUD、停靠面板、按钮、工具格、列表槽、迷你地图和地图提示使用 `rounded.none`。
-- 经典任务对话框最多使用 `rounded.dialog`，边框比圆角更重要。
-- 小型状态灯、方向标记、头像和确有语义的徽章可以使用圆形；普通按钮不要随意变成胶囊。
-- 资料/诊断界面的原生卡片可以使用 `native-card`，结果模态可使用 `native-modal`。同一局部容器内不要混用方角经典控件与大圆角玻璃卡片。
-- 图标优先使用清晰的 SF Symbols 或打包游戏数据中运行时解析出的图像。图标必须服务于识别，不以龙、印章、阴阳等符号作无意义装饰。
+第三份参考 `local/BV1Au4y1T78t.mp4` 重点补充建筑维护事故与敌军攻城。上传标题把大规模倒塌归因于「风水」，但连续画面和解说把约 `06:50–07:10` 出现的普通倒塌指向巡察塔未覆盖；因此不得把风水评价直接实现为失火或坍塌触发器。视频只证明事故的可见过程，不能据此推导阈值、住宅宽限或攻城选取算法；这些规则必须服从原版数据与手册。
 
-选中态通过金色填充和深色前景形成实心反转；悬停态只做轻微提亮；按下态略微变暗；禁用态降低饱和度并保留可读标签。键盘焦点必须有独立、可见的焦点环，不能只复用选中态。
+| 时间段 | 可观察状态 | 复刻规则 |
+| --- | --- | --- |
+| `06:50–07:10` | 未被巡察路线覆盖的既有建筑倒塌，道路保留，原址持续显示废墟 | 需要巡察的住宅与非住宅使用同一原版维护阈值；倒塌移除原设施并留下占地不变、可手动清理的阻塞废墟 |
+| `07:10–08:00` | 玩家补建巡察塔，解说指出此前建筑没有得到巡察 | 只有具备劳工且巡察员实际经过相邻道路的建筑获得风险削减；建筑信息需能说明当前火险、坍塌风险和最近巡察时间 |
+| `14:10–16:40` | 敌军与攻城器械进入城区后，多处建筑成片燃烧 | 只用于确认敌军可逐个攻击/点燃建筑；不得实现为“破城后按距离批量烧毁”。纵火必须由已实现的具体兵种、投射物或建筑攻击产生 |
+| `14:10–17:10` | 火焰在原址持续可见，随后留下需要清理的残骸 | 失火不能让建筑瞬间无痕消失；当前事故期叠加原版火焰素材，之后保留与原占地相同的废墟 |
 
-## Components
+原版 `Model/GeneralBuildingConfig.txt` 明确规定火险倍率上限 `5`、检查槽数 `4`、失火阈值 `1000` 和损坏阈值 `1000`；`Model/EmperorBuildingModels.txt` 提供各建筑的火险增量、损坏增量、风险削减、结构强度及五档难度倍率。对原版 `Emperor[EN].exe` 的静态核对进一步确认：每次维护轮次先随机选择一个 `0..<Frequency` 的全局槽，只有稳定槽位相同的建筑进行火险更新，增量再乘 `1...Multiplier` 的随机数；火险或损坏达到（不是超过）阈值即触发事故，且同轮先判断坍塌。原生实现必须使用可复放的确定性随机流复刻该分布，不能改成“每四个月固定增加五倍”。日常维护不得再用结构强度派生阈值，也不得给住宅另造宽限倍率。结构强度保留给实际燃烧/攻城伤害。
 
-### Imperial HUD
+原版手册同时规定巡察豁免：农业部除捕鱼码头外、军事部除兵器坊外、美化部、所有纪念建筑及纪念部建筑都不需要巡察；其他建筑（包括住宅）需要巡察。可执行文件中的巡察员逻辑使用建筑 `#124` 的风险削减字段，每次有效巡察分别从火险与损坏风险减去 `50` 并钳制到零；当前按月模拟把“本月实际经过建筑相邻道路”折叠为一次有效巡察，不得把仅处于巡察塔理论半径内视为已巡察。危险覆盖层显示的是实际风险柱：越接近失火/坍塌，柱体越高、越红，不是简单的巡察路线二值着色。
 
-高度固定 48px，使用由 `surface-raised` 到 `surface-deep` 的水平渐变，底部一条半透明金线。菜单保持 macOS 原生行为。指标由金色图标、弱化标签和象牙白等宽数值组成；不得添加可滚动内容或超过两行的信息。
+失火阈值不是普通建筑无动画地消失：可执行文件先把建筑内部燃烧状态由 `0` 置为 `1`，随后通过原版火焰族绘制燃烧并把占地转换为 `#161` 废墟单元；坍塌走独立的破坏入口。当前月级模拟把这段亚月事故过程呈现为“当月火焰覆盖 + 同占地持久废墟”，这是时间粒度折叠，不得据此声称巡察员能在原生实现中实时改道救火；实时灭火与蔓延只有在恢复原版逐帧火场状态机后才能标记为完成。
 
-### Docked control panel
+事故消息正文必须来自 `Model/EmperorEventmsg.txt`，不能由原生界面另写说明。火灾使用 `PHRASE_fire_title` 与 `PHRASE_fire_initial_announcement`，坍塌使用 `PHRASE_collapsed_building_title` 与 `PHRASE_collapsed_building_initial_announcement`；该文件按 GB18030 读取。已知玩家帐号可替换 `[player_name]`，未知时必须保留占位符并视为未完成的称谓绑定，不能杜撰默认君主名。消息列表不显示未经原版证据确认的地图坐标详情。其他事件的标题、阶段正文与变量替换尚未闭环，不得套用这两类事故的选择规则。Native 当前对未闭环的战役事件（request/invasion/earthquake/drought/flood/strike/gift/tribute）保持 fail-closed：消息列表只呈现已闭环的 fire/collapse 事故记录，不为这些事件渲染标题或正文，也不因事件入队而自动弹出消息面板；没有已闭环消息时，消息按钮不打开空面板。不得用杜撰中文文案填充，任何接入都必须先闭环原版短语族、阶段正文与变量替换。
 
-面板宽 286px 且占满 HUD 以下高度。所有工具、目标提示、速度和迷你地图都在此处闭环，避免在地图四周再堆第二套悬浮工具条。标题栏高 34px，金色标题与当前上下文值左右分布。
+维护事故和战斗破坏必须保持两条独立因果链，但共用事故呈现、消息和废墟清理流程。普通事故消息使用上述原版短语；其中火灾正文提到巡视员灭火，坍塌正文建议增建巡视员塔楼，均不得扩写为原版未写出的劳工提示。敌军纵火只有在具体作战单位真正对建筑实施攻击时才能产生。原版手册确认步兵可纵火、弩兵与骑兵可射燃烧箭、投石车会造成结构伤害或发射燃烧弹，而战车不能纵火；在逐单位建筑攻击尚未实现前，不得用城市突破报告代替这套过程。
 
-### Category rail and construction tiles
+火灾表现使用 `destruction.sg3` 的 `fire1…fire5`（图像 `#201…#450`），坍塌尘云使用同档案的 `dust_clouds_01…05`。`China_General` 图像 `#2231` 属于 `China_Banners.bmp`，不得作为火焰素材。
 
-分类轨道为纵向单选集合，当前分类使用 `button-selected`；非当前分类使用 `button-secondary`。建造工具为两列网格，图标在上、10–11px 标签在下。浏览、道路、清理树木与拆除另有常驻横条，避免埋在分类页里被误认成长城/纪念入口。工具必须有 tooltip、稳定的辅助功能标识和明确的选中状态。成本不足或任务禁用时使用真正的 disabled 状态，不仅降低透明度。
+自然灾害同样服从原版事故状态：地震可使建筑坍塌或失火，洪水会摧毁大多数结构；被摧毁的建筑、库存和所属行人消失，但原占地留下必须手动清理的废墟。原版概率尚未从可执行文件恢复时，允许使用明确标注且可复放的确定性选择，但不得无痕删除建筑或只写事件日志。
 
-### Buttons
+## 当前城内基准截图
 
-经典按钮使用方角、铜色 1px 描边和紧凑内边距：
+本规范所依据的城内截图包含一个 macOS 窗口：完整图片为 `2124 × 1680` 物理像素、约 `144 dpi`；去掉黑色留边和 macOS 标题栏后，游戏内容为 `2048 × 1536` 物理像素，即 Retina 2× 下精确的 `1024 × 768` 逻辑画布。
 
-- 主要/选中：金底深字。
-- 次要：控制褐底象牙白字。
-- 危险：红色图标或描边并带明确动词，如“拆除”“删除存档”；不要让整页充满红色。
-- 图标按钮在固定面板中视觉尺寸可为 22–26px，但交互命中区应尽量达到 28px，并提供 tooltip。
+截图确认了以下不可随意改变的结构：
 
-同一组按钮的高度和标签基线必须一致。速度控制是单选分段组，暂停、1×、2×、3× 的选中态必须一眼可见。
+- 地图列宽 `800px`，右侧控制栏宽 `224px`。
+- 顶部游戏界面总高 `40px`，包含原版装饰边条和紧凑信息行。
+- 右栏左侧分类轨道宽 `54px`，右侧内容列宽 `170px`。
+- 地图从顶部界面下方一直延伸到底部，是绝对视觉主体。
+- 暂停提示是靠近地图顶部的原版横幅，而不是现代浮动 toast 或圆角卡片。
+- 顾问信息位于右栏上部；建造目录使用原版细线分隔的三列图标槽，而不是两列带文字标签的大按钮。
+- 建造目录下方是原版小图标工具行；右栏下部保留滚动内容区、迷你地图和原版底部导航。
+- 迷你地图为 `138 × 138` 的原版逻辑尺寸，视口框直接叠加在地图上；此前 `112 × 112` 的估计与 2× 原版截图及已核定界面实现不符，不再使用。
+- 底部导航使用原版界面精灵和原版排列，不额外加入常驻税率、资源图层、旋转或速度控制条。
 
-### Mission guide and narrative panels
+这些数值是复刻基线，不是响应式设计建议。若后续从原版资源或更多截图中得到更精确的边界，应修正集中式几何值和本文件，而不是在单个 View 中添加补偿常量。
 
-任务目标始终先显示“要达成什么”，再显示“下一步做什么”。最多在固定右栏中展示两个高优先级目标，其余内容进入详情。完成态使用绿色勾选，未完成态使用金色方向提示；不要把完整教程正文塞进右栏。
+## 固定画布与窗口
 
-战役说明、任务导语和目标页可以使用较大的铜册面板，内部正文槽采用 `surface-deep`。标题和正文都应保持高对比，不仿照原版截图中偏低对比的细小黄字。
+玩家界面使用固定 `1024 × 768` 逻辑画布：
 
-### Map canvas, placement and overlays
+- 默认和最小内容尺寸均为 `1024 × 768`。
+- 画布内部不得响应式重排、拉伸列宽、改变控件比例或让长文本扩大父容器。
+- 更大窗口只允许按整数倍整体缩放；地图、精灵和界面位图使用 nearest-neighbor 插值。
+- 无法达到下一整数倍时，画布保持当前倍数并居中，额外区域使用与当前原版画面相符的安静背景延展。
+- 经典前台的原版插画默认保持 1× 居中；除非原版证据表明可缩放，否则不放大背景主体。
+- 小于基线的普通可调整窗口不应出现。系统强制进入更小空间时，宁可保持完整画布并提供明确的窗口恢复方式，也不能压缩或重排右栏。
 
-地图必须是视觉重心。建筑、道路、人物和地形使用原版运行时精灵或确定性的原生渲染，不在其上加统一色调蒙版。原地图的 `offMap` 存储边界不显示为可玩的菱形格；可玩陆地缺少直接图像记录时使用原版草地底图补绘，不能暴露纯色解析占位。建筑放置预览应显示对应原版精灵的半透明落点形态，并完整覆盖 footprint：合法为 `placement-valid`，非法为 `placement-invalid`，并在提示中说明原因；只有没有可用精灵的道路、清理或调试工具可以仅使用格子反馈。拖拽、点击、旋转和相机移动必须共享同一套命中测试与视觉反馈。
+固定宽度容器必须真正约束其子布局。SwiftUI 的 `.frame(width:)` 不等于自动裁剪内部理想尺寸；分类轨道、顾问文本、按钮行和建造网格都必须在各自的明确宽度中换行、截断或缩放，不能反向撑大 `224px` 右栏。
 
-地图提示使用 `map-hint`，只保留工具名和一条动作指令。浏览模式悬停住宅时显示当前等级、下一等级以及实时升级缺口；点击后进入完整建筑详情。需要长期阅读的信息进入右栏或对话框。
+## 原版素材优先
 
-### Minimap
+玩家界面的图像选择遵循以下规则：
 
-迷你地图固定在右栏底部，显示地图全貌、当前视口边框和可点击跳转。颜色来自地图语义而不是面板装饰色。方向按钮与迷你地图靠近，但不得遮挡地图内容。
+- 已解析到对应状态的原版界面精灵时，必须使用原版精灵。
+- 正常、悬停、按下、选中和禁用状态应使用原版状态帧，不用统一的金色填充重新解释。
+- 建筑、道路、地形、人物、覆盖层、光标、面板纹理、边框和图标都应优先从原版档案中运行时解析。
+- 原版位图缩放必须关闭平滑插值，不描边重绘、不加统一滤镜、不套现代阴影。
+- SF Symbols 只能作为尚未解析原版图标时的临时开发回退，不能成为玩家界面的首选图标系统。
+- 不为“更清晰”而把原版小图标改成带文字的大卡片；完整名称通过原版信息区、tooltip 或辅助功能标签提供。
 
-### Dialogs and mission outcomes
+若原版资产缺失，优先寻找同一界面家族中的合法状态或相邻帧；只有确认没有可用素材后才创建代码绘制的回退。
 
-玩家流程中的对话框使用铜册表面、细金铜边框和明确标题。结果模态在 62% 黑色遮罩上居中，最大宽 620px。胜利和失败分别使用成功绿与帝王红，但正文仍为象牙白；主操作放在最前，重玩、读取和返回保持清楚的次级层级。
+## 颜色、纹理与边框
 
-系统级文件选择、错误恢复和权限提示保留原生 macOS 控件，不伪装成游戏内面板。
+原版素材本身定义最终颜色。页首 `fallback-colors` 仅供尚无原版像素素材的临时代码绘制表面使用，不是要求覆盖原图的品牌色板。
 
-### Loading, empty and error states
+- 面板以原版赭褐纹理为主，保留可见但不过分强化的像素噪声和格纹。
+- 边框、分隔、回纹与凹槽优先使用原版切片；无可用切片时才以 1px 铜褐线近似。
+- 金黄用于原版已使用的标题、数值、警告和状态，不把每个选中项都改成大面积金色按钮。
+- 红色、绿色、蓝色等状态颜色以原版图标和反馈为准，不套通用产品设计语义。
+- 不使用玻璃材质、半透明毛玻璃、渐变品牌背景、大圆角卡片或大面积系统蓝。
+- 地图保持原始颜色，不添加统一棕色滤镜。
 
-加载状态说明正在索引、解析或初始化的具体对象。错误状态提供原因与可执行恢复动作。空状态使用一个图标、短标题和一句说明即可，不为填满空间增加装饰图。
+## 字体与文本
 
-### Accessibility and input
+文本目标是匹配原版截图中的字号、字重、对齐、像素密度和行距，而不是建立一套新的现代排版体系。
 
-所有图标按钮、地图工具、速度项、任务和结果操作都需要稳定的 accessibility label/identifier。保留已有自动化依赖的标识。键盘快捷键至少覆盖保存、载入和旋转；菜单项与按钮应呈现相同命令状态。正常正文保持 WCAG AA 级对比，颜色状态同时用文字/图标表达，并尊重 Reduce Motion 与系统字体可读性需求。
+- 优先确认原版字体资源、位图字形和实际测量结果。
+- 在原版字体尚未合法取得或解析时，使用最接近截图指标且可稳定显示中文的本地字体作为回退；回退字体不得写成永久视觉目标。
+- `Sarasa Term SC Nerd` 可以继续作为开发回退，但不再是玩家界面的规范性字体。
+- HUD、顾问栏和按钮文字保持原版的紧凑尺寸，不擅自放大并迫使其他区域重排。
+- 原版为单行的文本应保持单行；超出时按原版方式截断或缩放。原版允许多行的信息必须在固定内容列内换行，不能贡献超出父容器的理想宽度。
+- 翻译后的中文比原文长时，先调整措辞以贴近原版占位，再考虑最小幅度的字体缩放；不得扩大栏宽。
+- tooltip、VoiceOver 标签和辅助描述可以比屏幕文字更完整，但不改变可见布局。
 
-## Do's and Don'ts
+## 城内界面组成
 
-- Do 让地图、原版运行时精灵和任务内容占据主要视觉面积。
-- Do 从集中式主题/Token 取色和尺寸；新增共享 UI 时先复用现有组件。
-- Do 使用金色表示当前焦点和关键层级，使用一像素铜色边框建立结构。
-- Do 让固定右栏中的每个区块回答一个明确问题：目标、工具、图层、命令或导航。
-- Do 为紧凑图标提供 tooltip、键盘焦点和辅助功能名称。
-- Do 在实现有意改变视觉系统时，同一变更中更新本文件。
-- Don't 把玩家界面改成一串半透明、大圆角、悬浮的通用 SwiftUI 卡片。
-- Don't 用系统蓝作为品牌主色，也不要大面积使用纯白背景、玻璃材质或重投影。
-- Don't 同时高亮多个主要动作；红色不得用于普通导航或装饰。
-- Don't 为“古风”牺牲中文正文可读性，或引入来源不明的书法/像素字体；Sarasa Term SC Nerd 的正文最小字号仍必须遵循本规范。
-- Don't 把参考截图目录当作运行时数据源；可运行素材应来自仓库根目录 `GameData` 或应用包内的同名 Resources。
-- Don't 让装饰图案盖过数据、地图反馈、任务目标或错误原因。
+### 顶部界面
+
+顶部界面复刻原版装饰边条、菜单、资源指标、生肖日期与右侧顾问标题。城市栏优先使用 `China_Interface` #1221 的蓝瓦檐和编织木纹，右侧标题使用 #1223 的顶部裁切并与左栏连续。菜单与指标必须保持单行和原版顺序：文件/选项/帮助、铜钱国库、劳工数、五行与生肖、日期；不显示原版没有的「国库/人口/水/食物/日期」文字标签。任务说明、城市身份或开发状态不得常驻插入原版没有的位置。
+
+macOS 系统菜单栏可以提供等价命令，但不能用系统 toolbar 替换游戏画布内的原版顶部界面。
+
+### 地图画布
+
+地图使用原版投影、地形、建筑和人物素材，是画面的主体。可玩区域、`offMap` 边界、层级排序、动画帧、道路连接和相机裁切都应以原版结果为基准。
+人物只有在模拟状态实际跨越路径格时才从上一格插值；水夫的 `1/1/2` 微步节奏和运货车每 20 个原始微步跨一格的节奏在未跨格的更新中保持原地。鸟的 `BUILD_MAP_PREY_POINT` 出生点和路线尚未从地图对象层闭合前不合成临时路线。人物图像中尚未闭合原版阴影合成语义的纯红 `0x7C00` 标记保持透明，不得渲染为灰色矩形或自行绘制替代阴影；实现合同与未知边界见 `docs/exe-research/figure-motion-presentation.md`。
+
+放置预览优先显示对应原版建筑精灵、占地和光标反馈。若为了可访问性增加合法/非法说明，应尽量放入 tooltip、VoiceOver 或与原版提示区一致的位置，不增加永久悬浮卡片。
+
+地图上的暂停、警告、教程和操作提示应复刻原版横幅或消息样式。只有系统级错误和权限问题可以使用原生 macOS 对话框。
+
+### 右侧分类轨道
+
+分类轨道固定 `54px`，从顶部界面下缘延伸至底部导航上缘。分类顺序、图标、状态帧和间距以原版截图与界面档案为准。
+
+当前已核定的原版顺序为：住宅、农业、工业、商业、安全/供水、行政、娱乐、宗教、军事、美化、纪念/长城。对应 `China_Interface` 四态精灵族的基帧依次为 `#1323`、`#1327`、`#1331`、`#1335`、`#1339`、`#1343`、`#1347`、`#1351`、`#1355`、`#1359`、`#1319`；每族连续四帧为 normal、hover、selected、disabled。道路、清地、拆除等常驻工具不占用上述分类位置。
+
+轨道按钮以图标为主，不添加常驻文字标签。可访问名称通过 tooltip 和 accessibility label 提供。选中效果使用原版选中状态，不创造新的大面积高亮规则。
+
+### 顾问与建造内容
+
+右侧内容列固定 `170px`。上部顾问区复刻原版按钮、人口/容量、迁入意愿和限制原因的分区与居中方式。
+
+建造目录按原版使用三列图标槽。图标槽的边界、空槽、选中状态、禁用状态和滚动行为都要与原版一致：
+
+- 不改为两列大按钮。
+- 不在每个槽中常驻显示工具名称。
+- 不因某条说明、建筑名称或数字改变列宽。
+- 不把原版下方工具行拆成多个现代功能分组。
+- 原版每个分类保留六个固定顶层槽，不把本关可用项重排到前面。`0x53A760` 按 `0x855888` 的固定分类行填槽；无可用成员时禁用原槽。`0x53A690` 只对选择器 `#63/#204/#205/#222`（组 `14/35/36/38`）执行单成员折叠并保持原按钮族；其他建筑与资源子菜单即使只剩一个成员，也仍进入状态 `6` 显示一行。
+- 多成员建筑选择器点击后进入独立的原版菜单状态，不在右栏六槽内翻页。`0x404040` 切换到状态 `6`，`0x5B7030` 在地图右缘向左绘制按原始成员顺序排列的纵向条目，行距 `24px`，通过 `0x822A3C` 的成员数偏移表使列表底部对齐；选择条目后进入放置，右键取消并返回城市面板。精确字体、行底图和缩略图比例尚缺同状态无失真截图，当前可暂用原版面板纹理与既有建筑缩略图，但不得改成系统菜单、popover 或在右栏内滚动。
+- 资源选择器 `#88` 是陆路贸易城市菜单并在选中城市后放置贸易站 `#58`，`#87` 是水路贸易城市菜单并放置贸易码头 `#56`。两者的组成员都是帝国城市的一基序号；`0x5DB960/0x5DB9C0/0x5DBA20/0x402890` 按城市槽顺序排除玩家城市、关闭/不可用路线、已拥有实体贸易建筑的城市，并按陆/水路筛选。状态 `6` 显示城市名和 `#58/#56` 缩略图；选中后持久化实际城市槽再进入放置。Native 必须复用已解析的伙伴 ID、名称、开放状态、路线类型和实体建筑关系，不得从地图距离臆测路线。
+- 纪念分类后四槽由 `0x53A760` 按 `0x855D88` 的固定候选顺序 `76…84, 92, 93, 253…268` 动态填充，按钮族统一为 `#1653`。`0x53A5D0` 只匹配当前 type-2 纪念任务；`0x53A4E0` 将任务 `#85/#86` 与布局 ID `#253…#268` 视为同族。原版先取前四个匹配候选，再按精确 building ID 清除地图中已有项目/子建筑对应槽；空洞保留，后项不前移。没有 type-2 任务时六槽全空；任务 `#76…#86` 保留劳工营 `#233` 与工匠行会 `#234`，任务 `#92/#93` 只保留工匠行会。
+- `#253…#268` 已确认分别加载 `Model/Mon_Great_Wall_01_subs.txt` 至 `Mon_Great_Wall_16_subs.txt`，每个 ID 是一套完整多部件长城布局，不是施工阶段或已有墙段的推进动作。完整布局的创建路径会旋转、校验全部子建筑占地，并创建整套相对坐标对象；但 `0x402A50` 在普通城市模式对 `#253…#268` 返回不可用，只在地图编辑器模式统一返回可用。因此战役中的长城位置是地图预置对象，不是玩家从布局按钮自由放置，与手册“位置预定”一致。载入城市后 `0x5636B0 → 0x563720` 根据活动任务为这些预置对象切换显示族：任务 `#85` 为土长城，`#86` 为石长城，无长城任务时为废墟族。`0x42D790/0x42D360/0x5631B0/0x563850` 进一步确认预置长城由普通多态 `Building` 记录持久化：根与子件使用连续对象 ID，保留原始子件 index 和前后链接；子件 monument state 分别保存当前施工 phase、已交付物料计数、显示族和方向，根件另存整体 phase。Native 已解析全部 16 套布局（每套 9 个整体施工 phase、4 个城门和 4 个道路子件）并输出世界坐标子件清单；Badaling 已进一步确认为布局 `#257`，根点 `(55,32)`、无旋转，其 45 个 `4×4` 墙/塔、4 个 `2×2` 门和 4 个 `1×1` 道路占地恰好覆盖 `Badaling.map` 的 740 个土长城图像格。`Badaling.map/Badaling_S.map` 内 53 条 `cMonumentBldg` 记录已确认使用 base schema 4、wrapper schema 1、state schema 10 和 324 字节步长；所有 building/sub-index/坐标均与布局一致，根 whole phase 为 8，墙/塔/门/道路分别保存其 authored 终点 10/11/1/2；schema-10 中当前阶段现场更新、木材、内部作业、石料计数分别位于相对 building-ID 的 `+193/+207/+211/+219`，两份八达岭档案的四项均为零。四类 vtable 的 phase count 为 `11/12/2/3`，并统一以 `current >= phaseCount-1` 判定子件完成，故这些终点字段的确是逐件完成态。`0x565410` 也已闭合为按每件 authored phase/base 权重计算总分母，完成件贡献完整分母，最后返回整数 `sumNumerator*100/sumDenominator`；因此未经处理的 Badaling archive 必为 `100%`，`0x5604C0` 对任务 `#85/#86` 的目标阈值为 `>99`。但秦四唯一目标正是 `cMonumentGoal [85,0]`，任务说明与胜利文本又明确要求玩家建造土长城；地图包 `4 Qin Dynasty.pak` 的嵌入块 `203..<261` 与 `Badaling.map` 完全同字节，`Badaling_S.map` 也保存相同终态，不能用“战役另含未完成地图”解释。`0x563850` 解释了终态来源：新建多部件对象先清零，而地图编辑器或废墟显示模式会把各件写到 `phaseCount-1`、整体写到终点以展示完整遗迹。直接机器码现已闭合哈希指定 1.0.1.0 的新任务载入链：`cMonInfo` schema-10 读支在 `0x562CE6` 原样读回 sub/whole phase；共同尾部 `0x562E1F` 调 `0x563720`，后者从静态战役目标表识别秦四任务 `#85` 并只把 `state+0x5C` 切为土墙模式 `2`，不改 phase。`0x42E6A0 → 0x534BF0` 后续只再次刷新显示族并实例化目标；长城 vtable `0x7B887C` 的载入后 `+0x1C8` 钩子落到只返回 0 的 `0x413A00`，不存在此前怀疑的启动归零。共同目标链在普通首个月结（新城计数器归零后的 `51×16=816` 个内部模拟步）检查唯一目标，故静态控制流会让该终态档案于第一次月结满足胜利条件。这是已确认的发行数据/控制流与任务文案、预期建造流程冲突，不是可据此发明初始状态的许可；精确同版本的首个可玩运行观察仍未知。Native 现只读解析并随城市存档原样保留 53 件，但维持 fail-closed：不得把 `#85` 加入完成集合、启动施工，亦不得把疑似首月自动胜利包装成预期复刻合同。`0x57C650/0x57D090/0x57D640` 已闭合每类子件 phase 的精确需求：土墙材料 phase 每件请求 `200` 单位木材 `#10`，石墙对应请求石料 `#20`，两类墙在中间 phase 交替请求原版内部劳工作业 `#100/#101`；八达岭土墙总计木材 `27,000`、作业 `#100 = 27,700`、`#101 = 27,000`，石墙模式总计石料 `37,400`、两类作业各 `27,000`。劳工 `#10` 的两类状态链已确认分别为 `7→8→9→10/11` 和 `17→18→19→20/21`，均可在返回前连续重派同类待办；现场更新通过 `0x570670` 按各子件动画 ticks 完成，需求数 `200/100` 不是更新次数，西王母逐动画记录减半 ticks 并将协调器容量翻倍。四类长城子件 vtable 的 `+0x8C` 均指向通用交付函数 `0x571DA0`：它只接受类型 `19`、状态 `20` 且商品 subtype 匹配的载具，按当前需求把木材写入 `cMonInfo+0x2C`、石料写入 `+0x38`，以 `min(载量, 200-已交付)` 精确裁剪并把余量留在车上。共同协调器仍按稳定顺序合并同商品请求并在 `400` 截断批次，`0x56EA60` 创建一名 type-19 主载具与两名 type-20 跟随者；需求表里的工匠 `#80/#82` 不是该载具类型。仓库 `#54`、贸易码头 `#56`、贸易站 `#58` 的通用来源筛选与扣货合同同样适用。Native 已解析、存档四项计数并实现该目标交付 reducer；长城道路接入与路由缓存已按后文合同闭合并由真实 Badaling fixture 验证。实时城市派车仍因意图中的秦四首个可玩未完成状态未知而不接线。`0x56D170/0x566B30` 已确认逐件完成只执行有界 phase 递增、通用协调器登记与精灵刷新；`0x56C880` 仅对建筑 `#78…#82` 含专用整体 phase 后处理，不含长城布局 `#253…#268`，故长城没有额外的协调器奖励、解锁、地形改写或清理副作用，完成后仍由通用月结目标链按 `>99%` 判定。`0x57C650/0x57D640/0x57D090` 的需求量、`0x448AC0` 的 authored ticks、`0x56A910/0x56A940` 的协调器上限、`0x56D4D0` 的派工容量以及 `400` 单位材料批次均不读取难度；原版长城施工合同没有直接难度缩放，难度只能经已独立恢复的经济、用工等外围系统间接影响进度。作业 `#100/#101` 的动作语义现已闭合：`#100` 使用 `SprMain:Laborer` 的提篮/卸土状态族并在到场时触发 `laborer_dump2`（#97），表示运送并卸下泥土；`#101` 使用现场夯土状态族并选择 `walker_tamping`（#133），表示夯实/整备当前层；手册的“劳工运送或挖掘泥土、逐层准备”和长城“多层夯土”说明与该控制流一致。这些是确认的动作研究描述，不是恢复出的两个玩家可见标签；原版文本表与纪念工程报告路径未发现独立名称，Native 不得自行展示“运土/夯土”等新文案。意图中的秦四首个可玩未完成状态仍未闭合；普通玩家界面必须始终禁用这些布局按钮，旧有“点击地图上 4×4 墙段推进”的玩家入口不得展示，旧 Native 的 `3600` 工时及木材/石料混合常量不得作为复刻规则使用。完整字段证据见 `docs/exe-research/great-wall-map-state.md`。
+- 郑国渠任务 `#83` 同样是地图预定的普通多部件纪念工程。`Mon_Grand_Canal_subs.txt` 确认它由 33 个连续的 `4×4 SB_CANAL` 子件组成，索引 `10/16/22` 是道路穿越件；五个 authored phase range 的有效子件索引为 `0…4`，终点 `5` 是不可写哨兵，不是四轮逐段点击。`Haunxian.map` 在 `(4,68)` 无旋转预留了恰好 528 个 `China_Mon_Grand_Canal` 本地图像 `#201` 格，与这 33 件占地逐格一致；其全图字节网格本身没有统一保存 `#83`、sub-phase 或子件索引，但文件尾部的 MFC 对象区另有恰好 33 条 `cMonumentBldg` 记录。`0x427430` 的基础建筑序列化字段顺序确认这些记录逐条保存坐标 `(4+4n,68)`、building `#83` 和 sub-index `n=0…32`，其中索引 0 是根件，总数不是“根件再加 33 子件”。`SB_CANAL` vtable 的 `0x579960/0x5799B0` 进一步确认 sub-phase `0/1` 由劳工 `#10` 执行内部作业 `#102`（需求函数原样返回数量 `0`），sub-phase `2` 由石匠 `#82` 为每件交付石料 `#20` 至 `400`，总石料 `13,200`。作业 `#102` 的完整人物链现已闭合：状态 `0x0C` 抵达只移除初始派工记录并可把同一劳工重派为状态 `0x0D`；再次抵达后进入状态 `0x0E`，经 `0x4D5F60 → 0x564E00 → SB_CANAL+0x38/0x570670` 执行现场作业。`SB_CANAL.txt` 的 authored ticks 使 sub-phase `0` 每件需 `210` 次现场人物更新、sub-phase `1` 需 `180` 次；西王母效果逐条整数除二后为 `105/90`。缺少 authored vector 时的 `>50` 回退为 51 次，但两劳工 phase 均不使用；完成进入 `0x0F` 并由 `0x566B30` 推进子件 phase。`EmperorFigureModels.txt` 明确把劳工 `#10` 与石匠 `#82` 的速度都设为表值 `8 = 1⅓`；普通人物 vtable `0x7AFE60` 的 `+0x114 → 0x4C9310`、工人状态处理器 `0x4D6060` 与通用移动器 `0x4E47A0/0x4E7EB0/0x4E83E0` 进一步闭合其移动节奏：每三次人物更新按 `1/1/2` 推进子步，后续每 20 子步跨一个路径步，新建路径以进度 20 起步而在首个子步立即前进。`0x56D690 → 0x4E83E0` 又确认工人首先以模式 `1` 使用四邻 BFS 寻路，`0x5B0360` 仅在派生 `UInt16 & 0x0B0C != 0` 时准入候选格；这是准入掩码而非阻挡掩码，单独接受位为 `0x4/0x8/0x100/0x200/0x800`。`0x5AD440` 已直接确认普通裸地派生为 `0x10`、道路为 `0x4`、普通水面/阻挡地形为 `0x2`；其 `0x100` 分支实际要求 terrain 位 `0x400` 与道路同时存在。`0x5AD440` 的 active Ferry `#210` 后处理又通过 `0x4C6D30`，把 `0x800` OR 到表 `0x81FF18` 明确给出的 `6×6` 渡口占地，并沿对象保存的 `0/2/4/6` 四向连接链逐格 OR `0x200`；两位均被主掩码接纳，因此渡口占地及跨水连接是显式主路通道。故纪念工人沿道路/特定通道移动而不会横穿裸地；其余准入位，尤其 `0x8`，仍需闭合语义。主路失败时切到模式 `19`，由 `0x520DE0` 在另一张运行时格分类表 `DAT_01339270` 上以 `cellClass & 0x4C001CCE != 0` 和最多 `100000` 次扩展重试；这里不是直接读取 `.map` terrain flags。两者共用普通人物的 `1…999` 路径槽，每槽最多保存 500 个方向步。初始路线与阻挡仲裁均已闭合：下一格被拒时方向置 `9`，保留路径与索引并在后续人物更新重试同一格；两种初始寻路都失败时方向置 `10` 且不保留路径，下一次更新重新寻路。劳工 `#10` 和石匠 `#82` 不属于 `0x4E2560` 的特殊人物碰撞组，不会走其人物链接/绕行分支。`0x52E7C0` 已确认 `.map/.sav` 的 `0x32C40` 字节 terrain layer 原样读写为 `228×228 UInt32` 的 `DAT_00F6A9E0`；两张路由网格不是存档层，而是载图后依次由 `0x5AD8F0`（清零并重建 `UInt16 DAT_013789C0`）和 `0x522810`（以 `0x80000001` 初始化并重建 `UInt32 DAT_01339270`）从 terrain、实时建筑占用及附加格层派生的缓存。建筑创建和纪念物状态变化会对扩展矩形按同样顺序调用 `0x5AD440 → 0x5AD940/0x5223B0` 局部失效。来源、尺寸、初始化值、整图/局部重建顺序及渡口后处理均已确认；尚未闭合的是两个派生函数中其余附加格位和建筑 vtable 谓词的完整语义，因此仍不能把寻路掩码直接套到 terrain flags，也不能仅按端点距离推算总耗时。`0x56BB40/0x56D170` 确认 sub-phase `3` 在其他五类施工/运输队列清空后自动推进至终态 `4` 并重绘，不请求工种、物料、计时器或玩家点击；终态 `4` 不再入队。手册虽声明需要木料，但实际构建管线的全部需求只来自上述两个 vtable 槽，building `#83` 也没有额外注入分支；运行时不要求木料，手册此处作为冲突证据保留，不得据此发明数量。`0x56D4D0/0x56A910/0x56A940/0x56D8A0` 已恢复供应规则：劳工营初始容量 3、各工匠行会初始容量 1，并按建筑效率 `<50/<70/<80` 分别扣 `3/2/1`；协调器通常允许工匠总数 3、劳工总数 8，每人待办上限依次为劳工 7、人物 `#80/#81/#82` 的 `5/3/3`。`0x564E80 → 0x5A8420(3)` 及英雄效果状态确认翻倍分支由英雄 `#3` 触发；`EmperorFigureModels.txt` 的 `ALL HEROES` 表将 `#3` 定为西王母，手册也明确她在城中时缩短纪念物建造时间。相同谓词的 `#8` 使使者免费、`#10` 把 `600/800` 间谍费用减半，又分别与孙悟空和孙子的表号及手册能力吻合，因此该语义为已确认的西王母效果，不是难度或全局游戏速度。`0x564B50` 在 coordinator `+0x30/+0x50` 活动作业队列存在时用阈值 `50`，否则为 `30`。一般未完成预置根件随地图载入后自动建立当前 phase 待办；Haunxian archive 的根件为 active state `3`、终态 sub/whole phase `(4,4)`，载入即为 100%，不建立劳工待办，因此原版没有另行“开始营造”按钮或逐段点击入口。秦战役第一关 archive 明确把 “Zheng Guo's Canal” 绑定到 `Haunxian.map` 并以 `cMonumentGoal [83,0]` 要求郑国渠；`cMonumentGoal` vtable 的 `+0x18 → 0x5604C0` 只在根件聚合进度达到 `100%` 时满足该目标。`0x56C880` 的完工后专属清理只覆盖 building `#78…#82`，`#83` 明确无郑国渠专属奖励、解锁或清理写入。通用胜利链 `0x4AC2B0 → 0x4AC650 → 0x55CEE0 → 0x55CE90 → 0x55B6A0` 已闭合：单人模式在普通月结边界遍历当前关全部目标并对各自 `+0x18` 完成谓词做逻辑与，全部为真且无阻断状态才进入统一胜利转场；本关还包含年产物品 `#15` 达 `1,800` 的目标，故仅完成郑国渠不会立刻或单独获胜。Native 已把逐件现场作业、phase-2 普通仓库石料车队、两类路由、调度与全目标合并胜利判定接入确定性城市循环；不得展示旧有“开始营造/选择运河分段施工”入口或继续使用无来源的 `2400` 工时、`600` 木料、`800` 石料与四阶段均分规则。完整证据见 `docs/exe-research/grand-canal-map-state.md`。
+- 备用模式 `19` 的 `0x5223B0` 派生域已闭合为 12 个值：`2/4/8/0x40/0x10000200/0x20000100/0x40000010/0x40000020/0x48000400/0x4C000800/0x4C001000/0x80000001`；`0x4C001CCE` 接纳其中除 `0x10000200/0x20000100/0x80000001` 外的九类。与郑国渠直接相关的十六进制 `case 0x53` 即 building `#83`；`0x416B50` 已确认其 vtable `+0x1EC` 直接返回 building 内嵌的 `+0xC8` 纪念物 state，派生器读取的 `state+0x08` 正是当前子件 phase：phase `0` 派生 `2`，phase `1…` 无道路为 `0x4C001000`、有道路为 `0x40`，三者均准入。不要把它误认成十进制 `#53`；十六进制 `case 0x83` 才是城楼 `#131 → 0x40000020`。城门 `#130 → 0x20000100` 明确不准入；长城布局 `#253…#268` 依父子件状态选择 `2/0x48000400/0x4C000800`，三者均准入。Native 已独立实现“接收两张已派生网格、先 mode 1 后 mode 19”的仲裁器：两者按 `北→东→南→西` 扩展，主模式先四向后八向回溯、fallback 八向回溯，保留原版八方向顺序和等距取向规则；mode 19 的参数 `100000` 采用原版扩展后严格大于才退出的边界（可处理第 `100001` 项），500-byte scratch 则到 500 即失败、成功至多 499 个方向步。主路成功、fallback 成功及双路不可达 fixture 均已验证。该组件不负责 terrain/实时建筑到两张缓存的剩余派生，也不启用施工调度。普通 terrain/building 分支、完整 ID 表和回溯契约见 `docs/exe-research/grand-canal-map-state.md`；尚未语义化的通用 footprint 与其他实时占用分支不得猜测。
+- 主网格写入域的完整索引检查确认：`0x5AD440` 基础派生只产生 `1/2/4/0x10/0x20/0x80/0x100/0x400/0x1000/0x4000`，渡口后处理只再 OR `0x200/0x800`，其余直接写入者只负责清零或写/OR `2`。因此 mode 1 掩码虽包含 `0x8`，该哈希版本没有已恢复的生产者；其证据分类是“准入但无生产者”的确认否定结果，不得给它臆造 terrain/building 语义。
+- 郑国渠地图对象归档的 phase 已由字段边界直接更正：后续 `cMonumentBldg` 对象以 MFC `0x8003` 标记复用已登记类，从一个 building-ID 到下一个的 323 字节跨度由“下一对象标记 2 字节 + 当前对象载荷 321 字节”组成。`0x427430` 必须按地图实际保存的 building schema `4` 读取分支计长（179 字节），随后是 monument wrapper schema `1` 与 `cMonInfo` schema `9`；相对 building-ID，三者关键位置分别为 `-16/+165/+167`，`state+0x08` 当前子件 phase 位于 `+173`，`state+0x14` 整体 phase 位于 `+177`。`Haunxian.map` 与 `MPcanal1.map` 的 33 条对象均为 schema `(4,1,9)`、phase `(4,4)`，因此上一项巨段中“初始整体 phase 0”的旧推断作废：任务地图从第五施工 phase（索引 4）开始。Native 必须从原始对象载荷恢复这 33 条逐子件状态，并让它们进入自身存档；不得再用默认 phase 0 覆盖。
+- 上述归档偏移只对已验证的 `(base 4, wrapper 1, cMonInfo 9)` 成立，不是跨版本常量：`MPcanal4.map` 使用 base schema `3`，`MPcanal5.map` 使用 base schema `5`，`Yangzhou.map` 使用 `cMonInfo` schema `10`。Native 必须先通过精确 schema gate 才读 `+173/+177`；其他版本目前返回“未解码状态”，不得以 schema-9 偏移读取、不得把它们误报成损坏地图。3/5/10 的各自序列化分支仍属待恢复研究范围。
+- Native 已落实上述归档合同：`EmperorMap` 解码 33 条 `GrandCanalMapPartState`，地图开局把它们挂入 `DeterministicAestheticState`，并保存坐标、228×228 全局格索引、building/sub-index、三个 schema 版本、两个 phase、现场劳工作业计数与已交付石料计数。字段为可变、可编码的逐子件状态，旧 format-v1 Native 存档缺字段时仍按空集合/零值兼容；旧四段均分 `GrandCanalProjectRuntime` 只保留解码兼容，新地图城市不再创建它。phase-0/1 劳工和 phase-2 普通仓库石料车队均已接入城市循环并持久化人物/路径/队列状态；其他来源类别与未知占用分支仍保持 fail-closed。
+- Native 路由缓存适配器现已按 `0x5AD440 → 0x5223B0` 的原始顺序实现已恢复分支，并把 terrain word、实时 building 占用、纪念物当前 sub-phase、道路/水面辅助字节、主网格高程分类字节、表面对象状态与通用 footprint vtable 结果保持为互不混淆的输入；只有实际走到尚缺输入的分支才以坐标化研究错误停止。`Haunxian.map` 的 528 个郑国渠格不触及未知谓词，逐格派生为主网格 `0x20 × 507 + 0x04 × 21`、备用网格 `0x4C001000 × 507 + 0x40 × 21`：507 个普通渠格在主网格被 mode 1 拒绝，21 个原始道路交叉格被主网格接纳；备用网格按 building `#83`、存档 sub-phase `4` 与 road 位接纳全部渠格。真实 crossing-to-crossing fixture 已验证主网格无法跨越中间渠格而 mode 19 能抵达；phase fixture 也确认 phase `0` 的无道路格为 `2`，phase `4` 为 `0x4C001000`。`0x471CF0` 同时闭合为 `terrain & 0x44 == 0x44` 且独立 `DAT_00F2B290` 字节非零，此时 fallback 为 `0x40`，字节为零则落回水面 `0x10000200`；`0x4C11B0` 也已精确缩为 building `#26/#27/#28/#194…#199`，在 fallback 中均为 `2`。长城子类分支现也闭合：主缓存由当前子件 phase 生成 phase-0 的 `0x20` 或后续 `2`，均不被 mode 1 接纳；备用缓存要求根件 phase 大于零，门件为 `0x48000400`、墙/塔为 `0x4C000800`、道路件为 `2`，三者均被 mode 19 接纳。`0x5673D0` 把 `#83` 与 `#253…#268` 送入同一多部件接入算法；`0x820038 + size*0x60` 的 24 槽表已闭合 1/2/4 边长的顺时针一格周界。真实 Badaling fixture 精确产生 8 个接入子件 `13…16` 与 `49…52`（四门、四道路），其余墙/塔待办按曼哈顿距离与 authored 顺序借用这些接入。尚未闭合的只限未被地图 fixture 触发的主网格表面对象/图像判定和其他通用 building vtable `+0xCC`；长城实时施工仍因秦四意图中的未完成初态未知而保持 fail-closed，不再因接入/路由未知而阻塞。完整分类见 `docs/exe-research/grand-canal-map-state.md` 与 `great-wall-map-state.md`。
+- 郑国渠调度阈值适用于未完成 phase：可执行文件 `.data 0x859DA0` 把阈值初值设为 `30`，零初始化计数器先加一再作严格比较，故未完成项目在第 31 次 `0x5371A0 → 0x564B50` 原始 scheduler call 才触发。阈值 `50` 只在 `0x56D170` 返回 true、即 coordinator `+0x30` 或 `+0x50` 两类活动作业队列仍非空时启用，不代表“发生自动 phase 后”。`SB_CANAL +0x0C → 0x5786E0` 返回 phase count 5，`+0x10 → 0x570C50` 以 `current >= 4` 判定完成；`0x566B30/0x56D170` 均在 `next >= 5` 时跳过 setter。因此 Haunxian 的 `(4,4)` 已完成，不参与第 31/62 call、不会写成 5。Native 对未完成 phase 保留 counter/threshold 存档，对 terminal archive 直接返回 already-complete 且不消耗计数。
+- 原版 simulation-step 到日历月的频率桥现已闭合，上一项“频率桥未知、不得从 Native 日 tick 调用”的限制由本项取代。`0x536B20` 每个内层 step 调用一次 `0x5371A0`；`0x4AC2B0` 的 `DAT_00C82EF8` 每 `51` step 归零并调用 `0x4AC650`，后者的 `DAT_00C82EF0` 在第 `16` 次执行月结并归零。`0x4AC240` 新城初始化和 `0x42E6A0` 载图路径都把这些计数器归零，因此每个原版月份恒有 `51 × 16 = 816` 个 simulation step，也即 `816` 次 `0x564B50` scheduler call；墙钟速度只改变这些 step 的发出速度，不改变日历计数。Native 仍保留既有每月 30 个确定性存档日作为兼容层，并以累计整数比例 `floor(day × 816 / 30) - floor((day-1) × 816 / 30)` 每日分配 `27/28` 次原始 call，不宣称 Native 日是原版单位。第 30 日的第 816 call 必须放在 Native 月结之后，以保持原版同一步内 `0x4AC2B0` 先月结、`0x564B50` 后调度的顺序。
+- Native 的郑国渠目标完成状态必须由同一份逐子件存档状态派生，不能另注入旧 `MonumentProject` 完成标记：仅当集合仍是 building `#83` 的完整 33 条唯一 sub-index `0…32`，且每条 current sub-phase 与 shared whole phase 都达到终态索引 `4` 时，才把 `#83` 纳入 `completedMonumentBuildingIDs`。`Haunxian.map` 的完整 `(4,4)` 集合因此在载入时已经满足该目标；任何缺件、错 ID、错索引或低于 4 的记录均不满足。
+- 郑国渠 schema-9 的 `cMonInfo` 作业/物料存档字段也已闭合：`cMonumentBldg` vtable `0x7B887C` 的 `+0x08 → 0x5631B0` 调用 building `+0xC8` 内嵌状态，后者 vtable `0x7B886C` 的 `+0x08 → 0x561E30` 给出完整版本分支。schema 后字段并非按运行时偏移平移；`+0x20` 空 MFC 对象引用只占 2 个 archive 字节，因此 phase-0/1 使用的运行时 `cMonInfo+0x1C` 现场劳工作业计数位于 building-ID 相对 `+193`，phase-2 使用的运行时 `cMonInfo+0x38` 已交付石料计数位于 `+219`，两者均为小端 `UInt32`。`Haunxian.map` 与 `MPcanal1.map` 的 33 件两值均为 `0`；Native 逐件保存两项，旧 Native save 缺字段时迁移为 `0`。`0x5371A0` 每个原始 simulation step 先由 `0x4E27E0` 对每个人物调用一次 vtable `+0x28` 更新，再在末尾进入 `0x564B50` 调度；所以当步新派出的劳工/石匠从下一 step 才首次移动，不能在派出当步预走一步。
+- 郑国渠 phase-2 的目标端转移规则由 `0x571DA0` 闭合：仅匹配当前 worker figure ID、人物 type `0x13`、state `0x14`、commodity subtype `0x14` 的货载；接收量为 `min(cargo, 400-delivered)`，逐件 `cMonInfo+0x38` 增加接收量，人物 `+0x82` 保留超出 400 上限的余货。因此这是可变 payload 的精确截断/余货规则，不是“固定一车 100”；Native 的普通物流常量不得套用。供给端也已闭合到库存契约：`0x56E600` 以第一个正数待办的 commodity 为组，在整个 pending 容器中保持枚举顺序聚合同类记录并在原版 double 常量 `400` 处分割，每次向 `0x56EA60 → 0x5D3730/0x5D3A40` 发出不超过 400 的完整请求；人物创建失败时 pending 原样不动，成功时才把已选前缀移入 carrier-bound 容器，跨越 400 的边界记录拆成已绑定前缀与待派余量。state `20` 分货后才从 bound 容器扣数，归零记录立即移除。`0x5D61C0` 只接受 Warehouse `#54`、Trading Quay `#56`、Trading Station `#58`，其中 `#56/#58` 额外排除 commodity trade state `7/9`，且候选的库存 vtable `+0x264` 必须至少等于本次完整请求。Mill `#53` 虽有单独的“至少 400”分支，但其入口 `0x5DB4C0` 只认食物 `#1…#9`，对石料 `#20` 永不可达。选中来源后立即调用库存 vtable `+0x298` 扣货；返回值是未满足余量，实际 payload 为 `requested-remainder`，未扣出任何货物则销毁零载货人物。候选仲裁 `0x5B04A0 → 0x5B0360` 也已闭合：从传入目标格开始，在派生主路网格上按 `0x0B0C` 准入做四邻 BFS，先检查起点、扩展顺序固定为北/东/南/西；每个格按 active-building 枚举顺序扫描候选，因此同格与同深度 tie-break 均确定，不按 ID、直线距离或随机数。多部件入口 `0x5D3730 → 0x567540/0x567130` 会遍历 33 个 authored 子件，仅保留能由 `0x4BA6F0` 找到道路接入格者，并按“该子件世界原点到当前请求子件原点”的曼哈顿距离升序尝试；同距保持 authored index，BFS 真正从各自道路接入格起步，第一个产生任何库存候选的接入格即停止。`0x4BA6F0` 对 `SB_CANAL` 4×4 件读取 `0x820038 + 4×0x60` 的 24 槽表：16 个非零格按上边左→右、右边上→下、下边右→左、左边下→上的一格外圈排列，随后零终止；它优先选择 `0x4AF350` 统计出的全城十个最大连通道路组件（组件规模降序，同规模保持全图扫描发现顺序），同一组件再保持外圈表顺序。人物主调度列 `0x84E784 + type×40` 又确认 `0x56EA60` 创建一名 type `#19` 主车及两名 type `#20` 跟随者；石料车队初始 raw state 分别为 `19/6/8`，跟随链为第二名→第一名→主车。主车到渠边按 `19→20` 分两次人物更新，`0x56ED10` 在 state `20` 中按当前坐标到同 commodity 待办的欧氏距离反复分货，严格 `<` 使同距保持 coordinator 枚举顺序；余货走 state `7→10` 返来源，counter 从 `10→11` 时由来源 vtable `+0x154` 决定实际接收量。全收后 `0x4E2A20` 清空货载并转 `13→12`，抵达保存的来源原点后下一次更新销毁；部分接收则只扣实际接收量，再按新来源类别转 `7/8/9`，无来源转 `6`。出程 direction `10` 还会先以 `0x5688F0(...,1)` 恢复来源请求标志，返程断路不做该写入；两名跟随者在随后自身更新发现主链失效再销毁。direction `9` 已闭合为先释放旧路径：state `19/7` 在当前主网格值不含 `0x8` 时落入 raw state `6`，state `13` 保持不变；该版本主网格写入域没有 `0x8` 生产者，故普通前两者必入 state `6`。state `6` 每次 counter 先加一并在严格 `>30` 时重试来源，因此第 31 次人物更新搜索一次且无论成败归零。phase-2 coordinator 只在 scheduler 真正触发的 pass 进入：初值 `30` 使第 31 call 首次生成/维护 material queue `+0x30`；该活动队列令 `0x56D170` 返回 true 并把后续阈值切到 `50`，因此下一次维护发生在再经过 51 calls 后，而不是每个 simulation step 重建请求。Native 已把这段普通来源车队合同、pending→bound 批次迁移及 phase-2 调度入口实现为可编码核心状态，挂入 `DeterministicAestheticState` 存档并验证稳定同距、余货、空车、延迟、阻塞、重试、断路差异及 `31→50` 调度边界；调度 pass 本身只创建/维护待办；随后的城市接线再按已确认的来源、库存与路由合同扣货、生成并移动普通仓库石料车队。`0x56BB40` 的 x87 条件码现已消除反编译歧义：`400-delivered > 0` 且 worker `#82` 时建立 `+0x30` 的 commodity-20 物料记录；余量等于零时不建立 `+0x50` 石匠人物待办，而是走 `0x56BF53` 建立 `+0x80` 自动记录。只有 `+0x30…+0x70` 全空时，`0x56D170` 才在同一调度 pass 逐件执行 `2→3`、清空 `+0x80` 并返回 false，使阈值回到 30；下一次触发再由 `0x56C880/0x56B920` 把 shared whole phase `2→3`。Native 已实现并测试这条逐件后整体的两-pass 边界。旧 Native save 缺该字段时迁移为空集合。state `6`/部分接收所调用的通用 `0x4E2960` 完整来源优先级、trade state `7/9` 的玩家语义、占用外圈格的特殊调整以及非普通来源返货分支仍未闭合；Native 只对已确认的普通仓库路径自动生成石料人物。
+- 秦一石材厂 `#36` 的路由占用已由对象工厂链而非行业类推闭合：`0x5F0E20 → 0x557340` 的首个判别器 `0x559010` 只接受 `0x24`，随后 `0x558F50` 安装虚表 `0x7B75E0`；其 `+0xCC` 为恒 false 的 `0x416A50`。因此石材厂占用格与已确认仓库一样派生为主网格类 `2`、备用网格类 `4`。该证据只确认 building `#36`，不得推广到其他工业建筑；Native 城市路由投影现只据此开放 `#36`。
+- Native 已接通 phase-2 的普通仓库最小实时闭环：只投影按玩家实际放置顺序存在的 Warehouse `#54`，以其持久化道路接入点作为来源点；scheduler 真正触发物料维护 pass 时，先按完整请求与 `0x0B0C` BFS 选中精确仓库，再确认存在完整 mode-7 路线，之后才从该仓库扣货、把 pending 前缀移入 carrier-bound 容器，并分配一组持久化的主车/两随从 ID。每个原始 step 先更新 step 开始时已存在的车队，再运行 scheduler，所以新车当步不移动；当前坐标、路线 buffer、19/20/7/10/13/12 状态、货载、随从、bound 请求与下一个人物 ID 均可存档恢复。抵达渠边先 `19→20`，下一人物更新才按精确子件交付；余货只按已确认 Warehouse 容量返还同一实体库存并同步 aggregate inventory。Trading Quay/Station `#56/#58` 仍因 raw commodity state `7/9` 无 Native 等价真值而不进入实时来源投影，动态断路后的 state-6 替代供应者搜索也继续 fail-closed。
+- 上述郑国渠巨段中的三个旧结论由本项明确取代。作业 `#102` 不是“状态 `0x0C` 抵达即完成”：该次抵达只由 `0x564AC0/0x56D8A0` 移除初始派工记录并可把同一劳工重派为状态 `0x0D`；再次抵达后进入状态 `0x0E`，再经 `0x4D5F60 → 0x564E00 → SB_CANAL+0x38/0x570670` 执行现场作业。`SB_CANAL.txt` 的 authored ticks 使 sub-phase `0` 每件需 `80+40+50+40=210` 次现场人物更新、sub-phase `1` 需 `50+40+80+10=180` 次；西王母效果逐条整数除二后为 `105/90`。vtable `+0x3C` 的 `50` 只在缺少 authored phase vector 时以严格 `>50` 形成 51 次回退，两劳工 phase 均不使用；完成时人物进入 `0x0F`、清零 `cMonInfo+0x1C` 并由 `0x566B30` 把当前子件 phase 加一。调度阈值也不是“未自动推进 30/自动推进后 50”，而是 coordinator `+0x30/+0x50` 活动作业队列存在时为 `50`、否则为 `30`；Haunxian 存档初始 phase 为 `(4,4)`，不是 `(0,0)`。Native 已实现并存档逐件现场作业计数、phase 转移及实时劳工；只有供应者、占用类与路由缓存均落在已确认合同内才派工，其他状态保持原子化 fail-closed。
+- 郑国渠 task `#102` 的 coordinator 队列也已由直接反汇编闭合：pending 为 `+0x50`、初始派工记录为 `+0x60`、绑定中的 active assignment 为 `+0x70`。每次 scheduler pass 至多新派一名劳工；首次派出只复制 pending 到 `+0x60`，状态 `0x0C` 抵达后才移除该记录、以严格欧氏距离和枚举顺序挑最近同类 pending、从 `+0x50` 移除并绑定进 `+0x70`，继而按 `0x0D→0x0E→0x0F` 完成 authored 现场作业。完成后的重派门只接受 subtype `101` 而明确排除郑国渠 subtype `102`，所以每名郑国渠劳工完成一件后转状态 `0x10` 返回原劳工营，抵达营地才释放其 active monument-worker count。初始派工与绑定后的目标坐标也不可合并：`0x56D690 → 0x567540` 先以渠件道路接入格作劳工状态 `0x0C` 的目标并参与劳工营距离仲裁，抵达后 `0x56DB50/0x56DD30` 才以各 pending 渠件对象的 `+0x0A/+0x0C` 世界原点作严格欧氏最近比较和状态 `0x0D` 目标。building `#233` 构造器安装 vtable `0x7B4FF8`；其 `+0x1B4 → 0x428ED0` 明确返回 `assigned×100/required`，`+0x1B0 → 0x428EB0` 取 authored 需求、`+0x1B8 → 0x416B10` 取 building `+0x44` 的实时分配人数，模型行需求为 `10`。Native 已把这套 phase-0/1 pending、人物/provider 身份、raw state、稳定 figure ID、现场计数与 whole-phase 队列清空边界做成可编码核心状态，并从统一 workforce snapshot 与当前人物集合投影劳工营效率、实时派出计数和原始建筑原点；核心同时把渠件原点与首段道路接入点拆开，缺接入点时拒绝派工。后续 Phase-0/1 城市接线已接入完整道路接近点、两张派生路由缓存与实时人物移动；任何未落入已确认占用类的城市仍 fail-closed，绝不能改用普通 service walker。
+- `0x4AF350 → 0x4AF490` 从行优先扫描遇到的普通干燥道路格建立组件，按北/东/南/西在主派生网格 `& 0x0B0C` 上扩展，primary bit `0x08` 仅在 terrain bit `0x400` 时准入；Ferry `0x200/0x800` 等连接格参与连通与组件规模，但自身不是 `0x4BA6F0` 可选的道路接入格。十个最大组件按规模降序，同规模以严格比较保留发现顺序；渠件外圈内又以严格比较保留 authored perimeter 顺序。Native 已从完整 terrain/主派生网格复刻组件发现、稳定十组件排名与逐渠件接入候选；完整两张派生缓存及实时人物移动现已按下一项合同接入城市循环。缺输入或接入点时仍必须拒绝派工，不得用普通 service walker 替代。
+- 城市最小派工场景的普通占用分类已由哈希核验 vtable 闭合：劳工营 `#233` 的 `0x7B4FF8 + 0xCC` 与住宅基类的 `0x7B65E4 + 0xCC` 都指向恒 false 的 `0x416A50`；带 terrain occupancy `0x8008` 的此类格因此在 `0x5AD440` 为主类 `2`、在 `0x5223B0` 为通用备用类 `4`。该结论只覆盖住宅对象（可演化 building `#3…#17`）与劳工营，不外推其他建筑。`0x52E7C0` 的序列化顺序也已定位 `0x5AD440` 所读 signed elevation byte `DAT_00E92DD0`，以及 format `>4` 时位于后续固定层后的道路/水面辅助 byte `DAT_00F2B290`；Native 应从这些精确保存层解析，不能把 terrain 后的连续块误当成 13 张等价 byte grid。城市投影必须从基础 terrain 叠加实时 `roadNetwork` 与住宅/placement/纪念子件占用，其他未闭合 generic vtable 类型继续以坐标化错误停止。
+- Phase-0/1 城市接线已进入实时确定性循环。Native 从 authored terrain、`DAT_00E92DD0`、`DAT_00F2B290`、实时道路、住宅/劳工营/33 渠件占用重建 Haunxian 的完整两张工人路由缓存，再生成十组件排名与多部件接入候选。这里不能把 pending ID 与接入渠件 ID 绑定：`0x567540 → 0x5673D0/0x567130` 对当前 pending 对象，以“所有存在 `0x4BA6F0` 接入的候选渠件原点到 pending 原点”的曼哈顿距离选最近者，同距保持 authored index。每名劳工把实际主/备用路线、路径索引、`1/1/2` 周期位置和 20 子步进度存档；每个原版 step 先更新已有人物再调 scheduler，因此新派人物下一 step 才首次移动。抵达、现场 `210/180` 更新、单件完成后返营都回写同一 coordinator。真实 Haunxian phase-0 城市已验证在 Native 日历桥内自动派工、离营移动及 save/reload；其他未闭合建筑占用仍由直接路由 API 以坐标化错误拒绝，城市日推进则把这一类 typed error 视为原子化的“当前不支持”边界，整批不变且不猜分类、不让外围城市模拟崩溃。西王母实时在城状态仍未接线，不得用普通 service walker 补位。效果槽运行时生产者链已恢复：`FUN_005A8370 → FUN_005A7440 → FUN_00510C70 → FUN_00510F50` 把入选英雄索引写入槽 0 `+0x10` 并置 `+0x20`（索引 `3` 即西王母），清除侧为 `FUN_00514470`、载入清理为 `FUN_00535510`；但 Native `activeHeroIDs` 是单调集合，缺少原版英雄图元的入场/离场/死亡/载入清除物理生命周期与槽位独占，载入后重新激活顺序也未闭合；`FUN_00511EA0` 返回 `<4` 只是旧存档记录格式迁移触发，不是运行时激活门，故接线保持 `BLOCKED BY UNKNOWN`，见 `docs/exe-research/hero-effect-lifecycle.md`。
+- Phase-2 实时接线的剩余路由/占用合同已由哈希核验静态证据闭合。Warehouse `#54`、Trading Quay `#56`、Trading Station `#58` 的对象 vtable 分别为 `0x7BE1BC/0x7BEAB8/0x7BEDC4`，三者 `+0xCC` 都指向恒 false 的 `0x416A50`，故普通占地格为主类 `2`、备用类 `4`，不得外推其他 storage 类。`0x56EA60` 给 type-19 主车写 movement mode `7`；`0x4E83E0 → 0x5AFB00` 在主派生网格按 `value & 0x12C != 0`、北/东/南/西洪泛，先四向、失败再八向重建且没有 mode-19 fallback。人物模型 #19 的 speed `8` 经共享移动器形成同样的 `1/1/2`、20 子步、初值 20 节拍。Native phase-2 城市合同必须保持“当步先更新旧车队，再调 scheduler；触发 pass 至多尝试一次 `0x56E600` 批次；完整来源先扣库，成功才 pending→bound；`19→20` 抵达后的下一次人物更新才分货；余货按 `7→10` 返原来源”。只在完整 mode-7 正常路线存在时进入这条实时适配；断路时 request-flag 对 coordinator 的完整恢复、state-6 新来源仲裁仍不得猜。贸易码头/站的 raw commodity state `7/9` 未接入前不可用 importing/exporting 集合替代，当前只允许已闭合的物理仓库来源。
+- Phase-2 普通石料车队的可见组合与跟随相位也已由 `local/source` 闭合。`0x5CCBF0/0x5CCF70/0x408170` 确认图像资源键编码为 `archiveIndex = key >> 9`、`logicalGroup = (key & 0x1FF)-1`，而 `0x475B60` 的装载序列把 `SprMain/SprMain2` 固定在 index `38/39`。commodity `#20` 时，type-19 的 `0x4CB910` 选择 `0x4CA6 → SprMain:TeamLeader` group `165`、首帧 `#9743`；type-20 第一随从 raw state `6` 选择 `0x4E38 → SprMain2:WaterBuffaloSolo` group `55`、首帧 `#2234`；第二随从 raw state `8` 选择 `0x4E88 → SprMain2:WaterBuffaloCart` group `135`、首帧 `#7033`。三组均为八方向、每方向 12 帧。`WaterBuffaloCartLarge` group `137` 属另一条件分支，不得用于普通 400 单位石料车。`0x4E7520` 进一步确认随从不是贴在主车上的固定屏幕偏移：它们以 `+0x41` 的 20 子步相位分别落后前驱 `18/13`，相位到 `10/11` 时才复制前驱当前格并保留前一格用于插值；相位 `0/1` 同步方向，普通 attach 调用同步动画帧。Native 必须按主车→第一随从→第二随从的原始人物更新顺序持久化这组三格/相位，不得把三个 sprite 叠在同一地图点。完整地址与证据等级见 `docs/exe-research/grand-canal-map-state.md`。
+- 郑国渠 phase 终点与秦一初始目标状态由直接机器码再次更正：`SB_CANAL` vtable `0x7B9450` 的 `+0x0C → 0x5786E0` 返回 phase count `5`，`+0x10 → 0x570C50` 以 `current >= phaseCount-1` 判定完成；`0x566B30` 与 `0x56D170` 都在 `next >= phaseCount` 时跳过 setter。因此有效子件 phase 是 `0…4`，`Mon_Grand_Canal_subs.txt` 最后一行的终点 `5` 不是可写状态。`Haunxian.map` 的 33 件均为 `(sub,whole)=(4,4)`，载入时郑国渠聚合进度已是 `100%`，不会在第 31/62 scheduler call 发生旧文档所称的 `4→5`；旧结论来自 Ghidra 伪代码误读并作废。Native 必须从完整 33 条 `(4,4)` 直接把 `#83` 纳入目标完成集合，completed scheduler 不递增、不改写 archive state；秦一仍需同时满足年产铁器 `#15 = 1800`，所以不会仅因载图立即胜利。
+- 郑国渠地图画面选择已闭合为精确资源合同，不能再把 `Haunxian.map` 的 528 个预留 `#201` 格逐格绘制。`0x408170` 的资源键规则为 `archiveIndex=key>>9`、`logicalGroup=(key&0x1FF)-1`；`SB_CANAL +0x14 → 0x5786F0` 的 phase 1/2/3/4 本体基址分别是 `China_Mon_Grand_Canal #201/#212/#224/#232`，每个 `4×4` 子件只绘一次 318×160 本体。phase 0 普通件把 16 格恢复为 `China_Terrain #247`；道路穿越件先按独立字节层 `DAT_00F1E780[cell] % 9` 写 `#247…#255`，再在 Haunxian 无旋转 entry 方向的本地 `y+2` 四格覆写道路 `#782`。phase 1…3 由 `0x578C90` 按当前 phase、前后相连件 phase、entry 标记和该字节低位选择精确接缝/端头图，语义映射集中于 `OriginalBuildingSpriteCatalog`，不得靠图片外观猜邻接。
+- 道路穿越件是“运河本体 + 透明桥层”两次绘制，不是独立替代 sprite。终态 phase 4 在默认视角普通件用 `#233`，穿越件用垂直水向 `#232`；`SB_CANAL +0xA0 → 0x578F30` 在 phase 1/2 叠木脚手桥 `#236`，phase 3/4 叠石拱桥 `#240`。换算到 Native tile centre 后，桥层 source top-left 精确偏移依次为 phase 1/2 `(60,-100)`、phase 3 `(65,-92)`、phase 4 `(56,-86)`。索引 `10/16/22` 必须各绘一个桥层；原地图缓存的重复预留图必须被压制。其他视角旋转 jump table 已定位但当前 Native 玩家相机不提供旋转操作，未接线前不得外推。
+- Phase-0/1 type-10 劳工的玩家可见状态族现也由同一份可执行文件控制流闭合。人物调度表 `0x84E908` 指向 `0x4D6060`；raw state `12/13` 选择资源键 `0x4C58 → SprMain:Laborer` group `87`、首帧 `#5786`、每方向 12 帧，现场作业 state `14` 选择 `0x4C5B → group 90`、首帧 `#6074`、每方向 19 帧，完成/返营 state `15/16` 选择 `0x4C59 → group 88`、首帧 `#5882`、每方向 12 帧。三组均为八方向，原版在每次人物更新中先增 frame byte 再按所选组帧数回绕。Native 只把它们接到已存在、可存档的郑国渠 figure-10 劳工状态机，不把任一组误设为所有 type-10 情境的通用默认；移动格、前一格和动画 frame 必须随存档保持，从而在 1024×768 玩家画布按原相位插值。
+- 下方常驻工具行按原版五键顺序为修路、路障、清除、撤销、查看最后事件（`EmperorText.txt` 行 3694–3698，手册 p.16 同序：Build Roads / Place Roadblocks / Clear Item / Undo Last Action / View Last Event；图标族依次为 `China_Interface_New_parts` `#1275/#1279/#1283/#1287/#1291`，见 `docs/exe-research/utility-strip-roadblock.md`）。路障是工具行按钮，不在建造目录内；浏览为默认光标/右键模式，不是常驻工具行按钮。消息入口留在底部导航，不占用该工具行。
+- 建造按钮图来自 `China_Interface` 的 `New_Bbuttons` 三态族（`#1488–#1655`，每族 normal/hover/selected）。原版没有绝对 image ID 扁平表：`0x53A760` 从 `0x855888` 读取 `(selectorID, sheetFamilyIndex)`，写入 `index × 3`，`0x449C10` 再以组键 `#695` 加偏移绘制；导出资源中的基帧公式为 `1488 + index × 3`。45 组子菜单成员位于 `0x821164`；单成员折叠的四组白名单、贸易城市特殊组和动态纪念控制流见 `docs/exe-research/construction-panel-exe-mapping.md`。
+- `OriginalConstructionButtonSpriteCatalog.evidence(forBuildingID:)` 区分 `confirmedDirectFromExecutable` 与 `confirmedSubmenuFamilyFromExecutable`；未覆盖建筑仍为 `unknown`。不得把共享子菜单族误写成“原版同时显示多个相同图标”，也不得再从条带外观或 `0x4A5960` 猜测映射。
+- 新控制流确认原版分类修正：磨坊 `#53` 位于商业栏，巡察办公建筑 `#124` 位于安全/健康栏，制茶棚 `#237`、漆料棚 `#238`、养蚕棚 `#239` 共用农业子菜单族。作物 `#194…#199` 共用 `#1500`；`#1503` 属于灌溉子菜单，不是麻作物按钮。
+
+秦四首个可玩未完成状态的运行证据边界已经单独记录：一份可与八达岭静态图层逐字节对齐的历史自动存档，其 4,000 个 `Building` 槽均为 ID 0；哈希匹配版本的隔离 Wine 启动停在 DirectDraw 黑屏；已定位的公开八达岭完整实录又被 YouTube 登录验证阻断，未取得可分类的视频帧。三者均只作为已耗尽的负证据，不许可把任意 phase（包括全零）写成初态。已确认的发行终态可以独立渲染：`0x57BBA0/0x57D2B0/0x57CB10/0x57D860` 分别闭合墙、塔、joined gate 和道路在默认视角的 SG3/本地图像选择；Native 在秦四土长城任务中压制地图的 740 个编辑器占位格，改为按 53 条存档对象及其 4×4/2×2/1×1 footprint 深度排序绘制终态精灵。此终态表不得用于未完成 phase，施工中间画面仍需单独恢复。
+
+### 迷你地图与底部导航
+
+迷你地图、滚动槽、视口框和周围空白按原版位置复刻。地图内容来自真实世界状态，不使用装饰性色块替代。
+
+底部导航保持原版五枚图标的数量、顺序和状态：成/消息入口、视角罗盘、城市、世界地图、目标卷轴。按钮直接使用对应四态原版精灵，不在外侧增加方格底和描边；没有原版常驻位置的命令通过键盘、系统菜单、上下文界面或相应原版窗口提供。
+
+## 前台、对话框与其他玩家页面
+
+主菜单、帐号选择、游戏模式、战役选择、任务说明、世界地图、消息、目标、存档和结果页面都采用同一复刻方法：
+
+- 先收集同状态原版截图和资源。
+- 建立原版逻辑坐标与层级。
+- 使用原版切片、插画、按钮状态和文字区域。
+- 对照截图实现，不先设计新的 SwiftUI 信息架构。
+
+原版使用整屏插画或册页时，保持其构图和交互热点。原版使用模态窗口时，复刻其尺寸、边框、遮罩和按钮顺序。系统文件选择器、权限弹窗和崩溃恢复仍使用 macOS 原生界面。
+
+### 前台页面的共同构图
+
+视频与原版截图共同确认，前台不是一套通用原生窗口表单，而是“状态专属整屏插画 + 原版赭褐面板”的序列：
+
+- 帐号选择使用竹林村落背景；进入帐号后切换为驼队背景，页面中央是单列主操作，而不是常驻侧边导航。
+- 历史战役选择使用夜色长城背景。主体是左侧高列表、右上横向插画、右下说明的三块组合；选择变化只更新对应插画和说明，不改三块骨架。
+- 任务设置/说明使用人物或营帐整屏插画。面板保持直角、细回纹边、棕色格纹/纸纹和低浮雕按钮；页面不加毛玻璃遮罩、大圆角 sheet 或系统 toolbar。
+- 任务说明页以标题、目标带、正文和底部难度/进入城市操作形成明确纵向层级。长中文必须在原版正文框内换行，不能推动框体或按钮。
+- 每个页面使用与该状态匹配的原版背景；禁止为了工程方便让所有前台页面共用一个渐变或一张泛用古风图。
+- 转场应直接、克制，以页面替换和原版按钮状态为主。没有证据时不添加卡片飞入、背景模糊、弹性缩放或全屏淡入动画。
+
+### 原版矩形面板与按钮
+
+前台面板由原版纹理、内外细边框和直角分区组成。标题多为居中金黄文字；正文和按钮文字保持高对比但紧凑。按钮是矮而宽的矩形凹槽，normal、hover、pressed、disabled 必须可区分。原版底部把“返回”放在左侧、“继续/进入城市”放在右侧时，保持该空间语义，不因 macOS 习惯擅自互换。
+
+面板外的整屏插画仍是页面主体。面板不得扩张到覆盖大部分插画，也不得用不透明系统表单替换原版留白和人物构图。
+
+## 视频确认的城建行为契约
+
+下列行为由参考视频的连续画面确认，属于复刻的一部分，而不只是实现细节。
+
+### 相机、固定界面与迷你地图
+
+- 相机滚动时只有地图世界移动；顶部 HUD、右侧控制栏、建造目录、迷你地图外框和底部导航保持固定。
+- 视频宽屏版扩展地图可视范围的行为不覆盖当前经典基线；原生玩家画布仍保持 `1024 × 768`，地图列仍为 `800px`。若未来单独增加宽屏模式，必须将其定义为可选兼容模式并另行建立证据与几何规范，不能悄悄改变经典模式。
+- 迷你地图内容应同步反映相机位置，视口框直接覆盖地图纹理。移动相机不重建、闪烁或重排右栏。
+- 切换建造分类只替换右栏目录/说明状态，不能重置相机、清空已建道路或造成地图列宽变化。
+
+### 道路拖拽
+
+- 按下并拖动时，道路沿经过的网格连续延伸并保持连接；鼠标端点显示等角落点反馈。不能把一次长拖拽退化成互不相连、必须逐格单击的方块。
+- 连续路段随拖动轨迹形成原版允许的直线、折线和拐角，并立即使用与相邻路段匹配的连接帧。提交后的道路保持在世界中，不在松开鼠标时回退为通用直线。
+- 合法端点使用可辨认的绿色落点；越界、悬崖、受阻或不可建设位置使用红色落点。无论实现采用逐格提交还是暂存预览，都必须保证拖拽过程中已显示的路径、最终世界状态与费用变化一致。
+- 预览和提交均使用原版道路纹理与连接族；不可用通用米色线、矢量折线或纯色矩形代替。
+- 失败原因出现在原版提示位置或地图信息条中，不使用右下角 toast，也不弹出每次都要关闭的系统对话框。
+
+### 建筑预览与落成
+
+- 选中建筑后，鼠标处显示该建筑真实的等角预览、朝向和完整占地。大型建筑的视觉体量必须与最终落成精灵一致。
+- 合法预览对完整精灵/占地施加原版式绿色反馈，非法预览施加红色反馈；只有底部一块彩色矩形而建筑本体不变，不足以表达原版状态。
+- 旋转或移动预览时，占地、入口/道路要求、遮挡关系和合法性同步更新。点击合法位置后预览转为实际世界对象，并立即反映费用和相关模拟状态。
+- 放置失败不生成部分建筑、不扣除不可恢复的费用，也不改变当前地图布局；错误原因保持短暂、紧凑且不遮挡右栏。
+- 连续建造模式是否保留当前工具以原版同类操作为准。取消后应返回原版的浏览/选择状态，不遗留绿色或红色幽灵。
+
+### 农业生产链
+
+- 农业建造是明确的两阶段流程：先选择作物并放置带道路入口的农场/生产建筑，再在其服务半径内逐块铺设对应田地。作物按钮不能直接把田地当成完整生产建筑。
+- 田地是独立可见、可拆除的世界对象，归属于附近同作物农场；其合法性取决于农场作物、服务半径、田块容量、地形和占地，不要求每块田地直接邻路。
+- 超出服务半径、农场容量已满、作物不匹配或占地冲突时，完整田地预览变红且不扣费。拆除田地会降低所属农场产能；拆除农场会同时移除其关联田地，避免留下无主产能。
+- 农场可以在暂停状态下完成布局；模拟恢复后才推进劳工、收获、运输和库存变化，建造交互本身不得偷偷推进时间。
+
+### 覆盖层、建筑信息与任务结果
+
+- 美化分类中的“查看地区吸引力”和“查看风水”是两个独立入口。风水覆盖层直接为地图中的建筑整体着绿色、红色或中性色反馈，右栏同时汇总和谐、不祥与中性数量；它不是水域图层的别名。
+- 选中建筑后，详细信息使用地图左上、顶部 HUD 下方的赭褐色直角表格面板。面板包含名称、状态/库存/劳工等紧凑行和底部帮助、确认入口；不使用右上圆角悬浮卡、阴影或鼠标经过即弹出的现代摘要卡。
+- 胜利结果使用居中的赭褐色直角面板，清楚呈现任务名、胜利状态、已达成目标、说明和紧凑后续操作。地图仍可辨认，不用厚重毛玻璃、现代大图标或三张大号操作卡替代。
+
+### 世界反馈与信息层
+
+- 住宅和服务建筑落成后，居民、行人、建筑阶段和需求变化通过地图精灵与顾问信息逐步出现；不能只更新隐藏模型或现代统计卡片。
+- 原版顾问/任务消息会从地图底部展开为横向棕色面板，包含细边框、标题、正文、帮助与确认入口。复刻该覆盖层的位置、层级与密度；它覆盖地图列、暂停或配合消息状态，不把整个固定画布向上挤压，也不改成系统 alert。
+- 警告、费用或限制文本可在地图上缘短暂堆叠，但应使用原版紧凑行式、自动消退且不抢占固定布局。不得转换为圆角通知卡。
+- 暂停、速度、选择和建造状态必须在画面与模拟中一致；暂停时动画/时间推进停止，但当前选择、预览和可读信息不应消失。
+
+## 本轮原版资料契约
+
+这四项修正使用 `GameData/EmperorText.txt`、`GameData/Model/EmperorBuildingModels.txt`、`GameData/Model/GeneralBuildingConfig.txt`、`GameData/EmperorManual.pdf` 和 `China_General` 的 SG3/PNG 索引交叉核对。实现必须保持以下关系：
+
+- **市场与店铺：** `#59/#60` 只是 4/6 个店铺槽的市场本体；`#64…#70` 才是店铺。市场信息窗按 `MarketSquare.shopBuildingIDs` 的实际顺序逐行显示库存和状态，地图精灵也按相同数组填充 2×2 店铺槽，不得默认生成 `#66` 食物铺。市场的娱乐区仍属于市场壳体，未安装的店铺位置只显示市场地面。
+- **磨坊：** 手册确认磨坊有 8 个储位，每储位最多 4 担（100 单位/担），总上限 32 担；订单为“接受/拒收/清空/获取”。核心状态以 400 单位为最小调整粒度，信息窗显示每种食物的存量、限制和订单。`China_General.sg3` 的 `#647` 是 398×289 本体，`#648…#671` 是其 24 帧、位于 SG3 偏移 `(160,115)` 的有货/工作叠加帧。
+- **住宅升级原因：** 右键信息窗复用 `DeterministicHousingEvolution.evaluate` 的实时缺口；每个缺口显示 `EmperorText.txt` 对应的原版原因句（吸引力、水、食物品质、服务和商品），不能只显示一个无来源的“不可升级”。原因句只取经逐行确认对齐的 `EmperorText` 组 127：吸引力用一般性的 57 行；当前 Native 无法归因于特定负面建筑，所以不选 56 行。食物品质只把 59 行的 `[food_quality]` 替换为所需品质名称，不追加诊断；其他服务/商品按原文语义推断映射 58/60…67/68…72 行，不支持的形态不合成替代文案。无 GameData 时只回退到同组原版简体中文行。已静态确认 `0x51AF60` 使用 `group 0x7F`、`reasonCode + 0x27`（CH/EN 一致），但尚未逐项恢复 60…72 的 reason-code 赋值分支；详见 `docs/exe-research/housing-evolution-reasons.md`。
+- **人口顾问住房容量与迁移句：** 住宅顾问的容量行由 `EmperorText` 组 55 第 8/9 行拼装：EN 为 “Housing for” / “more people.”，语义对齐的 GB 18030 简体中文为 `目前住宅还可容纳` / `人居住`，Native 以运行时目录的精确行包住已计算的 `availableHousingCapacity` 并沿用金色数字强调；目录缺失或两行任一为空时整行省略，不合成替代文案。迁移区 UI 只使用组 55 第 12/13/20 行：12 = `移民受到限制.原因是:`（译文保留原版的 ASCII 句点与冒号），13 = `缺乏住房`，20 = `人们希望迁居你的城市`；EN 语义对应 “Immigration limited by” / “lack of housing vacancies.” / “People wish to come to the city.”。`ClassicTextLocalization.migrationStatusText` 只在这三行运行时全部存在且非空时返回该三元组，无任何硬编码回退。组 55 第 10 行（`个新移民本月到达` / “newcomers arrived this month.”）的表格语义对齐与渲染器使用（`FUN_00528b80` 数值 + 10 行后缀，原版纵向坐标相差 `0x10`）都是确认证据，行索引仍获目录授权，但 Native 不再选中它：其前置输入 `currentMonthImmigrants` 由自定义逐日 max-5 迁入模拟产生，不是原版累计的 `DAT_01311FCC`，因此行 10 在新移民生产者恢复前保持目录授权但不被 UI 选出（fail-closed）。原版迁移区由静态恢复的模式 0 渲染器 `FUN_0053b850`（@`0x53B850`，由 `FUN_0053ab80` 人口顾问渲染器到达）按 checker 顺序决定分支；其中截图确认的零容量分支 `DAT_0130F998 < 1`（愿望句 + 12/13 限制块）是 Native 唯一选定分支，判定严格保持 `availableHousingCapacity < 1` 且不依赖行 10 存在；`DAT_01312564 > 3`、新移民 `> 4`、带符号压力等生产者未闭合分支继续 fail-closed；模式 1/2/其他（`DAT_01311FD0` 非零顾问/overlay 分支）因该 dword 的 gameplay writer 与完整值域仍 unknown 而 fail-closed（已确认它不是 `FUN_005917E0`/`FUN_004AD4A0` 或已恢复 assignment/arrival 链的数值输入，详见下条）。`.noEligibleHousing`、`blockReason` 与 `plannedImmigrants` 不参与任何玩家可见行的选择（`plannedImmigrants` 不是该渲染器的输入）；旧的“`currentMonthImmigrants > 4` 时显示愿望句 + 金色计数 + 10 行后缀”UI 实现合同已撤销（见下），原 `migrationStatusRows` 只保留零容量分支。原版迁移生产者链已部分恢复（精确函数/地址、节奏/公式与分类见 `docs/exe-research/population-advisor-housing-capacity.md` §7）：流行度 `DAT_0130F974` 初始 60、钳位 0…100；`FUN_005917E0` 压力带 <16→-25、16…25→-17、26…35→-8、36…49→0、50…60→50、61…70→75、≥71→100；人口 >199999 时压力归零、战争计数 ≥4 抑制正值；请求量 `ceil(12*abs(pressure)/100)`，2 周期冷却；日历 case 0x17 `FUN_004AD4A0` 处理到达/离开，`FUN_004ADA10` 把 `param_1 - remaining` 累加进 `DAT_01311FB0` 再写入 `DAT_01311FCC`（调用方不检查 `FUN_004EA050` 生成是否成功，故为已分配/已入账人数，不是已证明生成成功的人物数），月末滚动把上月值复制后清零。Native 的逐日 max-5、`population >= 150` 阻断模型与该生产者链不等价，行 10 及所有未映射分支一律 fail-closed，不围绕近似数值渲染。零剩余容量截图（`capcap-260724-160610.png`）确认的可见构成：容量三行（prefix / 金色 0 / suffix）后，先单独一行普通色的迁入意愿 `人们希望迁居你的城市`，再单独一块限制区（引导 `移民受到限制.原因是:` + 金色/警告色原因 `缺乏住房`）；两个操作按钮之后、容量句与迁入意愿之间、以及意愿与限制区之间各有一条水平分隔线。Native 复用按钮后既有的 1px `EmperorTheme.secondary.opacity(0.68)` 细线与 1pt 垂直内边距，不把该 Native 几何表述为已恢复的原版常量。住宅顾问段间构成：容量 / 分隔 / 意愿 / 分隔 / 限制（`availableHousingCapacity < 1`），其他状态只有容量句；段间分隔由语义 `AdvisorSummaryLine.separator` 行插入且行尾无多余分隔，其他分类不受影响。组 55 双向表格均为 36 行，已直接比对为语义对齐并获目录授权的精确行是 8/9/10/12/13/20；行 11 保持未授权（其迁入数 1 的单数控制依赖尚未源映射的有符号压力等价），行 7/14、其他行与越界一律 fail-closed 返回 nil。原版消费方与状态→文本映射已恢复（`FUN_0053b850` @`0x53B850`，CH/EN 函数按 compare-report 一致），精确字号、色值与超出既有固定面板几何（`control-panel-width` 224px / `panel-content-width` 170px / `population-advisor-height` 280px）之外的新坐标不主张，分隔符也不作超出既有证据的进一步几何断言。Native 已验证同构成在 `224px` 面板内不撑宽：Qin-1 UI smoke 在回到住宅分类后、捕获基准图前，以受限遍历递归收集 `advisor-population-panel` 后代的字符串 AX 值/描述/标题并经空白归一化后断言必备 token（`目前住宅还可容纳` `0` `人居住` `人们希望迁居你的城市` `移民受到限制.原因是:` `缺乏住房`）存在、不支持 token（`等待下一个模拟日评估迁入条件` `缺乏临路住房` `国库为负` `失业率过高` `个新移民本月到达`）缺席，再到 AX 框架可得时断言面板宽 `<= 224`；基准态为零容量，因此 10 行后缀必须缺席 —— 该行虽为研究确认但有意不选中，直到原版 `DAT_01311FCC` 生产者实现；详见 `docs/exe-research/population-advisor-housing-capacity.md`。
+- **自动迁入生产状态（2026-08-14 更正，取代上一条中的 Native max-5 现状描述）：** 先前逐日最多 5 人、人口 150、国库与失业阻断规则没有原版来源，已从生产代码移除。`AutomaticMigrationAvailability` 固定为 `unsupportedOriginalProducer`；生产 tick 只通过 `observeHousing` 观测临路空置容量，迁入/迁出计划以及日/月计数保持零，不增减居民。后续把 `FUN_004ADE10` 人物 `#11` 走路折成即时入住、用 `lastSuppliedFoodQuality` 代替 `FUN_00590f30` 食物字段、把纪念碑/战争/模式写成 0 并升级旧 `unsupportedOriginalProducer` 存档的尝试已撤回：人物 `#11` / type `0xB` 抵达写入链已静态恢复（`FUN_004C7580` 跳到 `FUN_004C9FD0`，`house+0x20` 加在 `0x4CA265`），仍不得折成即时入住。同链上已 `confirmed`、但不得当作可实现合同的补充：`house+0x24` 是 `DAT_01391FE0` 入口格洪水填充快照（生命周期已恢复；2026-08-16 反汇编闭合通过谓词：4 邻域北/东/南/西扩展，邻居格主派生缓存 `DAT_013789C0` 词与掩码 `0xB7C` 非零即通过、深度 n+1，种子为原版路入口 `DAT_00C5CDFC/CDFE`，详见 docs/exe-research/migration-popularity-producer.md §10.4；Native 映射 = 同构确定性洪水，但须先逐位验证 Native 主缓存派生与恢复写域一致，未验证前仍不得等同 `observeHousing` 邻路）；`HouseBldg` vtable `+0xB8` 在 `house+9 != 0` 时为真（极性已恢复；该字节原名仍 `unknown`）；`+0x1E4` 返回 `cHouseInfo`，其 `+0x3C != 0` 时跳过 `0x4CA265` 的 occupancy add（极性已恢复；该字节语义、完整写入者/生命周期与 Native 映射仍 `unknown`）；空房时 `+0x230` 以参数 `3` 或 `0xD` 改写类型（`EmperorBuildingModels.txt` ID 2 Vacant House、3 Shelter House、11 Unocc Elite、13 Modest Elite）；调用后 `(house+0x14, house+0x16)=(3,0)` / `(13,10)` 对应 Native `ResidentialUnit.houseLevelID` 0 / 10，且 `buildingID = levelID + 3`（`confirmed` relationship，不得外推整个原版布局）。Native 仍缺少 building IDs 2/11 空房态的 `ResidentialUnit` 表示与生命周期，以及 walker 到达时 `2→3` / `11→13` 的类型切换时序，故不得宣称可实现自动迁入。`DAT_00D62408` 非零时跳过 `+0x230`（极性已恢复）；2026-08-16 对 EN/CH 两版的整文件扫描确认该地址没有任何静态写入者（三个绝对引用均为读取：维护槽更新门 FUN_0042D9A0、类型切换布尔门 FUN_004ACD00、移民到达跳过门 FUN_004C9FD0），因此出厂构建中该标志恒为 0、跳过分支不可达，Native 可无条件执行空房类型切换；仅保留未知块拷贝可能写 BSS 的研究性保留（详见 docs/exe-research/migration-popularity-producer.md §10）。食物字段走查 `FUN_00590F30` 已静态恢复（详见 `docs/exe-research/migration-popularity-producer.md` §3）：房屋列 8 为 `EVO_FOOD_QUALITY`，列 `0xE`/`0xF` 为 Crime Risk Increment/Base 而非食物库存；返回值比较 `cHouseInfo+0x36` 与列 8，并用 `house+0x5C` 条带。`cHouseInfo+0x36` 的已恢复常规市场配送写入路径为 `cMarket` vtable `+0x2c` @ `0x5437B0`（完整写入者集合未证明；磨坊 visit `+0x2c` 为 `ret 0`；月结算 `FUN_00518690` 在 `+0x12 < 1` 时清零该字节；cheat 写 `20`，英雄模型 79 case 4 写 `0x5A`，二者不清零）。Native `ResidentialUnit.foodSupplyAmount` / `foodQualityRawValue` / `lastSuppliedFoodQualityRawValue` / `suppliesByCommodityID` 与已恢复的 `cHouseInfo+0x12` 消耗量、品质混合与节奏 **不同构**（不得因 `0/20/30/50/70/90` 数值对应而替换；`lastSuppliedFoodQuality` 在已恢复的 `cHouseInfo` / `FUN_00590F30` 消费者中无对等字段，并非穷尽证明原版全局不存在快照）。`cMarket+0x180` 的食品店回市加权混合已静态恢复（`cStall+0x260` @ `0x541760`），mill-pickup 链路上 cart `+0x13` 已确认为 mill vtable `+0x2E4` 选出的 recipe type-count（stall 混合项为 `20 *` 该字节；不得仅从混合项推断 1…5 quality band），玩家向品质名与 Native `quality(in:)` 映射仍 `unknown`；peddler/buyer 对 `FUN_004EACD0` / `cMarket+0x2C` 并非排他（model 24 states 6/7 可经 `FUN_004E47A0` → `FUN_004E7EB0` 到达），因此不得写实现合同，食物因子继续 fail-closed。数值 `0/20/30/50/70/90` 对应仍为 `confirmed`。`DAT_01312564` Native 映射仍为 `unknown`。`FUN_0055AE30` 的 monument-object 匹配走查已静态恢复（空表/无匹配返回 0；建筑容器从索引 1 起；根件 `+0x16==0`；exact `building+0x14 == goal+0xC`，或 goal `+0xC` 为 `0x55`/`0x56` 时对布局 `0xFD…0x10C`；`FUN_00565410(building+0xB4, 0, 0) >= 100`；返回通过谓词的 (building, type-2 goal) 配对数量（同一 goal 可被多个 root 重复计数，不是 distinct goal count）并在 `FUN_00591200` 中 ×2；`cMonumentGoal` 构造 `+4==2`，`+0xC` 仅为 goal building/object ID。`0x55`/`0x56` 是任务/goal ID：载入后 `0x5636B0→0x563720` 对任务 `#85` 选土长城显示族、`#86` 选石长城，不得当作可放置 building type。详见 `docs/exe-research/migration-popularity-producer.md` §3）。Native `MonumentProject` / 郑国渠 / 土长城百分比并非已证实与 `FUN_00565410` 同构，live 建筑表、type-2 对象向量与 `goal+8` 存档生命周期仍未映射，故不得把缺纪念碑写成 0 或只凭 `buildingID` 猜完成度；生产保持 fail-closed。`DAT_01311FD0` 已确认不是 `FUN_005917E0`/`FUN_004AD4A0` 或已恢复 assignment/arrival 链的数值输入（`FUN_00590A70` init-zero 与 `FUN_00593140`/`FUN_0058FE40` 存档读写已闭合；gameplay writer、完整值域与任何非零状态来源仍 `unknown`，故非零顾问/overlay 分支 1/2/其他继续 fail-closed，不得把该字段写成 0 并启用生产者），详见 `docs/exe-research/migration-popularity-producer.md`。已确认的压力带/请求上限/工资就业表只记录在 `docs/exe-research/migration-popularity-producer.md`，生产代码与测试均不得复述为可调用实现。旧存档计数字段继续可解码，并在首个生产 tick 清零。诊断迁入状态条、摘要行和计数驱动的伪移民人物已删除；`CitySimulation.admitResidents` 仅供加载器/测试 fixture 使用，不是玩家命令或生产模拟路径。依赖自然人口增长的 Qin-1/Qin-2 正向玩家重放、夏朝第一/二关玩家经济闭环及无注入发布门禁标为 `BLOCKED BY UNKNOWN`，不得用 fixture 居民冒充原版迁入证据；不依赖迁入的战役设置、建造限制与反例测试仍实际运行。恢复条件是按已记录的 `FUN_004C9FD0` 合同接线人物 `#11` 的 `house+0x20` 写入（不得折成即时入住），闭合 Native 对 vacant IDs 2/11 的表示与 `2→3` / `11→13` 到达切换、以及 `cHouseInfo+0x3C` / `house+0x24` 的 Native 映射（`DAT_00D62408` 写入者已确认否定，不再作为实现门，见上条），并持久化原版流行度、八类因子（`FUN_00590F30` 走查已恢复，`cMarket+0x2c` 为已恢复的常规市场配送写入路径，完整 `+0x36` 写入者集合未证明；当前 Native 消耗/混合/节奏已确认不同构，不得用现有字段直接替换；`cMarket+0x180` 的食品店回市混合已恢复，mill-pickup cart `+0x13` 的 type-count 生产者已恢复，玩家向品质名与正确 Native 表示/映射仍 `unknown`，不得用 `lastSuppliedFoodQuality` 替换）、请求冷却、日历 case `0x17` 与战争状态生产者；此前组 55 第 10 行继续 fail-closed。非零顾问/overlay 模式不是启用该生产者必须闭合的数值输入。
+- **自动迁入实现合同（2026-08-17 更新，取代上一条中的 fail-closed 现状描述）：** Phase 1 研究已闭合，实施合同如下；实现完成并经测试验证前，`AutomaticMigrationAvailability` 仍保持 `unsupportedOriginalProducer`。合同要素（证据分类与细节见 `docs/exe-research/migration-popularity-producer.md` §10.4–§10.10）：
+  - **eligibility（`house+0x24`）**：每日（原版日历 case `0x15`）从原创作者路入口 `DAT_00C5CDFC/CDFE` 做四邻域洪水，邻居格主派生路由缓存 `DAT_013789C0` 的词与掩码 `0xB7C` 非零即通过、深度 `n+1`；Native 在自己的主缓存上实现同构洪水，且必须先逐位验证缓存派生与恢复写域一致（§10.4）。
+  - **空房生命周期**：`ResidentialUnit` 增加 building IDs 2/11 空房表示；移民到达时执行 `+0x230` 类型切换 `2→3 / 11→13`（写 `(house+0x14, house+0x16) = (3,0)/(13,10)`，即 Native `houseLevelID` 0/10）。`DAT_00D62408` 无任何静态写入者（§10.1），切换无条件执行。
+  - **定居锁**：`cHouseInfo+0x3C` = 2 由居民移除路径 `FUN_00468420 → FUN_004681A0` 设置并装 `house+0x98 = 32` 步倒计时，每日由 `FUN_005185C0` 递减、到 0 或房屋变空时清零；置位期间移民入住写入被跳过（§10.6）。Native 增加 `settlingLock` 字节 + 倒计时。
+  - **移民人物 #11**：物理人物状态机 `6→7→8`（生成 `FUN_004ADE10`、think `FUN_004C9FD0`），到达时在 `0x4CA265` 执行 `house+0x20 += figure+0x6e`、容量重算、`FUN_00591900` 人口效果、清 `house+0x32`；不得折成即时入住，人物/路线/相位必须可存档恢复（§5.2–§5.3）。
+  - **流行度与压力**：初值 60、钳制 0…100，切片 0/8 更新；和 = 风评+镇压+1+纪念碑×2+债务+食物+工资+就业+税收，阻尼带见 §2；压力带 `<16→−25, 16…25→−17, 26…35→−8, 36…49→0, 50…60→50, 61…70→75, ≥71→100`；请求 `ceil(12*|p|/100)`、2 日冷却；战争计数 ≥4 且压力为正时压力归零；人口 >199999 归零（§4、§10.7）。
+  - **因子来源**：食物 = `cHouseInfo+0x36` 原始字节（0–100，Native 单位 0/20/30/50/70/90），住宅库存字 `+0x12` 槽 0（Dinners），月耗 `(residents*25)/100`，市场品质 `+0x180` 摊位混合，交付替换/混合五档比例，消费走查按原始字节对照列 8 并维护 `house+0x5C` 连击（§10.10）；纪念碑 = `monumentPopularityTerm` = 2 × 匹配（完成根件, type-2 目标）对数（§10.8）；战争 = 场上敌方人物数（模型 58–62/78），Native 由敌方部队 `soldierCount` 求和、`.repelled` 时扣减（§10.7；Qin 入侵敌方模型选择为运行时观察 TODO，`enemyTypeID` 映射保持现状并记录）。
+  - **存档与计数**：新状态一律 optional-backed（定居锁/倒计时、移民人物、流行度/压力/请求/冷却、`DAT_01311FB0/FCC` 账务计数）；旧 `unsupportedOriginalProducer` 存档可解码并在首个生产 tick 清零计数，不升级为 supported。
+  - **UI/顾问**：仅渲染组 55 行 8/9/12/13/20（零容量分支）；行 10/11 保持 fail-closed，直到账务计数被证明等于原版 `DAT_01311FCC` 消费语义。
+  - **渡口**：在实现洪水与迁移前，先接线渡口后处理（6×6 占地 `0x800` + 连接链 `0x200`，连接由洪水引导射线计算并持久化，§10.9）；层基址与 `DAT_010C773C&3` 平局源为实现期核验项，未核验前渡口地图保持 fail-closed。
+
+- **建造与铲除：** 原版手册确认道路等连续工具使用左键拖拽、右键退出；单体建筑使用一次点击，右键取消。画布因此只允许道路、农田、墙体、清地和铲除进入区域拖拽，其他建造工具的左键拖动不应偷偷平移镜头或提交重复建筑。
+- **住宅服务行人生命周期（`confirmed`，2026-08-26 更正）：** 原版并非按 Native 日推进固定道路格数。`0x5371A0` 每个原始 step 先调用 51 相位 scheduler `0x4AC2B0`、再调用人物更新 `0x4E27E0`；16 个相位轮构成一个月，即 `51×16=816` 次人物更新。Native 30 日桥必须以 `floor(day×816/30)−floor((day−1)×816/30)` 精确分配 27/28 个原始 step，旧的每天 1 格与每天 10 格均已作废。scheduler phase `0x1F` 每轮给服务建筑一次生成机会；普通水夫/药师/针灸师、税务与宗教分别使用已恢复的三套雇工阈值。通用 outbound `0x51D0C0` 与水夫 `0x4E3A80` 使用有限行为范围并返程；公共人物 vtable `0x7AFE60` 的 selector-15 入口 `0x4C9310` 把 authored behavior range 精确乘以 `96` 后写为预算，不能直接拿 40/36/50 当预算。code 6 每次人物更新运行一个 `0x4E6D80` 子步；code 8 由 `+0x170` 明确循环 `1/1/2` 子步，出程与返程均相同，返程 `0x4E47A0` 不写住宅覆盖。普通服务人物构造后的路由模式字节 `+0x80/+0x84` 均为 0，返程由 `0x4E83E0→0x5AE740/0x5AE840` 在派生主路由缓存上以 `cell & 0x0B1D != 0`、北/东/南/西顺序扩展，再经 `0x5B18B0(...,8,...)` 重建；不能替换成只走道路的最短路。建筑基类 `0x426E60` 把 provider `+0x38` 初值清零，`0x51CF90→0x4E6A70→0x4E6690` 以相反方向启动并把实际选中的出口方向持久化回 `+0x38`，首次路口不再允许猜测，返程寻路也不覆盖该字节。跨格时 `0x429DF0→0x429E10` 依次重扫半径 1 与 2 的完整方形对象格，并以 `0x44E550/0x44E770` 的 16 方向扇区、最近遮挡深度、住宅墙/门 `89/90/91/104/105/106/231/232` 以及树/墙地形位决定回调可见性；Native 必须把住宅完整 2×2 footprint 投影为同一对象，不能只测 origin。税务/水/药师/针灸回调要求人口 `>0`；宗教回调接受建筑 ID `2…17`，空置时仅接受精英住宅 `11…17`，且儒家书院 `219` 始终只服务 `11…17`。共享 3-bit 访问字段由 phase `0x2D → 0x4B94A0` 每 8 次调用整体减 1（每月两次），不是永久标记。普通覆盖写 `0x60`、宗教写 `0x28`、税务写 `0x32`，并分别由 phase `0x23` / `0x30` 逐字节递减，不在月初整批清空。只有人物 `#27/#28/#30/#31/#35` 的通用链已闭合；娱乐 `#32…#34`、守卫 `#29`、巡察员 `#39` 使用独立 FSM，继续 fail-closed。水回调在 `cHouseInfo+0x32/+0x34` 之间的分支尚未映射为 Native 的两个独立字段；完整地址、向量、证据等级与这一剩余边界见 `docs/exe-research/residential-service-roamer-lifecycle.md`。
+- **路障 #126：** 手册确认“漫游者遇路障掉头，有明确目的地者可穿过，路障不区分漫游者”。静态控制流已闭合（`0x46D110` 放置、`0x5AD440` 主缓存、`0x5223B0` 备用缓存、`0x4E8BC0` 移动碰撞，CH/EN identical；详见 `docs/exe-research/roadblock-path-blocking.md`）：路障只能放在普通道路格（terrain `0x40` 置位、`0x400` 清零、`0x8` 清零、水辅助字节为零）；两张派生路由缓存把路障当普通道路（主缓存 `4`、备用缓存 `2`），所以目的地寻路保留道路连通性。阻断发生在人物移动碰撞层 `0x4E8BC0`；`0x4E6D80` 设置、`0x4E7EB0` 清除的全局移动上下文标志及其逐人物继承边界尚未完全恢复，因此不能把某一瞬时标志值直接等同为持久人物类别。玩家可见合同由手册独立确认：Native 漫游巡逻、市场 peddler 路线及漫游覆盖可达性必须以路障格为关断边界（不进入路障格），目的地型路径移动（劳工、车队、仓库/磨坊取送货、市场 buyer）继续穿过；市场 peddler 是手册明确的漫游者，运行中新放置的路障至少必须阻止其进入，原版碰撞后的具体选向仍为 `unknown`，Native 不得虚构自动返市、丢货或完成路线。英雄模型 79 的碰撞豁免为静态确认。路障工具入口在工具行第二键（修路/路障/清除/撤销/查看最后事件，`EmperorText.txt` 3694–3698），不在建造目录内；玩家帮助文案已与手册一致，无需改写。
+
+### 证据状态
+
+市场店铺 ID、容量、磨坊储位/订单、住宅条件和取消快捷键是已确认事实。市场 7×4/7×6 外壳内的 2×2 店铺槽顺序由原版占地尺寸、`China_StorNDist` 店铺精灵尺寸和手册市场区截图共同约束；在恢复无变形原版运行截图前，槽坐标仍标记为可替换的几何推断，集中在 `OriginalBuildingSpriteCatalog.marketShopOrigins`，不得在 View 中复制坐标。
+
+## 交互、键盘与无障碍
+
+复刻视觉不意味着复制原版的技术限制：
+
+- 保留原版鼠标行为、快捷键和操作顺序。
+- 可以补充 macOS 菜单命令，但画布内状态必须与原版同步。
+- 所有可点击图标保留稳定的 accessibility label 和 identifier。
+- VoiceOver、tooltip 和测试标识不得迫使可见控件扩大或重排。
+- 焦点环若原版没有对应视觉，应使用最小、清楚且不破坏构图的辅助呈现。
+- 尊重 Reduce Motion；需要减少动画时保持最终帧和状态信息不变。
+- 颜色状态同时提供可访问名称或文本，不必把说明永久显示在画布上。
+
+## 实现规则
+
+- 共享几何、资源映射和回退值集中管理，不在单个 View 中堆叠补偿常量。
+- 原版界面资源应建立语义目录，记录档案、图像 ID、状态帧、切片边距和验证截图。
+- 玩家画布中的布局优先使用明确坐标或严格固定的区域组合；不要让 SwiftUI 的 intrinsic size 决定原版栏宽。
+- 分隔线尽量以 overlay 绘制，避免在固定总宽中意外多占 1px。
+- 固定面板内禁止横向滚动。
+- 不把开发诊断、模拟参数、调试图层或测试按钮放入发行版玩家界面。
+- 如果实现必须偏离原版，需在同一变更中记录：原版证据、偏离原因、影响范围和未来替换条件。
+
+## 视觉验证与完成标准
+
+玩家界面的实质性改动必须进行同状态、同尺寸验证：
+
+1. 构建 macOS target。
+2. 在 `1024 × 768` 逻辑内容尺寸下生成截图。
+3. 与原版相同状态的参考截图并排比较；条件允许时生成像素差分或透明叠图。
+4. 检查外轮廓、主要分区、资源选择、裁切、文字基线、状态帧和交互反馈。
+5. 若改动涉及视频已覆盖的行为，至少核对“动作前、交互中、动作后”三个状态；道路需包含有效和无效落点，建筑需包含绿色和红色完整预览，消息需包含展开与关闭状态。
+6. 运行受影响流程对应的 UI smoke；辅助功能环境不可用时，明确记录未验证项。
+
+一个玩家界面功能只有在以下条件同时成立时才算完成：
+
+- 几何结构与原版一致，固定区域没有被文本或 intrinsic size 撑开。
+- 使用了现有可用的原版素材和正确状态帧。
+- 没有新增原版不存在的常驻视觉元素。
+- 核心操作、键盘和辅助功能可用。
+- 行为过程与视频证据一致，且没有把宽屏版扩展地图误当成经典画布结构。
+- 同尺寸截图没有明显的比例、层级或密度偏差。
+
+## 禁止事项
+
+- 不把原版玩家界面“现代化”为卡片、仪表盘、侧边栏或响应式工具面板。
+- 不以“更清晰”“更整洁”为理由改变原版分区、图标密度或控件顺序。
+- 不用 SF Symbols、emoji 或通用图标替换已经存在的原版素材。
+- 不把建造目录改成两列带标签的大按钮。
+- 不在右栏常驻加入原版没有的资源图层、税率、速度、旋转或调试控制条。
+- 不让长文本、翻译文本或辅助功能文本改变固定画布尺寸。
+- 不用程序生成的铜褐渐变冒充已经可以从 `GameData` 取得的原版纹理。
+- 不让参考截图目录成为运行时依赖。
+- 不在未经证据支持时发明原版未显示的界面。

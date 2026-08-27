@@ -42,14 +42,48 @@ enum EmperorTheme {
 
     // MARK: Layout
 
-    static let hudHeight: CGFloat = 48
-    static let panelWidth: CGFloat = 286
+    /// The original city screen renders into a 1024 × 768 logical canvas.
+    /// Keeping these dimensions centralized makes screenshot comparison
+    /// deterministic and prevents the map / HUD split from drifting.
+    static let classicViewportSize = CGSize(width: 1_024, height: 768)
+    static let cityMapColumnWidth: CGFloat = 800
+    static let hudHeight: CGFloat = 40
+    /// Height occupied by the blue roof edge in the original HUD artwork.
+    /// Status text is centered in the timber band below it, not in all 40 px.
+    static let hudRoofHeight: CGFloat = 12
+    static let panelWidth: CGFloat = 224
     static let panelHeaderHeight: CGFloat = 34
     static let categoryRailWidth: CGFloat = 54
+    /// Confirmed construction-family button record geometry at `0x855A98`.
+    static let constructionSlotSize = CGSize(width: 54, height: 53)
+    /// Original state-6 list advances one row by `0x18` pixels.
+    static let constructionSubmenuRowHeight: CGFloat = 24
+    /// Bounded presentation fallback until the original row background and
+    /// exact font rasterization are recovered from an undistorted capture.
+    static let constructionSubmenuFallbackWidth: CGFloat = 194
+    /// `0x5B7030` leaves `0x59` pixels between the list and panel origin.
+    static let constructionSubmenuPanelGap: CGFloat = 89
     static let commandRowHeight: CGFloat = 36
-    static let minimapSize = CGSize(width: 156, height: 112)
+    /// `#1223` changes from the woven advisor field to its construction grid
+    /// at logical y=321 (281 px below the city-panel origin).
+    static let populationAdvisorHeight: CGFloat = 280
+    static let cityNavigationHeight: CGFloat = 40
+    static let minimapSize = CGSize(width: 138, height: 138)
+    static let mapMessagePanelHeight: CGFloat = 116
     static let nativeCardRadius: CGFloat = 12
     static let nativeModalRadius: CGFloat = 22
+
+    static func classicIntegerScale(fitting size: CGSize) -> CGFloat {
+        max(
+            1,
+            floor(
+                min(
+                    size.width / classicViewportSize.width,
+                    size.height / classicViewportSize.height
+                )
+            )
+        )
+    }
 
     // MARK: Typography
 

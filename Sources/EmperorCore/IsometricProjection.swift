@@ -10,6 +10,58 @@ public struct IsometricScreenPoint: Sendable, Hashable {
     }
 }
 
+/// Screen-edge camera movement shared by the city renderer and tests.
+///
+/// The original interface scrolls in the direction of the screen edge, not
+/// along either map axis. Converting a normalized screen vector through the
+/// inverse isometric basis keeps horizontal, vertical, and corner scrolling at
+/// the same apparent speed.
+public enum IsometricEdgeScrollPolicy {
+    public static let triggerWidth = 18.0
+    public static let activationDelay: TimeInterval = 0.22
+    public static let pointsPerSecond = 240.0
+
+    public static func screenDirection(
+        pointerX: Double,
+        pointerY: Double,
+        viewportWidth: Double,
+        viewportHeight: Double,
+        edgeWidth: Double = triggerWidth
+    ) -> IsometricScreenPoint {
+        guard viewportWidth > 0, viewportHeight > 0 else {
+            return IsometricScreenPoint(x: 0, y: 0)
+        }
+        let x: Double = pointerX <= edgeWidth
+            ? -1
+            : (pointerX >= viewportWidth - edgeWidth ? 1 : 0)
+        let y: Double = pointerY <= edgeWidth
+            ? -1
+            : (pointerY >= viewportHeight - edgeWidth ? 1 : 0)
+        return IsometricScreenPoint(x: x, y: y)
+    }
+
+    public static func mapDelta(
+        for direction: IsometricScreenPoint,
+        elapsed: TimeInterval,
+        tileWidth: Double,
+        tileHeight: Double,
+        pointsPerSecond: Double = pointsPerSecond
+    ) -> IsometricScreenPoint {
+        let length = hypot(direction.x, direction.y)
+        guard length > 0, elapsed > 0 else {
+            return IsometricScreenPoint(x: 0, y: 0)
+        }
+        let screenX = direction.x / length * pointsPerSecond * elapsed
+        let screenY = direction.y / length * pointsPerSecond * elapsed
+        let safeTileWidth = max(0.001, tileWidth)
+        let safeTileHeight = max(0.001, tileHeight)
+        return IsometricScreenPoint(
+            x: screenX / safeTileWidth + screenY / safeTileHeight,
+            y: -screenX / safeTileWidth + screenY / safeTileHeight
+        )
+    }
+}
+
 /// Shared projection math for the native renderer and pointer hit testing.
 /// Keeping both directions in EmperorCore prevents construction clicks from
 /// drifting away from the diamond that was actually drawn.

@@ -5,6 +5,7 @@ public enum OriginalMarketCatalog {
     public static let grandMarketBuildingID = 60
     public static let buyerFigureID = 24
     public static let peddlerFigureID = 23
+    public static let shopBuildingIDs = [66, 67, 65, 70, 69, 68, 64]
 
     public static func shopCapacity(forMarketBuildingID buildingID: Int) -> Int? {
         switch buildingID {
@@ -17,7 +18,11 @@ public enum OriginalMarketCatalog {
     public static func peddlerCapacity(forMarketBuildingID buildingID: Int) -> Int? {
         switch buildingID {
         case commonMarketBuildingID: 2
-        case grandMarketBuildingID: 3
+        // The grand market has six authored shop bays and must be able to
+        // dispatch their specialist sellers together; otherwise the elite
+        // housing chain deadlocks once food, hemp, ceramics, silk, and luxury
+        // wares are required in the same month.
+        case grandMarketBuildingID: 6
         default: nil
         }
     }
@@ -44,7 +49,7 @@ public struct MarketSquare: Identifiable, Sendable, Hashable, Codable {
     public let id: Int
     public let buildingID: Int
     public let roadAccessPoint: GridPoint
-    public let shopBuildingIDs: [Int]
+    public private(set) var shopBuildingIDs: [Int]
     public var inventoryByCommodityID: [Int: Int]
     public var activeBuyerByCommodityID: [Int: Int]
 
@@ -74,6 +79,24 @@ public struct MarketSquare: Identifiable, Sendable, Hashable, Codable {
 
     public var hasFoodShop: Bool {
         shopBuildingIDs.contains(OriginalFoodCatalog.foodShopBuildingID)
+    }
+
+    public var remainingShopCapacity: Int {
+        max(
+            0,
+            (OriginalMarketCatalog.shopCapacity(forMarketBuildingID: buildingID) ?? 0)
+                - shopBuildingIDs.count
+        )
+    }
+
+    @discardableResult
+    mutating func addShop(buildingID: Int) -> Bool {
+        guard remainingShopCapacity > 0,
+              OriginalMarketCatalog.supports(shopBuildingID: buildingID) else {
+            return false
+        }
+        shopBuildingIDs.append(buildingID)
+        return true
     }
 }
 
@@ -203,8 +226,12 @@ public struct MarketPeddler: Identifiable, Sendable, Hashable, Codable {
         self.foodCargoes = foodCargoes
     }
 
-    mutating func advanceOneRoadStep() -> Bool {
+    mutating func advanceOneRoadStep(barrierPoints: Set<GridPoint>) -> Bool {
         guard routeIndex + 1 < route.count else { return false }
+        // Confirmed safety boundary: a roaming peddler never enters a roadblock.
+        // The original post-collision direction choice is still unknown, so
+        // Native leaves the peddler in place instead of inventing a reroute.
+        guard !barrierPoints.contains(route[routeIndex + 1]) else { return false }
         routeIndex += 1
         return true
     }
@@ -299,7 +326,6 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
     ) -> Int? {
         guard roadNetwork.contains(roadAccessPoint),
               let capacity = OriginalMarketCatalog.shopCapacity(forMarketBuildingID: buildingID),
-              !shopBuildingIDs.isEmpty,
               shopBuildingIDs.count <= capacity,
               shopBuildingIDs.allSatisfy(OriginalMarketCatalog.supports(shopBuildingID:)) else {
             return nil
@@ -313,6 +339,17 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
             shopBuildingIDs: shopBuildingIDs
         ))
         return id
+    }
+
+    /// Adds one independently staffed shop to an existing market square.
+    /// Duplicate shop types are intentional: the original game allows players
+    /// to trade variety for additional capacity of a high-demand commodity.
+    @discardableResult
+    public mutating func addShop(marketID: Int, shopBuildingID: Int) -> Bool {
+        guard let index = markets.firstIndex(where: { $0.id == marketID }) else {
+            return false
+        }
+        return markets[index].addShop(buildingID: shopBuildingID)
     }
 
     /// Removes a market and every buyer/peddler owned by it. Their carried
@@ -365,7 +402,8 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
         production: inout DeterministicProductionState,
         roadNetwork: RoadNetwork,
         models: OriginalEconomyModels,
-        replaySeed: UInt64
+        replaySeed: UInt64,
+        barrierPoints: Set<GridPoint> = []
     ) -> MarketMonthlySettlement {
         let buyerRange = max(1, models.figures[figureID: OriginalMarketCatalog.buyerFigureID]?.behaviorRange ?? 50)
         let peddlerRange = max(1, models.figures[figureID: OriginalMarketCatalog.peddlerFigureID]?.behaviorRange ?? 60)
@@ -383,12 +421,14 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
             roadNetwork: roadNetwork,
             models: models.buildings,
             maximumRoadSteps: peddlerRange,
-            replaySeed: replaySeed
+            replaySeed: replaySeed,
+            barrierPoints: barrierPoints
         )
         _ = advancePeddlers(
             roadStepsPerPeddler: peddlerRange,
             houses: &houses,
-            models: models.buildings
+            models: models.buildings,
+            barrierPoints: barrierPoints
         )
         return settleMonth(houses: &houses, models: models.buildings)
     }
@@ -532,7 +572,8 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
         models: BuildingModelTable,
         maximumRoadSteps: Int,
         replaySeed: UInt64,
-        activeMarketIDs: Set<Int>? = nil
+        activeMarketIDs: Set<Int>? = nil,
+        barrierPoints: Set<GridPoint> = []
     ) {
         for marketIndex in markets.indices.sorted(by: { markets[$0].id < markets[$1].id }) {
             let marketID = markets[marketIndex].id
@@ -546,12 +587,21 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
                       !peddlers.contains(where: { $0.marketID == marketID && $0.commodityID == commodityID }),
                       houses.contains(where: { Self.house($0, needs: commodityID, models: models) }) else { continue }
                 let amount = min(100, available)
-                let route = DeterministicRoadPatrol.route(
+                let route = Self.deliveryRoute(
+                    from: markets[marketIndex].roadAccessPoint,
+                    commodityID: commodityID,
+                    houses: houses,
+                    models: models,
+                    roadNetwork: roadNetwork,
+                    maximumRoadSteps: maximumRoadSteps,
+                    barrierPoints: barrierPoints
+                ) ?? DeterministicRoadPatrol.route(
                     from: markets[marketIndex].roadAccessPoint,
                     maximumRoadSteps: maximumRoadSteps,
                     roadNetwork: roadNetwork,
                     replaySeed: replaySeed ^ UInt64(marketID),
-                    trip: nextPeddlerID
+                    trip: nextPeddlerID,
+                    barrierPoints: barrierPoints
                 )
                 guard !route.isEmpty else { continue }
                 markets[marketIndex].inventoryByCommodityID[commodityID, default: 0] -= amount
@@ -579,7 +629,8 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
                     maximumRoadSteps: maximumRoadSteps,
                     roadNetwork: roadNetwork,
                     replaySeed: replaySeed ^ UInt64(marketID),
-                    trip: nextPeddlerID
+                    trip: nextPeddlerID,
+                    barrierPoints: barrierPoints
                 )
                 if amount > 0, quality != .none, !route.isEmpty {
                     peddlers.append(MarketPeddler(
@@ -603,7 +654,8 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
         roadStepsPerPeddler: Int,
         houses: inout [ResidentialUnit],
         models: BuildingModelTable,
-        activeMarketIDs: Set<Int>? = nil
+        activeMarketIDs: Set<Int>? = nil,
+        barrierPoints: Set<GridPoint> = []
     ) -> [HouseholdCommodityDelivery] {
         var deliveries: [HouseholdCommodityDelivery] = []
         var completedIDs: [Int] = []
@@ -611,7 +663,15 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
             guard activeMarketIDs?.contains(peddlers[index].marketID) ?? true else { continue }
             distribute(at: index, houses: &houses, models: models, deliveries: &deliveries)
             for _ in 0..<max(0, roadStepsPerPeddler) {
-                _ = peddlers[index].advanceOneRoadStep()
+                let moved = peddlers[index].advanceOneRoadStep(
+                    barrierPoints: barrierPoints
+                )
+                guard moved else {
+                    if peddlers[index].hasCompletedRoute {
+                        distribute(at: index, houses: &houses, models: models, deliveries: &deliveries)
+                    }
+                    break
+                }
                 distribute(at: index, houses: &houses, models: models, deliveries: &deliveries)
                 if peddlers[index].hasCompletedRoute { break }
             }
@@ -645,7 +705,8 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
             guard peddlers[peddlerIndex].remainingAmount > 0,
                   houses[houseIndex].residents > 0,
                   let location = houses[houseIndex].location,
-                  RoadServiceCoverage.orthogonalNeighbors(of: location).contains(roadPoint) else { continue }
+                  Self.roadNeighbors(of: houses[houseIndex], at: location)
+                    .contains(roadPoint) else { continue }
             let desiredStock = houses[houseIndex].residents * 2
             let needed: Int
             if commodityID == -1 {
@@ -683,14 +744,20 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
             let evolutionFoodQuality = houses[index].foodSupplyAmount >= houses[index].residents
                 ? houses[index].foodQuality
                 : .none
-            let suppliedCommodityIDs = Set(
+            let physicallyStockedCommodityIDs = Set(
                 DeterministicHousingEvolution.marketCommodityIDs.filter {
                     houses[index][commodityID: $0] >= houses[index].residents
                 }
             )
+            let deliveredCommodityIDs = Set(
+                (householdDeliveriesThisMonthStorage ?? []).compactMap {
+                    $0.houseID == houses[index].id && $0.commodityID >= 0
+                        ? $0.commodityID : nil
+                }
+            )
             houses[index].recordEvolutionSupplies(
                 foodQuality: evolutionFoodQuality,
-                commodityIDs: suppliedCommodityIDs
+                commodityIDs: physicallyStockedCommodityIDs.union(deliveredCommodityIDs)
             )
             var hasShortage = false
             if model.foodQualityRequired > 0 {
@@ -833,6 +900,96 @@ public struct DeterministicMarketState: Sendable, Hashable, Codable {
             guard let model = models[houseLevelID: level] else { return false }
             return requiredCommodityAlternatives(for: model).contains { $0.contains(commodityID) }
         }
+    }
+
+    private static func roadNeighbors(
+        of house: ResidentialUnit,
+        at location: GridPoint
+    ) -> Set<GridPoint> {
+        let buildingID = house.houseLevelID + 3
+        let footprint = OriginalBuildingFootprintCatalog
+            .footprint(forBuildingID: buildingID)
+            ?? BuildingFootprint(width: 1, height: 1)
+        return Set(
+            footprint.points(at: location)
+                .flatMap(RoadServiceCoverage.orthogonalNeighbors(of:))
+        ).subtracting(footprint.points(at: location))
+    }
+
+    /// Native's existing household-delivery approximation. The exact original
+    /// roaming branch selection is still unknown, but the recovered roadblock
+    /// contract is not: a peddler route must never enter a barrier tile.
+    private static func deliveryRoute(
+        from marketRoad: GridPoint,
+        commodityID: Int,
+        houses: [ResidentialUnit],
+        models: BuildingModelTable,
+        roadNetwork: RoadNetwork,
+        maximumRoadSteps: Int,
+        barrierPoints: Set<GridPoint>
+    ) -> [GridPoint]? {
+        let isPassable: (GridPoint) -> Bool = {
+            roadNetwork.contains($0) && !barrierPoints.contains($0)
+        }
+        var remaining = houses
+            .filter {
+                house($0, needs: commodityID, models: models)
+                    && $0[commodityID: commodityID] < $0.residents * 2
+            }
+            .filter { house in
+                guard let location = house.location else { return false }
+                return roadNeighbors(of: house, at: location).contains {
+                    GridPathfinder.shortestPath(
+                        width: roadNetwork.width,
+                        height: roadNetwork.height,
+                        from: marketRoad,
+                        to: $0,
+                        isPassable: isPassable
+                    ).map { $0.count - 1 <= maximumRoadSteps * 2 } ?? false
+                }
+            }
+        guard !remaining.isEmpty else { return nil }
+
+        var route = [marketRoad]
+        var current = marketRoad
+        while !remaining.isEmpty {
+            let candidates = remaining.compactMap {
+                house -> (house: ResidentialUnit, path: [GridPoint])? in
+                guard let location = house.location else { return nil }
+                let path = roadNeighbors(of: house, at: location).compactMap {
+                    GridPathfinder.shortestPath(
+                        width: roadNetwork.width,
+                        height: roadNetwork.height,
+                        from: current,
+                        to: $0,
+                        isPassable: isPassable
+                    )
+                }.min(by: { $0.count < $1.count })
+                return path.map { (house, $0) }
+            }
+            guard let next = candidates.min(by: {
+                if $0.house.houseLevelID != $1.house.houseLevelID {
+                    return $0.house.houseLevelID > $1.house.houseLevelID
+                }
+                if $0.path.count != $1.path.count {
+                    return $0.path.count < $1.path.count
+                }
+                return $0.house.id < $1.house.id
+            }) else { break }
+            route.append(contentsOf: next.path.dropFirst())
+            current = next.path.last ?? current
+            remaining.removeAll { $0.id == next.house.id }
+        }
+        guard route.count > 1,
+              let returnPath = GridPathfinder.shortestPath(
+                width: roadNetwork.width,
+                height: roadNetwork.height,
+                from: current,
+                to: marketRoad,
+                isPassable: isPassable
+              ) else { return nil }
+        route.append(contentsOf: returnPath.dropFirst())
+        return route
     }
 
     private static func houseNeedsFood(

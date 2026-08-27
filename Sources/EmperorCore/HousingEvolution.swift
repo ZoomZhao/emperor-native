@@ -53,6 +53,54 @@ public enum HouseEvolutionRequirement: Sendable, Hashable, Codable {
     case service(WalkerServiceKind)
     case foodQuality(current: Int, required: Int)
     case commodityAlternatives([Int])
+
+    /// Original `EmperorText` group 127 upgrade-reason row used for the
+    /// requirement, zero-based. Group 127 keeps the same row ordering and row
+    /// count (75) in `EmperorText.eng` and `EmperorText.txt`, so the Chinese row
+    /// can be fetched by index from the aligned table. Service and commodity
+    /// rows remain semantic mappings pending recovery of their reason writers.
+    ///
+    /// Desirability maps to row 57 (the generic low-appeal line); row 56 names
+    /// negative nearby buildings as the trigger, which the current native state
+    /// cannot attribute, so it is intentionally never selected. Unsupported
+    /// service/commodity requirement shapes return `nil` and must not be
+    /// rendered with invented prose.
+    public var emperorTextGroup127UpgradeReasonRowIndex: Int? {
+        switch self {
+        case .desirability:
+            return 57
+        case .foodQuality:
+            return 59
+        case let .service(service):
+            return Self.emperorTextGroup127UpgradeReasonRowIndex(forService: service)
+        case let .commodityAlternatives(ids):
+            switch Set(ids) {
+            case [25]: return 68
+            case [19]: return 69
+            case [13]: return 70
+            case [22, 23]: return 71
+            case [24]: return 72
+            default: return nil
+            }
+        }
+    }
+
+    private static func emperorTextGroup127UpgradeReasonRowIndex(
+        forService service: WalkerServiceKind
+    ) -> Int? {
+        switch service {
+        case .water: return 58
+        case .music: return 60
+        case .acrobat: return 61
+        case .drama: return 62
+        case .acupuncture: return 63
+        case .herbalist: return 64
+        case .ancestor: return 65
+        case .confucian: return 66
+        case .daoistOrBuddhist: return 67
+        case .inspection, .constable, .tax: return nil
+        }
+    }
 }
 
 public enum HouseEvolutionDirection: String, Sendable, Hashable, Codable {
@@ -119,13 +167,21 @@ public enum DeterministicHousingEvolution {
         models: BuildingModelTable,
         difficulty: GameDifficulty
     ) -> HouseEvolutionEvaluation? {
-        guard house.residents > 0,
-              house.location != nil,
-              let current = models[houseLevelID: house.houseLevelID] else {
+        guard house.location != nil,
+              let current = models[houseLevelID: house.houseLevelID],
+              house.residents > 0
+                || (house.houseLevelID == 8 && current.populationCapacity == 0) else {
             return nil
         }
         let next = nextLevel(after: house.houseLevelID)
-        var evolutionMissing = requirementsMissing(model: current, house: house)
+        // The original evolves a house when it satisfies the **target**
+        // level's authored requirements (food quality, services, goods), not
+        // the current level's. Checking the current level would let a Hut
+        // (food 0) evolve into a Plain Cottage (food 20) without food.
+        var evolutionMissing: [HouseEvolutionRequirement] = []
+        if let next, let nextModel = models[houseLevelID: next] {
+            evolutionMissing = requirementsMissing(model: nextModel, house: house)
+        }
         let evolveThreshold = threshold(
             current.evolveDesirability,
             fieldIndex: 1,
@@ -183,6 +239,12 @@ public enum DeterministicHousingEvolution {
                     houses[index].houseLevelID = previousLevel
                     let capacity = houses[index].capacity(using: models)
                     houses[index].residents = min(oldResidents, capacity)
+                    if oldResidents > houses[index].residents {
+                        // Original `FUN_00468420` eviction path sets the
+                        // `cHouseInfo+0x3C` settling lock with a 32-step
+                        // countdown after residents are removed (§10.6).
+                        houses[index].startSettlingLock()
+                    }
                     changes.append(HouseEvolutionChange(
                         houseID: houses[index].id,
                         fromLevelID: currentLevel,

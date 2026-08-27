@@ -16,9 +16,21 @@ public struct DeterministicTerrainState: Sendable, Equatable, Codable {
     public let width: Int
     public let height: Int
     public private(set) var terrainRawValues: [UInt32]
+    /// Exact mission-sized projections of the two serialized auxiliary layers
+    /// consumed by the recovered worker routing builders. Optional fields keep
+    /// saves written before this source-layer recovery decodable.
+    public let primaryElevationClassRawValues: [UInt8]?
+    public let roadWaterAuxiliaryValues: [UInt8]?
     /// Optional keeps native saves from releases before authored map points
     /// were decoded backwards compatible.
     public let authoredPoints: EmperorMapAuthoredPoints?
+    /// Predetermined Great Wall root recovered by matching the map's authored
+    /// wall-image footprint to the original multipart layout files. Optional
+    /// preserves native saves written before this map contract was decoded.
+    public let greatWallPlacement: OriginalGreatWallLayoutCatalog.MapPlacement?
+    /// Predetermined Grand Canal reserve recovered from the authored map
+    /// image footprint. Optional preserves earlier Native saves.
+    public let grandCanalPlacement: OriginalGrandCanalLayoutCatalog.MapPlacement?
 
     public init(map: EmperorMap) {
         width = map.width
@@ -26,22 +38,44 @@ public struct DeterministicTerrainState: Sendable, Equatable, Codable {
         terrainRawValues = (0..<map.height).flatMap { y in
             (0..<map.width).map { x in map.terrainFlags(x: x, y: y) ?? 0 }
         }
+        primaryElevationClassRawValues = (0..<map.height).flatMap { y in
+            (0..<map.width).map { x in
+                UInt8(bitPattern: map.primaryElevationClassValue(x: x, y: y) ?? -1)
+            }
+        }
+        roadWaterAuxiliaryValues = map.roadWaterAuxiliaryValues.map { _ in
+            (0..<map.height).flatMap { y in
+                (0..<map.width).map { x in map.roadWaterAuxiliaryValue(x: x, y: y) ?? 0 }
+            }
+        }
         authoredPoints = map.authoredPoints
+        greatWallPlacement = OriginalGreatWallLayoutCatalog.campaignPlacement(in: map)
+        grandCanalPlacement = OriginalGrandCanalLayoutCatalog.campaignPlacement(in: map)
     }
 
     public init(
         width: Int,
         height: Int,
         terrainRawValues: [UInt32],
-        authoredPoints: EmperorMapAuthoredPoints? = nil
+        primaryElevationClassRawValues: [UInt8]? = nil,
+        roadWaterAuxiliaryValues: [UInt8]? = nil,
+        authoredPoints: EmperorMapAuthoredPoints? = nil,
+        greatWallPlacement: OriginalGreatWallLayoutCatalog.MapPlacement? = nil,
+        grandCanalPlacement: OriginalGrandCanalLayoutCatalog.MapPlacement? = nil
     ) throws {
-        guard width > 0, height > 0, terrainRawValues.count == width * height else {
+        guard width > 0, height > 0, terrainRawValues.count == width * height,
+              primaryElevationClassRawValues.map({ $0.count == width * height }) ?? true,
+              roadWaterAuxiliaryValues.map({ $0.count == width * height }) ?? true else {
             throw GameDataError.malformedFile("native terrain dimensions")
         }
         self.width = width
         self.height = height
         self.terrainRawValues = terrainRawValues
+        self.primaryElevationClassRawValues = primaryElevationClassRawValues
+        self.roadWaterAuxiliaryValues = roadWaterAuxiliaryValues
         self.authoredPoints = authoredPoints
+        self.greatWallPlacement = greatWallPlacement
+        self.grandCanalPlacement = grandCanalPlacement
     }
 
     public func contains(_ point: GridPoint) -> Bool {
@@ -51,6 +85,29 @@ public struct DeterministicTerrainState: Sendable, Equatable, Codable {
     public func terrain(at point: GridPoint) -> TerrainFlags? {
         guard contains(point) else { return nil }
         return TerrainFlags(rawValue: terrainRawValues[point.y * width + point.x])
+    }
+
+    public func primaryElevationClass(at point: GridPoint) -> Int8? {
+        guard contains(point), let primaryElevationClassRawValues else { return nil }
+        return Int8(bitPattern: primaryElevationClassRawValues[point.y * width + point.x])
+    }
+
+    public func roadWaterAuxiliary(at point: GridPoint) -> UInt8? {
+        guard contains(point), let roadWaterAuxiliaryValues else { return nil }
+        return roadWaterAuxiliaryValues[point.y * width + point.x]
+    }
+
+    /// Original roadblock terrain guard (recovered from `0x46D110`, roadblock
+    /// branches, and documented in
+    /// `docs/exe-research/roadblock-path-blocking.md` §2.1). The block may sit
+    /// only on a plain road tile: no `0x400` special-crossing surface, no
+    /// occupied-surface marker (`0x8`), and a zero road-water auxiliary byte.
+    public func canPlaceRoadBlock(at point: GridPoint) -> Bool {
+        guard let flags = terrain(at: point) else { return false }
+        return flags.contains(.road)
+            && flags.rawValue & Self.roadBlockSpecialCrossingSurfaceMask == 0
+            && !flags.contains(.building)
+            && (roadWaterAuxiliary(at: point) ?? 0) == 0
     }
 
     public var roadPoints: Set<GridPoint> {
@@ -272,6 +329,11 @@ public struct DeterministicTerrainState: Sendable, Equatable, Codable {
         }
         return visited
     }
+
+    /// `1 << 10` was not added to `TerrainFlags`' verified set because the
+    /// native water/road parsing never asserts on it; it exists only as the
+    /// original special-crossing surface that blocks roadblock placement.
+    private static let roadBlockSpecialCrossingSurfaceMask: UInt32 = 1 << 10
 
     private static let constructionObstacles: TerrainFlags = [
         .tree, .rock, .water, .building, .scrub, .garden,

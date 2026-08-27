@@ -312,7 +312,8 @@ public struct CampaignMissionRuntimeState: Sendable, Hashable, Codable {
         month: Int,
         city: inout DeterministicCityState,
         rules: EconomyRulesEngine,
-        goalSet: CampaignMissionGoalSet?
+        goalSet: CampaignMissionGoalSet?,
+        completedMonumentBuildingIDsAtBoundary: Set<Int>? = nil
     ) -> CampaignMissionAdvanceResult {
         guard outcome == .running else { return .noChange }
         let relativeYear = max(0, settlementYear - startYear)
@@ -364,7 +365,8 @@ public struct CampaignMissionRuntimeState: Sendable, Hashable, Codable {
                 alliedCityCount: empireState?.alliedCityCount ?? 0,
                 conqueredCityCount: empireState?.conqueredCityCount ?? 0,
                 homageProgress: empireState?.homageProgress ?? 0,
-                menagerieSpeciesCount: menagerieAnimalIDs.count
+                menagerieSpeciesCount: menagerieAnimalIDs.count,
+                completedMonumentBuildingIDs: completedMonumentBuildingIDsAtBoundary
             )
            ) {
             let victory: CampaignMissionOutcome = .victory(CampaignVictoryRecord(
@@ -405,14 +407,17 @@ public struct CampaignMissionRuntimeState: Sendable, Hashable, Codable {
         let productID = requests[index].productID
         let amount = requests[index].amount
         if productID >= Self.firstMenagerieProductID {
-            let available = menagerieAnimalCountsByProductID[productID, default: 0]
+            guard let speciesID = Self.canonicalMenagerieProductID(productID) else {
+                return false
+            }
+            let available = menagerieAnimalCountsByProductID[speciesID, default: 0]
             guard available >= amount else { return false }
             let remaining = available - amount
             if remaining == 0 {
-                menagerieAnimalCountsByProductID.removeValue(forKey: productID)
-                menagerieAnimalIDs.remove(productID)
+                menagerieAnimalCountsByProductID.removeValue(forKey: speciesID)
+                menagerieAnimalIDs.remove(speciesID)
             } else {
-                menagerieAnimalCountsByProductID[productID] = remaining
+                menagerieAnimalCountsByProductID[speciesID] = remaining
             }
         } else {
             guard city.fulfillCampaignRequest(commodityID: productID, amount: amount) else {
@@ -426,9 +431,21 @@ public struct CampaignMissionRuntimeState: Sendable, Hashable, Codable {
     /// Adds animals obtained through scripted gifts or future native systems.
     /// Victory counts distinct species, while requests consume actual headcount.
     public mutating func receiveMenagerieAnimals(productID: Int, amount: Int) {
-        guard productID >= Self.firstMenagerieProductID, amount > 0 else { return }
-        menagerieAnimalCountsByProductID[productID, default: 0] += amount
-        menagerieAnimalIDs.insert(productID)
+        guard let speciesID = Self.canonicalMenagerieProductID(productID),
+              amount > 0 else { return }
+        menagerieAnimalCountsByProductID[speciesID, default: 0] += amount
+        menagerieAnimalIDs.insert(speciesID)
+    }
+
+    /// Continuation missions keep the physical menagerie inherited with the
+    /// city. Script gifts use figure IDs 69...77 while emissary requests use
+    /// product IDs 30...38; both are normalized before merging.
+    public mutating func inheritMenagerie(
+        animalCountsByProductID: [Int: Int]
+    ) {
+        for (productID, amount) in animalCountsByProductID where amount > 0 {
+            receiveMenagerieAnimals(productID: productID, amount: amount)
+        }
     }
 
     @discardableResult
@@ -518,6 +535,17 @@ public struct CampaignMissionRuntimeState: Sendable, Hashable, Codable {
         _ = empire.adjustFavor(cityID: source.id, amount: -5)
         empireState = empire
         return speciesID
+    }
+
+    public static func canonicalMenagerieProductID(_ productID: Int) -> Int? {
+        switch productID {
+        case firstMenagerieProductID..<(firstMenagerieProductID + 9):
+            productID
+        case 69...77:
+            firstMenagerieProductID + productID - 69
+        default:
+            nil
+        }
     }
 
     @discardableResult
@@ -649,9 +677,11 @@ public struct CampaignMissionRuntimeState: Sendable, Hashable, Codable {
                 )
                 if let code = CampaignCityStatusCode(rawValue: occurrence.statusChangeCode),
                    let cityID = occurrence.cityFromID {
-                    if code == .tradeSuspended || code == .tradeShutsDown {
+                    if code == .tradeSuspended || code == .tradeShutsDown
+                        || code == .cityBecomesInactive {
                         city.setCampaignTradeOpen(false, partnerID: cityID)
-                    } else if code == .tradeResumed || code == .tradeOpensUp {
+                    } else if code == .tradeResumed || code == .tradeOpensUp
+                        || code == .cityBecomesActive {
                         city.setCampaignTradeOpen(true, partnerID: cityID)
                     }
                 }

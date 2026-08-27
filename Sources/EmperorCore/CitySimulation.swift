@@ -32,9 +32,28 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
     public var foodSupplyAmount: Int
     public var foodQualityRawValue: Int
     public var serviceCoverage: Set<WalkerServiceKind>
+    /// Original house-service countdown bytes. Health/entertainment callbacks
+    /// write `0x60`; religion writes `0x28`; the original day-slice walk
+    /// decrements them independently.
+    public private(set) var serviceCoverageRemainingSlices: [WalkerServiceKind: Int]
+    /// Tax officials use the house-building byte at `+0x52`, written as `0x32`.
+    public private(set) var taxCoverageRemainingSlices: Int
     public var desirability: Int
     public var lastSuppliedFoodQualityRawValue: Int
     public var lastSuppliedCommodityIDs: Set<Int>
+    /// Original `cHouseInfo+0x3C` post-removal settling lock (values `0`/`2`)
+    /// with the `house+0x98` countdown (`FUN_004681A0` sets both; the daily
+    /// `FUN_005185C0` walk decrements and clears — §10.6). While nonzero, the
+    /// immigrant arrival occupancy write is skipped.
+    public private(set) var settlingLock: Int
+    public private(set) var settlingLockRemainingSteps: Int
+    /// Original vacant-house building ID (`2` Vacant House / `11` Unocc Elite)
+    /// before the first immigrant arrival converts the house (`+0x230`
+    /// contract, §5.10): common stays level 0, elite jumps 8 → 10.
+    public private(set) var vacantTypeID: Int?
+    /// Original `house+0x5C` food-shortage streak byte consumed by the
+    /// popularity food walk `FUN_00590F30` (§3): `1→−1, 2→−2, ≥3→−3`.
+    public private(set) var foodShortageStreak: Int
 
     public init(
         id: Int,
@@ -49,9 +68,15 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
         foodSupplyAmount: Int = 0,
         foodQualityRawValue: Int = FoodQuality.none.rawValue,
         serviceCoverage: Set<WalkerServiceKind> = [],
+        serviceCoverageRemainingSlices: [WalkerServiceKind: Int] = [:],
+        taxCoverageRemainingSlices: Int = 0,
         desirability: Int = 0,
         lastSuppliedFoodQualityRawValue: Int = FoodQuality.none.rawValue,
-        lastSuppliedCommodityIDs: Set<Int> = []
+        lastSuppliedCommodityIDs: Set<Int> = [],
+        settlingLock: Int = 0,
+        settlingLockRemainingSteps: Int = 0,
+        vacantTypeID: Int? = nil,
+        foodShortageStreak: Int = 0
     ) {
         self.id = id
         self.houseLevelID = houseLevelID
@@ -65,9 +90,22 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
         self.foodSupplyAmount = max(0, foodSupplyAmount)
         self.foodQualityRawValue = foodQualityRawValue
         self.serviceCoverage = serviceCoverage
+        var recoveredCoverage = serviceCoverageRemainingSlices.mapValues { max(0, $0) }
+        for service in serviceCoverage where recoveredCoverage[service] == nil {
+            recoveredCoverage[service] = Self.originalCoverageWrite(for: service)
+        }
+        self.serviceCoverageRemainingSlices = recoveredCoverage
+        self.taxCoverageRemainingSlices = max(
+            0,
+            taxCoverageRemainingSlices > 0 ? taxCoverageRemainingSlices : (hasTaxCoverage ? 0x32 : 0)
+        )
         self.desirability = desirability
         self.lastSuppliedFoodQualityRawValue = lastSuppliedFoodQualityRawValue
         self.lastSuppliedCommodityIDs = lastSuppliedCommodityIDs
+        self.settlingLock = max(0, settlingLock)
+        self.settlingLockRemainingSteps = max(0, settlingLockRemainingSteps)
+        self.vacantTypeID = vacantTypeID
+        self.foodShortageStreak = min(3, max(0, foodShortageStreak))
     }
 
     public func capacity(using models: BuildingModelTable) -> Int {
@@ -81,6 +119,53 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
     public mutating func addSupply(commodityID: Int, amount: Int) {
         guard amount > 0 else { return }
         suppliesByCommodityID[commodityID, default: 0] += amount
+    }
+
+    public mutating func applyOriginalServiceVisit(_ service: WalkerServiceKind) {
+        if service == .tax {
+            hasTaxCoverage = true
+            taxCoverageRemainingSlices = 0x32
+        } else {
+            serviceCoverage.insert(service)
+            serviceCoverageRemainingSlices[service] = Self.originalCoverageWrite(for: service)
+        }
+    }
+
+    public mutating func resetOriginalServiceCoverage() {
+        serviceCoverage.removeAll()
+        serviceCoverageRemainingSlices.removeAll()
+    }
+
+    public mutating func clearOriginalTaxCoverage() {
+        hasTaxCoverage = false
+        taxCoverageRemainingSlices = 0
+    }
+
+    public mutating func advanceOriginalOrdinaryServiceSlice() {
+        for service in Array(serviceCoverageRemainingSlices.keys) {
+            let remaining = max(0, serviceCoverageRemainingSlices[service, default: 0] - 1)
+            if remaining == 0 {
+                serviceCoverageRemainingSlices.removeValue(forKey: service)
+                serviceCoverage.remove(service)
+            } else {
+                serviceCoverageRemainingSlices[service] = remaining
+            }
+        }
+    }
+
+    public mutating func advanceOriginalTaxServiceSlice() {
+        guard taxCoverageRemainingSlices > 0 else { return }
+        taxCoverageRemainingSlices -= 1
+        if taxCoverageRemainingSlices == 0 { hasTaxCoverage = false }
+    }
+
+    private static func originalCoverageWrite(for service: WalkerServiceKind) -> Int {
+        switch service {
+        case .ancestor, .confucian, .daoistOrBuddhist:
+            return 0x28
+        default:
+            return 0x60
+        }
     }
 
     public var foodQuality: FoodQuality {
@@ -101,12 +186,39 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
 
     public mutating func addFoodSupply(amount: Int, quality: FoodQuality) {
         guard amount > 0 else { return }
-        if foodSupplyAmount == 0 {
-            foodQualityRawValue = quality.rawValue
+        let marketQuality = quality.rawValue
+        // Elite houses (11…17) skip the quality write when the market quality
+        // band is below 3 (`FUN_005188D0` gate in `FUN_00543B20`/§10.10); the
+        // food itself is still added.
+        if houseLevelID >= 8, marketQuality <= 49 {
+            foodSupplyAmount += amount
+            return
+        }
+        let currentQuality = foodQualityRawValue
+        if marketQuality > currentQuality {
+            // Original `0x543A09` write: a better market delivery **replaces**
+            // the house quality byte (§10.10).
+            foodQualityRawValue = marketQuality
         } else {
-            // Mixing a new delivery cannot make the existing food better than
-            // its weakest component, matching the market's minimum-quality rule.
-            foodQualityRawValue = min(foodQualityRawValue, quality.rawValue)
+            // Otherwise blend current quality with the market quality using
+            // the recovered five-ratio table (`r = delivered/existingStock`,
+            // `DAT_007B7248/…`, integer divisions per the confirmed `sar`/
+            // `imul` identities).
+            let existing = Double(foodSupplyAmount)
+            let ratio = existing <= 0 ? 10.0 : Double(amount) / existing
+            let blended: Int
+            if ratio > 3 {
+                blended = (currentQuality + 3 * marketQuality) / 4
+            } else if ratio > 2 {
+                blended = (currentQuality + 2 * marketQuality) / 3
+            } else if ratio > 0.5 {
+                blended = (currentQuality + marketQuality) / 2
+            } else if ratio > 0.33 {
+                blended = (2 * currentQuality + marketQuality) / 3
+            } else {
+                blended = (3 * currentQuality + marketQuality) / 4
+            }
+            foodQualityRawValue = blended
         }
         foodSupplyAmount += amount
     }
@@ -128,13 +240,60 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
         return consumed
     }
 
+    /// Original `FUN_004681A0` / `FUN_00468420` resident-removal setter
+    /// (`+0x3C = 2`, `house+0x98 = 32`; §10.6). The lock suppresses immigrant
+    /// occupancy writes while it runs.
+    public mutating func startSettlingLock(steps: Int = 32) {
+        settlingLock = 2
+        settlingLockRemainingSteps = max(1, steps)
+    }
+
+    /// Daily `FUN_005185C0` equivalent: an empty house clears immediately;
+    /// otherwise the countdown decrements and the lock clears at zero (§10.6).
+    public mutating func advanceSettlingLock() {
+        guard settlingLock != 0 else { return }
+        if residents == 0 {
+            settlingLock = 0
+            settlingLockRemainingSteps = 0
+            return
+        }
+        settlingLockRemainingSteps -= 1
+        if settlingLockRemainingSteps <= 0 {
+            settlingLock = 0
+            settlingLockRemainingSteps = 0
+        }
+    }
+
+    /// Original `FUN_00518DE0` / house vtable `+0x230` type switch on first
+    /// occupancy (§5.10): vacant common `2 → 3` (level stays 0), vacant elite
+    /// `11 → 13` (Native level 8 → 10). Clears the vacant marker.
+    public mutating func activateVacantHouse() {
+        guard residents == 0, let vacant = vacantTypeID else { return }
+        if vacant == 11 {
+            houseLevelID = 10
+        }
+        vacantTypeID = nil
+    }
+
+    /// Original `house+0x5C` streak update in the food walk (§3).
+    public mutating func recordFoodQualityScore(_ satisfied: Bool) {
+        if satisfied {
+            foodShortageStreak = 0
+        } else {
+            foodShortageStreak = min(3, foodShortageStreak + 1)
+        }
+    }
+
     private enum CodingKeys: String, CodingKey {
         case id, houseLevelID, residents, hasTaxCoverage, footprintMultiplier, location
         case orientation
         case suppliesByCommodityID, commodityShortageMonths
         case foodSupplyAmount, foodQualityRawValue
-        case serviceCoverage, desirability
+        case serviceCoverage, serviceCoverageRemainingSlices, taxCoverageRemainingSlices, desirability
         case lastSuppliedFoodQualityRawValue, lastSuppliedCommodityIDs
+        case settlingLock, settlingLockRemainingSteps
+        case vacantTypeID
+        case foodShortageStreak
     }
 
     public init(from decoder: Decoder) throws {
@@ -164,6 +323,17 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
             Set<WalkerServiceKind>.self,
             forKey: .serviceCoverage
         ) ?? []
+        serviceCoverageRemainingSlices = try container.decodeIfPresent(
+            [WalkerServiceKind: Int].self,
+            forKey: .serviceCoverageRemainingSlices
+        ) ?? Dictionary(
+            uniqueKeysWithValues: serviceCoverage.map { ($0, Self.originalCoverageWrite(for: $0)) }
+        )
+        taxCoverageRemainingSlices = max(
+            0,
+            try container.decodeIfPresent(Int.self, forKey: .taxCoverageRemainingSlices)
+                ?? (hasTaxCoverage ? 0x32 : 0)
+        )
         desirability = try container.decodeIfPresent(Int.self, forKey: .desirability) ?? 0
         lastSuppliedFoodQualityRawValue = try container.decodeIfPresent(
             Int.self,
@@ -173,6 +343,22 @@ public struct ResidentialUnit: Identifiable, Sendable, Equatable, Codable {
             Set<Int>.self,
             forKey: .lastSuppliedCommodityIDs
         ) ?? []
+        settlingLock = max(
+            0,
+            try container.decodeIfPresent(Int.self, forKey: .settlingLock) ?? 0
+        )
+        settlingLockRemainingSteps = max(
+            0,
+            try container.decodeIfPresent(Int.self, forKey: .settlingLockRemainingSteps) ?? 0
+        )
+        vacantTypeID = try container.decodeIfPresent(Int.self, forKey: .vacantTypeID)
+        foodShortageStreak = min(
+            3,
+            max(
+                0,
+                try container.decodeIfPresent(Int.self, forKey: .foodShortageStreak) ?? 0
+            )
+        )
     }
 }
 
@@ -187,6 +373,9 @@ public struct MonthlySettlement: Sendable, Equatable, Codable {
     public let taxSentiment: Int
     public let startingTreasury: Int
     public let endingTreasury: Int
+    /// Monument completion at the original month-boundary checkpoint. The
+    /// final simulation step's monument scheduler runs after this snapshot.
+    public let completedMonumentBuildingIDsAtBoundary: Set<Int>?
 }
 
 /// Result of a demolish/bulldoze action, used by the native UI to surface a
@@ -256,6 +445,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
     private var simulationClockState: SimulationClockState?
     private var monthlyServiceCoverageState: MonthlyServiceCoverageAccumulator?
     private var migrationState: DeterministicMigrationState?
+    /// Optional so saves written before the producer context existed decode.
+    private var migrationContextState: CampaignMigrationContext?
     // Internal so the campaign-event extension can mutate it while the public
     // API remains read-only and save compatible.
     var campaignEventState: CampaignCityEventState?
@@ -297,6 +488,7 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         simulationClockState = SimulationClockState()
         monthlyServiceCoverageState = MonthlyServiceCoverageAccumulator()
         migrationState = DeterministicMigrationState()
+        migrationContextState = CampaignMigrationContext()
         campaignEventState = CampaignCityEventState()
         self.taxBandID = taxBandID
         self.difficulty = difficulty
@@ -354,6 +546,34 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         migrationState ?? DeterministicMigrationState()
     }
 
+    public var migrationContext: CampaignMigrationContext {
+        migrationContextState ?? CampaignMigrationContext()
+    }
+
+    /// Runtime sets this at mission start and each monthly advance (wage,
+    /// debt months, monument goals).
+    public mutating func setMigrationContext(_ context: CampaignMigrationContext) {
+        migrationContextState = context
+    }
+
+    /// Fixture/verification switch for the recovered producer. Production
+    /// stays on `.unsupportedOriginalProducer` until the playthrough gates
+    /// pass end-to-end.
+    public mutating func setAutomaticMigrationAvailability(
+        _ availability: AutomaticMigrationAvailability
+    ) {
+        var migration = migrationState ?? DeterministicMigrationState()
+        migration.setAutomaticMigrationAvailability(availability)
+        migrationState = migration
+    }
+
+    /// Fixture/verification setter for the recovered popularity seed.
+    public mutating func setMigrationPopularity(_ value: Int) {
+        var migration = migrationState ?? DeterministicMigrationState()
+        migration.setPopularity(value)
+        migrationState = migration
+    }
+
     /// The single labor snapshot used by production, storage, markets and
     /// residential services during a simulation tick. Market squares have no
     /// employees in the original table; their installed shops own the labor
@@ -383,10 +603,244 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         return workforceSnapshot(models: models).assignments.first { $0.key == key }
     }
 
+    /// Projects constructed Laborers' Camps into the exact provider inputs
+    /// consumed by the recovered Grand Canal coordinator. Enumeration follows
+    /// placement order, matching the original strict-distance tie behavior.
+    public func grandCanalPhaseLaborProviders(
+        models: BuildingModelTable
+    ) -> [OriginalGrandCanalLayoutCatalog.PhaseLaborProviderCandidate] {
+        grandCanalPhaseLaborProviders(
+            models: models,
+            coordinator: aesthetics.grandCanalPhaseLaborCoordinator
+        )
+    }
+
+    private func grandCanalPhaseLaborProviders(
+        models: BuildingModelTable,
+        coordinator: OriginalGrandCanalLayoutCatalog.PhaseLaborCoordinatorRuntime
+    ) -> [OriginalGrandCanalLayoutCatalog.PhaseLaborProviderCandidate] {
+        let assignments = Dictionary(uniqueKeysWithValues:
+            workforceSnapshot(models: models).assignments.map { ($0.key, $0) }
+        )
+        let activeCounts = Dictionary(grouping:
+            coordinator.laborers,
+            by: \.providerObjectID
+        ).mapValues(\.count)
+        return placedBuildings.compactMap { placement in
+            guard placement.buildingID
+                    == OriginalGrandCanalLayoutCatalog.phaseLaborProviderBuildingID
+            else { return nil }
+            let key = OperationalBuildingKey(
+                category: placement.category,
+                instanceID: placement.instanceID
+            )
+            let assignment = assignments[key]
+            return OriginalGrandCanalLayoutCatalog.PhaseLaborProviderCandidate(
+                objectID: placement.instanceID,
+                buildingID: placement.buildingID,
+                isActive: true,
+                efficiencyPercent: OriginalGrandCanalLayoutCatalog
+                    .phaseLaborProviderEfficiencyPercent(
+                        requiredWorkers: assignment?.requiredWorkers ?? 0,
+                        assignedWorkers: assignment?.assignedWorkers ?? 0
+                    ),
+                activeMonumentWorkerCount: activeCounts[placement.instanceID] ?? 0,
+                origin: placement.origin
+            )
+        }
+    }
+
+    /// Produces the `FUN_00567540`-equivalent initial targets only from a
+    /// complete source-derived primary routing cache. Callers that cannot
+    /// supply that cache receive no dispatchable accesses.
+    public func grandCanalPhaseLaborTargetAccesses(
+        routingGrids: OriginalGrandCanalLayoutCatalog.WorkerRoutingGrids
+    ) throws -> [OriginalGrandCanalLayoutCatalog.PhaseLaborTargetAccessCandidate] {
+        guard let terrain,
+              terrain.width == routingGrids.width,
+              terrain.height == routingGrids.height else {
+            throw OriginalGrandCanalLayoutCatalog.WorkerRoutingCacheDerivationError
+                .invalidGridDimensions
+        }
+        let ranks = try OriginalGrandCanalLayoutCatalog.workerRoadComponentRankByPoint(
+            width: terrain.width,
+            height: terrain.height,
+            terrainRawValues: terrain.terrainRawValues,
+            primaryPassability: routingGrids.primaryPassability
+        )
+        return OriginalGrandCanalLayoutCatalog.phaseLaborTargetAccesses(
+            parts: aesthetics.grandCanalMapPartStates,
+            roadComponentRankByPoint: ranks
+        )
+    }
+
+    public func grandCanalPhaseTwoTargetAccesses(
+        routingGrids: OriginalGrandCanalLayoutCatalog.WorkerRoutingGrids
+    ) throws -> [OriginalGrandCanalLayoutCatalog.PhaseTwoTargetAccessCandidate] {
+        try grandCanalPhaseLaborTargetAccesses(routingGrids: routingGrids).map {
+            .init(
+                subBuildingIndex: $0.subBuildingIndex,
+                worldOrigin: $0.worldOrigin,
+                roadAccessPoint: $0.roadAccessPoint
+            )
+        }
+    }
+
+    public func greatWallTargetAccesses(
+        routingGrids: OriginalGrandCanalLayoutCatalog.WorkerRoutingGrids
+    ) throws -> [OriginalGreatWallLayoutCatalog.TargetAccessCandidate] {
+        guard let terrain,
+              terrain.width == routingGrids.width,
+              terrain.height == routingGrids.height else {
+            throw OriginalGrandCanalLayoutCatalog.WorkerRoutingCacheDerivationError
+                .invalidGridDimensions
+        }
+        let ranks = try OriginalGrandCanalLayoutCatalog.workerRoadComponentRankByPoint(
+            width: terrain.width,
+            height: terrain.height,
+            terrainRawValues: terrain.terrainRawValues,
+            primaryPassability: routingGrids.primaryPassability
+        )
+        return OriginalGreatWallLayoutCatalog.targetAccesses(
+            parts: aesthetics.greatWallMapPartStates,
+            roadComponentRankByPoint: ranks
+        )
+    }
+
+    /// Rebuilds the original worker routing inputs from the Native city's
+    /// single sources of truth. This intentionally supports only occupancy
+    /// classes whose routing vtables are source-confirmed; encountering any
+    /// other live building stops derivation at that coordinate.
+    public func grandCanalWorkerRoutingGrids() throws
+        -> OriginalGrandCanalLayoutCatalog.WorkerRoutingGrids {
+        guard let terrain else {
+            throw OriginalGrandCanalLayoutCatalog.WorkerRoutingCacheDerivationError
+                .invalidGridDimensions
+        }
+        typealias Occupancy = OriginalGrandCanalLayoutCatalog.WorkerRoutingCellOccupancy
+        var occupancyByPoint: [GridPoint: Occupancy] = [:]
+
+        func insert(_ occupancy: Occupancy, at points: [GridPoint]) throws {
+            for point in points {
+                guard terrain.contains(point) else {
+                    throw OriginalGrandCanalLayoutCatalog
+                        .WorkerRoutingCacheDerivationError.invalidGridDimensions
+                }
+                guard occupancyByPoint.updateValue(occupancy, forKey: point) == nil else {
+                    throw OriginalGrandCanalLayoutCatalog
+                        .WorkerRoutingCacheDerivationError.duplicateOccupancy(point)
+                }
+            }
+        }
+
+        let houseFootprint = OriginalBuildingFootprintCatalog.footprint(forBuildingID: 2)
+            ?? BuildingFootprint(width: 2, height: 2)
+        for house in houses {
+            guard let origin = house.location else { continue }
+            try insert(
+                Occupancy(
+                    buildingID: house.houseLevelID + 3,
+                    genericFootprintPredicate: false
+                ),
+                at: houseFootprint.points(at: origin)
+            )
+        }
+        for placement in placedBuildings {
+            // Every placed building blocks movement unless a recovered branch
+            // says otherwise; `+0xCC == false` is confirmed for the housing/
+            // storage/service families and is the conservative default for the
+            // remaining non-walkable buildings. The still-unclassified
+            // TRUE-predicate branch keeps throwing (fail-closed), so no cell
+            // silently becomes passable through an unverified building.
+            let predicate: Bool? = false
+            try insert(
+                Occupancy(
+                    buildingID: placement.buildingID,
+                    genericFootprintPredicate: predicate
+                ),
+                at: placement.occupiedPoints
+            )
+        }
+        let canalFootprint = BuildingFootprint(width: 4, height: 4)
+        for part in aesthetics.grandCanalMapPartStates {
+            try insert(
+                Occupancy(
+                    buildingID: part.buildingID,
+                    currentMonumentSubBuildingPhase: part.currentSubBuildingPhase,
+                    genericFootprintPredicate: false
+                ),
+                at: canalFootprint.points(at: part.worldOrigin)
+            )
+        }
+        let greatWallRootPhase = aesthetics.greatWallMapPartStates
+            .first(where: { $0.subBuildingIndex == 0 })?.currentSubBuildingPhase
+        for part in aesthetics.greatWallMapPartStates {
+            guard let kind = OriginalGreatWallLayoutCatalog.subBuildingKind(
+                buildingID: part.buildingID,
+                subBuildingIndex: part.subBuildingIndex
+            ) else {
+                throw OriginalGrandCanalLayoutCatalog
+                    .WorkerRoutingCacheDerivationError.unsupportedGreatWallSubtype(
+                        part.worldOrigin,
+                        buildingID: part.buildingID
+                    )
+            }
+            let footprint = BuildingFootprint(
+                width: kind.footprintSide,
+                height: kind.footprintSide
+            )
+            try insert(
+                Occupancy(
+                    buildingID: part.buildingID,
+                    currentMonumentSubBuildingPhase: part.currentSubBuildingPhase,
+                    greatWallRootSubBuildingPhase: greatWallRootPhase,
+                    greatWallPartKind: kind,
+                    genericFootprintPredicate: false
+                ),
+                at: footprint.points(at: part.worldOrigin)
+            )
+        }
+
+        var inputs: [OriginalGrandCanalLayoutCatalog.WorkerRoutingCellInput] = []
+        inputs.reserveCapacity(terrain.width * terrain.height)
+        for y in 0..<terrain.height {
+            for x in 0..<terrain.width {
+                let point = GridPoint(x: x, y: y)
+                let index = y * terrain.width + x
+                var raw = terrain.terrainRawValues[index] & ~UInt32(0x40)
+                if roadNetwork.contains(point) { raw |= 0x40 }
+                let occupancy = occupancyByPoint[point]
+                if occupancy != nil { raw |= 0x8008 }
+                inputs.append(.init(
+                    point: point,
+                    terrainRawValue: raw,
+                    occupancy: occupancy,
+                    roadWaterAuxiliaryByte: terrain.roadWaterAuxiliary(at: point),
+                    primaryElevationClassByte: terrain.primaryElevationClass(at: point),
+                    primarySurfaceObjectIsAbsentOrNonblocking: true
+                ))
+            }
+        }
+        return try OriginalGrandCanalLayoutCatalog.workerRoutingGrids(
+            width: terrain.width,
+            height: terrain.height,
+            inputs: inputs
+        )
+    }
+
     private func operationalWorkerRequirements(
         models: BuildingModelTable
     ) -> [OperationalBuildingKey: Int] {
         var result: [OperationalBuildingKey: Int] = [:]
+        for building in production.buildings {
+            let key = OperationalBuildingKey(
+                category: .production,
+                instanceID: building.id
+            )
+            result[key] = building.isEnabled
+                ? max(0, models[buildingID: building.buildingID]?.employees ?? 0)
+                : 0
+        }
         for market in markets.markets {
             let key = OperationalBuildingKey(category: .market, instanceID: market.id)
             result[key] = market.shopBuildingIDs.reduce(0) {
@@ -404,6 +858,48 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             points.formUnion(placement.occupiedPoints)
         }
         return points
+    }
+
+    /// Road-block tiles (building 126). They stay in the road network and in
+    /// every derived routing layer, so destination/path-following movement
+    /// crosses them; roaming patrols and roamer coverage treat them as closed.
+    public var roadblockPoints: Set<GridPoint> {
+        Set(
+            placedBuildings
+                .filter { $0.buildingID == 126 }
+                .flatMap(\.occupiedPoints)
+        )
+    }
+
+    /// Houses live outside `buildingPlacementState`, but the original model
+    /// table gives every visible residential tier normal fire, damage, and
+    /// structural-integrity values. Project them into placement geometry for
+    /// inspection and maintenance without duplicating housing state.
+    var buildingFailureCandidatePlacements: [PlacedBuilding] {
+        let houseFootprint = OriginalBuildingFootprintCatalog.footprint(forBuildingID: 2)
+            ?? BuildingFootprint(width: 2, height: 2)
+        let residential = houses.compactMap { house -> PlacedBuilding? in
+            guard let origin = house.location else { return nil }
+            let occupied = Set(houseFootprint.points(at: origin))
+            let roadAccess = occupied
+                .flatMap(RoadServiceCoverage.orthogonalNeighbors(of:))
+                .filter { roadNetwork.contains($0) }
+                .sorted {
+                    if $0.y != $1.y { return $0.y < $1.y }
+                    return $0.x < $1.x
+                }
+                .first ?? origin
+            return PlacedBuilding(
+                category: .residential,
+                instanceID: house.id,
+                buildingID: house.houseLevelID + 3,
+                origin: origin,
+                orientation: house.orientation,
+                footprint: houseFootprint,
+                roadAccessPoint: roadAccess
+            )
+        }
+        return placedBuildings + residential
     }
 
     /// Military movement treats intact walls and towers as obstacles while an
@@ -447,6 +943,16 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             height: terrain.height,
             points: terrain.roadPoints
         )
+        if !map.grandCanalPartStates.isEmpty {
+            var aesthetics = aestheticState ?? DeterministicAestheticState()
+            aesthetics.restoreGrandCanalMapPartStates(map.grandCanalPartStates)
+            aestheticState = aesthetics
+        }
+        if !map.greatWallPartStates.isEmpty {
+            var aesthetics = aestheticState ?? DeterministicAestheticState()
+            aesthetics.restoreGreatWallMapPartStates(map.greatWallPartStates)
+            aestheticState = aesthetics
+        }
         workforceEnabledState = true
         publicSafetyEnabledState = true
     }
@@ -500,12 +1006,19 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
     }
 
     /// Advances an existing city into a continuation mission on the same
-    /// authored map. Buildings, population, inventories, roads, treasury and
-    /// military survive; mission-local clocks, event effects and yearly goal
-    /// accounting restart from the new mission's authored date.
+    /// authored map. Buildings, population, inventories, roads and military
+    /// survive; the Campaign Creator's funds rule and all mission-local clocks,
+    /// event effects and yearly goal accounting restart for the new mission.
     public mutating func continueCampaignMission(
         with missionSettings: CampaignMissionStartSettings
     ) {
+        economy = DeterministicEconomyState(
+            treasury: missionSettings.startingTreasury(
+                difficulty: difficulty,
+                inheritedTreasury: economy.treasury
+            ),
+            inventory: economy.inventory
+        )
         calendar = SimulationCalendar(
             year: missionSettings.startYear,
             month: missionSettings.startMonth
@@ -593,6 +1106,12 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         for y in 0...(roadNetwork.height - footprint.height) {
             for x in 0...(roadNetwork.width - footprint.width) {
                 let point = GridPoint(x: x, y: y)
+                if buildingID == 203 {
+                    if canConstructIrrigationPump(at: point, orientation: orientation) {
+                        return point
+                    }
+                    continue
+                }
                 if constructionFootprint(
                     buildingID: buildingID,
                     at: point,
@@ -642,7 +1161,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
     }
 
     public func quayWaterEdge(for placement: PlacedBuilding) -> QuayWaterEdge? {
-        guard placement.buildingID == TradeRouteKind.sea.buildingID,
+        guard placement.buildingID == TradeRouteKind.sea.buildingID
+                || placement.buildingID == 203,
               let terrainState else { return nil }
         return terrainState.quayWaterEdge(
             footprintPoints: placement.occupiedPoints,
@@ -1131,6 +1651,7 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             footprintMultiplier: footprintMultiplier,
             location: location,
             orientation: orientation,
+            vacantTypeID: constructionBuildingID == 11 ? 11 : 2,
             models: rules.models.buildings
         )
     }
@@ -1145,6 +1666,10 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         isBuildingAvailableInCampaign(buildingID)
             && roadNetwork.contains(point)
             && !occupiedBuildingPoints.contains(point)
+            // Terrain guards (0x8/0x400/road-water auxiliary) live in the
+            // centralized terrain predicate; map-less procedural cities have
+            // no terrain and rely on road-network membership alone.
+            && (terrain?.canPlaceRoadBlock(at: point) ?? true)
     }
 
     @discardableResult
@@ -1184,6 +1709,7 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         footprintMultiplier: Int = 1,
         location: GridPoint? = nil,
         orientation: IsometricBuildingOrientation = .northSouth,
+        vacantTypeID: Int? = nil,
         models: BuildingModelTable
     ) -> Int? {
         guard let model = models[houseLevelID: levelID],
@@ -1198,12 +1724,15 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             hasTaxCoverage: hasTaxCoverage,
             footprintMultiplier: multiplier,
             location: location,
-            orientation: orientation
+            orientation: orientation,
+            vacantTypeID: vacantTypeID
         ))
         return id
     }
 
     @discardableResult
+    /// Loader/test-fixture primitive. Production simulation must not call this
+    /// until the original popularity/factor migration producer is implemented.
     public mutating func admitResidents(_ requested: Int, models: BuildingModelTable) -> Int {
         guard requested > 0 else { return 0 }
         var remaining = requested
@@ -1216,21 +1745,427 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         return requested - remaining
     }
 
-    private mutating func admitResidents(
-        _ requested: Int,
-        eligibleHouseIDs: Set<Int>,
+    /// Original immigrant arrival write at `0x4CA265` (§5.3): skips while the
+    /// settling lock is set, converts a vacant house on first occupancy, and
+    /// adds the people count clamped to capacity. Population is derived from
+    /// house residents, so no separate counter is needed.
+    @discardableResult
+    public mutating func applyImmigrantArrival(
+        _ arrival: ImmigrantArrival,
         models: BuildingModelTable
-    ) -> Int {
-        guard requested > 0, !eligibleHouseIDs.isEmpty else { return 0 }
-        var remaining = requested
-        for index in houses.indices.sorted(by: { houses[$0].id < houses[$1].id }) where
-            remaining > 0 && eligibleHouseIDs.contains(houses[index].id) {
-            let vacancy = max(0, houses[index].capacity(using: models) - houses[index].residents)
-            let admitted = min(vacancy, remaining)
-            houses[index].residents += admitted
-            remaining -= admitted
+    ) -> Bool {
+        guard let index = houses.firstIndex(where: { $0.id == arrival.houseID }) else {
+            return false
         }
-        return requested - remaining
+        guard houses[index].settlingLock == 0 else { return false }
+        houses[index].activateVacantHouse()
+        let capacity = houses[index].capacity(using: models)
+        let admitted = min(arrival.peopleCount, max(0, capacity - houses[index].residents))
+        guard admitted > 0 else { return false }
+        houses[index].residents += admitted
+        return true
+    }
+
+    /// Arms the original post-removal settling lock on a house
+    /// (`FUN_004681A0` contract, §10.6). The production resident-removal path
+    /// calls this; the arrival write skips while it is set.
+    @discardableResult
+    public mutating func startHouseSettlingLock(houseID: Int, steps: Int = 32) -> Bool {
+        guard let index = houses.firstIndex(where: { $0.id == houseID }) else { return false }
+        houses[index].startSettlingLock(steps: steps)
+        return true
+    }
+
+    /// Spawns a physical immigrant figure (model 11) from the authored land
+    /// entry toward `houseID`. The producer is unsupported, so production
+    /// never calls this; fixtures use it to exercise the arrival chain.
+    /// `houseWaitOffset` is the recovered `house+0x51` term (semantics not
+    /// closed; defaults to 0 and is recorded as an inference).
+    @discardableResult
+    public mutating func spawnImmigrant(
+        houseID: Int,
+        peopleCount: Int,
+        houseWaitOffset: Int = 0,
+        grids: OriginalGrandCanalLayoutCatalog.WorkerRoutingGrids
+    ) -> Int? {
+        var migration = migrationState ?? DeterministicMigrationState()
+        let result = spawnImmigrant(
+            houseID: houseID,
+            peopleCount: peopleCount,
+            houseWaitOffset: houseWaitOffset,
+            grids: grids,
+            into: &migration
+        )
+        migrationState = migration
+        return result
+    }
+
+    @discardableResult
+    private mutating func spawnImmigrant(
+        houseID: Int,
+        peopleCount: Int,
+        houseWaitOffset: Int = 0,
+        grids: OriginalGrandCanalLayoutCatalog.WorkerRoutingGrids,
+        into migration: inout DeterministicMigrationState
+    ) -> Int? {
+        guard let house = houses.first(where: { $0.id == houseID }),
+              let location = house.location,
+              let entry = terrain?.authoredPoints?.landEntry,
+              let destination = DeterministicMigration.houseRoadAccessPoint(
+                houseLocation: location,
+                vacantBuildingID: house.vacantTypeID ?? (house.houseLevelID == 10 ? 11 : 2),
+                roadNetwork: roadNetwork
+              ) else {
+            return nil
+        }
+        migration.advanceImmigrantWaitGlobal()
+        let waitSteps = (houseWaitOffset & 0xFF7F) + migration.immigrantWaitGlobal
+        guard let walker = DeterministicMigration.spawnImmigrant(
+            id: migration.nextImmigrantWalkerID,
+            houseID: houseID,
+            peopleCount: peopleCount,
+            entryPoint: entry,
+            destination: destination,
+            waitSteps: waitSteps,
+            primaryValues: grids.primaryPassability,
+            fallbackValues: grids.fallbackCellClass,
+            width: grids.width,
+            height: grids.height
+        ) else {
+            return nil
+        }
+        let walkerID = walker.id
+        migration.registerImmigrantWalker(walker)
+        return walkerID
+    }
+
+    /// Complete monument roots for the popularity term (§10.8): legacy
+    /// projects, phased 77/84, palace 82, canal 83, and Great Wall layout
+    /// roots whose sub-index-0 part is at its final phase.
+    public var completeMonumentRootBuildingIDs: Set<Int> {
+        var roots = aesthetics.completedMonumentBuildingIDs
+        for project in aesthetics.phasedMonumentProjects where project.isComplete {
+            roots.insert(project.buildingID)
+        }
+        if let palace = aesthetics.largePalaceProject, palace.isComplete {
+            roots.insert(LargePalaceProjectRuntime.buildingID)
+        }
+        // Executable-confirmed per-kind phase counts: wall 11, tower 12,
+        // gate 2, road 3; a root (sub-index 0) is complete at `count - 1`
+        // (§10.8 / great-wall-map-state.md).
+        let finalPhaseByKind: [OriginalGreatWallLayoutCatalog.SubBuildingKind: Int] = [
+            .wall: 10, .tower: 11, .gate: 1, .road: 2,
+        ]
+        for part in aesthetics.greatWallMapPartStates
+        where part.subBuildingIndex == 0 {
+            if let kind = OriginalGreatWallLayoutCatalog.subBuildingKind(
+                buildingID: part.buildingID,
+                subBuildingIndex: 0
+            ), let finalPhase = finalPhaseByKind[kind] {
+                if part.currentSubBuildingPhase >= finalPhase {
+                    roots.insert(part.buildingID)
+                }
+            }
+        }
+        return roots
+    }
+
+    /// Recovered `FUN_00590F30` food term (§3): mean of per-house scores
+    /// (`+2` when raw quality ≥ required, else `−streak`), rounded
+    /// away-from-zero only when `abs(remainder) > count/2`; a negative mean
+    /// returns 0 while population < 350 and the city never exceeded 349.
+    mutating func migrationFoodTerm(
+        rules: EconomyRulesEngine,
+        neverExceeded349: Bool
+    ) -> Int {
+        let population = self.population
+        var sum = 0
+        var count = 0
+        for index in houses.indices.sorted(by: { houses[$0].id < houses[$1].id }) {
+            let house = houses[index]
+            guard house.residents > 0,
+                  let required = rules.models.buildings[houseLevelID: house.houseLevelID]?
+                    .foodQualityRequired,
+                  required > 0 else { continue }
+            let satisfied = house.foodQualityRawValue >= required
+            houses[index].recordFoodQualityScore(satisfied)
+            if satisfied {
+                sum += 2
+            } else {
+                sum -= max(1, houses[index].foodShortageStreak)
+            }
+            count += 1
+        }
+        guard count > 0 else { return 0 }
+        let mean = sum / count
+        let remainder = abs(sum % count)
+        let rounded = remainder * 2 > count ? mean + (sum < 0 ? -1 : 1) : mean
+        if rounded < 0, population < 350, !neverExceeded349 {
+            return 0
+        }
+        return rounded
+    }
+
+    /// Recovered `FUN_00591200` popularity update (§2–§3). Runs on the two
+    /// slice days (1 and 16) of each Native month.
+    public mutating func updateMigrationPopularity(rules: EconomyRulesEngine) {
+        let population = self.population
+        var migration = migrationState ?? DeterministicMigrationState()
+        if population > 349 {
+            migration.setNeverExceeded349()
+        }
+
+        // Tax (coverage < 10% forces the None row).
+        let taxedPopulation = houses
+            .filter(\.hasTaxCoverage)
+            .reduce(0) { $0 + $1.residents }
+        let hasMeaningfulCoverage = population > 0 && taxedPopulation * 10 >= population
+        var tax = rules.taxSentiment(
+            bandID: taxBandID,
+            difficulty: difficulty,
+            hasMeaningfulCoverage: hasMeaningfulCoverage
+        ) ?? 0
+        var wage = DeterministicMigration.wageEffect(
+            currentWage: migrationContext.normalAnnualWage
+        )
+        let workforce = workforceSnapshot(models: rules.models.buildings)
+        let unemploymentPercent = workforce.availableWorkers > 0
+            ? workforce.unemployedWorkers * 100 / workforce.availableWorkers
+            : 0
+        var employment = DeterministicMigration.employmentEffect(
+            unemploymentPercent: unemploymentPercent
+        )
+        let suppressNegatives = population < 350 && !migration.neverExceeded349
+        if suppressNegatives {
+            if tax < 0 { tax = 0 }
+            if wage < 0 { wage = 0 }
+            if employment < 0 { employment = 0 }
+        }
+
+        var food = migrationFoodTerm(
+            rules: rules,
+            neverExceeded349: migration.neverExceeded349
+        )
+        if food < 0, suppressNegatives { food = 0 }
+        let debt = DeterministicMigration.debtEffect(
+            debtYears: migrationContext.consecutiveDebtMonths / 12,
+            treasuryIsNegative: economy.treasury < 0
+        )
+        let feng = DeterministicMigration.fengShuiEffect(
+            population: population,
+            harmonyPercent: fengShuiSummary(models: rules.models.buildings).harmonyPercent
+        )
+        let watchtowers = placedBuildings.filter { $0.buildingID == 127 }.count
+        let repression = DeterministicMigration.repressionEffect(
+            population: population,
+            watchtowerCount: watchtowers
+        )
+        let monument = DeterministicMigration.monumentPopularityTerm(
+            goalBuildingIDs: migrationContext.monumentGoalBuildingIDs,
+            completeRootBuildingIDs: completeMonumentRootBuildingIDs
+        )
+        let sum = feng + repression + 1 + monument + debt + food + wage + employment + tax
+        let delta = DeterministicMigration.dampedPopularityDelta(
+            current: migration.popularity,
+            factorSum: sum
+        )
+        migration.setPopularity(migration.popularity + delta)
+
+        // DAT_01312514 worst-factor blame (1 food … 8 repression).
+        var blame = 0
+        var worst = Int.max
+        let candidates: [(Int, Int)] = [
+            (1, food), (2, employment), (3, tax), (4, wage),
+            (5, debt), (6, 0), (7, feng), (8, repression),
+        ]
+        for (index, value) in candidates where value < worst {
+            worst = value
+            blame = index
+        }
+        migration.setFactorBlame(blame)
+        migrationState = migration
+    }
+
+    /// Recovered daily `FUN_004AD4A0` pressure/request/assignment pass
+    /// (§4–§5). Departure requests are recorded but not yet dispatched
+    /// (emigration walkers fail-closed, documented).
+    public mutating func dailyMigrationAssignment(rules: EconomyRulesEngine) {
+        var migration = migrationState ?? DeterministicMigrationState()
+        migration.advanceImmigrantWaitGlobal()
+        let population = self.population
+        var pressure = DeterministicMigration.pressureBand(popularity: migration.popularity)
+        if population > 199_999 {
+            pressure = 0
+        } else if warCount >= 4, pressure > 0 {
+            pressure = 0
+        }
+        migration.setPressure(pressure)
+        migration.setArrivalRequest(0)
+        migration.setDepartureRequest(0)
+        if pressure > 0 {
+            if migration.arrivalCooldown != 0 {
+                migration.setArrivalCooldown(migration.arrivalCooldown - 1)
+            } else {
+                migration.setArrivalRequest(
+                    DeterministicMigration.requestSize(forAbsolutePressure: pressure)
+                )
+                migration.setDepartureCooldown(2)
+            }
+        } else if pressure < 0 {
+            if migration.departureCooldown != 0 {
+                migration.setDepartureCooldown(migration.departureCooldown - 1)
+            } else if population >= 101 {
+                migration.setDepartureRequest(
+                    DeterministicMigration.requestSize(forAbsolutePressure: -pressure)
+                )
+                migration.setArrivalCooldown(2)
+            }
+        }
+
+        migration.setAssignedToday(0)
+        var pending = migration.pendingArrival
+        let request = migration.arrivalRequest
+        if request > 0 {
+            if request < 6 {
+                pending += request
+                if pending > 5 {
+                    _ = assignImmigrantRequests(pending, migration: &migration, rules: rules)
+                    pending = 0
+                }
+            } else {
+                _ = assignImmigrantRequests(request, migration: &migration, rules: rules)
+                pending = migration.pendingArrival
+            }
+        }
+        migration.setPendingArrival(pending)
+        migration.setPendingDeparture(
+            migration.pendingDeparture + migration.departureRequest
+        )
+        migration.setArrivalRequest(0)
+        migration.setDepartureRequest(0)
+        migrationState = migration
+    }
+
+    /// Recovered `FUN_004ADA10` house walk (§5): spawns immigrant figures for
+    /// up to `request` people across flood-reachable houses. Returns the
+    /// unassigned remainder and updates the assignment accounting.
+    @discardableResult
+    mutating func assignImmigrantRequests(
+        _ request: Int,
+        migration: inout DeterministicMigrationState,
+        rules: EconomyRulesEngine
+    ) -> Int {
+        guard request > 0 else { return 0 }
+        guard let terrain, let entry = terrain.authoredPoints?.landEntry else {
+            migration.setUnfulfilledArrivalCarry(
+                migration.unfulfilledArrivalCarry + request
+            )
+            return request
+        }
+        let grids = (try? grandCanalWorkerRoutingGrids()) ?? .init(
+            width: terrain.width,
+            height: terrain.height,
+            primaryPassability: [UInt16](repeating: 0, count: terrain.width * terrain.height),
+            fallbackCellClass: [UInt32](repeating: 0, count: terrain.width * terrain.height)
+        )
+        let flood = DeterministicMigration.landEntryFloodDepths(
+            width: grids.width,
+            height: grids.height,
+            primaryPassability: grids.primaryPassability,
+            seed: entry
+        )
+        var remaining = request
+
+        func floodReachability(of house: ResidentialUnit) -> Bool {
+            guard let location = house.location,
+                  let access = DeterministicMigration.houseRoadAccessPoint(
+                    houseLocation: location,
+                    vacantBuildingID: house.vacantTypeID ?? (house.houseLevelID == 10 ? 11 : 2),
+                    roadNetwork: roadNetwork
+                  ) else { return false }
+            let index = access.y * grids.width + access.x
+            return flood.indices.contains(index) && flood[index] != nil
+        }
+
+        // Pass 1: vacant houses (residents 0, capacity > 0), chunks ≤ 6,
+        // skipping houses with a live in-flight immigrant (the original
+        // `FUN_004ADA10` links `house+0x32` and skips while the figure is
+        // alive).
+        for index in houses.indices.sorted(by: { houses[$0].id < houses[$1].id }) {
+            guard remaining > 0 else { break }
+            let house = houses[index]
+            guard floodReachability(of: house), house.residents == 0,
+                  house.capacity(using: rules.models.buildings) != 0,
+                  !migration.immigrantWalkers.contains(where: { $0.houseID == house.id })
+            else { continue }
+            let count = min(remaining, 6)
+            _ = spawnImmigrant(
+                houseID: house.id,
+                peopleCount: count,
+                grids: grids,
+                into: &migration
+            )
+            remaining -= count
+        }
+        // Pass 2: capacity > 11 with no in-flight immigrant.
+        for index in houses.indices.sorted(by: { houses[$0].id < houses[$1].id }) {
+            guard remaining > 0 else { break }
+            let house = houses[index]
+            guard floodReachability(of: house),
+                  house.capacity(using: rules.models.buildings) > 11,
+                  !migration.immigrantWalkers.contains(where: { $0.houseID == house.id })
+            else { continue }
+            let count = min(remaining, 6)
+            _ = spawnImmigrant(
+                houseID: house.id,
+                peopleCount: count,
+                grids: grids,
+                into: &migration
+            )
+            remaining -= count
+        }
+        // Pass 3: remaining capacity with no in-flight immigrant.
+        for index in houses.indices.sorted(by: { houses[$0].id < houses[$1].id }) {
+            guard remaining > 0 else { break }
+            let house = houses[index]
+            guard floodReachability(of: house),
+                  !migration.immigrantWalkers.contains(where: { $0.houseID == house.id })
+            else { continue }
+            let capacity = house.capacity(using: rules.models.buildings)
+            guard capacity > 0 else { continue }
+            let count = min(remaining, capacity)
+            _ = spawnImmigrant(
+                houseID: house.id,
+                peopleCount: count,
+                grids: grids,
+                into: &migration
+            )
+            remaining -= count
+        }
+
+        let assigned = request - remaining
+        migration.setAssignedToday(migration.assignedToday + assigned)
+        migration.addAssignedThisMonth(migration.assignedToday)
+        if remaining == request, remaining > 0 {
+            migration.setUnfulfilledArrivalCarry(
+                migration.unfulfilledArrivalCarry + remaining
+            )
+        }
+        return remaining
+    }
+
+    /// War count `DAT_01312564` (§10.7): live enemy figures whose model is in
+    /// {58…62, 78}. Native maps enemy units as forces; the Qin Nomad Camps
+    /// currently map to Xiongnu Infantry (6), which is outside the gate, so
+    /// the Qin count is 0 (documented inference, §10.7).
+    public var warCount: Int {
+        let gate: Set<Int> = [58, 59, 60, 61, 62, 78]
+        return military.enemyForces.reduce(0) { total, force in
+            guard force.status != .repelled, gate.contains(force.enemyTypeID) else {
+                return total
+            }
+            return total + force.soldierCount
+        }
     }
 
     public mutating func setTaxCoverage(_ covered: Bool, houseID: Int) {
@@ -1295,9 +2230,10 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         return id
     }
 
-    /// Constructs one original seasonal farm/orchard unit and its tended plots
-    /// as a single transaction. Plot positions are deliberately kept out of the
-    /// deterministic rules layer; the native map editor can bind them later.
+    /// Constructs one original seasonal farm/orchard unit and, for legacy
+    /// headless callers, an optional initial number of tended plots as a single
+    /// transaction. Map-facing play places the producer first with zero fields,
+    /// then adds visible plots through `constructAgriculturalPlot`.
     @discardableResult
     public mutating func constructAgriculturalProducer(
         crop: AgriculturalCrop,
@@ -1308,7 +2244,7 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         assignedWorkers: Int? = nil,
         rules: EconomyRulesEngine
     ) -> Int? {
-        guard fieldCount > 0,
+        guard fieldCount >= 0,
               missionSettingsState?.allowedResourceCommodityIDs.contains(
                 crop.outputCommodityID
               ) ?? true,
@@ -1322,12 +2258,16 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             buildingID: crop.producerBuildingID,
             rules: rules,
             difficulty: difficulty
-        ), updatedEconomy.spendOnConstruction(
+        ) else { return nil }
+        if fieldCount > 0,
+           !updatedEconomy.spendOnConstruction(
             buildingID: crop.plotBuildingID,
             quantity: fieldCount,
             rules: rules,
             difficulty: difficulty
-        ) else { return nil }
+           ) {
+            return nil
+        }
 
         let configuration = AgriculturalConfiguration(
             crop: crop,
@@ -1347,6 +2287,52 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         return id
     }
 
+    public func canConstructAgriculturalProducer(
+        crop: AgriculturalCrop,
+        at origin: GridPoint,
+        orientation: IsometricBuildingOrientation = .northSouth
+    ) -> Bool {
+        isAgriculturalCropAvailable(crop)
+            && constructionFootprint(
+                buildingID: crop.producerBuildingID,
+                at: origin,
+                orientation: orientation
+            ) != nil
+    }
+
+    /// Places the physical farm/orchard before any fields are assigned to it.
+    /// This is the two-stage interaction shown by the original application.
+    @discardableResult
+    public mutating func constructAgriculturalProducer(
+        crop: AgriculturalCrop,
+        at origin: GridPoint,
+        orientation: IsometricBuildingOrientation = .northSouth,
+        fertilityPercent: Int = 100,
+        climate: AgriculturalClimate = .temperate,
+        assignedWorkers: Int? = nil,
+        rules: EconomyRulesEngine
+    ) -> Int? {
+        guard let placement = preparedPlacement(
+            category: .production,
+            buildingID: crop.producerBuildingID,
+            at: origin,
+            orientation: orientation
+        ), isAgriculturalCropAvailable(crop) else { return nil }
+        var updated = self
+        guard let id = updated.constructAgriculturalProducer(
+            crop: crop,
+            fieldCount: 0,
+            fertilityPercent: fertilityPercent,
+            climate: climate,
+            serviceRoadStart: placement.roadAccessPoint,
+            assignedWorkers: assignedWorkers,
+            rules: rules
+        ) else { return nil }
+        updated.recordPlacement(placement, instanceID: id)
+        self = updated
+        return id
+    }
+
     /// Whether a crop is offered by the active mission's resource rules.
     public func isAgriculturalCropAvailable(_ crop: AgriculturalCrop) -> Bool {
         missionSettingsState?.allowedResourceCommodityIDs.contains(
@@ -1354,12 +2340,13 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         ) ?? true
     }
 
-    /// Validates the visible one-tile plot used by the native construction
-    /// surface. Agricultural producers remain deterministic simulation
-    /// instances, while this geometry preserves the selected crop on the map.
+    /// Validates one visible plot against a matching farm/orchard's authored
+    /// tending range and capacity. Fields do not need direct road access; the
+    /// producer building does.
     public func canConstructAgriculturalPlot(
         crop: AgriculturalCrop,
-        at origin: GridPoint
+        at origin: GridPoint,
+        rules: EconomyRulesEngine? = nil
     ) -> Bool {
         guard isAgriculturalCropAvailable(crop),
               let footprint = OriginalBuildingFootprintCatalog.footprint(
@@ -1372,7 +2359,11 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             && points.allSatisfy {
                 terrainAllowsConstruction(buildingID: crop.plotBuildingID, at: $0)
             }
-            && adjacentRoadPoints(to: points).first != nil
+            && agriculturalProducerCandidate(
+                crop: crop,
+                plotOrigin: origin,
+                rules: rules
+            ) != nil
     }
 
     /// Constructs a crop-specific plot and binds its original artwork to the
@@ -1385,36 +2376,79 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         climate: AgriculturalClimate = .temperate,
         rules: EconomyRulesEngine
     ) -> Int? {
-        guard canConstructAgriculturalPlot(crop: crop, at: origin),
+        guard canConstructAgriculturalPlot(crop: crop, at: origin, rules: rules),
               let footprint = OriginalBuildingFootprintCatalog.footprint(
                 forBuildingID: crop.plotBuildingID
-              ),
-              let roadAccessPoint = adjacentRoadPoints(
-                to: footprint.points(at: origin)
-              ).first else { return nil }
+              ), let producer = agriculturalProducerCandidate(
+                crop: crop,
+                plotOrigin: origin,
+                rules: rules
+              ) else { return nil }
         var updated = self
-        guard let id = updated.constructAgriculturalProducer(
-            crop: crop,
-            fieldCount: 1,
-            fertilityPercent: fertilityPercent,
-            climate: climate,
-            serviceRoadStart: roadAccessPoint,
-            rules: rules
+        guard updated.economy.spendOnConstruction(
+            buildingID: crop.plotBuildingID,
+            rules: rules,
+            difficulty: difficulty
         ) else { return nil }
+        updated.production.setAgriculturalFieldCount(
+            producer.configuration.fieldCount + 1,
+            buildingInstanceID: producer.id
+        )
         updated.recordPlacement(
             PlacedBuilding(
-                category: .production,
-                instanceID: 0,
+                category: .agriculturalPlot,
+                instanceID: producer.id,
                 buildingID: crop.plotBuildingID,
                 origin: origin,
                 orientation: .northSouth,
                 footprint: footprint,
-                roadAccessPoint: roadAccessPoint
-            ),
-            instanceID: id
+                roadAccessPoint: producer.roadAccessPoint
+            ), instanceID: producer.id
         )
         self = updated
-        return id
+        return producer.id
+    }
+
+    private func agriculturalProducerCandidate(
+        crop: AgriculturalCrop,
+        plotOrigin: GridPoint,
+        rules: EconomyRulesEngine?
+    ) -> (id: Int, roadAccessPoint: GridPoint, configuration: AgriculturalConfiguration)? {
+        let agricultureRules = rules.map { OriginalAgricultureRules(farm: $0.models.farm) }
+        let tendingRange = agricultureRules?.tendingRange(for: crop.category) ?? 3
+        let maximumFields = agricultureRules?.maximumTendedFields(for: crop.category) ?? 9
+        let candidates: [(
+            id: Int,
+            roadAccessPoint: GridPoint,
+            configuration: AgriculturalConfiguration,
+            distance: Int
+        )] = production.buildings.compactMap { building in
+            guard let configuration = building.agriculture,
+                  configuration.crop == crop,
+                  configuration.fieldCount < maximumFields,
+                  let roadAccessPoint = building.roadAccessPoint else { return nil }
+            let producerPlacement = placement(category: .production, instanceID: building.id)
+            let distance: Int
+            if let producerPlacement {
+                distance = producerPlacement.occupiedPoints.map {
+                    abs($0.x - plotOrigin.x) + abs($0.y - plotOrigin.y)
+                }.min() ?? .max
+            } else {
+                // Save compatibility for older headless cities whose farm has
+                // a road endpoint but no authored map placement.
+                distance = abs(roadAccessPoint.x - plotOrigin.x)
+                    + abs(roadAccessPoint.y - plotOrigin.y)
+            }
+            guard distance <= tendingRange else { return nil }
+            return (building.id, roadAccessPoint, configuration, distance)
+        }
+        return candidates.sorted {
+            if $0.distance != $1.distance { return $0.distance < $1.distance }
+            // When two farms are equally close, prefer the one the player most
+            // recently placed. This makes the natural "place farm, then add
+            // its fields" flow deterministic even in a dense same-crop row.
+            return $0.id > $1.id
+        }.first.map { ($0.id, $0.roadAccessPoint, $0.configuration) }
     }
 
     @discardableResult
@@ -1523,7 +2557,6 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         guard isBuildingAvailableInCampaign(marketBuildingID),
               roadNetwork.contains(serviceRoadStart),
               let capacity = OriginalMarketCatalog.shopCapacity(forMarketBuildingID: marketBuildingID),
-              !shopBuildingIDs.isEmpty,
               shopBuildingIDs.count <= capacity,
               rules.models.buildings[buildingID: marketBuildingID] != nil,
               shopBuildingIDs.allSatisfy({ shopID in
@@ -1556,6 +2589,49 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         economy = updatedEconomy
         marketState = state
         return id
+    }
+
+    public func canConstructMarketShop(shopBuildingID: Int, at point: GridPoint) -> Bool {
+        guard OriginalMarketCatalog.supports(shopBuildingID: shopBuildingID),
+              let placement = placedBuildings.first(where: {
+                  $0.category == .market && $0.occupiedPoints.contains(point)
+              }),
+              let market = markets.markets.first(where: { $0.id == placement.instanceID }) else {
+            return false
+        }
+        return market.remainingShopCapacity > 0
+    }
+
+    /// Builds a shop into the market square occupying `point`. The shop cost
+    /// and market mutation are committed atomically, matching whole-building
+    /// construction and preventing a charged-but-missing shop.
+    @discardableResult
+    public mutating func constructMarketShop(
+        shopBuildingID: Int,
+        at point: GridPoint,
+        rules: EconomyRulesEngine
+    ) -> Int? {
+        guard canConstructMarketShop(shopBuildingID: shopBuildingID, at: point),
+              rules.models.buildings[buildingID: shopBuildingID] != nil,
+              let placement = placedBuildings.first(where: {
+                  $0.category == .market && $0.occupiedPoints.contains(point)
+              }) else {
+            return nil
+        }
+        var updatedEconomy = economy
+        guard updatedEconomy.spendOnConstruction(
+            buildingID: shopBuildingID,
+            rules: rules,
+            difficulty: difficulty
+        ) else { return nil }
+        var state = marketState ?? DeterministicMarketState()
+        guard state.addShop(
+            marketID: placement.instanceID,
+            shopBuildingID: shopBuildingID
+        ) else { return nil }
+        economy = updatedEconomy
+        marketState = state
+        return placement.instanceID
     }
 
     @discardableResult
@@ -1666,6 +2742,33 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         return id
     }
 
+    public func canConstructTradingBuilding(
+        partnerID: Int,
+        at origin: GridPoint,
+        orientation: IsometricBuildingOrientation = .northSouth
+    ) -> Bool {
+        guard let partner = trade.partner(id: partnerID), partner.isOpen,
+              !trade.buildings.contains(where: { $0.partnerID == partnerID }),
+              isBuildingAvailableInCampaign(partner.routeKind.buildingID) else {
+            return false
+        }
+        switch partner.routeKind {
+        case .land:
+            return preparedPlacement(
+                category: .trading,
+                buildingID: partner.routeKind.buildingID,
+                at: origin,
+                orientation: orientation
+            ) != nil
+        case .sea:
+            return preparedQuayPlacement(
+                buildingID: partner.routeKind.buildingID,
+                at: origin,
+                orientation: orientation
+            ) != nil
+        }
+    }
+
     public mutating func setTradeImporting(
         _ enabled: Bool,
         commodityID: Int,
@@ -1719,6 +2822,32 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         for commodityID in commodityIDs {
             logistics.setPolicy(policy, commodityID: commodityID, warehouseID: warehouseID)
         }
+        logisticsState = logistics
+        return true
+    }
+
+    @discardableResult
+    public mutating func setMillPolicy(
+        _ policy: WarehouseCommodityPolicy,
+        millID: Int,
+        commodityID: Int
+    ) -> Bool {
+        var logistics = logisticsState ?? DeterministicLogisticsState()
+        guard logistics.mills.contains(where: { $0.id == millID }) else { return false }
+        logistics.setMillPolicy(policy, commodityID: commodityID, millID: millID)
+        logisticsState = logistics
+        return true
+    }
+
+    @discardableResult
+    public mutating func setMillStorageLimit(
+        _ amount: Int,
+        millID: Int,
+        commodityID: Int
+    ) -> Bool {
+        var logistics = logisticsState ?? DeterministicLogisticsState()
+        guard logistics.mills.contains(where: { $0.id == millID }) else { return false }
+        logistics.setMillStorageLimit(amount, commodityID: commodityID, millID: millID)
         logisticsState = logistics
         return true
     }
@@ -1987,12 +3116,381 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         let id = state.addConstruction(
             buildingID: buildingID,
             kind: kind,
+            location: placement.markerPoint,
+            origin: placement.origin,
+            orientation: placement.orientation
+        )
+        updated.aestheticState = state
+        updated.recordPlacement(placement, instanceID: id)
+        self = updated
+        return id
+    }
+
+    public func canConstructIrrigationPump(
+        at origin: GridPoint,
+        orientation: IsometricBuildingOrientation = .northSouth
+    ) -> Bool {
+        preparedIrrigationPumpPlacement(
+            at: origin,
+            orientation: orientation
+        ) != nil
+    }
+
+    /// Places the original one-tile water lift on clear bank land. The
+    /// selected bank edge determines which of its four authored sprites is
+    /// rendered; a road on another adjacent edge supplies its workforce.
+    @discardableResult
+    public mutating func constructIrrigationPump(
+        at origin: GridPoint,
+        orientation: IsometricBuildingOrientation = .northSouth,
+        rules: EconomyRulesEngine
+    ) -> Int? {
+        guard let placement = preparedIrrigationPumpPlacement(
+            at: origin,
+            orientation: orientation
+        ) else { return nil }
+        var updated = self
+        guard updated.economy.spendOnConstruction(
+            buildingID: 203,
+            rules: rules,
+            difficulty: difficulty
+        ) else { return nil }
+        var state = updated.aestheticState ?? DeterministicAestheticState()
+        let id = state.addConstruction(
+            buildingID: 203,
+            kind: .irrigationPump,
             location: placement.markerPoint
         )
         updated.aestheticState = state
         updated.recordPlacement(placement, instanceID: id)
         self = updated
         return id
+    }
+
+    /// Starts a project whose geometry is authored directly into the mission
+    /// map rather than represented by a normal rectangular placement.
+    @discardableResult
+    public mutating func beginMapMonument(buildingID: Int) -> Int? {
+        // IDs 83 and 85 use predetermined multipart map geometry. Their
+        // worker scheduling and completion control flow remain incomplete;
+        // never instantiate either legacy synthetic project for a new game.
+        _ = buildingID
+        return nil
+    }
+
+    public func canAdvanceGrandCanalSegment(at point: GridPoint) -> Bool {
+        _ = point
+        return false
+    }
+
+    @discardableResult
+    public mutating func advanceGrandCanalSegment(at point: GridPoint) -> Int? {
+        _ = point
+        return nil
+    }
+
+    /// Advances one recovered original monument-scheduler call. Native daily
+    /// ticks use the separately recovered 816-calls-per-month clock adapter;
+    /// this operation remains available for exact boundary tests and research.
+    @discardableResult
+    public mutating func advanceGrandCanalSchedulerCall() throws
+        -> OriginalGrandCanalLayoutCatalog.SchedulerCallOutcome {
+        var state = aestheticState ?? DeterministicAestheticState()
+        let outcome = try state.advanceGrandCanalSchedulerCall()
+        aestheticState = state
+        return outcome
+    }
+
+    private mutating func advanceGrandCanalPhaseTwoSimulationSteps(
+        _ count: Int,
+        state: inout DeterministicAestheticState,
+        routingGrids: OriginalGrandCanalLayoutCatalog.WorkerRoutingGrids,
+        targetAccesses: [OriginalGrandCanalLayoutCatalog.PhaseTwoTargetAccessCandidate]
+    ) throws {
+        typealias Catalog = OriginalGrandCanalLayoutCatalog
+        var logistics = logisticsState ?? DeterministicLogisticsState()
+        var production = self.production
+
+        for _ in 0..<count {
+            var parts = state.grandCanalMapPartStates
+            var coordinator = state.grandCanalPhaseTwoCoordinator
+            var convoys = state.grandCanalPhaseTwoConvoys
+            let existingCarrierIDs = convoys.map(\.carrierFigureID)
+
+            for carrierID in existingCarrierIDs {
+                guard let index = convoys.firstIndex(where: {
+                    $0.carrierFigureID == carrierID
+                }) else { continue }
+                switch convoys[index].carrierState {
+                case .travelingToMonument, .returningWithCargo,
+                        .returningToAlternateSource, .returningEmpty:
+                    _ = convoys[index].advanceMovement(routingGrids: routingGrids)
+                case .allocatingAtMonument:
+                    if let allocation = convoys[index].allocateAtMonument(
+                        currentPoint: convoys[index].currentPoint,
+                        pendingRequests: &coordinator.carrierBoundRequests
+                    ) {
+                        for delivery in allocation.deliveries {
+                            guard let partIndex = parts.firstIndex(where: {
+                                $0.subBuildingIndex == delivery.requestID
+                            }) else { continue }
+                            _ = parts[partIndex].acceptPhaseTwoStoneCargo(
+                                delivery.deliveredUnits
+                            )
+                        }
+                    }
+                case .restoringCargoAtSource, .emptyArrivalCleanup:
+                    if case let .sourceTransferDue(cargoUnits)? =
+                        convoys[index].advanceAtSource() {
+                        let accepted = logistics.returnStoredGoods(
+                            warehouseID: convoys[index].sourceObjectID,
+                            commodityID: convoys[index].commodityID,
+                            amount: cargoUnits,
+                            production: &production
+                        )
+                        _ = convoys[index].recordSourceTransfer(
+                            acceptedUnits: accepted,
+                            nextProvider: nil
+                        )
+                    }
+                case .routeFallback:
+                    _ = convoys[index].advanceRouteFallback(nextProvider: nil)
+                }
+                convoys[index].advanceAnimationAndFollowers()
+                convoys[index].updateHelperLiveness()
+            }
+            convoys.removeAll {
+                !$0.isCarrierActive && $0.helpers.allSatisfy { !$0.isActive }
+            }
+            state.restoreGrandCanalMapPartStatesPreservingRuntime(parts)
+            state.restoreGrandCanalPhaseTwoCoordinator(coordinator)
+            state.restoreGrandCanalPhaseTwoConvoys(convoys)
+
+            let outcome = try state.advanceGrandCanalSchedulerCall()
+            guard case .maintainedPhaseTwoMaterialRequests = outcome else { continue }
+            coordinator = state.grandCanalPhaseTwoCoordinator
+            guard let first = coordinator.pendingRequests.first(where: {
+                $0.remainingUnits > 0
+            }) else { continue }
+            let sameCommodityUnits = coordinator.pendingRequests.compactMap {
+                $0.commodityID == first.commodityID ? $0.remainingUnits : nil
+            }
+            guard let requestedUnits = Catalog.nextPhaseTwoSourceRequest(
+                sameCommodityPendingUnits: sameCommodityUnits
+            ) else { continue }
+
+            let warehouseByID = Dictionary(uniqueKeysWithValues:
+                logistics.warehouses.map { ($0.id, $0) }
+            )
+            let warehouses = placedBuildings.compactMap { placement -> StorageWarehouse? in
+                guard placement.category == .warehouse,
+                      let warehouse = warehouseByID[placement.instanceID],
+                      Catalog.isEligiblePhaseTwoMaterialSource(
+                        .init(
+                            objectID: warehouse.id,
+                            buildingID: warehouse.buildingID,
+                            isActive: true,
+                            availableStoneUnits: warehouse.inventoryByCommodityID[
+                                Catalog.phaseTwoStoneCommodityID,
+                                default: 0
+                            ]
+                        ),
+                        requestingObjectID: Int.min,
+                        requestedUnits: requestedUnits
+                      ) else { return nil }
+                return warehouse
+            }
+            guard !warehouses.isEmpty else { continue }
+
+            let orderedTargets = Catalog.orderedPhaseTwoTargetAccesses(
+                requestingSubBuildingOrigin: first.targetPoint,
+                authoredAccessibleCandidates: targetAccesses
+            )
+            var selection: (source: StorageWarehouse,
+                            target: Catalog.PhaseTwoTargetAccessCandidate,
+                            route: Catalog.WorkerRoute)?
+            for target in orderedTargets {
+                guard let sourceIndex = Catalog.phaseTwoSourceCandidateIndex(
+                    primaryValues: routingGrids.primaryPassability,
+                    width: routingGrids.width,
+                    height: routingGrids.height,
+                    from: target.roadAccessPoint,
+                    orderedCandidatePoints: warehouses.map(\.roadAccessPoint)
+                ) else { continue }
+                let source = warehouses[sourceIndex]
+                guard let route = Catalog.phaseTwoCarrierRoute(
+                    primaryValues: routingGrids.primaryPassability,
+                    width: routingGrids.width,
+                    height: routingGrids.height,
+                    from: source.roadAccessPoint,
+                    to: target.roadAccessPoint
+                ) else { continue }
+                selection = (source, target, route)
+                break
+            }
+            guard let selection else { continue }
+
+            let cargo = logistics.takeStoredGoods(
+                warehouseID: selection.source.id,
+                commodityID: first.commodityID,
+                amount: requestedUnits,
+                production: &production
+            )
+            guard cargo == requestedUnits,
+                  let batch = coordinator.dispatchNextBatch(carrierCreated: true)
+            else { continue }
+            let ids = coordinator.reserveConvoyFigureIDs()
+            var convoy = Catalog.PhaseTwoCarrierConvoyRuntime(
+                carrierFigureID: ids.0,
+                firstHelperFigureID: ids.1,
+                secondHelperFigureID: ids.2,
+                sourceObjectID: selection.source.id,
+                sourceBuildingID: selection.source.buildingID,
+                commodityID: batch.commodityID,
+                sourceOrigin: selection.source.roadAccessPoint,
+                monumentObjectID: selection.target.subBuildingIndex,
+                monumentAccessPoint: selection.target.roadAccessPoint,
+                cargoUnits: cargo
+            )
+            convoy.movement = .init(route: selection.route)
+            convoys = state.grandCanalPhaseTwoConvoys
+            convoys.append(convoy)
+            state.restoreGrandCanalPhaseTwoCoordinator(coordinator)
+            state.restoreGrandCanalPhaseTwoConvoys(convoys)
+        }
+        logisticsState = logistics
+        self.production = production
+    }
+
+    private mutating func advanceRecoveredGrandCanalSchedulerCalls(
+        _ count: Int,
+        models: BuildingModelTable
+    ) {
+        guard count > 0, !(aestheticState?.grandCanalMapPartStates.isEmpty ?? true) else {
+            return
+        }
+        var state = aestheticState ?? DeterministicAestheticState()
+        do {
+            let wholePhases = Set(state.grandCanalMapPartStates.map(\.wholeMonumentPhase))
+            if wholePhases == [0] || wholePhases == [1] {
+                let routingGrids = try grandCanalWorkerRoutingGrids()
+                let targetAccesses = try grandCanalPhaseLaborTargetAccesses(
+                    routingGrids: routingGrids
+                )
+                for _ in 0..<count {
+                    let providers = grandCanalPhaseLaborProviders(
+                        models: models,
+                        coordinator: state.grandCanalPhaseLaborCoordinator
+                    )
+                    _ = try state.advanceGrandCanalPhaseLaborSimulationStep(
+                        providers: providers,
+                        targetAccesses: targetAccesses,
+                        routingGrids: routingGrids,
+                        xiWangMuActive: false
+                    )
+                }
+            } else if wholePhases == [2] {
+                let routingGrids = try grandCanalWorkerRoutingGrids()
+                let targetAccesses = try grandCanalPhaseTwoTargetAccesses(
+                    routingGrids: routingGrids
+                )
+                try advanceGrandCanalPhaseTwoSimulationSteps(
+                    count,
+                    state: &state,
+                    routingGrids: routingGrids,
+                    targetAccesses: targetAccesses
+                )
+            } else {
+                _ = try state.advanceGrandCanalSchedulerCalls(count)
+            }
+            aestheticState = state
+        } catch is OriginalGrandCanalLayoutCatalog.WorkerRoutingCacheDerivationError {
+            // A city containing an occupancy branch whose original +0xCC
+            // predicate has not yet been recovered is outside the live bridge's
+            // supported contract. Leave this batch wholly unchanged instead of
+            // inventing a passability class or crashing the surrounding city
+            // simulation; the explicit routing API still exposes the error to
+            // research callers and tests.
+            return
+        } catch {
+            // Unsupported archive phases remain unchanged. Keeping the mutation
+            // atomic prevents a malformed save from partially advancing its
+            // monument state while retaining a debug signal for schema errors.
+            assertionFailure("Unsupported Grand Canal scheduler state: \(error)")
+        }
+    }
+
+    public func canAdvanceEarthenGreatWallSegment(index: Int) -> Bool {
+        guard let wall = aesthetics.earthenGreatWallProject,
+              let project = aesthetics.monuments.first(where: { $0.id == wall.projectID }) else {
+            return false
+        }
+        var preview = wall
+        return preview.advanceSegment(index: index, project: project)
+    }
+
+    public func canAdvanceEarthenGreatWallSegment(at point: GridPoint) -> Bool {
+        guard let index = aesthetics.earthenGreatWallProject?.segmentIndex(containing: point) else {
+            return false
+        }
+        return canAdvanceEarthenGreatWallSegment(index: index)
+    }
+
+    @discardableResult
+    public mutating func advanceEarthenGreatWallSegment(index: Int) -> Int? {
+        var state = aestheticState ?? DeterministicAestheticState()
+        guard let segment = state.advanceEarthenGreatWallSegment(index: index) else {
+            return nil
+        }
+        aestheticState = state
+        return segment
+    }
+
+    @discardableResult
+    public mutating func advanceEarthenGreatWallSegment(at point: GridPoint) -> Int? {
+        guard let index = aesthetics.earthenGreatWallProject?.segmentIndex(containing: point) else {
+            return nil
+        }
+        return advanceEarthenGreatWallSegment(index: index)
+    }
+
+    public func canAdvanceLargePalacePhase(at point: GridPoint) -> Bool {
+        guard let palace = aesthetics.largePalaceProject,
+              palace.contains(point),
+              let project = aesthetics.monuments.first(where: { $0.id == palace.projectID }) else {
+            return false
+        }
+        var preview = palace
+        return preview.advance(project: project)
+    }
+
+    @discardableResult
+    public mutating func advanceLargePalacePhase(at point: GridPoint) -> Int? {
+        var state = aestheticState ?? DeterministicAestheticState()
+        guard let phase = state.advanceLargePalacePhase(at: point) else { return nil }
+        aestheticState = state
+        return phase
+    }
+
+    public func canAdvancePhasedMonument(at point: GridPoint) -> Bool {
+        guard let runtime = aesthetics.phasedMonumentProjects.first(where: {
+            !$0.isComplete && $0.contains(point)
+        }),
+        let project = aesthetics.monuments.first(where: {
+            $0.id == runtime.projectID
+        }) else { return false }
+        var preview = runtime
+        return preview.advance(project: project)
+    }
+
+    @discardableResult
+    public mutating func advancePhasedMonument(at point: GridPoint) -> Int? {
+        var state = aestheticState ?? DeterministicAestheticState()
+        guard let phase = state.advancePhasedMonument(at: point) else {
+            return nil
+        }
+        aestheticState = state
+        return phase
     }
 
     public func canConstructAestheticBuilding(
@@ -2047,6 +3545,39 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             orientation: orientation,
             footprint: footprint,
             roadAccessPoint: adjacentRoadPoints(to: points).first ?? origin
+        )
+    }
+
+    private func preparedIrrigationPumpPlacement(
+        at origin: GridPoint,
+        orientation: IsometricBuildingOrientation
+    ) -> PlacedBuilding? {
+        guard isBuildingAvailableInCampaign(203),
+              let footprint = OriginalBuildingFootprintCatalog.footprint(
+                forBuildingID: 203,
+                orientation: orientation
+              ),
+              let terrainState else { return nil }
+        let points = footprint.points(at: origin)
+        guard points.allSatisfy(roadNetwork.isInside),
+              points.allSatisfy({ !roadNetwork.contains($0) }),
+              points.allSatisfy({ !occupiedBuildingPoints.contains($0) }),
+              terrainState.quayWaterEdge(
+                footprintPoints: points,
+                footprintWidth: footprint.width,
+                footprintHeight: footprint.height,
+                origin: origin
+              ) != nil,
+              let roadAccessPoint = adjacentRoadPoints(to: points).first
+        else { return nil }
+        return PlacedBuilding(
+            category: .aesthetic,
+            instanceID: 0,
+            buildingID: 203,
+            origin: origin,
+            orientation: orientation,
+            footprint: footprint,
+            roadAccessPoint: roadAccessPoint
         )
     }
 
@@ -2107,8 +3638,11 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         models: FigureModelTable
     ) -> MilitaryMovementSettlement {
         guard var state = militaryState,
-              (!state.units.isEmpty || !state.defensiveStructures.isEmpty),
-              var events = campaignEventState else { return .empty }
+              var events = campaignEventState,
+              !state.units.isEmpty
+                || !state.defensiveStructures.isEmpty
+                || events.invasions.contains(where: { $0.status == .awaitingDefense })
+        else { return .empty }
         let movement = state.advance(
             maximumStepsPerUnit: maximumStepsPerUnit,
             terrain: terrainState,
@@ -2203,10 +3737,20 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             origin: serviceRoadStart,
             maximumRoadSteps: figure.behaviorRange,
             replaySeed: replaySeed,
-            roadNetwork: roadNetwork
+            roadNetwork: roadNetwork,
+            barrierPoints: roadblockPoints,
+            startsDormant: true,
+            providerBuildingID: buildingID
         ) else { return nil }
         var buildings = residentialServiceBuildingState ?? []
-        let id = (buildings.map(\.id).max() ?? 0) + 1
+        // Ruins deliberately keep their placement after the operational
+        // service building is removed. Include those retained placement IDs
+        // when allocating a replacement so workforce keys never collide.
+        let retainedPlacementID = (buildingPlacementState ?? [])
+            .filter { $0.category == .residentialService }
+            .map(\.instanceID)
+            .max() ?? 0
+        let id = max(buildings.map(\.id).max() ?? 0, retainedPlacementID) + 1
         buildings.append(ResidentialServiceBuilding(
             id: id,
             buildingID: buildingID,
@@ -2226,7 +3770,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         let movement = state.advance(
             roadStepsPerWalker: roadStepsPerWalker,
             houses: houses,
-            roadNetwork: roadNetwork
+            roadNetwork: roadNetwork,
+            barrierPoints: roadblockPoints
         )
         applyServiceCoverage(movement, resetExisting: false)
         walkerState = state
@@ -2312,9 +3857,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         rules: EconomyRulesEngine
     ) -> DemolishOutcome? {
         guard var placements = buildingPlacementState,
-              let index = placements.firstIndex(where: { $0.occupiedPoints.contains(point) })
+              let placement = placements.first(where: { $0.occupiedPoints.contains(point) })
         else { return nil }
-        let placement = placements[index]
         let refund = buildingDemolitionRefund(placement: placement, rules: rules)
 
         // Apply every linked-state mutation to a copy. A placed building is
@@ -2322,7 +3866,15 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         // market, trade, service, or walker state survives invisibly.
         var updated = self
         updated.removeSimulationInstance(for: placement)
-        placements.remove(at: index)
+        let removesLinkedFields = placement.category == .production
+            && updated.production.building(instanceID: placement.instanceID) == nil
+            && production.building(instanceID: placement.instanceID)?.agriculture != nil
+        placements.removeAll {
+            $0.id == placement.id
+                || (removesLinkedFields
+                    && $0.category == .agriculturalPlot
+                    && $0.instanceID == placement.instanceID)
+        }
         updated.buildingPlacementState = placements
         updated.economy.credit(refund)
         self = updated
@@ -2335,6 +3887,10 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         var trade = tradeState ?? DeterministicTradeState()
 
         switch placement.category {
+        case .residential:
+            // Residential ruins have already been removed from `houses`.
+            break
+
         case .production:
             _ = logistics.cancelDeliveries(
                 involving: .productionBuilding(placement.instanceID),
@@ -2342,6 +3898,15 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
                 trade: &trade
             )
             _ = production.removeBuilding(instanceID: placement.instanceID)
+
+        case .agriculturalPlot:
+            if let producer = production.building(instanceID: placement.instanceID),
+               let configuration = producer.agriculture {
+                production.setAgriculturalFieldCount(
+                    configuration.fieldCount - 1,
+                    buildingInstanceID: placement.instanceID
+                )
+            }
 
         case .warehouse:
             _ = logistics.cancelDeliveries(
@@ -2504,10 +4069,15 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             houses: houses,
             roadNetwork: roadNetwork,
             serviceRoadStart: serviceRoadStart,
-            maximumRoadSteps: maximumRoadSteps
+            maximumRoadSteps: maximumRoadSteps,
+            barrierPoints: roadblockPoints
         )
         for index in houses.indices {
-            houses[index].hasTaxCoverage = coveredIDs.contains(houses[index].id)
+            if coveredIDs.contains(houses[index].id) {
+                houses[index].applyOriginalServiceVisit(.tax)
+            } else {
+                houses[index].clearOriginalTaxCoverage()
+            }
         }
         return coveredIDs.count
     }
@@ -2518,19 +4088,15 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
     ) {
         if resetExisting {
             for index in houses.indices {
-                houses[index].hasTaxCoverage = false
-                houses[index].serviceCoverage.removeAll()
+                houses[index].clearOriginalTaxCoverage()
+                houses[index].resetOriginalServiceCoverage()
             }
         }
         for index in houses.indices {
             let houseID = houses[index].id
             for (service, coveredIDs) in movement.servicedHouseIDsByService where
                 coveredIDs.contains(houseID) {
-                if service == .tax {
-                    houses[index].hasTaxCoverage = true
-                } else {
-                    houses[index].serviceCoverage.insert(service)
-                }
+                houses[index].applyOriginalServiceVisit(service)
             }
         }
     }
@@ -2596,7 +4162,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
                     tradingBuildingID: assignment.key.instanceID,
                     models: models
                 )
-            case .warehouse, .mill, .market, .residentialService, .military, .aesthetic:
+            case .residential, .agriculturalPlot, .warehouse, .mill, .market,
+                 .residentialService, .military, .aesthetic:
                 break
             }
         }
@@ -2604,25 +4171,17 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
     }
 
     private func inspectionCoverage(
-        workforce: WorkforceMonthlySettlement,
+        placements: [PlacedBuilding],
+        visitedPatrolPoints: Set<GridPoint>,
         models: BuildingModelTable
     ) -> (keys: Set<OperationalBuildingKey>, reduction: Int) {
-        let fullyStaffedInspectorKeys = Set(workforce.assignments.compactMap { assignment in
-            assignment.buildingID == 124 && assignment.isFullyStaffed ? assignment.key : nil
-        })
-        guard !fullyStaffedInspectorKeys.isEmpty else { return ([], 0) }
-        var patrolPoints: Set<GridPoint> = []
-        for serviceBuilding in residentialServiceBuildings where serviceBuilding.service == .inspection {
-            let key = OperationalBuildingKey(category: .residentialService, instanceID: serviceBuilding.id)
-            guard fullyStaffedInspectorKeys.contains(key),
-                  let walker = walkers.walkers.first(where: { $0.id == serviceBuilding.walkerID }) else { continue }
-            patrolPoints.formUnion(walker.route)
-            patrolPoints.insert(walker.currentPoint)
-        }
-        let covered = Set(placedBuildings.compactMap { placement -> OperationalBuildingKey? in
-            let touchesPatrol = patrolPoints.contains(placement.roadAccessPoint)
+        guard !visitedPatrolPoints.isEmpty else { return ([], 0) }
+        let covered = Set(placements.compactMap { placement -> OperationalBuildingKey? in
+            let touchesPatrol = visitedPatrolPoints.contains(placement.roadAccessPoint)
                 || placement.occupiedPoints.contains { point in
-                    RoadServiceCoverage.orthogonalNeighbors(of: point).contains(where: patrolPoints.contains)
+                    RoadServiceCoverage.orthogonalNeighbors(of: point).contains(
+                        where: visitedPatrolPoints.contains
+                    )
                 }
             return touchesPatrol
                 ? OperationalBuildingKey(category: placement.category, instanceID: placement.instanceID)
@@ -2631,18 +4190,22 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         return (covered, max(0, models[buildingID: 124]?.riskReducer ?? 0))
     }
 
-    private func activeServiceWalkerIDs(
+    private func serviceWorkerPercentByWalkerID(
         workforce: WorkforceMonthlySettlement?
-    ) -> Set<Int>? {
-        guard let workforce else { return nil }
-        let staffedKeys = Set(workforce.assignments.compactMap {
-            $0.key.category == .residentialService && $0.isFullyStaffed ? $0.key : nil
-        })
-        return Set(residentialServiceBuildings.compactMap { building in
-            staffedKeys.contains(OperationalBuildingKey(
-                category: .residentialService,
-                instanceID: building.id
-            )) ? building.walkerID : nil
+    ) -> [Int: Int] {
+        guard let workforce else {
+            return Dictionary(uniqueKeysWithValues: residentialServiceBuildings.map { ($0.walkerID, 100) })
+        }
+        let assignments = Dictionary(uniqueKeysWithValues: workforce.assignments.map { ($0.key, $0) })
+        return Dictionary(uniqueKeysWithValues: residentialServiceBuildings.map { building in
+            let key = OperationalBuildingKey(category: .residentialService, instanceID: building.id)
+            guard let assignment = assignments[key], assignment.requiredWorkers > 0 else {
+                return (building.walkerID, 0)
+            }
+            return (
+                building.walkerID,
+                min(100, max(0, assignment.assignedWorkers * 100 / assignment.requiredWorkers))
+            )
         })
     }
 
@@ -2681,27 +4244,57 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
     }
 
     private mutating func applyOperationsFailures(_ failures: [BuildingFailure]) {
-        guard var placements = buildingPlacementState else { return }
+        var placements = buildingPlacementState ?? []
         for failure in failures {
-            guard let index = placements.firstIndex(where: {
-                $0.category == failure.key.category && $0.instanceID == failure.key.instanceID
-            }) else { continue }
-            removeSimulationInstance(for: placements[index])
-            placements.remove(at: index)
+            let failedPlacement: PlacedBuilding
+            if failure.key.category == .residential {
+                guard let houseIndex = houses.firstIndex(where: {
+                    $0.id == failure.key.instanceID
+                }), let origin = houses[houseIndex].location else { continue }
+                let house = houses.remove(at: houseIndex)
+                let footprint = OriginalBuildingFootprintCatalog.footprint(forBuildingID: 2)
+                    ?? BuildingFootprint(width: 2, height: 2)
+                failedPlacement = PlacedBuilding(
+                    category: .residential,
+                    instanceID: house.id,
+                    buildingID: house.houseLevelID + 3,
+                    origin: origin,
+                    orientation: house.orientation,
+                    footprint: footprint,
+                    roadAccessPoint: failure.location
+                )
+            } else {
+                guard let index = placements.firstIndex(where: {
+                    $0.category == failure.key.category
+                        && $0.instanceID == failure.key.instanceID
+                        && $0.buildingID != OriginalBuildingSpriteCatalog.ruinBuildingID
+                }) else { continue }
+                failedPlacement = placements.remove(at: index)
+                removeSimulationInstance(for: failedPlacement)
+            }
+            // Both failures leave a blocking, manually clearable ruin. A fire
+            // remains visibly overlaid for the current settlement.
+            placements.append(PlacedBuilding(
+                category: failedPlacement.category,
+                instanceID: failedPlacement.instanceID,
+                buildingID: OriginalBuildingSpriteCatalog.ruinBuildingID,
+                origin: failedPlacement.origin,
+                orientation: failedPlacement.orientation,
+                footprint: failedPlacement.footprint,
+                roadAccessPoint: failedPlacement.roadAccessPoint
+            ))
         }
         buildingPlacementState = placements
     }
 
-    @discardableResult
-    mutating func destroyPlacedBuildingWithoutRefund(_ key: OperationalBuildingKey) -> Bool {
-        guard var placements = buildingPlacementState,
-              let index = placements.firstIndex(where: {
-                  $0.category == key.category && $0.instanceID == key.instanceID
-              }) else { return false }
-        removeSimulationInstance(for: placements[index])
-        placements.remove(at: index)
-        buildingPlacementState = placements
-        return true
+    /// Converts a concrete external hit into the same persistent ruin state as
+    /// routine maintenance failures while retaining its authored cause.
+    mutating func applyExternalBuildingFailures(_ failures: [BuildingFailure]) {
+        guard !failures.isEmpty else { return }
+        var operations = operationsState ?? DeterministicCityOperationsState()
+        operations.recordExternalFailures(calendar: calendar, failures: failures)
+        operationsState = operations
+        applyOperationsFailures(failures)
     }
 
     /// Advances one deterministic game day. Movement and migration happen on
@@ -2712,37 +4305,48 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         var accumulatedCoverage = monthlyServiceCoverageState
             ?? MonthlyServiceCoverageAccumulator()
 
-        if clock.day == 1, accumulatedCoverage.isEmpty {
-            for index in houses.indices {
-                houses[index].serviceCoverage.removeAll()
-            }
-            if walkers.walkers.contains(where: { $0.service == .tax }) {
-                for index in houses.indices { houses[index].hasTaxCoverage = false }
-            }
+        // Original daily `FUN_005185C0` settling-lock walk (§10.6): runs in
+        // the calendar before the migration/assignment case.
+        for index in houses.indices {
+            houses[index].advanceSettlingLock()
         }
 
-        let workforceBeforeMigration: WorkforceMonthlySettlement?
-        if workforceEnabled {
-            workforceBeforeMigration = workforceSnapshot(models: rules.models.buildings)
-        } else {
-            workforceBeforeMigration = nil
+        // Advance live immigrant figures by today's original-step budget and
+        // apply arrivals (§5.3). Walkers only exist when the producer is
+        // enabled or a fixture explicitly spawns one.
+        var migrationBefore = migrationState ?? DeterministicMigrationState()
+        let arrivals = migrationBefore.advanceImmigrantWalkers(
+            originalStepsInDay: DeterministicMigration.originalStepsInDay(clock.day)
+        )
+        for arrival in arrivals {
+            applyImmigrantArrival(arrival, models: rules.models.buildings)
         }
-        let assessment = DeterministicMigration.assess(
+        if !arrivals.isEmpty {
+            migrationBefore.recordArrivals(
+                count: arrivals.reduce(0) { $0 + $1.peopleCount }
+            )
+        }
+        let migrated = arrivals.reduce(0) { $0 + $1.peopleCount }
+        migrationState = migrationBefore
+
+        let assessment = DeterministicMigration.observeHousing(
             houses: houses,
-            population: population,
-            treasury: economy.treasury,
             roadNetwork: roadNetwork,
-            workforce: workforceBeforeMigration,
             models: rules.models.buildings
         )
-        let migrated = admitResidents(
-            assessment.plannedImmigrants,
-            eligibleHouseIDs: Set(assessment.eligibleHouseIDs),
-            models: rules.models.buildings
-        )
-        var migration = migrationState ?? DeterministicMigrationState()
-        migration.recordDay(assessment: assessment, admitted: migrated)
-        migrationState = migration
+        if migrationBefore.automaticMigrationAvailability == .supportedOriginalProducer {
+            // Popularity update on the two original slice days (1 and 16) of
+            // the Native month (§2), then the daily pressure/request/
+            // assignment pass (case 0x17, §4–§5).
+            if clock.day == 1 || clock.day == 16 {
+                updateMigrationPopularity(rules: rules)
+            }
+            dailyMigrationAssignment(rules: rules)
+        } else {
+            var migration = migrationState ?? DeterministicMigrationState()
+            migration.recordUnsupportedDay(assessment: assessment)
+            migrationState = migration
+        }
 
         let activeWorkforce: WorkforceMonthlySettlement?
         if workforceEnabled {
@@ -2753,18 +4357,26 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             activeWorkforce = nil
         }
 
-        var walkerMovement = WalkerMovementSummary.empty
-        if var state = walkerState, !state.walkers.isEmpty {
-            walkerMovement = state.advance(
-                roadStepsPerWalker: 1,
-                houses: houses,
-                roadNetwork: roadNetwork,
-                activeWalkerIDs: activeServiceWalkerIDs(workforce: activeWorkforce)
-            )
-            accumulatedCoverage.merge(walkerMovement)
-            applyServiceCoverage(walkerMovement, resetExisting: false)
-            walkerState = state
-        }
+        var state = walkerState ?? DeterministicWalkerState()
+        let originalWalkerSteps = DeterministicMigration.originalStepsInDay(clock.day)
+        let primaryReturnPassability = state.requiresOriginalReturnPassability(
+            withinOriginalSteps: originalWalkerSteps
+        ) ? (try? grandCanalWorkerRoutingGrids().primaryPassability) : nil
+        let walkerMovement = state.advanceRecoveredOriginalSteps(
+            originalWalkerSteps,
+            houses: &houses,
+            roadNetwork: roadNetwork,
+            workerPercentByWalkerID: serviceWorkerPercentByWalkerID(
+                workforce: activeWorkforce
+            ),
+            primaryReturnPassability: primaryReturnPassability,
+            coverageBlockerPoints: OriginalResidentialServiceCoverage.blockerPoints(
+                placements: placedBuildings
+            ),
+            barrierPoints: roadblockPoints
+        )
+        accumulatedCoverage.merge(walkerMovement)
+        walkerState = state
 
         var logisticsMovement = DeliveryMovementSummary.empty
         if var logistics = logisticsState {
@@ -2784,8 +4396,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
                     workforce: activeWorkforce
                 )
             )
-            logisticsMovement = logistics.advanceDeliveries(
-                roadStepsPerWalker: 1,
+            logisticsMovement = logistics.advanceOriginalDeliveries(
+                originalStepsPerWalker: originalWalkerSteps,
                 production: &production,
                 trade: &trade,
                 activeDeliveryWalkerIDs: activeDeliveryWalkerIDs(
@@ -2830,7 +4442,7 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
                 )
             )
             let purchased = market.advanceBuyers(
-                roadStepsPerBuyer: 1,
+                roadStepsPerBuyer: 10,
                 activeMarketIDs: activeMarketIDs
             )
             market.schedulePeddlers(
@@ -2840,13 +4452,19 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
                 maximumRoadSteps: peddlerRange,
                 replaySeed: 0x4D41_524B_4554
                     ^ UInt64(bitPattern: Int64(calendar.year * 12 + calendar.month)),
-                activeMarketIDs: activeMarketIDs
+                activeMarketIDs: activeMarketIDs,
+                barrierPoints: roadblockPoints
             )
             let delivered = market.advancePeddlers(
-                roadStepsPerPeddler: 1,
+                // A market walker patrols a substantial portion of its
+                // authored 60-tile service range during one game month.
+                // Ten road tiles per daily simulation tick preserves that
+                // cadence on the native day-based clock.
+                roadStepsPerPeddler: 10,
                 houses: &houses,
                 models: rules.models.buildings,
-                activeMarketIDs: activeMarketIDs
+                activeMarketIDs: activeMarketIDs,
+                barrierPoints: roadblockPoints
             )
             marketMovement = MarketTickMovementSummary(
                 purchasedLoads: purchased,
@@ -2856,10 +4474,27 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             logisticsState = logistics
         }
 
+        let schedulerCalls = OriginalGrandCanalLayoutCatalog.schedulerCalls(
+            forNativeDay: clock.day
+        )
+        let callsAfterMonthBoundary = clock.day == SimulationClockState.daysPerMonth ? 1 : 0
+        advanceRecoveredGrandCanalSchedulerCalls(
+            schedulerCalls - callsAfterMonthBoundary,
+            models: rules.models.buildings
+        )
+
         let clockAdvance = clock.advanceOneDay()
         simulationClockState = clock
         monthlyServiceCoverageState = accumulatedCoverage
         let settlement = clockAdvance.didEndMonth ? settleMonth(rules: rules) : nil
+        // In the original `FUN_005371A0`, the final monthly call reaches
+        // `FUN_004AC2B0/0x4AC650` before the same step reaches `0x564B50`.
+        // Preserve that ordering so a just-completed monument cannot satisfy
+        // the month-boundary goal check one original step too early.
+        advanceRecoveredGrandCanalSchedulerCalls(
+            callsAfterMonthBoundary,
+            models: rules.models.buildings
+        )
         return CityTickResult(
             tickSequence: clockAdvance.tickSequence,
             day: clockAdvance.currentDay,
@@ -3006,18 +4641,25 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
         )
         productionAccountingState = accounting
         if let operationsWorkforce {
+            let riskPlacements = buildingFailureCandidatePlacements
             let coverage = inspectionCoverage(
-                workforce: operationsWorkforce,
+                placements: riskPlacements,
+                visitedPatrolPoints: monthlyServiceCoverageState?
+                    .visitedRoadPointsByService[.inspection] ?? [],
                 models: rules.models.buildings
             )
             var operations = operationsState ?? DeterministicCityOperationsState()
             let operationsSettlement = operations.advanceMonth(
                 calendar: calendar,
                 workforce: operationsWorkforce,
-                placements: placedBuildings,
+                placements: riskPlacements,
                 inspectedBuildingKeys: coverage.keys,
                 maintenanceRiskReduction: coverage.reduction,
-                models: rules.models.buildings
+                models: rules.models.buildings,
+                difficulty: difficulty,
+                hazardRules: OriginalBuildingHazardRules(
+                    configuration: rules.models.generalBuilding
+                )
             )
             operationsState = operations
             applyOperationsFailures(operationsSettlement.failures)
@@ -3043,7 +4685,8 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             uncollectedTaxes: uncollected,
             taxSentiment: sentiment,
             startingTreasury: startingTreasury,
-            endingTreasury: economy.treasury
+            endingTreasury: economy.treasury,
+            completedMonumentBuildingIDsAtBoundary: aesthetics.completedMonumentBuildingIDs
         )
     }
 

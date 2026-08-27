@@ -58,41 +58,6 @@ struct CitySettlementStrip: View {
     }
 }
 
-struct MigrationStatusStrip: View {
-    let migration: DeterministicMigrationState
-
-    var body: some View {
-        HStack(spacing: 18) {
-            Label("自然迁入", systemImage: "person.crop.circle.badge.plus")
-                .font(EmperorTheme.headlineMedium)
-            Spacer()
-            LabeledContent("今日", value: "+\(migration.lastDailyImmigrants)")
-            LabeledContent("本月", value: "+\(migration.currentMonthImmigrants)")
-            LabeledContent("上月", value: "+\(migration.lastMonthImmigrants)")
-            if let reason = migration.lastAssessment?.blockReason {
-                Label(blockReasonText(reason), systemImage: "pause.circle.fill")
-                    .foregroundStyle(.orange)
-            } else if migration.lastDailyImmigrants > 0 {
-                Text("空置临路住宅正在吸引移民")
-                    .foregroundStyle(.secondary)
-            }
-        }
-        .padding(14)
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 12))
-    }
-
-    private func blockReasonText(_ reason: MigrationBlockReason) -> String {
-        switch reason {
-        case .noEligibleHousing:
-            "暂无邻接道路的空置住宅"
-        case .negativeTreasury:
-            "国库为负，迁入暂停"
-        case let .highUnemployment(percent):
-            "失业率 \(percent)%，迁入暂停"
-        }
-    }
-}
-
 struct ProductionStatusStrip: View {
     let production: DeterministicProductionState
     let logistics: DeterministicLogisticsState

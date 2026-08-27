@@ -1,0 +1,2865 @@
+{
+  "generatedAt": "2026-08-11T02:58:34.009465+00:00",
+  "schema": [
+    "category",
+    "slot",
+    "buildingId",
+    "imageId",
+    "frame",
+    "screenRect",
+    "evidenceType",
+    "source"
+  ],
+  "rowsAssetConfirmed": [
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1491,
+      "frame": 0,
+      "stateImageIds": [
+        1491,
+        1492,
+        1493
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 0,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1494,
+      "frame": 0,
+      "stateImageIds": [
+        1494,
+        1495,
+        1496
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 1,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1497,
+      "frame": 0,
+      "stateImageIds": [
+        1497,
+        1498,
+        1499
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 2,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1500,
+      "frame": 0,
+      "stateImageIds": [
+        1500,
+        1501,
+        1502
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 3,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1503,
+      "frame": 0,
+      "stateImageIds": [
+        1503,
+        1504,
+        1505
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 4,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1506,
+      "frame": 0,
+      "stateImageIds": [
+        1506,
+        1507,
+        1508
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 5,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1509,
+      "frame": 0,
+      "stateImageIds": [
+        1509,
+        1510,
+        1511
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 6,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1512,
+      "frame": 0,
+      "stateImageIds": [
+        1512,
+        1513,
+        1514
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 7,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1515,
+      "frame": 0,
+      "stateImageIds": [
+        1515,
+        1516,
+        1517
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 8,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1518,
+      "frame": 0,
+      "stateImageIds": [
+        1518,
+        1519,
+        1520
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 9,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1521,
+      "frame": 0,
+      "stateImageIds": [
+        1521,
+        1522,
+        1523
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 10,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1524,
+      "frame": 0,
+      "stateImageIds": [
+        1524,
+        1525,
+        1526
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 11,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1527,
+      "frame": 0,
+      "stateImageIds": [
+        1527,
+        1528,
+        1529
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 12,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1530,
+      "frame": 0,
+      "stateImageIds": [
+        1530,
+        1531,
+        1532
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 13,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1536,
+      "frame": 0,
+      "stateImageIds": [
+        1536,
+        1537,
+        1538
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 14,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1539,
+      "frame": 0,
+      "stateImageIds": [
+        1539,
+        1540,
+        1541
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 15,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1542,
+      "frame": 0,
+      "stateImageIds": [
+        1542,
+        1543,
+        1544
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 16,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1545,
+      "frame": 0,
+      "stateImageIds": [
+        1545,
+        1546,
+        1547
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 17,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1548,
+      "frame": 0,
+      "stateImageIds": [
+        1548,
+        1549,
+        1550
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 18,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1551,
+      "frame": 0,
+      "stateImageIds": [
+        1551,
+        1552,
+        1553
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 19,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1554,
+      "frame": 0,
+      "stateImageIds": [
+        1554,
+        1555,
+        1556
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 20,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1557,
+      "frame": 0,
+      "stateImageIds": [
+        1557,
+        1558,
+        1559
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 21,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1560,
+      "frame": 0,
+      "stateImageIds": [
+        1560,
+        1561,
+        1562
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 22,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1563,
+      "frame": 0,
+      "stateImageIds": [
+        1563,
+        1564,
+        1565
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 23,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1566,
+      "frame": 0,
+      "stateImageIds": [
+        1566,
+        1567,
+        1568
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 24,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1569,
+      "frame": 0,
+      "stateImageIds": [
+        1569,
+        1570,
+        1571
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 25,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1572,
+      "frame": 0,
+      "stateImageIds": [
+        1572,
+        1573,
+        1574
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 26,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1575,
+      "frame": 0,
+      "stateImageIds": [
+        1575,
+        1576,
+        1577
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 27,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1578,
+      "frame": 0,
+      "stateImageIds": [
+        1578,
+        1579,
+        1580
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 28,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1581,
+      "frame": 0,
+      "stateImageIds": [
+        1581,
+        1582,
+        1583
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 29,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1584,
+      "frame": 0,
+      "stateImageIds": [
+        1584,
+        1585,
+        1586
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 30,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1596,
+      "frame": 0,
+      "stateImageIds": [
+        1596,
+        1597,
+        1598
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 31,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1599,
+      "frame": 0,
+      "stateImageIds": [
+        1599,
+        1600,
+        1601
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 32,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1602,
+      "frame": 0,
+      "stateImageIds": [
+        1602,
+        1603,
+        1604
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 33,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1605,
+      "frame": 0,
+      "stateImageIds": [
+        1605,
+        1606,
+        1607
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 34,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1608,
+      "frame": 0,
+      "stateImageIds": [
+        1608,
+        1609,
+        1610
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 35,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1611,
+      "frame": 0,
+      "stateImageIds": [
+        1611,
+        1612,
+        1613
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 36,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1614,
+      "frame": 0,
+      "stateImageIds": [
+        1614,
+        1615,
+        1616
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 37,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1623,
+      "frame": 0,
+      "stateImageIds": [
+        1623,
+        1624,
+        1625
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 38,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1626,
+      "frame": 0,
+      "stateImageIds": [
+        1626,
+        1627,
+        1628
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 39,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1629,
+      "frame": 0,
+      "stateImageIds": [
+        1629,
+        1630,
+        1631
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 40,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1638,
+      "frame": 0,
+      "stateImageIds": [
+        1638,
+        1639,
+        1640
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 41,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1641,
+      "frame": 0,
+      "stateImageIds": [
+        1641,
+        1642,
+        1643
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 42,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1644,
+      "frame": 0,
+      "stateImageIds": [
+        1644,
+        1645,
+        1646
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 43,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": null,
+      "buildingIdEvidence": "unknown",
+      "imageId": 1653,
+      "frame": 0,
+      "stateImageIds": [
+        1653,
+        1654,
+        1655
+      ],
+      "width": 54,
+      "height": 53,
+      "screenRect": null,
+      "sheetFamilyIndex": 44,
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv + China_Interface.sg3 bitmap China_Interface_New_Bbuttons.BMP",
+      "fieldsConfirmed": [
+        "imageId",
+        "frame",
+        "width",
+        "height",
+        "sheetFamilyIndex",
+        "stateImageIds"
+      ],
+      "fieldsUnknown": [
+        "category",
+        "slot",
+        "buildingId",
+        "screenRect"
+      ]
+    }
+  ],
+  "rowsNativeInferredCrosswalk": [
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 2,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1491,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "common housing"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 11,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1494,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "elite housing"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 31,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1512,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "fishing wharf"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 33,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1506,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "hunting camp"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 35,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1515,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "clay pit"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 36,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1518,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "quarry / stoneworks"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 43,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1521,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "kiln"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 39,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1524,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "bronze smelter"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 40,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1524,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "iron smelter shares the furnace button"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 38,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1527,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "lumber mill"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 54,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1528,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "warehouse"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 66,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1531,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "food shop"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 53,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1534,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "mill"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 47,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1537,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "weaver"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 65,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1540,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "ceramics shop"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 67,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1543,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "hemp shop"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 59,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1546,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "common market"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 60,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1546,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "grand market shares the market pavilion family"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 72,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1551,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "well"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 207,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1554,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "herbalist"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 208,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1557,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "acupuncture clinic"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 124,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1560,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "inspector tower"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 127,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1563,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "watchtower"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 209,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1566,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "administrative city"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 110,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1569,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "palace"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 125,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1572,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "tax office"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 203,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1575,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "irrigation pump"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 211,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1584,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "music school"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 212,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1587,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "acrobat school"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 213,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1590,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "drama school"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 214,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1596,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "ancestral shrine"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 215,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1599,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "Daoist shrine"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 216,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1599,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "large Daoist temple shares the Daoist button family"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 218,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1602,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "Buddhist pagoda"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 219,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1605,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "Confucian academy"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 220,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1608,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "crossbow fort"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 221,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1611,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "infantry fort"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 224,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1614,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "cavalry fort"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 225,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1617,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "chariot fort"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 223,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1620,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "catapult fort"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 116,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1623,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "decorative sculpture"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 115,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1626,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "garden"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 117,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1629,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "ornate sculpture"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 120,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1632,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "pond"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 121,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1635,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "tai chi park"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 119,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1638,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "wayside pavilion"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 118,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1641,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "flowering tree"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 122,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1644,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "private garden"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 233,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1647,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "laborers camp"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 52,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1650,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "carpenters guild"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 235,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1650,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "masons guild shares the guild button family"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 236,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1650,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "ceramists guild shares the guild button family"
+    },
+    {
+      "category": null,
+      "slot": null,
+      "buildingId": 93,
+      "buildingIdEvidence": "inferred",
+      "imageId": 1653,
+      "frame": 0,
+      "screenRect": null,
+      "evidenceType": "inferred",
+      "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked)",
+      "comment": "grand pagoda"
+    }
+  ],
+  "categoryRailBand1311_1365": [
+    {
+      "imageId": 1311,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 18,
+      "height": 18,
+      "path": "China_Interface/007_China_Interface_New_parts/001311_18x18.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1312,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 18,
+      "height": 18,
+      "path": "China_Interface/007_China_Interface_New_parts/001312_18x18.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1313,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 18,
+      "height": 18,
+      "path": "China_Interface/007_China_Interface_New_parts/001313_18x18.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1314,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 18,
+      "height": 18,
+      "path": "China_Interface/007_China_Interface_New_parts/001314_18x18.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1315,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 18,
+      "height": 18,
+      "path": "China_Interface/007_China_Interface_New_parts/001315_18x18.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1316,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 18,
+      "height": 18,
+      "path": "China_Interface/007_China_Interface_New_parts/001316_18x18.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1317,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 18,
+      "height": 18,
+      "path": "China_Interface/007_China_Interface_New_parts/001317_18x18.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1318,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 18,
+      "height": 18,
+      "path": "China_Interface/007_China_Interface_New_parts/001318_18x18.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1319,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001319_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1320,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001320_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1321,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001321_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1322,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001322_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1323,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 38,
+      "path": "China_Interface/007_China_Interface_New_parts/001323_46x38.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1324,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 38,
+      "path": "China_Interface/007_China_Interface_New_parts/001324_46x38.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1325,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 38,
+      "path": "China_Interface/007_China_Interface_New_parts/001325_46x38.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1326,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 38,
+      "path": "China_Interface/007_China_Interface_New_parts/001326_46x38.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1327,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001327_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1328,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001328_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1329,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001329_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1330,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001330_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1331,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001331_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1332,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001332_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1333,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001333_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1334,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001334_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1335,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 38,
+      "path": "China_Interface/007_China_Interface_New_parts/001335_46x38.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1336,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 38,
+      "path": "China_Interface/007_China_Interface_New_parts/001336_46x38.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1337,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 38,
+      "path": "China_Interface/007_China_Interface_New_parts/001337_46x38.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1338,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 38,
+      "path": "China_Interface/007_China_Interface_New_parts/001338_46x38.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1339,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 38,
+      "path": "China_Interface/007_China_Interface_New_parts/001339_46x38.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1340,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 38,
+      "path": "China_Interface/007_China_Interface_New_parts/001340_46x38.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1341,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 38,
+      "path": "China_Interface/007_China_Interface_New_parts/001341_46x38.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1342,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 38,
+      "path": "China_Interface/007_China_Interface_New_parts/001342_46x38.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1343,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001343_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1344,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001344_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1345,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001345_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1346,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001346_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1347,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001347_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1348,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001348_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1349,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001349_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1350,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001350_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1351,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001351_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1352,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001352_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1353,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001353_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1354,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001354_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1355,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001355_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1356,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001356_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1357,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001357_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1358,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001358_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1359,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001359_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1360,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001360_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1361,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001361_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1362,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 46,
+      "height": 37,
+      "path": "China_Interface/007_China_Interface_New_parts/001362_46x37.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1363,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 32,
+      "height": 24,
+      "path": "China_Interface/007_China_Interface_New_parts/001363_32x24.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1364,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 32,
+      "height": 24,
+      "path": "China_Interface/007_China_Interface_New_parts/001364_32x24.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    },
+    {
+      "imageId": 1365,
+      "bitmapCategory": "China_Interface_New_parts.BMP",
+      "width": 32,
+      "height": 24,
+      "path": "China_Interface/007_China_Interface_New_parts/001365_32x24.png",
+      "evidenceType": "confirmed",
+      "source": "INDEX.csv",
+      "roleHint": "possible_category_or_chrome_icon_band_from_exe_0x4A5960_returns",
+      "roleHintEvidence": "inferred"
+    }
+  ],
+  "nativeCategoryTaxonomyInferred": [
+    {
+      "key": "residential",
+      "labelZh": "住宅",
+      "evidenceType": "inferred",
+      "source": "native ConstructionToolCategory (not original exe enum)"
+    },
+    {
+      "key": "agriculture",
+      "labelZh": "农业",
+      "evidenceType": "inferred",
+      "source": "native ConstructionToolCategory (not original exe enum)"
+    },
+    {
+      "key": "industry",
+      "labelZh": "工业",
+      "evidenceType": "inferred",
+      "source": "native ConstructionToolCategory (not original exe enum)"
+    },
+    {
+      "key": "commerce",
+      "labelZh": "商业",
+      "evidenceType": "inferred",
+      "source": "native ConstructionToolCategory (not original exe enum)"
+    },
+    {
+      "key": "safety",
+      "labelZh": "安全",
+      "evidenceType": "inferred",
+      "source": "native ConstructionToolCategory (not original exe enum)"
+    },
+    {
+      "key": "government",
+      "labelZh": "行政",
+      "evidenceType": "inferred",
+      "source": "native ConstructionToolCategory (not original exe enum)"
+    },
+    {
+      "key": "entertainment",
+      "labelZh": "娱乐",
+      "evidenceType": "inferred",
+      "source": "native ConstructionToolCategory (not original exe enum)"
+    },
+    {
+      "key": "religious",
+      "labelZh": "宗教",
+      "evidenceType": "inferred",
+      "source": "native ConstructionToolCategory (not original exe enum)"
+    },
+    {
+      "key": "military",
+      "labelZh": "军事",
+      "evidenceType": "inferred",
+      "source": "native ConstructionToolCategory (not original exe enum)"
+    },
+    {
+      "key": "aesthetics",
+      "labelZh": "美化",
+      "evidenceType": "inferred",
+      "source": "native ConstructionToolCategory (not original exe enum)"
+    },
+    {
+      "key": "monuments",
+      "labelZh": "纪念",
+      "evidenceType": "inferred",
+      "source": "native ConstructionToolCategory (not original exe enum)"
+    }
+  ],
+  "runtimeCapture": {
+    "status": "partial",
+    "reason": "Rosetta 2 + Wine 5.0 reached the hash-matched Chinese tutorial; semantic building IDs and writer/tooltip records are still unresolved",
+    "rows": [
+      {
+        "category": "商业",
+        "slot": "row1-col1",
+        "buildingId": null,
+        "imageId": 1533,
+        "frame": 0,
+        "screenRect": null,
+        "evidenceType": "confirmed",
+        "source": "Original Chinese runtime capture 2026-08-12; family #1533–#1535",
+        "semanticStatus": "unknown"
+      },
+      {
+        "category": "商业",
+        "slot": "row1-col2",
+        "buildingId": null,
+        "imageId": 1536,
+        "frame": 0,
+        "screenRect": null,
+        "evidenceType": "confirmed",
+        "source": "Original Chinese runtime capture 2026-08-12; family #1536–#1538",
+        "semanticStatus": "unknown"
+      },
+      {
+        "category": "商业",
+        "slot": "row1-col3",
+        "buildingId": null,
+        "imageId": 1539,
+        "frame": 0,
+        "screenRect": null,
+        "evidenceType": "confirmed",
+        "source": "Original Chinese runtime capture 2026-08-12; family #1539–#1541",
+        "semanticStatus": "unknown"
+      }
+    ],
+    "scratch": [
+      ".agent_scratch/exe_re/runtime-blocked.txt",
+      ".agent_scratch/exe_re/lldb-construction-panel.lldb",
+      ".agent_scratch/exe_re/trampoline-recipe.json"
+    ]
+  },
+  "summary": {
+    "confirmedBuildingMappings": 0,
+    "confirmedImageFamilies": 45,
+    "inferredBuildingCrosswalkRows": 53,
+    "unknownScreenRects": 45,
+    "fullAuthoritativeMap": "unknown"
+  },
+  "mapPanelsNote": "China_Unloaded.sg3 map_panels.BMP is map-editor art, not city construction rail"
+}

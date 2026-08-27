@@ -9,9 +9,26 @@ public struct OriginalLocalizedTextCatalog: Sendable, Hashable {
     private static let groupRecordByteCount = 8
     private static let groupRecordCapacity = 1_000
     private static let textDataOffset = 28 + groupRecordCapacity * groupRecordByteCount
+    /// Groups whose every shipping English row was compared semantically
+    /// against the Chinese row at the same index. Exposing a group here grants
+    /// row-index access to every equal-count row.
+    private static let fullyAlignedGroupIDs: Set<Int> = [127]
+    /// Groups whose shipping English and Chinese rows were compared
+    /// semantically only at the recorded zero-based indices. Row-index access
+    /// is restricted to exactly these rows; the rest of the group is `unknown`
+    /// and must not leak through row lookup.
+    private static let confirmedAlignedRowsByGroup: [Int: Set<Int>] = [
+        // Group 55: housing-capacity legend rows 8/9 plus the migration
+        // components (10 newcomer suffix, 12 restriction lead, 13 housing
+        // reason, 20 wish). All other rows of group 55 — including 7, 11, and
+        // 14 — remain unauthorized. Row 11 is deliberately excluded: its 1-4
+        // control depends on the unrecovered signed-pressure equivalence.
+        55: [8, 9, 10, 12, 13, 20],
+    ]
 
     private let localizedByGroup: [Int: [String: String]]
     private let unambiguousLocalizedText: [String: String]
+    private let alignedRowsByGroup: [Int: [Int: String]]
 
     public init(root: URL) throws {
         try self.init(
@@ -49,6 +66,35 @@ public struct OriginalLocalizedTextCatalog: Sendable, Hashable {
         unambiguousLocalizedText = candidates.compactMapValues { values in
             values.count == 1 ? values.first : nil
         }
+        // Row-index lookup is deliberately restricted to rows whose shipping
+        // English and Chinese texts were compared semantically, not merely
+        // found to have equal counts. A fully aligned group exposes every
+        // equal-count row; a partially confirmed group exposes only its
+        // recorded row indices. Add either only with recorded source evidence.
+        var alignedRows: [Int: [Int: String]] = [:]
+        for groupID in Self.fullyAlignedGroupIDs {
+            guard let englishRows = englishGroups[groupID] else { continue }
+            guard let chineseRows = chineseGroups[groupID],
+                  englishRows.count == chineseRows.count,
+                  !chineseRows.isEmpty else { continue }
+            alignedRows[groupID] = Dictionary(
+                uniqueKeysWithValues: chineseRows.indices.map { ($0, chineseRows[$0]) }
+            )
+        }
+        for (groupID, confirmedRows) in Self.confirmedAlignedRowsByGroup {
+            guard let englishRows = englishGroups[groupID] else { continue }
+            guard let chineseRows = chineseGroups[groupID],
+                  englishRows.count == chineseRows.count else { continue }
+            guard confirmedRows.allSatisfy({
+                englishRows.indices.contains($0) && chineseRows.indices.contains($0)
+            }) else {
+                continue
+            }
+            alignedRows[groupID] = Dictionary(
+                uniqueKeysWithValues: confirmedRows.map { ($0, chineseRows[$0]) }
+            )
+        }
+        alignedRowsByGroup = alignedRows
     }
 
     public func localized(_ authoredText: String, groupID: Int? = nil) -> String? {
@@ -57,6 +103,14 @@ public struct OriginalLocalizedTextCatalog: Sendable, Hashable {
             return localized
         }
         return unambiguousLocalizedText[key]
+    }
+
+    /// Exact zero-based row lookup restricted to rows whose shipping English
+    /// and Chinese rows have been confirmed aligned. Returns `nil` for any
+    /// other group, any unconfirmed row, or an out-of-bounds index; it never
+    /// invents a row.
+    public func localized(groupID: Int, rowIndex: Int) -> String? {
+        alignedRowsByGroup[groupID]?[rowIndex]
     }
 
     private static func englishGroups(contentsOf url: URL) throws -> [Int: [String]] {

@@ -1,4 +1,4 @@
-import EmperorCore
+@testable import EmperorCore
 import XCTest
 
 final class EmperorCoreTests: XCTestCase {
@@ -19,14 +19,23 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(white.alpha, 255)
     }
 
-    func testFigureShadowMarkerBecomesTranslucentBlack() {
+    func testFigureShadowMarkerRemainsTransparentUntilShadowCompositorIsRecovered() {
         let sprite = DecodedSprite(
             width: 2,
             height: 1,
             rgba: Data([255, 0, 0, 255, 255, 0, 8, 255])
         ).correctingFigureShadow()
-        XCTAssertEqual(Array(sprite.rgba.prefix(4)), [0, 0, 0, 72])
+        XCTAssertEqual(Array(sprite.rgba.prefix(4)), [0, 0, 0, 0])
         XCTAssertEqual(Array(sprite.rgba.suffix(4)), [255, 0, 8, 255])
+    }
+
+    func testDecodedSpriteFlipsHorizontally() {
+        let sprite = DecodedSprite(
+            width: 2,
+            height: 1,
+            rgba: Data([1, 2, 3, 255, 4, 5, 6, 255])
+        ).flippedHorizontally()
+        XCTAssertEqual(Array(sprite.rgba), [4, 5, 6, 255, 1, 2, 3, 255])
     }
 
     func testVegetationCanBeClearedWithoutLosingUnderlyingTerrain() throws {
@@ -124,6 +133,96 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testEdgeScrollConvertsScreenEdgesToIsometricMapAxes() {
+        let right = IsometricEdgeScrollPolicy.mapDelta(
+            for: IsometricScreenPoint(x: 1, y: 0),
+            elapsed: 1,
+            tileWidth: 80,
+            tileHeight: 40
+        )
+        XCTAssertGreaterThan(right.x, 0)
+        XCTAssertLessThan(right.y, 0)
+
+        let down = IsometricEdgeScrollPolicy.mapDelta(
+            for: IsometricScreenPoint(x: 0, y: 1),
+            elapsed: 1,
+            tileWidth: 80,
+            tileHeight: 40
+        )
+        XCTAssertGreaterThan(down.x, 0)
+        XCTAssertGreaterThan(down.y, 0)
+    }
+
+    func testCornerEdgeScrollKeepsTheSameScreenSpeed() {
+        let straight = IsometricEdgeScrollPolicy.mapDelta(
+            for: IsometricScreenPoint(x: 1, y: 0),
+            elapsed: 0.5,
+            tileWidth: 80,
+            tileHeight: 40
+        )
+        let corner = IsometricEdgeScrollPolicy.mapDelta(
+            for: IsometricScreenPoint(x: 1, y: 1),
+            elapsed: 0.5,
+            tileWidth: 80,
+            tileHeight: 40
+        )
+
+        func projectedLength(_ delta: IsometricScreenPoint) -> Double {
+            let x = (delta.x - delta.y) * 80 * 0.5
+            let y = (delta.x + delta.y) * 40 * 0.5
+            return hypot(x, y)
+        }
+        XCTAssertEqual(projectedLength(straight), projectedLength(corner), accuracy: 0.001)
+    }
+
+    func testConstructionDragPlannerPreservesRoadTurns() {
+        let firstLeg = ConstructionDragPlanner.orthogonalSegment(
+            from: GridPoint(x: 2, y: 3),
+            to: GridPoint(x: 5, y: 3)
+        )
+        let path = ConstructionDragPlanner.appendingOrthogonalSegment(
+            to: firstLeg,
+            endingAt: GridPoint(x: 5, y: 6)
+        )
+        XCTAssertEqual(path, [
+            GridPoint(x: 2, y: 3),
+            GridPoint(x: 3, y: 3),
+            GridPoint(x: 4, y: 3),
+            GridPoint(x: 5, y: 3),
+            GridPoint(x: 5, y: 4),
+            GridPoint(x: 5, y: 5),
+            GridPoint(x: 5, y: 6),
+        ])
+    }
+
+    func testConstructionDragPlannerFillsFieldsAndTilesHousing() {
+        XCTAssertEqual(
+            ConstructionDragPlanner.rectangularPoints(
+                from: GridPoint(x: 4, y: 5),
+                to: GridPoint(x: 6, y: 6)
+            ),
+            [
+                GridPoint(x: 4, y: 5), GridPoint(x: 5, y: 5),
+                GridPoint(x: 6, y: 5), GridPoint(x: 4, y: 6),
+                GridPoint(x: 5, y: 6), GridPoint(x: 6, y: 6),
+            ]
+        )
+        XCTAssertEqual(
+            ConstructionDragPlanner.tiledOrigins(
+                from: GridPoint(x: 8, y: 8),
+                to: GridPoint(x: 4, y: 4),
+                footprint: BuildingFootprint(width: 2, height: 2)
+            ),
+            [
+                GridPoint(x: 8, y: 8), GridPoint(x: 6, y: 8),
+                GridPoint(x: 4, y: 8), GridPoint(x: 8, y: 6),
+                GridPoint(x: 6, y: 6), GridPoint(x: 4, y: 6),
+                GridPoint(x: 8, y: 4), GridPoint(x: 6, y: 4),
+                GridPoint(x: 4, y: 4),
+            ]
+        )
+    }
+
     func testLocalCatalogWhenOriginalAssetsAreInstalled() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")
@@ -178,6 +277,232 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(catalog.localized("Banpo", groupID: 21), "半坡")
         XCTAssertEqual(catalog.localized("Wheat", groupID: 23), "小麦")
         XCTAssertEqual(catalog.localized("Banpo"), "半坡")
+    }
+
+    func testLocalEmperorTextGroup127RowLookupIsExactChinese() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let source = try GameDataSource.openDefault()
+        let catalog = try OriginalLocalizedTextCatalog(root: source.root)
+
+        XCTAssertEqual(
+            catalog.localized(groupID: 127, rowIndex: 58),
+            "干渴的居民们要喝水, 没有水这所房子就不能升级."
+        )
+        XCTAssertEqual(
+            catalog.localized(groupID: 127, rowIndex: 57),
+            "除非这个地区的吸引力有所提高, 否则这所房子就不能升级."
+        )
+        XCTAssertEqual(
+            catalog.localized(groupID: 127, rowIndex: 59),
+            "这所房子里的居民需要 [food_quality] 食物, 房子才能升级."
+        )
+        let expectedRows = [
+            60: "这所房子里的居民要听到音乐, 房子才能升级.",
+            61: "这所房子里的居民要看到杂技表演, 房子才能升级.",
+            62: "这所房子里的居民要看到戏曲表演, 房子才能升级.",
+            63: "这所房子里的居民 需要针灸医生来检查身体.",
+            64: "这所房子里的居民 需要草药医生来服务.",
+            65: "除非有先祖庙的人到这里来, 否则这所房子不能升级.",
+            66: "这所房子里的人 希望能有孔庙里的人来访.",
+            67: "如果没有术士或和尚来这里, 那么这所房子就不能升级.",
+            68: "这所房子里的居民需要瓷器.",
+            69: "要是没有小贩送来苎麻, 这所房子就不能升级.",
+            70: "要是没有小贩来卖茶叶, 这所房子就不能升级.",
+            71: "这所房子里的居民需要生活器皿.",
+            72: "这所房子的居民没有买到丝绸, 房子就不能升级.",
+        ]
+        for (rowIndex, expected) in expectedRows {
+            XCTAssertEqual(catalog.localized(groupID: 127, rowIndex: rowIndex), expected)
+        }
+    }
+
+    func testLocalEmperorTextGroup55HousingCapacityAndMigrationRowsAreExactChinese() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let source = try GameDataSource.openDefault()
+        let catalog = try OriginalLocalizedTextCatalog(root: source.root)
+
+        XCTAssertEqual(
+            catalog.localized(groupID: 55, rowIndex: 8),
+            "目前住宅还可容纳"
+        )
+        XCTAssertEqual(
+            catalog.localized(groupID: 55, rowIndex: 9),
+            "人居住"
+        )
+        XCTAssertEqual(
+            catalog.localized(groupID: 55, rowIndex: 12),
+            "移民受到限制.原因是:"
+        )
+        XCTAssertEqual(
+            catalog.localized(groupID: 55, rowIndex: 13),
+            "缺乏住房"
+        )
+        XCTAssertEqual(
+            catalog.localized(groupID: 55, rowIndex: 20),
+            "人们希望迁居你的城市"
+        )
+        XCTAssertEqual(
+            catalog.localized(groupID: 55, rowIndex: 10),
+            "个新移民本月到达"
+        )
+        XCTAssertEqual(
+            catalog.localized("Housing for", groupID: 55),
+            "目前住宅还可容纳"
+        )
+        XCTAssertEqual(
+            catalog.localized("more people.", groupID: 55),
+            "人居住"
+        )
+        XCTAssertEqual(
+            catalog.localized("Immigration limited by", groupID: 55),
+            "移民受到限制.原因是:"
+        )
+        XCTAssertEqual(
+            catalog.localized("lack of housing vacancies.", groupID: 55),
+            "缺乏住房"
+        )
+        XCTAssertEqual(
+            catalog.localized("People wish to come to the city.", groupID: 55),
+            "人们希望迁居你的城市"
+        )
+        XCTAssertEqual(
+            catalog.localized("newcomers arrived this month.", groupID: 55),
+            "个新移民本月到达"
+        )
+    }
+
+    func testLocalEmperorTextGroup55RowLookupReturnsNilOutsideBounds() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let source = try GameDataSource.openDefault()
+        let catalog = try OriginalLocalizedTextCatalog(root: source.root)
+
+        XCTAssertNil(catalog.localized(groupID: 55, rowIndex: -1))
+        XCTAssertNil(catalog.localized(groupID: 55, rowIndex: 7))
+        XCTAssertNil(catalog.localized(groupID: 55, rowIndex: 11))
+        XCTAssertNil(catalog.localized(groupID: 55, rowIndex: 14))
+        XCTAssertNil(catalog.localized(groupID: 55, rowIndex: 36))
+
+        // Row 10 is authorized (newcomer plural suffix `个新移民本月到达`); row 11
+        // stays unauthorized because its 1-4 singular control depends on the
+        // unrecovered signed-pressure equivalence.
+        XCTAssertEqual(catalog.localized(groupID: 55, rowIndex: 10), "个新移民本月到达")
+    }
+
+    func testLocalEmperorTextRowLookupReturnsNilOutsideBounds() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let source = try GameDataSource.openDefault()
+        let catalog = try OriginalLocalizedTextCatalog(root: source.root)
+
+        XCTAssertNil(catalog.localized(groupID: 127, rowIndex: -1))
+        XCTAssertNil(catalog.localized(groupID: 127, rowIndex: 75))
+        XCTAssertNil(catalog.localized(groupID: 0, rowIndex: 0))
+    }
+
+    func testHousingEvolutionRequirementGroup127SemanticRowIDs() {
+        XCTAssertEqual(
+            HouseEvolutionRequirement.desirability(current: 0, required: 1)
+                .emperorTextGroup127UpgradeReasonRowIndex,
+            57
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.foodQuality(current: 20, required: 50)
+                .emperorTextGroup127UpgradeReasonRowIndex,
+            59
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.service(.water).emperorTextGroup127UpgradeReasonRowIndex,
+            58
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.service(.music).emperorTextGroup127UpgradeReasonRowIndex,
+            60
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.service(.acrobat).emperorTextGroup127UpgradeReasonRowIndex,
+            61
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.service(.drama).emperorTextGroup127UpgradeReasonRowIndex,
+            62
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.service(.acupuncture).emperorTextGroup127UpgradeReasonRowIndex,
+            63
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.service(.herbalist).emperorTextGroup127UpgradeReasonRowIndex,
+            64
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.service(.ancestor).emperorTextGroup127UpgradeReasonRowIndex,
+            65
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.service(.confucian).emperorTextGroup127UpgradeReasonRowIndex,
+            66
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.service(.daoistOrBuddhist)
+                .emperorTextGroup127UpgradeReasonRowIndex,
+            67
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.commodityAlternatives([25])
+                .emperorTextGroup127UpgradeReasonRowIndex,
+            68
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.commodityAlternatives([19])
+                .emperorTextGroup127UpgradeReasonRowIndex,
+            69
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.commodityAlternatives([13])
+                .emperorTextGroup127UpgradeReasonRowIndex,
+            70
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.commodityAlternatives([23, 22])
+                .emperorTextGroup127UpgradeReasonRowIndex,
+            71
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.commodityAlternatives([22, 23])
+                .emperorTextGroup127UpgradeReasonRowIndex,
+            71
+        )
+        XCTAssertEqual(
+            HouseEvolutionRequirement.commodityAlternatives([24])
+                .emperorTextGroup127UpgradeReasonRowIndex,
+            72
+        )
+        XCTAssertNil(
+            HouseEvolutionRequirement.service(.inspection)
+                .emperorTextGroup127UpgradeReasonRowIndex
+        )
+        XCTAssertNil(
+            HouseEvolutionRequirement.service(.constable)
+                .emperorTextGroup127UpgradeReasonRowIndex
+        )
+        XCTAssertNil(
+            HouseEvolutionRequirement.service(.tax).emperorTextGroup127UpgradeReasonRowIndex
+        )
+        XCTAssertNil(
+            HouseEvolutionRequirement.commodityAlternatives([13, 25])
+                .emperorTextGroup127UpgradeReasonRowIndex
+        )
+        XCTAssertNil(
+            HouseEvolutionRequirement.commodityAlternatives([22])
+                .emperorTextGroup127UpgradeReasonRowIndex
+        )
     }
 
     func testLocalCampaignEmpireMapTemplateLayout() throws {
@@ -1217,7 +1542,7 @@ final class EmperorCoreTests: XCTestCase {
     func testOriginalPlacedBuildingSpriteCatalogAndCompositeGeometry() {
         let primaryImageIDs = [
             35: 2_789,
-            43: 2_788,
+            43: 2_810,
             53: 647,
             72: 1_559,
             125: 1_908,
@@ -1284,6 +1609,18 @@ final class EmperorCoreTests: XCTestCase {
                 Set(BuildingFootprint(width: 3, height: 3).points(at: GridPoint(x: 0, y: 0)))
             )
         }
+        XCTAssertEqual(
+            OriginalBuildingSpriteCatalog.constructionCatalogSprite(
+                forBuildingID: TradeRouteKind.land.buildingID
+            )?.imageID,
+            OriginalBuildingSpriteCatalog.tradingStationOfficeImageID
+        )
+        XCTAssertEqual(
+            OriginalBuildingSpriteCatalog.constructionCatalogSprite(
+                forBuildingID: TradeRouteKind.sea.buildingID
+            )?.imageID,
+            OriginalBuildingSpriteCatalog.quayHouseImageIDs[.north]
+        )
 
         for edge in QuayWaterEdge.allCases {
             let quay = OriginalBuildingSpriteCatalog.buildingComponents(
@@ -1402,7 +1739,15 @@ final class EmperorCoreTests: XCTestCase {
                     orientation: orientation
                 ) {
                     XCTAssertEqual(component.footprint.width, component.footprint.height)
-                    expectedTileSpanByImageID[component.sprite.imageID] = component.footprint.width
+                    // Water lifts overhang the bank and the laborers' camp
+                    // includes its surrounding work yard, so their authored
+                    // bitmap width intentionally exceeds the occupied tiles.
+                    if buildingID != 203, buildingID != 233,
+                       component.sprite.archiveBaseName
+                        == OriginalBuildingSpriteCatalog.generalArchiveBaseName {
+                        expectedTileSpanByImageID[component.sprite.imageID]
+                            = component.footprint.width
+                    }
                 }
             }
         }
@@ -1620,6 +1965,22 @@ final class EmperorCoreTests: XCTestCase {
         }
         XCTAssertEqual(wallIDs.count, 40)
         XCTAssertEqual(Set(wallIDs), Set(201...216))
+        let earthenWallArchive = try SG3Archive(
+            contentsOf: source.dataDirectory.appendingPathComponent(
+                "China_Mon_Earthen_Greatwall_1.sg3"
+            )
+        )
+        let earthenWallIDs = (0..<wallMap.height).flatMap { y in
+            (0..<wallMap.width).compactMap { x in
+                wallMap.chinaEarthenGreatWall1SpriteID(
+                    x: x,
+                    y: y,
+                    imageCount: earthenWallArchive.images.count
+                )
+            }
+        }
+        XCTAssertGreaterThan(earthenWallIDs.count, 700)
+        XCTAssertTrue(Set(earthenWallIDs).isSubset(of: Set(earthenWallArchive.images.indices)))
 
         let canalMap = try EmperorMap(
             url: source.citiesDirectory.appendingPathComponent("MPcanal1.map")
@@ -1668,6 +2029,21 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(models.figures[figureID: 27]?.behaviorRange, 40)
         XCTAssertEqual(models.buildings[buildingID: 125]?.name, "Tax Office")
         XCTAssertEqual(models.buildings[buildingID: 125]?.employees, 8)
+        let hazards = OriginalBuildingHazardRules(configuration: models.generalBuilding)
+        XCTAssertEqual(hazards.fireRiskMultiplier, 5)
+        XCTAssertEqual(hazards.fireCheckFrequency, 4)
+        XCTAssertEqual(hazards.fireRiskLimit, 1_000)
+        XCTAssertEqual(hazards.burnDamage, 100)
+        XCTAssertEqual(hazards.fireDamageMultiplier, 10)
+        XCTAssertEqual(hazards.collapseRiskLimit, 1_000)
+        XCTAssertEqual(
+            models.buildings.difficultyModifiers.map { $0.values[6] },
+            [50, 80, 100, 120, 150]
+        )
+        XCTAssertEqual(
+            models.buildings.difficultyModifiers.map { $0.values[7] },
+            [50, 80, 100, 120, 150]
+        )
         XCTAssertEqual(rules.constructionCost(buildingID: 125, difficulty: .veryEasy), 20)
         XCTAssertEqual(rules.constructionCost(buildingID: 125, difficulty: .normal), 40)
         XCTAssertEqual(rules.constructionCost(buildingID: 125, difficulty: .veryHard), 60)
@@ -1828,6 +2204,18 @@ final class EmperorCoreTests: XCTestCase {
             city.production.buildings.first { $0.id == producerID }?.isEnabled,
             false
         )
+        let disabledProducerPlacement = try XCTUnwrap(
+            city.placedBuildings.first {
+                $0.category == .production && $0.instanceID == producerID
+            }
+        )
+        XCTAssertEqual(
+            city.workforceAssignment(
+                for: disabledProducerPlacement,
+                models: original.buildings
+            )?.requiredWorkers,
+            0
+        )
         XCTAssertTrue(
             original.trade.commodities.allSatisfy { commodity in
                 city.logistics.warehouses.first { $0.id == warehouseID }?
@@ -1883,16 +2271,17 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(city.houses[0].desirability, 4)
         XCTAssertEqual(city.lastHousingSettlement?.evolvedCount, 1)
 
+        // The original gates each evolution on the **target** level's authored
+        // food requirement: a Hut (food 0) cannot become a Plain Cottage
+        // (food 20) without food, so water alone stops at level 1.
         _ = city.advanceMonth(rules: rules)
-        XCTAssertEqual(city.houses[0].houseLevelID, 2)
-        XCTAssertEqual(city.lastHousingSettlement?.changes.first?.fromLevelID, 1)
-        XCTAssertEqual(city.lastHousingSettlement?.changes.first?.toLevelID, 2)
+        XCTAssertEqual(city.houses[0].houseLevelID, 1)
+        XCTAssertEqual(city.lastHousingSettlement?.evolvedCount, 0)
 
         _ = city.advanceMonth(rules: rules)
-        XCTAssertEqual(city.houses[0].houseLevelID, 2)
+        XCTAssertEqual(city.houses[0].houseLevelID, 1)
         let missing = try XCTUnwrap(city.lastHousingSettlement?.evaluations.first)
             .missingEvolutionRequirements
-        XCTAssertTrue(missing.contains(.service(.ancestor)))
         XCTAssertTrue(missing.contains(.foodQuality(current: 0, required: 20)))
         let liveEvaluation = try XCTUnwrap(DeterministicHousingEvolution.evaluate(
             house: city.houses[0],
@@ -1900,6 +2289,423 @@ final class EmperorCoreTests: XCTestCase {
             difficulty: city.difficulty
         ))
         XCTAssertEqual(liveEvaluation, city.lastHousingSettlement?.evaluations.first)
+    }
+
+    func testServiceWalkerUsesRecoveredOriginalStepAndSpawnPhases() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let rules = EconomyRulesEngine(models: original)
+
+        // The model supplies speed 8/range 40. Figure-model selector 15 turns
+        // that range into a 40 * 96 outbound budget; the executable
+        // independently fixes 816 figure updates per month and runs the
+        // building-spawn slice at scheduler phase 0x1f.
+        XCTAssertEqual(original.figures[figureID: 23]?.speed, 8)
+        XCTAssertEqual(original.figures[figureID: 28]?.speed, 8)
+        XCTAssertEqual(original.figures[figureID: 28]?.behaviorRange, 40)
+
+        var city = DeterministicCityState(
+            year: 1600,
+            treasury: 1_000,
+            mapWidth: 16,
+            mapHeight: 5
+        )
+        let roads = (0..<16).map { GridPoint(x: $0, y: 2) }
+        XCTAssertEqual(city.buildRoad(roads, rules: rules), roads.count)
+        XCTAssertNotNil(city.constructResidentialServiceBuilding(
+            buildingID: 72,
+            serviceRoadStart: roads[0],
+            replaySeed: 0x5345_5256_4943_45,
+            rules: rules
+        ))
+
+        let first = city.advanceTick(rules: rules)
+        XCTAssertEqual(first.movement.walkers.requestedRoadSteps, 27)
+        XCTAssertEqual(first.movement.walkers.movedRoadSteps, 0)
+        XCTAssertEqual(city.walkers.walkers.first?.originalPhase, .dormant)
+
+        _ = city.advanceTick(rules: rules)
+        _ = city.advanceTick(rules: rules)
+        let fourth = city.advanceTick(rules: rules)
+        XCTAssertEqual(fourth.movement.walkers.requestedRoadSteps, 27)
+        XCTAssertFalse(fourth.movement.walkers.visitedRoadPoints.isEmpty)
+        XCTAssertEqual(
+            fourth.movement.walkers.completedTrips,
+            0,
+            "range 40 is scaled to 3840 budget units, not exhausted as 40 raw units"
+        )
+    }
+
+    func testGenericServiceReturnBuildsModeZeroRouteOnTheFollowingUpdate() {
+        let road = RoadNetwork(
+            width: 3,
+            height: 1,
+            points: [
+                GridPoint(x: 0, y: 0),
+                GridPoint(x: 1, y: 0),
+                GridPoint(x: 2, y: 0),
+            ]
+        )
+        var state = DeterministicWalkerState()
+        XCTAssertNotNil(state.addWalker(
+            figureID: 27,
+            service: .tax,
+            origin: GridPoint(x: 0, y: 0),
+            maximumRoadSteps: 2,
+            replaySeed: 7,
+            roadNetwork: road,
+            startsDormant: false
+        ))
+        var houses: [ResidentialUnit] = []
+        let outbound = state.advanceRecoveredOriginalSteps(
+            33,
+            houses: &houses,
+            roadNetwork: road,
+            workerPercentByWalkerID: [:],
+            primaryReturnPassability: [0x4, 0x10, 0x4],
+            barrierPoints: []
+        )
+        XCTAssertEqual(state.walkers[0].originalPhase, .returning)
+        XCTAssertEqual(state.walkers[0].completedTrips, 0)
+        XCTAssertNotEqual(state.walkers[0].currentPoint, state.walkers[0].origin)
+        XCTAssertFalse(outbound.visitedRoadPoints.isEmpty)
+
+        _ = state.advanceRecoveredOriginalSteps(
+            1,
+            houses: &houses,
+            roadNetwork: road,
+            workerPercentByWalkerID: [:],
+            primaryReturnPassability: [0x4, 0x10, 0x4],
+            barrierPoints: []
+        )
+        XCTAssertEqual(state.walkers[0].currentPoint, state.walkers[0].origin)
+        XCTAssertEqual(state.walkers[0].originalPhase, .dormant)
+        XCTAssertEqual(state.walkers[0].completedTrips, 1)
+    }
+
+    func testWaterServiceUsesRecoveredOneOneTwoSubstepCadence() {
+        let points = (0..<10).map { GridPoint(x: $0, y: 0) }
+        let road = RoadNetwork(width: 10, height: 1, points: Set(points))
+        var generic = DeterministicWalkerState()
+        var water = DeterministicWalkerState()
+        XCTAssertNotNil(generic.addWalker(
+            figureID: 27,
+            service: .tax,
+            origin: points[0],
+            maximumRoadSteps: 40,
+            replaySeed: 1,
+            roadNetwork: road
+        ))
+        XCTAssertNotNil(water.addWalker(
+            figureID: 28,
+            service: .water,
+            origin: points[0],
+            maximumRoadSteps: 40,
+            replaySeed: 1,
+            roadNetwork: road
+        ))
+        var genericHouses: [ResidentialUnit] = []
+        var waterHouses: [ResidentialUnit] = []
+        let genericMovement = generic.advanceRecoveredOriginalSteps(
+            60,
+            houses: &genericHouses,
+            roadNetwork: road,
+            workerPercentByWalkerID: [:]
+        )
+        let waterMovement = water.advanceRecoveredOriginalSteps(
+            60,
+            houses: &waterHouses,
+            roadNetwork: road,
+            workerPercentByWalkerID: [:]
+        )
+        XCTAssertEqual(genericMovement.movedRoadSteps, 3)
+        XCTAssertEqual(waterMovement.movedRoadSteps, 4)
+        XCTAssertEqual(generic.walkers[0].currentPoint, points[3])
+        XCTAssertEqual(water.walkers[0].currentPoint, points[4])
+    }
+
+    func testWalkerPresentationMovesOnlyWhenItsRoutePositionChanges() {
+        let points = (0..<10).map { GridPoint(x: $0, y: 0) }
+        let road = RoadNetwork(width: 10, height: 1, points: Set(points))
+        var state = DeterministicWalkerState()
+        XCTAssertNotNil(state.addWalker(
+            figureID: 28,
+            service: .water,
+            origin: points[0],
+            maximumRoadSteps: 40,
+            replaySeed: 1,
+            roadNetwork: road
+        ))
+        var houses: [ResidentialUnit] = []
+
+        var movementStep: Int?
+        for step in 1...60 {
+            _ = state.advanceRecoveredOriginalSteps(
+                1,
+                houses: &houses,
+                roadNetwork: road,
+                workerPercentByWalkerID: [:]
+            )
+            if state.walkers[0].movedOnLastSimulationStep {
+                movementStep = step
+                break
+            }
+        }
+        XCTAssertNotNil(movementStep)
+        XCTAssertTrue(state.walkers[0].movedOnLastSimulationStep)
+
+        _ = state.advanceRecoveredOriginalSteps(
+            1,
+            houses: &houses,
+            roadNetwork: road,
+            workerPercentByWalkerID: [:]
+        )
+        XCTAssertFalse(state.walkers[0].movedOnLastSimulationStep)
+    }
+
+    func testRecoveredServiceCoverageWritesDecayIndependently() {
+        var house = ResidentialUnit(id: 1, houseLevelID: 0, residents: 7)
+
+        house.applyOriginalServiceVisit(.water)
+        house.applyOriginalServiceVisit(.ancestor)
+        house.applyOriginalServiceVisit(.tax)
+        XCTAssertEqual(house.serviceCoverageRemainingSlices[.water], 0x60)
+        XCTAssertEqual(house.serviceCoverageRemainingSlices[.ancestor], 0x28)
+        XCTAssertEqual(house.taxCoverageRemainingSlices, 0x32)
+
+        for _ in 0..<39 { house.advanceOriginalOrdinaryServiceSlice() }
+        XCTAssertEqual(house.serviceCoverageRemainingSlices[.ancestor], 1)
+        XCTAssertTrue(house.serviceCoverage.contains(.ancestor))
+        XCTAssertEqual(house.serviceCoverageRemainingSlices[.water], 57)
+
+        house.advanceOriginalOrdinaryServiceSlice()
+        XCTAssertNil(house.serviceCoverageRemainingSlices[.ancestor])
+        XCTAssertFalse(house.serviceCoverage.contains(.ancestor))
+        XCTAssertTrue(house.serviceCoverage.contains(.water))
+
+        for _ in 0..<49 { house.advanceOriginalTaxServiceSlice() }
+        XCTAssertEqual(house.taxCoverageRemainingSlices, 1)
+        XCTAssertTrue(house.hasTaxCoverage)
+        house.advanceOriginalTaxServiceSlice()
+        XCTAssertEqual(house.taxCoverageRemainingSlices, 0)
+        XCTAssertFalse(house.hasTaxCoverage)
+
+        for _ in 0..<56 { house.advanceOriginalOrdinaryServiceSlice() }
+        XCTAssertNil(house.serviceCoverageRemainingSlices[.water])
+        XCTAssertFalse(house.serviceCoverage.contains(.water))
+    }
+
+    func testRecoveredServiceCallbacksPreservePopulationAndEliteHousingGates() {
+        let origin = GridPoint(x: 0, y: 0)
+        let vacantCommon = ResidentialUnit(
+            id: 1,
+            houseLevelID: 0,
+            residents: 0,
+            location: GridPoint(x: 1, y: 0),
+            vacantTypeID: 2
+        )
+        XCTAssertTrue(OriginalResidentialServiceCoverage.houseIndices(
+            servicedFrom: origin,
+            service: .water,
+            providerBuildingID: 72,
+            houses: [vacantCommon],
+            blockerPoints: []
+        ).isEmpty)
+
+        let vacantElite = ResidentialUnit(
+            id: 2,
+            houseLevelID: 10,
+            residents: 0,
+            location: GridPoint(x: 1, y: 0),
+            vacantTypeID: 11
+        )
+        XCTAssertEqual(OriginalResidentialServiceCoverage.houseIndices(
+            servicedFrom: origin,
+            service: .ancestor,
+            providerBuildingID: 214,
+            houses: [vacantElite],
+            blockerPoints: []
+        ), [0])
+
+        let populatedCommon = ResidentialUnit(
+            id: 3,
+            houseLevelID: 0,
+            residents: 8,
+            location: GridPoint(x: 1, y: 0)
+        )
+        XCTAssertTrue(OriginalResidentialServiceCoverage.houseIndices(
+            servicedFrom: origin,
+            service: .confucian,
+            providerBuildingID: 219,
+            houses: [populatedCommon],
+            blockerPoints: []
+        ).isEmpty)
+        XCTAssertEqual(OriginalResidentialServiceCoverage.houseIndices(
+            servicedFrom: origin,
+            service: .confucian,
+            providerBuildingID: 219,
+            houses: [vacantElite],
+            blockerPoints: []
+        ), [0])
+    }
+
+    func testRecoveredCoverageUsesWholeHouseFootprintAndSixteenSectorOcclusion() {
+        let origin = GridPoint(x: 0, y: 0)
+        let residentialWall = PlacedBuilding(
+            category: .aesthetic,
+            instanceID: 1,
+            buildingID: 89,
+            origin: GridPoint(x: 1, y: 0),
+            orientation: .northSouth,
+            footprint: BuildingFootprint(width: 1, height: 2),
+            roadAccessPoint: origin
+        )
+        let ordinaryService = PlacedBuilding(
+            category: .residentialService,
+            instanceID: 2,
+            buildingID: 125,
+            origin: GridPoint(x: -1, y: 0),
+            orientation: .northSouth,
+            footprint: BuildingFootprint(width: 2, height: 2),
+            roadAccessPoint: origin
+        )
+        XCTAssertEqual(
+            OriginalResidentialServiceCoverage.blockerPoints(
+                placements: [residentialWall, ordinaryService]
+            ),
+            Set(residentialWall.occupiedPoints)
+        )
+
+        let house = ResidentialUnit(
+            id: 1,
+            houseLevelID: 0,
+            residents: 8,
+            location: GridPoint(x: 2, y: 0)
+        )
+        XCTAssertEqual(OriginalResidentialServiceCoverage.houseIndices(
+            servicedFrom: origin,
+            service: .tax,
+            providerBuildingID: 125,
+            houses: [house],
+            blockerPoints: []
+        ), [0])
+
+        XCTAssertTrue(OriginalResidentialServiceCoverage.houseIndices(
+            servicedFrom: origin,
+            service: .tax,
+            providerBuildingID: 125,
+            houses: [house],
+            blockerPoints: [GridPoint(x: 1, y: 0), GridPoint(x: 1, y: 1)]
+        ).isEmpty)
+    }
+
+    func testRecoveredVisitFieldsAgeEveryEighthSchedulerSlice() {
+        var state = DeterministicWalkerState()
+        var houses: [ResidentialUnit] = []
+        let roads = RoadNetwork(width: 1, height: 1, points: [])
+
+        _ = state.advanceRecoveredOriginalSteps(
+            352,
+            houses: &houses,
+            roadNetwork: roads,
+            workerPercentByWalkerID: [:]
+        )
+        XCTAssertEqual(state.originalVisitDecayCounter, 7)
+
+        _ = state.advanceRecoveredOriginalSteps(
+            51,
+            houses: &houses,
+            roadNetwork: roads,
+            workerPercentByWalkerID: [:]
+        )
+        XCTAssertEqual(state.originalVisitDecayCounter, 0)
+    }
+
+    func testRecoveredServiceSaveReplayPreservesSchedulerAndRoamerState() throws {
+        let roadPoints = Set((0..<6).map { GridPoint(x: $0, y: 0) })
+        let roads = RoadNetwork(width: 6, height: 1, points: roadPoints)
+        var uninterrupted = DeterministicWalkerState()
+        XCTAssertNotNil(uninterrupted.addWalker(
+            figureID: 27,
+            service: .tax,
+            origin: GridPoint(x: 0, y: 0),
+            maximumRoadSteps: 2,
+            replaySeed: 0x5341_5645,
+            roadNetwork: roads,
+            startsDormant: false,
+            providerBuildingID: 125
+        ))
+        var uninterruptedHouses = [ResidentialUnit(
+            id: 1,
+            houseLevelID: 0,
+            residents: 8,
+            location: GridPoint(x: 2, y: 0)
+        )]
+        _ = uninterrupted.advanceRecoveredOriginalSteps(
+            117,
+            houses: &uninterruptedHouses,
+            roadNetwork: roads,
+            workerPercentByWalkerID: [1: 100]
+        )
+
+        var restored = try JSONDecoder().decode(
+            DeterministicWalkerState.self,
+            from: JSONEncoder().encode(uninterrupted)
+        )
+        var restoredHouses = try JSONDecoder().decode(
+            [ResidentialUnit].self,
+            from: JSONEncoder().encode(uninterruptedHouses)
+        )
+        XCTAssertEqual(restored, uninterrupted)
+        XCTAssertEqual(restoredHouses, uninterruptedHouses)
+
+        let passability = [UInt16](repeating: 0x4, count: 6)
+        let first = uninterrupted.advanceRecoveredOriginalSteps(
+            150,
+            houses: &uninterruptedHouses,
+            roadNetwork: roads,
+            workerPercentByWalkerID: [1: 100],
+            primaryReturnPassability: passability
+        )
+        let second = restored.advanceRecoveredOriginalSteps(
+            150,
+            houses: &restoredHouses,
+            roadNetwork: roads,
+            workerPercentByWalkerID: [1: 100],
+            primaryReturnPassability: passability
+        )
+        XCTAssertEqual(second, first)
+        XCTAssertEqual(restored, uninterrupted)
+        XCTAssertEqual(restoredHouses, uninterruptedHouses)
+    }
+
+    func testVacantEliteHousingCanEvolveBeforeItsFirstResidentsArrive() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        var houses = [
+            ResidentialUnit(
+                id: 1,
+                houseLevelID: 8,
+                residents: 0,
+                location: GridPoint(x: 2, y: 1),
+                desirability: 100
+            )
+        ]
+        XCTAssertEqual(original.buildings[houseLevelID: 8]?.populationCapacity, 0)
+
+        let settlement = DeterministicHousingEvolution.settle(
+            houses: &houses,
+            models: original.buildings,
+            difficulty: .normal
+        )
+
+        XCTAssertEqual(houses[0].houseLevelID, 9)
+        XCTAssertEqual(settlement.changes.first?.direction, .evolved)
+        XCTAssertEqual(settlement.changes.first?.displacedResidents, 0)
     }
 
     func testHousingDevolvesWhenPreviousLevelServiceIsLost() throws {
@@ -1921,13 +2727,15 @@ final class EmperorCoreTests: XCTestCase {
             location: GridPoint(x: 2, y: 1),
             models: original.buildings
         )
+        // Fixture-only occupancy isolates the downgrade/displacement rule;
+        // automatic migration waits for the original popularity producer.
+        XCTAssertEqual(city.admitResidents(8, models: original.buildings), 8)
 
         _ = city.advanceMonth(rules: rules)
         XCTAssertEqual(city.houses[0].houseLevelID, 1)
         XCTAssertEqual(city.lastHousingSettlement?.devolvedCount, 1)
         XCTAssertEqual(city.lastHousingSettlement?.changes.first?.direction, .devolved)
-        // Daily migration fills the level-2 dwelling before it loses service;
-        // the downgrade therefore displaces the eight residents over level 1's capacity.
+        // The full level-2 fixture exceeds level 1 capacity by eight residents.
         XCTAssertEqual(city.lastHousingSettlement?.changes.first?.displacedResidents, 8)
     }
 
@@ -1942,7 +2750,10 @@ final class EmperorCoreTests: XCTestCase {
                 houseLevelID: 3,
                 residents: 20,
                 location: GridPoint(x: 2, y: 1),
-                serviceCoverage: [.water, .ancestor],
+                // The original gates evolution on the **target** level's
+                // requirements: Spacious Dwelling (level 4) needs water,
+                // herbalist, music, food 30 and hemp.
+                serviceCoverage: [.water, .ancestor, .herbalist, .music],
                 desirability: 20
             )
         ]
@@ -2216,7 +3027,33 @@ final class EmperorCoreTests: XCTestCase {
         for _ in 0..<8 { _ = city.advanceTick(rules: rules) }
         XCTAssertEqual(city.logistics.mills[0].inventoryByCommodityID[7, default: 0], 100)
         XCTAssertEqual(city.production[commodityID: 7], 100)
-        XCTAssertTrue(city.logistics.deliveryWalkers.isEmpty)
+        XCTAssertEqual(city.logistics.deliveryWalkers.count, 1)
+    }
+
+    func testDeliveryCartUsesRecoveredTwentySubstepRouteCadence() {
+        let points = (0..<4).map { GridPoint(x: $0, y: 0) }
+        var walker = DeliveryWalker(
+            id: 1,
+            figureID: 22,
+            source: .productionBuilding(1),
+            destination: .mill(2),
+            cargo: DeliveryCargo(commodityID: 4, amount: 100),
+            outboundPath: points
+        )
+
+        for _ in 0..<19 {
+            XCTAssertFalse(walker.advanceOriginalSimulationStep())
+        }
+        XCTAssertEqual(walker.currentPoint, points[0])
+        XCTAssertFalse(walker.movedOnLastSimulationStep)
+
+        XCTAssertTrue(walker.advanceOriginalSimulationStep())
+        XCTAssertEqual(walker.currentPoint, points[1])
+        XCTAssertTrue(walker.movedOnLastSimulationStep)
+
+        walker.beginSimulationStep()
+        XCTAssertFalse(walker.advanceOriginalSimulationStep())
+        XCTAssertFalse(walker.movedOnLastSimulationStep)
     }
 
     func testCropSpecificAgriculturalPlotCreatesVisibleLinkedPlacement() throws {
@@ -2231,26 +3068,146 @@ final class EmperorCoreTests: XCTestCase {
             mapWidth: 7,
             mapHeight: 5
         )
-        _ = city.buildRoad((0...6).map { GridPoint(x: $0, y: 2) }, rules: rules)
-        let plotPoint = GridPoint(x: 3, y: 1)
+        _ = city.buildRoad((0...6).map { GridPoint(x: $0, y: 3) }, rules: rules)
+        let plotPoint = GridPoint(x: 4, y: 1)
 
-        XCTAssertTrue(city.canConstructAgriculturalPlot(crop: .rice, at: plotPoint))
-        let producerID = try XCTUnwrap(city.constructAgriculturalPlot(
+        XCTAssertFalse(city.canConstructAgriculturalPlot(crop: .rice, at: plotPoint))
+        let producerID = try XCTUnwrap(city.constructAgriculturalProducer(
+            crop: .rice,
+            at: GridPoint(x: 1, y: 0),
+            rules: rules
+        ))
+        XCTAssertTrue(city.canConstructAgriculturalPlot(
             crop: .rice,
             at: plotPoint,
             rules: rules
         ))
-        let placement = try XCTUnwrap(city.placement(
+        XCTAssertEqual(producerID, city.constructAgriculturalPlot(
+            crop: .rice,
+            at: plotPoint,
+            rules: rules
+        ))
+        let producerPlacement = try XCTUnwrap(city.placement(
             category: .production,
             instanceID: producerID
         ))
-        XCTAssertEqual(placement.buildingID, AgriculturalCrop.rice.plotBuildingID)
-        XCTAssertEqual(placement.origin, plotPoint)
+        XCTAssertEqual(producerPlacement.buildingID, AgriculturalCrop.rice.producerBuildingID)
+        XCTAssertEqual(producerPlacement.origin, GridPoint(x: 1, y: 0))
+        let plotPlacement = try XCTUnwrap(city.placedBuildings.first {
+            $0.category == .agriculturalPlot && $0.origin == plotPoint
+        })
+        XCTAssertEqual(plotPlacement.instanceID, producerID)
+        XCTAssertEqual(plotPlacement.buildingID, AgriculturalCrop.rice.plotBuildingID)
         XCTAssertEqual(
             city.production.buildings.first(where: { $0.id == producerID })?.agriculture?.crop,
             .rice
         )
+        XCTAssertEqual(
+            city.production.buildings.first(where: { $0.id == producerID })?
+                .agriculture?.fieldCount,
+            1
+        )
         XCTAssertFalse(city.canConstructAgriculturalPlot(crop: .wheat, at: plotPoint))
+
+        _ = city.demolish(at: plotPoint, rules: rules)
+        XCTAssertFalse(city.placedBuildings.contains {
+            $0.category == .agriculturalPlot && $0.origin == plotPoint
+        })
+        XCTAssertEqual(
+            city.production.building(instanceID: producerID)?.agriculture?.fieldCount,
+            0
+        )
+
+        XCTAssertEqual(producerID, city.constructAgriculturalPlot(
+            crop: .rice,
+            at: plotPoint,
+            rules: rules
+        ))
+        _ = city.demolish(at: GridPoint(x: 1, y: 0), rules: rules)
+        XCTAssertNil(city.production.building(instanceID: producerID))
+        XCTAssertFalse(city.placedBuildings.contains {
+            $0.category == .agriculturalPlot && $0.instanceID == producerID
+        })
+    }
+
+    func testAgriculturalPlotWorkforceUsesProducerModelInsteadOfVisualFieldModel() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let rules = EconomyRulesEngine(models: original)
+        var city = DeterministicCityState(
+            year: 1600,
+            treasury: 10_000,
+            mapWidth: 7,
+            mapHeight: 5
+        )
+        city.workforceEnabled = true
+        _ = city.buildRoad((0...6).map { GridPoint(x: $0, y: 3) }, rules: rules)
+        for x in 0..<3 {
+            XCTAssertNotNil(city.addHouse(
+                levelID: 0,
+                location: GridPoint(x: x, y: 4),
+                models: original.buildings
+            ))
+        }
+        let producerID = try XCTUnwrap(city.constructAgriculturalProducer(
+            crop: .millet,
+            at: GridPoint(x: 1, y: 0),
+            rules: rules
+        ))
+        XCTAssertNotNil(city.constructAgriculturalPlot(
+            crop: .millet,
+            at: GridPoint(x: 4, y: 1),
+            rules: rules
+        ))
+
+        let placement = try XCTUnwrap(city.placement(
+            category: .production,
+            instanceID: producerID
+        ))
+        XCTAssertEqual(placement.buildingID, AgriculturalCrop.millet.producerBuildingID)
+        let assignment = try XCTUnwrap(city.workforceAssignment(
+            for: placement,
+            models: original.buildings
+        ))
+        XCTAssertEqual(
+            assignment.requiredWorkers,
+            original.buildings[buildingID: AgriculturalCrop.millet.producerBuildingID]?.employees
+        )
+        XCTAssertGreaterThan(assignment.requiredWorkers, 0)
+    }
+
+    func testEquidistantAgriculturalPlotPrefersTheMostRecentlyPlacedFarm() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let rules = EconomyRulesEngine(models: try OriginalEconomyModels(source: .openDefault()))
+        var city = DeterministicCityState(
+            year: 1600,
+            treasury: 10_000,
+            mapWidth: 10,
+            mapHeight: 6
+        )
+        _ = city.buildRoad((0..<10).map { GridPoint(x: $0, y: 5) }, rules: rules)
+        let olderFarmID = try XCTUnwrap(city.constructAgriculturalProducer(
+            crop: .rice,
+            at: GridPoint(x: 1, y: 2),
+            rules: rules
+        ))
+        let newerFarmID = try XCTUnwrap(city.constructAgriculturalProducer(
+            crop: .rice,
+            at: GridPoint(x: 5, y: 2),
+            rules: rules
+        ))
+
+        XCTAssertEqual(newerFarmID, city.constructAgriculturalPlot(
+            crop: .rice,
+            at: GridPoint(x: 4, y: 2),
+            rules: rules
+        ))
+        XCTAssertEqual(city.production.building(instanceID: olderFarmID)?.agriculture?.fieldCount, 0)
+        XCTAssertEqual(city.production.building(instanceID: newerFarmID)?.agriculture?.fieldCount, 1)
     }
 
     func testLandTradeUsesOriginalQuotaCapacityPricesAndPhysicalRoadDelivery() throws {
@@ -2399,6 +3356,45 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(january.transactions.first?.amount, original.trade.landCapacity)
         XCTAssertEqual(january.transactions.first?.amount, 800)
         XCTAssertEqual(trade.building(id: buildingID)?.storedAmount, 800)
+    }
+
+    func testTradeConstructionSelectorsFilterRouteOpenStateAndExistingBuilding() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        var trade = DeterministicTradeState()
+        for partner in [
+            TradePartner(id: 9, name: "Sea", routeKind: .sea),
+            TradePartner(id: 7, name: "Land B", routeKind: .land),
+            TradePartner(id: 3, name: "Land A", routeKind: .land),
+            TradePartner(id: 8, name: "Closed", routeKind: .land, isOpen: false),
+        ] {
+            XCTAssertTrue(trade.addPartner(partner, tradeRules: original.trade))
+        }
+
+        XCTAssertEqual(
+            trade.availableConstructionPartners(for: .land).map(\.id),
+            [3, 7]
+        )
+        XCTAssertEqual(
+            trade.availableConstructionPartners(for: .sea).map(\.id),
+            [9]
+        )
+
+        var road = RoadNetwork(width: 4, height: 3)
+        _ = road.insert([GridPoint(x: 1, y: 1)])
+        XCTAssertNotNil(trade.addTradingBuilding(
+            partnerID: 7,
+            roadAccessPoint: GridPoint(x: 1, y: 1),
+            assignedWorkers: 0,
+            models: original.buildings,
+            roadNetwork: road
+        ))
+        XCTAssertEqual(
+            trade.availableConstructionPartners(for: .land).map(\.id),
+            [3]
+        )
     }
 
     func testNativeSaveGameRoundTripsDeterministicCityState() throws {
@@ -2589,7 +3585,9 @@ final class EmperorCoreTests: XCTestCase {
 
         XCTAssertEqual(purchasedCommodityIDs, [19, 25])
         XCTAssertEqual(deliveredCommodityIDs, [19, 25])
-        XCTAssertEqual(completionTick, 80)
+        // The 2x2 dwelling accepts delivery from every edge of its authored
+        // footprint, not just the top-left anchor tile.
+        XCTAssertEqual(completionTick, 64)
         XCTAssertGreaterThan(city.houses[0][commodityID: 19], 0)
         XCTAssertGreaterThan(city.houses[0][commodityID: 25], 0)
 
@@ -2627,6 +3625,9 @@ final class EmperorCoreTests: XCTestCase {
             location: GridPoint(x: 5, y: 2),
             models: original.buildings
         )
+        // Fixture-only occupancy keeps this test about mill/market food
+        // quantities, not the unsupported automatic migration producer.
+        XCTAssertEqual(city.admitResidents(12, models: original.buildings), 12)
         _ = city.constructProductionBuilding(
             buildingID: 31,
             assignedWorkers: original.buildings[buildingID: 31]?.employees ?? 0,
@@ -2652,19 +3653,23 @@ final class EmperorCoreTests: XCTestCase {
         var purchasedCommodityIDs: Set<Int> = []
         var foodDeliveries: [HouseholdCommodityDelivery] = []
         var completionTick: UInt64?
+        var sawMeatDeliveryWalker = false
         for _ in 0..<90 where completionTick == nil {
             let tick = city.advanceTick(rules: rules)
             purchasedCommodityIDs.formUnion(tick.movement.market.purchasedLoads.map(\.commodityID))
             foodDeliveries.append(contentsOf: tick.movement.market.householdDeliveries)
+            sawMeatDeliveryWalker = sawMeatDeliveryWalker
+                || city.logistics.deliveryWalkers.contains { $0.cargo.commodityID == 4 }
             if city.houses[0].foodSupplyAmount > 0 {
                 completionTick = tick.tickSequence
             }
         }
 
         XCTAssertEqual(city.logistics.mills.count, 1)
-        XCTAssertEqual(city.logistics.mills[0].foodQuality, .none)
+        XCTAssertEqual(city.logistics.mills[0].foodQuality, .plain)
         XCTAssertEqual(purchasedCommodityIDs, [2, 4])
-        XCTAssertEqual(completionTick, 53)
+        XCTAssertTrue(sawMeatDeliveryWalker)
+        XCTAssertLessThanOrEqual(try XCTUnwrap(completionTick), 53)
         XCTAssertEqual(foodDeliveries, [
             HouseholdCommodityDelivery(houseID: 1, commodityID: -1, amount: 44)
         ])
@@ -2673,7 +3678,10 @@ final class EmperorCoreTests: XCTestCase {
 
         _ = city.advanceMonth(rules: rules)
         XCTAssertEqual(city.houses[0].commodityShortageMonths, 0)
-        XCTAssertEqual(city.markets.lastSettlement?.purchasedLoads.map(\.commodityID), [2, 4])
+        XCTAssertEqual(
+            Set(city.markets.lastSettlement?.purchasedLoads.map(\.commodityID) ?? []),
+            [2, 4]
+        )
         XCTAssertEqual(
             city.markets.lastSettlement?.householdDeliveries,
             [HouseholdCommodityDelivery(houseID: 1, commodityID: -1, amount: 44)]
@@ -2879,6 +3887,423 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(settlement.taxedPopulation, firstCapacity + secondCapacity)
         XCTAssertEqual(settlement.untaxedPopulation, 4)
         XCTAssertGreaterThan(city.walkers.walkers[0].completedTrips, 1)
+    }
+
+    func testRoadblockBlocksRoamerPatrolAndCoverageButKeepsRoadForDestinationRoute() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let rules = EconomyRulesEngine(models: original)
+        var city = DeterministicCityState(
+            year: 1600,
+            treasury: 1_000,
+            mapWidth: 10,
+            mapHeight: 10
+        )
+        // Horizontal road y=3 across x=0...7 plus a vertical road x=3 up y=0...7.
+        // Grid halves meet at (3,3); a roadblock goes on the vertical road at (3,2).
+        let roads = (0...7).map { GridPoint(x: $0, y: 3) }
+            + (0...7).map { GridPoint(x: 3, y: $0) }
+        XCTAssertEqual(city.buildRoad(roads, rules: rules), Set(roads).count)
+
+        let roadblockPoint = GridPoint(x: 3, y: 2)
+        XCTAssertTrue(city.canConstructRoadBlock(at: roadblockPoint))
+        XCTAssertFalse(city.canConstructRoadBlock(at: GridPoint(x: 0, y: 0)))
+        XCTAssertNil(city.constructRoadBlock(at: GridPoint(x: 0, y: 0), rules: rules))
+        XCTAssertNotNil(city.constructRoadBlock(at: roadblockPoint, rules: rules))
+        XCTAssertEqual(city.roadblockPoints, [roadblockPoint])
+
+        // House beyond the roadblock (orthogonal road neighbour (3,1)).
+        _ = city.addHouse(
+            levelID: 0,
+            residents: 5,
+            location: GridPoint(x: 2, y: 0),
+            models: original.buildings
+        )
+        // Control house on the same side as the service building (orthogonal
+        // road neighbour (4,3) on the horizontal road).
+        _ = city.addHouse(
+            levelID: 0,
+            residents: 5,
+            location: GridPoint(x: 4, y: 4),
+            models: original.buildings
+        )
+        let origin = GridPoint(x: 3, y: 7)
+        XCTAssertNotNil(city.constructTaxOffice(
+            serviceRoadStart: origin,
+            replaySeed: 0x5242_4C_4B,
+            rules: rules
+        ))
+
+        // Roamer patrol never enters the roadblock tile (turns away).
+        let route = DeterministicRoadPatrol.route(
+            from: origin,
+            maximumRoadSteps: 40,
+            roadNetwork: city.roadNetwork,
+            replaySeed: 0x5242_4C_4B,
+            trip: 0,
+            barrierPoints: city.roadblockPoints
+        )
+        XCTAssertEqual(route.first, origin)
+        XCTAssertEqual(route.last, origin)
+        XCTAssertFalse(route.contains(roadblockPoint))
+
+        // Coverage reachability also stops at the roadblock: only the control
+        // house is covered.
+        let covered = city.applyTaxCoverage(from: origin, maximumRoadSteps: 40)
+        XCTAssertEqual(covered, 1)
+        let coveredHouseIDs = Set(city.houses.compactMap { house in
+            house.hasTaxCoverage ? house.id : nil
+        })
+        let controlHouseID = city.houses[1].id
+        XCTAssertEqual(coveredHouseIDs, [controlHouseID])
+
+        // The road itself stays intact, so a destination path still crosses the
+        // roadblock tile.
+        let destinationPath = try XCTUnwrap(GridPathfinder.shortestPath(
+            width: city.roadNetwork.width,
+            height: city.roadNetwork.height,
+            from: origin,
+            to: GridPoint(x: 3, y: 1),
+            isPassable: city.roadNetwork.contains
+        ))
+        XCTAssertTrue(destinationPath.contains(roadblockPoint))
+        XCTAssertTrue(city.roadNetwork.contains(roadblockPoint))
+
+        // Walker movement visits neither the roadblock tile nor the far house.
+        let movement = city.advanceServiceWalkers(roadStepsPerWalker: 40)
+        XCTAssertFalse(movement.visitedRoadPoints.contains(roadblockPoint))
+        XCTAssertEqual(movement.servicedHouseIDs, coveredHouseIDs)
+
+        // Demolishing the roadblock reopens the road for roamers.
+        XCTAssertNotNil(city.demolishBuilding(at: roadblockPoint, rules: rules))
+        XCTAssertTrue(city.roadblockPoints.isEmpty)
+        let reopenedCovered = city.applyTaxCoverage(from: origin, maximumRoadSteps: 40)
+        XCTAssertEqual(reopenedCovered, 2)
+    }
+
+    func testRoadblockPlacedOnWalkerNextTileHoldsPositionWithoutTeleport() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let rules = EconomyRulesEngine(models: original)
+        var city = DeterministicCityState(
+            year: 1600,
+            treasury: 1_000,
+            mapWidth: 10,
+            mapHeight: 10
+        )
+        let roads = (0...7).map { GridPoint(x: $0, y: 3) }
+            + (0...7).map { GridPoint(x: 3, y: $0) }
+        XCTAssertEqual(city.buildRoad(roads, rules: rules), Set(roads).count)
+
+        let origin = GridPoint(x: 3, y: 7)
+        XCTAssertNotNil(city.constructTaxOffice(
+            serviceRoadStart: origin,
+            replaySeed: 0x5242_4C_4B,
+            rules: rules
+        ))
+
+        _ = city.advanceServiceWalkers(roadStepsPerWalker: 1)
+        let positionBeforeBlock = try XCTUnwrap(city.walkers.walkers.first?.currentPoint)
+        XCTAssertNotEqual(positionBeforeBlock, origin)
+        let roadblockPoint = try XCTUnwrap(
+            city.walkers.walkers.first?.route.dropFirst(
+                (city.walkers.walkers.first?.routeIndex ?? 0) + 1
+            ).first
+        )
+        XCTAssertNotNil(city.constructRoadBlock(at: roadblockPoint, rules: rules))
+        let after = city.advanceServiceWalkers(roadStepsPerWalker: 1)
+        XCTAssertFalse(after.visitedRoadPoints.contains(roadblockPoint))
+        XCTAssertEqual(
+            city.walkers.walkers.first?.currentPoint,
+            positionBeforeBlock,
+            "the unsupported post-collision turn choice must not become a teleport to origin"
+        )
+        XCTAssertNotNil(city.demolishBuilding(at: roadblockPoint, rules: rules))
+        _ = city.advanceServiceWalkers(roadStepsPerWalker: 1)
+        XCTAssertEqual(city.walkers.walkers.first?.currentPoint, roadblockPoint)
+    }
+
+    func testAdvanceTickBlocksExistingServiceWalkerAtNewRoadblock() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let rules = EconomyRulesEngine(models: original)
+        var city = DeterministicCityState(
+            year: 1600,
+            treasury: 1_000,
+            mapWidth: 8,
+            mapHeight: 5
+        )
+        let roads = (0...5).map { GridPoint(x: $0, y: 2) }
+        XCTAssertEqual(city.buildRoad(roads, rules: rules), roads.count)
+        let origin = GridPoint(x: 0, y: 2)
+        XCTAssertNotNil(city.constructTaxOffice(
+            serviceRoadStart: origin,
+            replaySeed: 0x5242_4C_4B,
+            rules: rules
+        ))
+        let nextPoint = try XCTUnwrap(city.walkers.walkers.first?.route.dropFirst().first)
+        XCTAssertEqual(nextPoint, GridPoint(x: 1, y: 2))
+        XCTAssertNotNil(city.constructRoadBlock(at: nextPoint, rules: rules))
+
+        _ = city.advanceTick(rules: rules)
+        XCTAssertEqual(city.walkers.walkers.first?.currentPoint, origin)
+        XCTAssertFalse(city.walkers.lastMovement?.visitedRoadPoints.contains(nextPoint) ?? true)
+    }
+
+    func testRoadServiceWalkerSaveRoundTripPreservesRouteState() throws {
+        let origin = GridPoint(x: 0, y: 0)
+        let barrier = GridPoint(x: 3, y: 0)
+        let roads = RoadNetwork(
+            width: 5,
+            height: 1,
+            points: Set((0...4).map { GridPoint(x: $0, y: 0) })
+        )
+        let walker = RoadServiceWalker(
+            id: 1,
+            figureID: 7,
+            service: .tax,
+            origin: origin,
+            maximumRoadSteps: 8,
+            replaySeed: 0x5242_4C_4B,
+            roadNetwork: roads,
+            barrierPoints: [barrier]
+        )
+
+        let decoded = try JSONDecoder().decode(
+            RoadServiceWalker.self,
+            from: JSONEncoder().encode(walker)
+        )
+        XCTAssertEqual(decoded, walker)
+        XCTAssertFalse(decoded.route.contains(barrier))
+    }
+
+    private struct HempMarketFixture {
+        var market: DeterministicMarketState
+        var roadNetwork: RoadNetwork
+        var houses: [ResidentialUnit]
+        let marketRoad: GridPoint
+        let barrier: GridPoint
+        let nearHouseID: Int
+        let farHouseID: Int
+    }
+
+    /// Builds a market whose hemp inventory is stocked through the destination
+    /// buyer. The buyer visits a warehouse beyond `barrier`, so stocking itself
+    /// exercises the buyer's market-to-warehouse route passing the roadblock.
+    private func makeStockedHempMarket(models: BuildingModelTable) throws -> HempMarketFixture {
+        let marketRoad = GridPoint(x: 0, y: 3)
+        let barrier = GridPoint(x: 7, y: 3)
+        let roadNetwork = RoadNetwork(
+            width: 16,
+            height: 10,
+            points: Set((0...15).map { GridPoint(x: $0, y: 3) })
+        )
+        var market = DeterministicMarketState()
+        _ = try XCTUnwrap(market.addMarket(
+            buildingID: OriginalMarketCatalog.commonMarketBuildingID,
+            roadAccessPoint: marketRoad,
+            shopBuildingIDs: [67],
+            roadNetwork: roadNetwork
+        ))
+        var logistics = DeterministicLogisticsState()
+        _ = try XCTUnwrap(logistics.addWarehouse(
+            roadAccessPoint: GridPoint(x: 14, y: 3),
+            roadNetwork: roadNetwork
+        ))
+        var production = DeterministicProductionState()
+        XCTAssertEqual(
+            logistics.storeCampaignGift(commodityID: 19, amount: 100, production: &production),
+            100
+        )
+        let houses = [
+            ResidentialUnit(id: 1, houseLevelID: 4, residents: 10, location: GridPoint(x: 2, y: 4)),
+            ResidentialUnit(id: 2, houseLevelID: 4, residents: 10, location: GridPoint(x: 12, y: 4))
+        ]
+        market.scheduleBuyers(
+            houses: houses,
+            logistics: &logistics,
+            production: &production,
+            roadNetwork: roadNetwork,
+            models: models,
+            maximumOneWayRoadSteps: 50
+        )
+        let buyer = try XCTUnwrap(market.buyers.first)
+        XCTAssertTrue(buyer.route.contains(barrier),
+                      "the buyer is a destination walker and stocks the market across the roadblock tile")
+        _ = market.advanceBuyers(roadStepsPerBuyer: 50)
+        XCTAssertEqual(market.markets[0].inventoryByCommodityID[19, default: 0], 100)
+        return HempMarketFixture(
+            market: market,
+            roadNetwork: roadNetwork,
+            houses: houses,
+            marketRoad: marketRoad,
+            barrier: barrier,
+            nearHouseID: houses[0].id,
+            farHouseID: houses[1].id
+        )
+    }
+
+    func testCommodityPeddlerDispatchRouteAvoidsRoadblockAndNeverServesFarSide() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        var fixture = try makeStockedHempMarket(models: original.buildings)
+
+        fixture.market.schedulePeddlers(
+            houses: fixture.houses,
+            roadNetwork: fixture.roadNetwork,
+            models: original.buildings,
+            maximumRoadSteps: 60,
+            replaySeed: 0x4D41_524B_4554,
+            barrierPoints: [fixture.barrier]
+        )
+        XCTAssertFalse(fixture.market.peddlers.isEmpty)
+        for peddler in fixture.market.peddlers {
+            XCTAssertFalse(
+                peddler.route.contains(fixture.barrier),
+                "a commodity peddler patrol never enters a roadblock tile"
+            )
+            XCTAssertFalse(
+                peddler.route.contains { $0.x > fixture.barrier.x },
+                "the patrol turns before the barrier and stays on the market side"
+            )
+        }
+
+        let deliveries = fixture.market.advancePeddlers(
+            roadStepsPerPeddler: 60,
+            houses: &fixture.houses,
+            models: original.buildings,
+            barrierPoints: [fixture.barrier]
+        )
+        XCTAssertFalse(
+            deliveries.contains { $0.houseID == fixture.farHouseID },
+            "the far-side house must never receive a commodity across the roadblock"
+        )
+        XCTAssertEqual(fixture.houses[1][commodityID: 19], 0)
+        XCTAssertGreaterThan(
+            fixture.houses[0][commodityID: 19],
+            0,
+            "the market-side house keeps receiving hemp"
+        )
+    }
+
+    func testBuyerDestinationRoutePassesThroughRoadblockTile() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let marketRoad = GridPoint(x: 0, y: 3)
+        let barrier = GridPoint(x: 7, y: 3)
+        let roadNetwork = RoadNetwork(
+            width: 16,
+            height: 10,
+            points: Set((0...15).map { GridPoint(x: $0, y: 3) })
+        )
+        var market = DeterministicMarketState()
+        _ = try XCTUnwrap(market.addMarket(
+            buildingID: OriginalMarketCatalog.commonMarketBuildingID,
+            roadAccessPoint: marketRoad,
+            shopBuildingIDs: [67],
+            roadNetwork: roadNetwork
+        ))
+        var logistics = DeterministicLogisticsState()
+        _ = try XCTUnwrap(logistics.addWarehouse(
+            roadAccessPoint: GridPoint(x: 14, y: 3),
+            roadNetwork: roadNetwork
+        ))
+        var production = DeterministicProductionState()
+        XCTAssertEqual(
+            logistics.storeCampaignGift(commodityID: 19, amount: 100, production: &production),
+            100
+        )
+        let houses = [
+            ResidentialUnit(id: 1, houseLevelID: 4, residents: 10, location: GridPoint(x: 2, y: 4))
+        ]
+        market.scheduleBuyers(
+            houses: houses,
+            logistics: &logistics,
+            production: &production,
+            roadNetwork: roadNetwork,
+            models: original.buildings,
+            maximumOneWayRoadSteps: 50
+        )
+        let buyer = try XCTUnwrap(market.buyers.first)
+        XCTAssertTrue(
+            buyer.route.contains(barrier),
+            "the buyer keeps the roadblock tile on its market-to-warehouse destination route"
+        )
+        let purchased = market.advanceBuyers(roadStepsPerBuyer: 50)
+        XCTAssertTrue(purchased.contains { $0.commodityID == 19 })
+        XCTAssertEqual(market.markets[0].inventoryByCommodityID[19, default: 0], 100)
+    }
+
+    func testRoadblockOnExistingPeddlerNextTileHoldsWithoutEnterOrCompleteOrCargoReturn() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        var fixture = try makeStockedHempMarket(models: original.buildings)
+
+        fixture.market.schedulePeddlers(
+            houses: fixture.houses,
+            roadNetwork: fixture.roadNetwork,
+            models: original.buildings,
+            maximumRoadSteps: 60,
+            replaySeed: 0x4D41_524B_4554
+        )
+        let peddlerBefore = try XCTUnwrap(fixture.market.peddlers.first)
+        let startPoint = try XCTUnwrap(peddlerBefore.currentPoint)
+        XCTAssertEqual(startPoint, fixture.marketRoad)
+        let newlyBlockedTile = peddlerBefore.route[peddlerBefore.routeIndex + 1]
+
+        // A roadblock is newly placed on the peddler's very next tile after the
+        // peddler was already dispatched and is standing at a road tile.
+        let deliveries = fixture.market.advancePeddlers(
+            roadStepsPerPeddler: 60,
+            houses: &fixture.houses,
+            models: original.buildings,
+            barrierPoints: [newlyBlockedTile]
+        )
+        XCTAssertTrue(deliveries.isEmpty)
+        let peddlerAfter = try XCTUnwrap(fixture.market.peddlers.first)
+        XCTAssertEqual(
+            peddlerAfter.currentPoint,
+            startPoint,
+            "the blocked peddler must not enter the newly roadblocked next tile"
+        )
+        XCTAssertEqual(
+            peddlerAfter.routeIndex,
+            peddlerBefore.routeIndex,
+            "position and completion state stay unchanged"
+        )
+        XCTAssertFalse(peddlerAfter.hasCompletedRoute)
+        XCTAssertEqual(
+            peddlerAfter.remainingAmount,
+            100,
+            "cargo is neither returned nor lost while the peddler is held at the barrier"
+        )
+        XCTAssertEqual(
+            fixture.market.markets[0].inventoryByCommodityID[19, default: 0],
+            0,
+            "the market inventory is not restocked by a held peddler"
+        )
+        XCTAssertEqual(fixture.houses[0][commodityID: 19], 0,
+                       "no delivery happens before the peddler moves")
+
+        _ = fixture.market.advancePeddlers(
+            roadStepsPerPeddler: 1,
+            houses: &fixture.houses,
+            models: original.buildings
+        )
+        XCTAssertEqual(fixture.market.peddlers.first?.currentPoint, newlyBlockedTile,
+                       "removing the runtime barrier resumes the preserved route")
     }
 
     func testRoadConstructionAndTaxCoverageUseDeterministicRoutes() throws {
@@ -3302,6 +4727,57 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertFalse(serviceCity.walkers.walkers.contains { $0.id == walkerID })
     }
 
+    func testMarketShopsAreBuiltIntoExistingMarketUpToAuthoredCapacity() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let rules = EconomyRulesEngine(models: original)
+        var city = DeterministicCityState(
+            year: 1600,
+            treasury: 10_000,
+            mapWidth: 18,
+            mapHeight: 12
+        )
+        XCTAssertEqual(
+            city.buildRoad((0..<18).map { GridPoint(x: $0, y: 1) }, rules: rules),
+            18
+        )
+        let origin = GridPoint(x: 1, y: 2)
+        let marketID = try XCTUnwrap(city.constructMarket(
+            at: origin,
+            shopBuildingIDs: [],
+            rules: rules
+        ))
+        XCTAssertEqual(city.markets.markets.first?.remainingShopCapacity, 4)
+
+        for shopBuildingID in [66, 67, 65, 70] {
+            XCTAssertTrue(city.canConstructMarketShop(
+                shopBuildingID: shopBuildingID,
+                at: origin
+            ))
+            XCTAssertEqual(
+                city.constructMarketShop(
+                    shopBuildingID: shopBuildingID,
+                    at: origin,
+                    rules: rules
+                ),
+                marketID
+            )
+        }
+        XCTAssertEqual(
+            city.markets.markets.first?.shopBuildingIDs,
+            [66, 67, 65, 70]
+        )
+        XCTAssertEqual(city.markets.markets.first?.remainingShopCapacity, 0)
+        XCTAssertFalse(city.canConstructMarketShop(shopBuildingID: 69, at: origin))
+        XCTAssertNil(city.constructMarketShop(
+            shopBuildingID: 69,
+            at: origin,
+            rules: rules
+        ))
+    }
+
     func testDemolishCancelsInFlightDeliveryAndReleasesItsSource() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")
@@ -3489,7 +4965,7 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertFalse(city.trade.lastSettlement?.transactions.isEmpty ?? true)
     }
 
-    func testWorkforceShortageCausesOriginalFireAndCollapseRisks() throws {
+    func testUninspectedBuildingsUseOriginalFireAndCollapseLimits() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")
         }
@@ -3512,24 +4988,238 @@ final class EmperorCoreTests: XCTestCase {
             rules: rules
         ))
         var failures: [BuildingFailure] = []
-        for _ in 0..<14 {
+        for _ in 0..<100 {
             _ = city.advanceMonth(rules: rules)
             failures.append(contentsOf: city.operations.lastSettlement?.failures ?? [])
         }
         XCTAssertTrue(failures.contains {
-            $0.key.instanceID == kilnID && $0.kind == .fire
+            $0.key.instanceID == kilnID
         })
         XCTAssertTrue(failures.contains {
             $0.key.instanceID == clayID && $0.kind == .collapse
         })
         XCTAssertFalse(city.production.buildings.contains { $0.id == kilnID || $0.id == clayID })
-        XCTAssertFalse(city.placedBuildings.contains {
-            $0.category == .production && ($0.instanceID == kilnID || $0.instanceID == clayID)
+        let kilnRuin = try XCTUnwrap(city.placedBuildings.first {
+            $0.category == .production && $0.instanceID == kilnID
         })
+        XCTAssertEqual(kilnRuin.buildingID, OriginalBuildingSpriteCatalog.ruinBuildingID)
+        let collapseRuin = try XCTUnwrap(city.placedBuildings.first {
+            $0.category == .production && $0.instanceID == clayID
+        })
+        XCTAssertEqual(collapseRuin.buildingID, OriginalBuildingSpriteCatalog.ruinBuildingID)
+        XCTAssertEqual(collapseRuin.footprint, BuildingFootprint(width: 2, height: 2))
         XCTAssertEqual(city.operations.lastSettlement?.workforce.availableWorkers, 0)
     }
 
-    func testStaffedInspectorPatrolRepairsBuildingRisk() throws {
+    func testOriginalMaintenanceUsesSlottedVariableFireChecksAndInclusiveCollapsePriority() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let model = try XCTUnwrap(original.buildings[buildingID: 43])
+        XCTAssertGreaterThan(model.fireRiskIncrement, 0)
+        XCTAssertGreaterThan(model.damageRiskIncrement, 0)
+        let placement = PlacedBuilding(
+            category: .production,
+            instanceID: 17,
+            buildingID: model.id,
+            origin: GridPoint(x: 3, y: 4),
+            orientation: .northSouth,
+            footprint: BuildingFootprint(width: 2, height: 2),
+            roadAccessPoint: GridPoint(x: 3, y: 6)
+        )
+        let workforce = DeterministicCityOperationsState().workforce(
+            population: 0,
+            placements: [placement],
+            models: original.buildings
+        )
+        let highLimits = OriginalBuildingHazardRules(configuration: LegacyINI(text: """
+            [Fire]
+            Multiplier=5
+            Frequency=4
+            BurnLimit=1000000
+            BurnDamage=100
+            FireDamageMult=10
+            [Damage]
+            DamageLimit=1000000
+            """))
+        var first = DeterministicCityOperationsState()
+        var second = DeterministicCityOperationsState()
+        var observedFireMultipliers: [Int] = []
+        for offset in 0..<64 {
+            let calendar = SimulationCalendar(year: 1600 + offset / 12, month: offset % 12 + 1)
+            let before = first.risks.first?.fireRisk ?? 0
+            _ = first.advanceMonth(
+                calendar: calendar,
+                workforce: workforce,
+                placements: [placement],
+                inspectedBuildingKeys: [],
+                maintenanceRiskReduction: 0,
+                models: original.buildings,
+                difficulty: .normal,
+                hazardRules: highLimits
+            )
+            _ = second.advanceMonth(
+                calendar: calendar,
+                workforce: workforce,
+                placements: [placement],
+                inspectedBuildingKeys: [],
+                maintenanceRiskReduction: 0,
+                models: original.buildings,
+                difficulty: .normal,
+                hazardRules: highLimits
+            )
+            let delta = try XCTUnwrap(first.risks.first).fireRisk - before
+            if delta > 0 {
+                XCTAssertEqual(delta % model.fireRiskIncrement, 0)
+                observedFireMultipliers.append(delta / model.fireRiskIncrement)
+            }
+        }
+        XCTAssertEqual(first, second)
+        XCTAssertFalse(observedFireMultipliers.isEmpty)
+        XCTAssertTrue(observedFireMultipliers.allSatisfy { (1...5).contains($0) })
+        XCTAssertLessThan(observedFireMultipliers.count, 64)
+
+        let exactLimits = OriginalBuildingHazardRules(configuration: LegacyINI(text: """
+            [Fire]
+            Multiplier=1
+            Frequency=1
+            BurnLimit=\(model.fireRiskIncrement)
+            BurnDamage=100
+            FireDamageMult=10
+            [Damage]
+            DamageLimit=\(model.damageRiskIncrement)
+            """))
+        var thresholdState = DeterministicCityOperationsState()
+        let settlement = thresholdState.advanceMonth(
+            calendar: SimulationCalendar(year: 1600),
+            workforce: workforce,
+            placements: [placement],
+            inspectedBuildingKeys: [],
+            maintenanceRiskReduction: 0,
+            models: original.buildings,
+            difficulty: .normal,
+            hazardRules: exactLimits
+        )
+        XCTAssertEqual(settlement.failures.first?.kind, .collapse)
+
+        let fireOnlyLimits = OriginalBuildingHazardRules(configuration: LegacyINI(text: """
+            [Fire]
+            Multiplier=1
+            Frequency=1
+            BurnLimit=\(model.fireRiskIncrement)
+            BurnDamage=100
+            FireDamageMult=10
+            [Damage]
+            DamageLimit=1000000
+            """))
+        var fireThresholdState = DeterministicCityOperationsState()
+        let fireSettlement = fireThresholdState.advanceMonth(
+            calendar: SimulationCalendar(year: 1600),
+            workforce: workforce,
+            placements: [placement],
+            inspectedBuildingKeys: [],
+            maintenanceRiskReduction: 0,
+            models: original.buildings,
+            difficulty: .normal,
+            hazardRules: fireOnlyLimits
+        )
+        XCTAssertEqual(fireSettlement.failures.first?.kind, .fire)
+    }
+
+    func testUninspectedHouseParticipatesInOriginalMaintenanceRisk() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let rules = EconomyRulesEngine(models: original)
+        var city = DeterministicCityState(
+            year: 1600,
+            treasury: 50_000,
+            mapWidth: 12,
+            mapHeight: 8
+        )
+        city.workforceEnabled = true
+        city.housingEvolutionEnabled = false
+        _ = city.buildRoad((0..<12).map { GridPoint(x: $0, y: 5) }, rules: rules)
+        let houseID = try XCTUnwrap(city.addHouse(
+            levelID: 0,
+            residents: 7,
+            location: GridPoint(x: 2, y: 3),
+            models: original.buildings
+        ))
+
+        var observedFailure: BuildingFailure?
+        for _ in 0..<120 where observedFailure == nil {
+            _ = city.advanceMonth(rules: rules)
+            observedFailure = city.operations.lastSettlement?.failures.first {
+                $0.key == OperationalBuildingKey(category: .residential, instanceID: houseID)
+            }
+        }
+
+        XCTAssertFalse(city.houses.contains { $0.id == houseID })
+        let ruin = try XCTUnwrap(city.placedBuildings.first {
+            $0.category == .residential && $0.instanceID == houseID
+        })
+        XCTAssertEqual(ruin.buildingID, OriginalBuildingSpriteCatalog.ruinBuildingID)
+        XCTAssertEqual(ruin.footprint, BuildingFootprint(width: 2, height: 2))
+        XCTAssertEqual(observedFailure?.cause, .maintenance)
+    }
+
+    func testCityBreachDoesNotInventBatchBuildingFires() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let rules = EconomyRulesEngine(models: original)
+        var city = DeterministicCityState(
+            year: 1600,
+            treasury: 50_000,
+            mapWidth: 12,
+            mapHeight: 8
+        )
+        city.housingEvolutionEnabled = false
+        _ = city.buildRoad((0..<12).map { GridPoint(x: $0, y: 5) }, rules: rules)
+        let houseID = try XCTUnwrap(city.addHouse(
+            levelID: 0,
+            residents: 7,
+            location: GridPoint(x: 2, y: 3),
+            models: original.buildings
+        ))
+        let kilnID = try XCTUnwrap(city.constructProductionBuilding(
+            buildingID: 43,
+            at: GridPoint(x: 6, y: 3),
+            rules: rules
+        ))
+        let invasion = CampaignEventOccurrence(
+            eventID: 7,
+            occurrenceIndex: 0,
+            kindRawValue: CampaignEventKind.invasion.rawValue,
+            triggerMode: .oneTime,
+            relativeYear: 0,
+            month: 1,
+            amount: 16
+        )
+        _ = city.applyCampaignCityEvent(invasion)
+
+        let movement = city.advanceMilitary(
+            maximumStepsPerUnit: 100,
+            models: original.figures
+        )
+
+        XCTAssertEqual(movement.reports.first?.outcome, .cityBreached)
+        XCTAssertTrue(city.houses.contains { $0.id == houseID })
+        XCTAssertTrue(city.production.buildings.contains { $0.id == kilnID })
+        XCTAssertEqual(
+            city.placedBuildings.filter {
+                $0.buildingID == OriginalBuildingSpriteCatalog.ruinBuildingID
+            }.count,
+            0
+        )
+        XCTAssertNil(city.operations.lastSettlement)
+    }
+
+    func testInspectorFSMStaysFailClosedUntilItsOriginalHandlerIsRecovered() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")
         }
@@ -3539,12 +5229,12 @@ final class EmperorCoreTests: XCTestCase {
         city.workforceEnabled = true
         city.housingEvolutionEnabled = false
         _ = city.buildRoad((0..<12).map { GridPoint(x: $0, y: 5) }, rules: rules)
-        _ = city.addHouse(
+        let residentHouseID = try XCTUnwrap(city.addHouse(
             levelID: 14,
             residents: 100,
             location: GridPoint(x: 11, y: 4),
             models: original.buildings
-        )
+        ))
         XCTAssertGreaterThanOrEqual(city.population, 17)
         let kilnID = try XCTUnwrap(city.constructProductionBuilding(
             buildingID: 43,
@@ -3558,21 +5248,14 @@ final class EmperorCoreTests: XCTestCase {
             replaySeed: 0x494E_5350_4543_54,
             rules: rules
         ))
-        for _ in 0..<12 { _ = city.advanceMonth(rules: rules) }
+        _ = city.advanceTick(rules: rules)
         XCTAssertTrue(city.production.buildings.contains { $0.id == kilnID })
         XCTAssertTrue(city.residentialServiceBuildings.contains { $0.id == inspectorID })
-        let kilnKey = OperationalBuildingKey(category: .production, instanceID: kilnID)
-        XCTAssertTrue(city.operations.lastSettlement?.inspectedBuildingKeys.contains(kilnKey) == true)
-        XCTAssertGreaterThan(city.operations.lastSettlement?.repairedRiskByBuildingKey[kilnKey] ?? 0, 0)
-        let kilnRisk = city.operations.risks.first { $0.key == kilnKey }
-        XCTAssertEqual(kilnRisk?.fireRisk, 0)
-        XCTAssertEqual(kilnRisk?.damageRisk, 0)
-        XCTAssertEqual(
-            city.operations.lastSettlement?.workforce.assignments.first {
-                $0.key == kilnKey
-            }?.assignedWorkers,
-            original.buildings[buildingID: 43]?.employees
-        )
+        let walker = try XCTUnwrap(city.walkers.walkers.first { $0.figureID == 39 })
+        XCTAssertFalse(walker.supportsRecoveredResidentialRoam)
+        XCTAssertEqual(walker.originalPhase, .dormant)
+        XCTAssertNil(city.operations.lastSettlement)
+        XCTAssertTrue(city.houses.contains { $0.id == residentHouseID })
         XCTAssertEqual(
             try JSONDecoder().decode(
                 DeterministicCityState.self,
@@ -3632,7 +5315,7 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(protectedHouses[0].residents, 10)
     }
 
-    func testWatchtowerGuardProvidesPhysicalCrimeCoverage() throws {
+    func testWatchtowerGuardFSMStaysFailClosedUntilItsOriginalHandlerIsRecovered() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")
         }
@@ -3658,8 +5341,11 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertTrue(city.residentialServiceBuildings.contains {
             $0.id == towerID && $0.figureID == 29 && $0.service == .constable
         })
-        XCTAssertTrue(city.houses.first { $0.id == houseID }?.serviceCoverage.contains(.constable) == true)
-        XCTAssertTrue(city.publicHealthSafety.lastSettlement?.protectedHouseIDs.contains(houseID) == true)
+        let walker = try XCTUnwrap(city.walkers.walkers.first { $0.figureID == 29 })
+        XCTAssertFalse(walker.supportsRecoveredResidentialRoam)
+        XCTAssertEqual(walker.originalPhase, .dormant)
+        XCTAssertFalse(city.houses.first { $0.id == houseID }?.serviceCoverage.contains(.constable) == true)
+        XCTAssertFalse(city.publicHealthSafety.lastSettlement?.protectedHouseIDs.contains(houseID) == true)
         XCTAssertEqual(
             try JSONDecoder().decode(
                 DeterministicCityState.self,
@@ -3781,6 +5467,16 @@ final class EmperorCoreTests: XCTestCase {
         ])
         XCTAssertTrue(city.production.buildings.contains { $0.id == kilnID })
         XCTAssertFalse(city.production.buildings.contains { $0.id == clayID })
+        XCTAssertEqual(
+            city.placedBuildings.first {
+                $0.category == .production && $0.instanceID == clayID
+            }?.buildingID,
+            OriginalBuildingSpriteCatalog.ruinBuildingID
+        )
+        XCTAssertEqual(
+            city.operations.lastSettlement?.failures.first?.cause,
+            .disaster
+        )
         XCTAssertEqual(city.campaignEvents.disasters.last?.epicenter, disasterPoint)
 
         let drought = CampaignEventOccurrence(
@@ -3923,6 +5619,49 @@ final class EmperorCoreTests: XCTestCase {
             ),
             city
         )
+    }
+
+    func testQinNomadInvasionRetainsSecondarySelectorAndUsesXiongnuInfantry() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let original = try OriginalEconomyModels(source: .openDefault())
+        let rules = EconomyRulesEngine(models: original)
+        let invasionPoint = GridPoint(x: 9, y: 4)
+        let terrain = try DeterministicTerrainState(
+            width: 10,
+            height: 8,
+            terrainRawValues: [UInt32](repeating: 0, count: 80),
+            authoredPoints: EmperorMapAuthoredPoints(landInvasion: [invasionPoint])
+        )
+        var city = DeterministicCityState(year: -209, treasury: 18_000, terrain: terrain)
+        _ = city.buildRoad((0..<10).map { GridPoint(x: $0, y: 4) }, rules: rules)
+        _ = try XCTUnwrap(city.constructMilitaryFort(
+            buildingID: 221,
+            at: GridPoint(x: 0, y: 0),
+            rules: rules
+        ))
+        let occurrence = CampaignEventOccurrence(
+            eventID: 2,
+            occurrenceIndex: 0,
+            kindRawValue: CampaignEventKind.invasion.rawValue,
+            triggerMode: .oneTime,
+            relativeYear: 6,
+            month: 6,
+            amount: 9,
+            cityFromID: 0,
+            secondarySelectionID: 10,
+            timeAllowed: 6
+        )
+
+        _ = city.applyCampaignCityEvent(occurrence)
+        XCTAssertEqual(city.campaignEvents.invasions.first?.secondarySelectionID, 10)
+        XCTAssertEqual(city.campaignEvents.invasions.first?.strength, 9)
+        _ = city.advanceMilitary(maximumStepsPerUnit: 1, models: original.figures)
+        let force = try XCTUnwrap(city.military.enemyForces.first)
+        XCTAssertEqual(force.enemyTypeID, 6)
+        XCTAssertEqual(force.soldierCount, 9)
+        XCTAssertEqual(force.route.first, invasionPoint)
     }
 
     func testVersion031WallsGateTowerSentriesAndMultiFormationOrders() throws {
@@ -4577,14 +6316,13 @@ final class EmperorCoreTests: XCTestCase {
             assignedWorkers: original.buildings[buildingID: 35]?.employees ?? 0,
             rules: rules
         ))
-        let treasury = city.economy.treasury
         city.continueCampaignMission(with: continuation)
         XCTAssertEqual(city.calendar, SimulationCalendar(year: -1559, month: 6))
         XCTAssertEqual(city.missionSettings, continuation)
         XCTAssertEqual(city.population, 100)
         XCTAssertEqual(city.production.buildings.count, 1)
         XCTAssertEqual(city.roadNetwork.points.count, 20)
-        XCTAssertEqual(city.economy.treasury, treasury)
+        XCTAssertEqual(city.economy.treasury, 9_000)
         XCTAssertTrue(city.campaignEvents.invasions.isEmpty)
     }
 

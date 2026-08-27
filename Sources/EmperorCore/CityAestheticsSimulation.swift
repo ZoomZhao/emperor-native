@@ -37,6 +37,7 @@ public struct FengShuiCitySummary: Sendable, Hashable, Codable {
 
 public enum AestheticConstructionKind: String, Sendable, Hashable, Codable {
     case scenery
+    case irrigationPump
     case laborersCamp
     case carpentersGuild
     case masonsGuild
@@ -73,8 +74,20 @@ public struct OriginalMonumentConfiguration: Sendable, Hashable, Codable {
         case 77:
             return Self(
                 buildingID: buildingID,
+                // Emperor Heaven records 89 loads of wood, 11 loads of
+                // lacquerware or bronzeware, 10 silk, 9 ceramics, 7 weapons,
+                // and 4 carved-jade loads. One warehouse load is 100 internal
+                // units. Dirt remains represented by requiredWork because it
+                // is excavated by laborers rather than stored as a commodity.
                 requiredWork: 2_400,
-                requiredCommodityUnits: [10: 800, 17: 200, 21: 200, 23: 300, 24: 300, 25: 300],
+                requiredCommodityUnits: [
+                    10: 8_900,
+                    21: 700,
+                    22: 1_100,
+                    24: 1_000,
+                    25: 900,
+                    26: 400,
+                ],
                 requiredSupportKinds: labor.union(carpenter)
             )
         case 78: // Great Temple.
@@ -112,18 +125,13 @@ public struct OriginalMonumentConfiguration: Sendable, Hashable, Codable {
                 requiredCommodityUnits: [10: 800, 18: 800, 20: 800],
                 requiredSupportKinds: labor.union(carpenter).union(ceramist).union(mason)
             )
-        case 83:
-            return Self(
-                buildingID: buildingID,
-                requiredWork: 2_400,
-                requiredCommodityUnits: [10: 600, 20: 800],
-                requiredSupportKinds: labor.union(carpenter).union(mason)
-            )
         case 84:
             return Self(
                 buildingID: buildingID,
+                // 106 wood loads and 11 clay loads. The 337 dirt loads are
+                // laborer work and therefore do not enter the warehouse map.
                 requiredWork: 4_000,
-                requiredCommodityUnits: [10: 1_000, 18: 1_200],
+                requiredCommodityUnits: [10: 10_600, 18: 1_100],
                 requiredSupportKinds: labor.union(carpenter).union(ceramist)
             )
         case 92: // Clock tower needs wood and bronze; no labor camp.
@@ -158,20 +166,50 @@ public struct MonumentProject: Identifiable, Sendable, Hashable, Codable {
 
     public var completionPercent: Int {
         let materialRequired = requiredCommodityUnits.values.reduce(0, +)
-        let materialDelivered = deliveredCommodityUnits.values.reduce(0, +)
+        let materialDelivered = requiredCommodityUnits.reduce(0) {
+            $0 + min(
+                $1.value,
+                deliveredUnits(satisfyingRequirementFor: $1.key)
+            )
+        }
         let totalRequired = max(1, requiredWork + materialRequired)
         return min(100, (completedWork + materialDelivered) * 100 / totalRequired)
+    }
+
+    /// Building #77 accepts the original burial-provision alternatives:
+    /// lacquerware (22) and bronzeware (23) can be mixed to satisfy the single
+    /// 11-load requirement. Qin V has no legal bronzeware source, so normal
+    /// play supplies lacquerware without losing compatibility with other
+    /// scenarios or imported saves that already delivered bronzeware.
+    public func deliveredUnits(satisfyingRequirementFor commodityID: Int) -> Int {
+        if buildingID == 77, commodityID == 22 {
+            return deliveredCommodityUnits[22, default: 0]
+                + deliveredCommodityUnits[23, default: 0]
+        }
+        return deliveredCommodityUnits[commodityID, default: 0]
+    }
+
+    public func hasDelivered(_ requirements: [Int: Int]) -> Bool {
+        requirements.allSatisfy {
+            deliveredUnits(satisfyingRequirementFor: $0.key) >= $0.value
+        }
     }
 
     mutating func recordDelivery(commodityID: Int, amount: Int) {
         deliveredCommodityUnits[commodityID, default: 0] += max(0, amount)
     }
 
-    mutating func performWork(_ amount: Int) {
+    mutating func performWork(_ amount: Int, allowCompletion: Bool = true) {
         completedWork = min(requiredWork, completedWork + max(0, amount))
-        isComplete = completedWork >= requiredWork && requiredCommodityUnits.allSatisfy {
-            deliveredCommodityUnits[$0.key, default: 0] >= $0.value
-        }
+        isComplete = allowCompletion
+            && completedWork >= requiredWork
+            && hasDelivered(requiredCommodityUnits)
+    }
+
+    mutating func markSegmentedConstructionComplete() {
+        guard completedWork >= requiredWork,
+              hasDelivered(requiredCommodityUnits) else { return }
+        isComplete = true
     }
 }
 
@@ -190,25 +228,285 @@ public struct MonumentMonthlySettlement: Sendable, Hashable, Codable {
 public struct DeterministicAestheticState: Sendable, Hashable, Codable {
     public private(set) var constructions: [AestheticConstruction]
     public private(set) var monuments: [MonumentProject]
+    public private(set) var grandCanalProject: GrandCanalProjectRuntime?
+    // Optional preserves native format-v1 saves created before original
+    // cMonumentBldg per-part state was decoded. This is the source-backed
+    // replacement state; `grandCanalProject` above remains legacy decoding
+    // compatibility only.
+    private var grandCanalMapPartStatesState: [GrandCanalMapPartState]?
+    /// Read-only source state from the original Great Wall object archive.
+    /// Optionality preserves Native saves created before schema-10 decoding.
+    private var greatWallMapPartStatesState: [GreatWallMapPartState]?
+    /// Optional preserves Native saves written before the original scheduler
+    /// call counter was connected to the decoded per-part state.
+    private var grandCanalSchedulerState: GrandCanalSchedulerState?
+    /// Optional preserves Native saves written before source-backed phase-2
+    /// convoy state existed. Live dispatch is connected only after its city
+    /// inventory/figure inputs have passed the recovered original gates.
+    private var grandCanalPhaseTwoConvoysState:
+        [OriginalGrandCanalLayoutCatalog.PhaseTwoCarrierConvoyRuntime]?
+    private var grandCanalPhaseTwoCoordinatorState:
+        OriginalGrandCanalLayoutCatalog.PhaseTwoCoordinatorRuntime?
+    /// Optional preserves saves written before phase-0/1 task-102 coordinator
+    /// and live laborer state were represented.
+    private var grandCanalPhaseLaborCoordinatorState:
+        OriginalGrandCanalLayoutCatalog.PhaseLaborCoordinatorRuntime?
+    public private(set) var earthenGreatWallProject: EarthenGreatWallProjectRuntime?
+    public private(set) var largePalaceProject: LargePalaceProjectRuntime?
+    private var phasedMonumentProjectsState: [PhasedMonumentProjectRuntime]?
     public private(set) var lastMonumentSettlement: MonumentMonthlySettlement?
     private var nextConstructionID: Int
 
     public init() {
         constructions = []
         monuments = []
+        grandCanalProject = nil
+        grandCanalMapPartStatesState = []
+        greatWallMapPartStatesState = []
+        grandCanalSchedulerState = GrandCanalSchedulerState()
+        grandCanalPhaseTwoConvoysState = []
+        grandCanalPhaseTwoCoordinatorState = .init()
+        grandCanalPhaseLaborCoordinatorState = .init()
+        earthenGreatWallProject = nil
+        largePalaceProject = nil
+        phasedMonumentProjectsState = []
         lastMonumentSettlement = nil
         nextConstructionID = 1
     }
 
     public var completedMonumentBuildingIDs: Set<Int> {
-        Set(monuments.filter(\.isComplete).map(\.buildingID))
+        var completed = Set(monuments.filter(\.isComplete).map(\.buildingID))
+        let canalParts = grandCanalMapPartStates
+        if canalParts.count == GrandCanalLayout.original.segments.count,
+           canalParts.map(\.subBuildingIndex).sorted() == Array(0..<33),
+           Set(canalParts.map(\.buildingID)) == [OriginalGrandCanalLayoutCatalog.buildingID],
+           canalParts.allSatisfy({
+               $0.currentSubBuildingPhase
+                   >= OriginalGrandCanalLayoutCatalog.finalCompletedPhaseIndex
+                   && $0.wholeMonumentPhase
+                   >= OriginalGrandCanalLayoutCatalog.finalCompletedPhaseIndex
+           }) {
+            completed.insert(OriginalGrandCanalLayoutCatalog.buildingID)
+        }
+        return completed
+    }
+
+    public var phasedMonumentProjects: [PhasedMonumentProjectRuntime] {
+        phasedMonumentProjectsState ?? []
+    }
+
+    public var grandCanalMapPartStates: [GrandCanalMapPartState] {
+        grandCanalMapPartStatesState ?? []
+    }
+
+    public var greatWallMapPartStates: [GreatWallMapPartState] {
+        greatWallMapPartStatesState ?? []
+    }
+
+    public var grandCanalScheduler: GrandCanalSchedulerState {
+        grandCanalSchedulerState ?? GrandCanalSchedulerState()
+    }
+
+    public var grandCanalPhaseTwoConvoys:
+        [OriginalGrandCanalLayoutCatalog.PhaseTwoCarrierConvoyRuntime] {
+        grandCanalPhaseTwoConvoysState ?? []
+    }
+
+    public var grandCanalPhaseTwoCoordinator:
+        OriginalGrandCanalLayoutCatalog.PhaseTwoCoordinatorRuntime {
+        grandCanalPhaseTwoCoordinatorState ?? .init()
+    }
+
+    public var grandCanalPhaseLaborCoordinator:
+        OriginalGrandCanalLayoutCatalog.PhaseLaborCoordinatorRuntime {
+        grandCanalPhaseLaborCoordinatorState ?? .init()
+    }
+
+    mutating func restoreGrandCanalMapPartStates(
+        _ states: [GrandCanalMapPartState]
+    ) {
+        grandCanalMapPartStatesState = states
+        grandCanalSchedulerState = GrandCanalSchedulerState()
+        grandCanalPhaseTwoConvoysState = []
+        grandCanalPhaseTwoCoordinatorState = .init()
+        grandCanalPhaseLaborCoordinatorState = .init()
+    }
+
+    mutating func restoreGreatWallMapPartStates(
+        _ states: [GreatWallMapPartState]
+    ) {
+        greatWallMapPartStatesState = states
+    }
+
+    /// Live simulation writes part counters without resetting scheduler,
+    /// queues, or figures. The archive-load entry above intentionally retains
+    /// its full-runtime reset semantics.
+    mutating func restoreGrandCanalMapPartStatesPreservingRuntime(
+        _ states: [GrandCanalMapPartState]
+    ) {
+        grandCanalMapPartStatesState = states
+    }
+
+    mutating func restoreGrandCanalPhaseTwoConvoys(
+        _ convoys: [OriginalGrandCanalLayoutCatalog.PhaseTwoCarrierConvoyRuntime]
+    ) {
+        grandCanalPhaseTwoConvoysState = convoys
+    }
+
+    mutating func restoreGrandCanalPhaseTwoCoordinator(
+        _ coordinator: OriginalGrandCanalLayoutCatalog.PhaseTwoCoordinatorRuntime
+    ) {
+        grandCanalPhaseTwoCoordinatorState = coordinator
+    }
+
+    mutating func restoreGrandCanalPhaseLaborCoordinator(
+        _ coordinator: OriginalGrandCanalLayoutCatalog.PhaseLaborCoordinatorRuntime
+    ) {
+        grandCanalPhaseLaborCoordinatorState = coordinator
+    }
+
+    /// Advances the original scheduler-call counter without binding it to the
+    /// Native daily clock. Callers must provide the recovered engine cadence.
+    @discardableResult
+    mutating func advanceGrandCanalSchedulerCall() throws
+        -> OriginalGrandCanalLayoutCatalog.SchedulerCallOutcome {
+        try advanceGrandCanalSchedulerCalls(1).first ?? .alreadyComplete
+    }
+
+    /// Atomically advances a recovered number of original inner simulation
+    /// steps. Invalid or unsupported archive state is left unchanged.
+    mutating func advanceGrandCanalSchedulerCalls(
+        _ count: Int
+    ) throws -> [OriginalGrandCanalLayoutCatalog.SchedulerCallOutcome] {
+        guard count > 0 else { return [] }
+        guard var parts = grandCanalMapPartStatesState, !parts.isEmpty else {
+            return Array(repeating: .alreadyComplete, count: count)
+        }
+        var scheduler = grandCanalSchedulerState ?? GrandCanalSchedulerState()
+        var coordinator = grandCanalPhaseTwoCoordinatorState ?? .init()
+        var outcomes: [OriginalGrandCanalLayoutCatalog.SchedulerCallOutcome] = []
+        outcomes.reserveCapacity(count)
+        for _ in 0..<count {
+            if Set(parts.map(\.wholeMonumentPhase)) == [2] {
+                outcomes.append(
+                    try OriginalGrandCanalLayoutCatalog.advancePhaseTwoSchedulerCall(
+                        parts: &parts,
+                        scheduler: &scheduler,
+                        coordinator: &coordinator
+                    )
+                )
+            } else {
+                outcomes.append(
+                    try OriginalGrandCanalLayoutCatalog.advanceSchedulerCall(
+                        parts: &parts,
+                        scheduler: &scheduler
+                    )
+                )
+            }
+        }
+        grandCanalMapPartStatesState = parts
+        grandCanalSchedulerState = scheduler
+        grandCanalPhaseTwoCoordinatorState = coordinator
+        return outcomes
+    }
+
+    /// Phase-0/1 scheduler entry retains explicit provider inputs so the core
+    /// state can be tested and persisted independently of city-layer staffing.
+    @discardableResult
+    mutating func advanceGrandCanalPhaseLaborSchedulerCall(
+        providers: [OriginalGrandCanalLayoutCatalog.PhaseLaborProviderCandidate],
+        targetAccesses: [OriginalGrandCanalLayoutCatalog.PhaseLaborTargetAccessCandidate],
+        xiWangMuActive: Bool
+    ) throws -> OriginalGrandCanalLayoutCatalog.SchedulerCallOutcome {
+        guard var parts = grandCanalMapPartStatesState, !parts.isEmpty else {
+            return .alreadyComplete
+        }
+        var scheduler = grandCanalSchedulerState ?? GrandCanalSchedulerState()
+        var coordinator = grandCanalPhaseLaborCoordinatorState ?? .init()
+        let outcome = try OriginalGrandCanalLayoutCatalog.advancePhaseLaborSchedulerCall(
+            parts: &parts,
+            scheduler: &scheduler,
+            coordinator: &coordinator,
+            providers: providers,
+            targetAccesses: targetAccesses,
+            xiWangMuActive: xiWangMuActive
+        )
+        grandCanalMapPartStatesState = parts
+        grandCanalSchedulerState = scheduler
+        grandCanalPhaseLaborCoordinatorState = coordinator
+        return outcome
+    }
+
+    /// One recovered original inner simulation step for Grand Canal labor:
+    /// existing figures update first, then the monument scheduler runs. This
+    /// preserves the original creation boundary where a newly dispatched
+    /// worker cannot move until the following step.
+    @discardableResult
+    mutating func advanceGrandCanalPhaseLaborSimulationStep(
+        providers: [OriginalGrandCanalLayoutCatalog.PhaseLaborProviderCandidate],
+        targetAccesses: [OriginalGrandCanalLayoutCatalog.PhaseLaborTargetAccessCandidate],
+        routingGrids: OriginalGrandCanalLayoutCatalog.WorkerRoutingGrids,
+        xiWangMuActive: Bool
+    ) throws -> OriginalGrandCanalLayoutCatalog.SchedulerCallOutcome {
+        guard var parts = grandCanalMapPartStatesState, !parts.isEmpty else {
+            return .alreadyComplete
+        }
+        var scheduler = grandCanalSchedulerState ?? GrandCanalSchedulerState()
+        var coordinator = grandCanalPhaseLaborCoordinatorState ?? .init()
+        _ = coordinator.advanceFigureUpdates(
+            parts: &parts,
+            routingGrids: routingGrids,
+            xiWangMuActive: xiWangMuActive
+        )
+        let outcome = try OriginalGrandCanalLayoutCatalog.advancePhaseLaborSchedulerCall(
+            parts: &parts,
+            scheduler: &scheduler,
+            coordinator: &coordinator,
+            providers: providers,
+            targetAccesses: targetAccesses,
+            xiWangMuActive: xiWangMuActive
+        )
+        grandCanalMapPartStatesState = parts
+        grandCanalSchedulerState = scheduler
+        grandCanalPhaseLaborCoordinatorState = coordinator
+        return outcome
+    }
+
+    @discardableResult
+    mutating func recordGrandCanalLaborerArrival(
+        figureID: Int,
+        at point: GridPoint
+    ) -> OriginalGrandCanalLayoutCatalog.PhaseLaborArrival? {
+        var coordinator = grandCanalPhaseLaborCoordinatorState ?? .init()
+        let outcome = coordinator.recordArrival(figureID: figureID, at: point)
+        grandCanalPhaseLaborCoordinatorState = coordinator
+        return outcome
+    }
+
+    @discardableResult
+    mutating func recordGrandCanalLaborerWorkUpdate(
+        figureID: Int,
+        xiWangMuActive: Bool
+    ) -> OriginalGrandCanalLayoutCatalog.PhaseLaborWorkAdvance? {
+        guard var parts = grandCanalMapPartStatesState else { return nil }
+        var coordinator = grandCanalPhaseLaborCoordinatorState ?? .init()
+        let outcome = coordinator.recordOnSiteWorkUpdate(
+            figureID: figureID,
+            parts: &parts,
+            xiWangMuActive: xiWangMuActive
+        )
+        grandCanalMapPartStatesState = parts
+        grandCanalPhaseLaborCoordinatorState = coordinator
+        return outcome
     }
 
     @discardableResult
     mutating func addConstruction(
         buildingID: Int,
         kind: AestheticConstructionKind,
-        location: GridPoint
+        location: GridPoint,
+        origin: GridPoint? = nil,
+        orientation: IsometricBuildingOrientation = .northSouth
     ) -> Int {
         let id = nextConstructionID
         nextConstructionID += 1
@@ -229,8 +527,114 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
                 completedWork: 0,
                 isComplete: false
             ))
+            if buildingID == LargePalaceProjectRuntime.buildingID {
+                largePalaceProject = LargePalaceProjectRuntime(
+                    projectID: id,
+                    origin: origin ?? location,
+                    orientation: orientation
+                )
+            }
+            if let runtime = PhasedMonumentProjectRuntime(
+                projectID: id,
+                buildingID: buildingID,
+                origin: origin ?? location,
+                orientation: orientation
+            ) {
+                var projects = phasedMonumentProjects
+                projects.append(runtime)
+                phasedMonumentProjectsState = projects
+            }
         }
         return id
+    }
+
+    @discardableResult
+    mutating func addMapMonument(buildingID: Int) -> Int? {
+        guard monuments.contains(where: { $0.buildingID == buildingID }) == false,
+              let configuration = OriginalMonumentConfiguration.configuration(
+                buildingID: buildingID
+              ) else { return nil }
+        let id = nextConstructionID
+        nextConstructionID += 1
+        monuments.append(MonumentProject(
+            id: id,
+            buildingID: buildingID,
+            requiredWork: configuration.requiredWork,
+            requiredCommodityUnits: configuration.requiredCommodityUnits,
+            requiredSupportKinds: configuration.requiredSupportKinds,
+            deliveredCommodityUnits: [:],
+            completedWork: 0,
+            isComplete: false
+        ))
+        if buildingID == GrandCanalProjectRuntime.buildingID {
+            grandCanalProject = GrandCanalProjectRuntime(projectID: id)
+        }
+        if buildingID == EarthenGreatWallProjectRuntime.buildingID {
+            earthenGreatWallProject = EarthenGreatWallProjectRuntime(projectID: id)
+        }
+        return id
+    }
+
+    @discardableResult
+    mutating func advanceGrandCanalSegment(at point: GridPoint) -> Int? {
+        guard var canal = grandCanalProject,
+              let segmentIndex = canal.segmentIndex(containing: point),
+              let monumentIndex = monuments.firstIndex(where: { $0.id == canal.projectID }),
+              canal.advanceSegment(index: segmentIndex, project: monuments[monumentIndex]) else {
+            return nil
+        }
+        grandCanalProject = canal
+        if canal.isComplete {
+            monuments[monumentIndex].markSegmentedConstructionComplete()
+        }
+        return segmentIndex
+    }
+
+    @discardableResult
+    mutating func advanceEarthenGreatWallSegment(index: Int) -> Int? {
+        guard var wall = earthenGreatWallProject,
+              let monumentIndex = monuments.firstIndex(where: { $0.id == wall.projectID }),
+              wall.advanceSegment(index: index, project: monuments[monumentIndex]) else {
+            return nil
+        }
+        earthenGreatWallProject = wall
+        if wall.isComplete {
+            monuments[monumentIndex].markSegmentedConstructionComplete()
+        }
+        return index
+    }
+
+    @discardableResult
+    mutating func advanceLargePalacePhase(at point: GridPoint) -> Int? {
+        guard var palace = largePalaceProject,
+              palace.contains(point),
+              let monumentIndex = monuments.firstIndex(where: { $0.id == palace.projectID }),
+              palace.advance(project: monuments[monumentIndex]) else { return nil }
+        largePalaceProject = palace
+        if palace.isComplete {
+            monuments[monumentIndex].markSegmentedConstructionComplete()
+        }
+        return palace.completedPhaseCount
+    }
+
+    @discardableResult
+    mutating func advancePhasedMonument(at point: GridPoint) -> Int? {
+        var projects = phasedMonumentProjects
+        guard let projectIndex = projects.firstIndex(where: {
+            !$0.isComplete && $0.contains(point)
+        }),
+        let monumentIndex = monuments.firstIndex(where: {
+            $0.id == projects[projectIndex].projectID
+        }),
+        projects[projectIndex].advance(project: monuments[monumentIndex]) else {
+            return nil
+        }
+        let completedPhase = projects[projectIndex].completedPhaseCount
+        if projects[projectIndex].isComplete {
+            monuments[monumentIndex].markSegmentedConstructionComplete()
+        }
+        phasedMonumentProjectsState = projects
+        return completedPhase
     }
 
     @discardableResult
@@ -238,6 +642,18 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
         guard let index = constructions.firstIndex(where: { $0.id == id }) else { return false }
         constructions.remove(at: index)
         monuments.removeAll { $0.id == id }
+        if grandCanalProject?.projectID == id {
+            grandCanalProject = nil
+        }
+        if earthenGreatWallProject?.projectID == id {
+            earthenGreatWallProject = nil
+        }
+        if largePalaceProject?.projectID == id {
+            largePalaceProject = nil
+        }
+        phasedMonumentProjectsState = phasedMonumentProjects.filter {
+            $0.projectID != id
+        }
         return true
     }
 
@@ -250,10 +666,31 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
         var work: [Int: Int] = [:]
         var completed: [Int] = []
         for index in monuments.indices where !monuments[index].isComplete {
-            for (commodityID, required) in monuments[index].requiredCommodityUnits.sorted(by: { $0.key < $1.key }) {
+            let palaceRequirements: MonumentPhaseRequirements?
+            if monuments[index].buildingID == LargePalaceProjectRuntime.buildingID,
+               let palace = largePalaceProject,
+               palace.projectID == monuments[index].id {
+                palaceRequirements = palace.nextPhaseRequirements(
+                    project: monuments[index]
+                )
+            } else {
+                palaceRequirements = nil
+            }
+            let phasedRequirements = phasedMonumentProjects.first(where: {
+                $0.projectID == monuments[index].id
+            })?.nextPhaseRequirements(project: monuments[index])
+            let phaseRequirements = palaceRequirements ?? phasedRequirements
+            let requiredCommodityUnits = phaseRequirements?.commodityUnits
+                ?? monuments[index].requiredCommodityUnits
+            let requiredWork = phaseRequirements?.work
+                ?? monuments[index].requiredWork
+            for (commodityID, required) in requiredCommodityUnits.sorted(by: { $0.key < $1.key }) {
                 let remaining = max(
                     0,
-                    required - monuments[index].deliveredCommodityUnits[commodityID, default: 0]
+                    required
+                        - monuments[index].deliveredUnits(
+                            satisfyingRequirementFor: commodityID
+                        )
                 )
                 let load = min(DeterministicLogisticsState.originalDeliveryLoad, remaining)
                 if load > 0, logistics.takeCampaignRequestGoods(
@@ -265,20 +702,30 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
                     deliveries[monuments[index].id, default: [:]][commodityID, default: 0] += load
                 }
             }
-            let hasMaterials = monuments[index].requiredCommodityUnits.allSatisfy {
-                monuments[index].deliveredCommodityUnits[$0.key, default: 0] >= $0.value
-            }
+            let hasMaterials = monuments[index].hasDelivered(requiredCommodityUnits)
             let crewCount = monuments[index].requiredSupportKinds
                 .map { supportCounts[$0, default: 0] }
                 .min() ?? 0
             if hasMaterials, crewCount > 0 {
                 let performed = min(
-                    monuments[index].requiredWork - monuments[index].completedWork,
+                    max(0, requiredWork - monuments[index].completedWork),
                     crewCount * 100
                 )
-                monuments[index].performWork(performed)
-                work[monuments[index].id] = performed
-                if monuments[index].isComplete { completed.append(monuments[index].id) }
+                if performed > 0 {
+                    monuments[index].performWork(
+                        performed,
+                        allowCompletion: monuments[index].buildingID
+                            != GrandCanalProjectRuntime.buildingID
+                            && monuments[index].buildingID
+                            != EarthenGreatWallProjectRuntime.buildingID
+                            && monuments[index].buildingID
+                            != LargePalaceProjectRuntime.buildingID
+                            && PhasedMonumentProjectRuntime
+                                .phaseCountsByBuildingID[monuments[index].buildingID] == nil
+                    )
+                    work[monuments[index].id] = performed
+                    if monuments[index].isComplete { completed.append(monuments[index].id) }
+                }
             }
         }
         let settlement = MonumentMonthlySettlement(
@@ -293,7 +740,9 @@ public struct DeterministicAestheticState: Sendable, Hashable, Codable {
 
 public extension DeterministicCityState {
     func fengShuiSummary(models: BuildingModelTable) -> FengShuiCitySummary {
-        let evaluations = placedBuildings.map { placement in
+        let evaluations = placedBuildings.filter {
+            $0.category != .agriculturalPlot
+        }.map { placement in
             let model = models[buildingID: placement.buildingID]
             let element = model.flatMap { FengShuiElement(rawValue: $0.fengShuiValue) }
             let quality: FengShuiPlacementQuality

@@ -1223,8 +1223,13 @@ do {
         let grandCanalImageCount = try SG3Archive(
             contentsOf: game.dataDirectory.appendingPathComponent("China_Mon_Grand_Canal.sg3")
         ).images.count
+        let earthenGreatWallImageCount = try SG3Archive(
+            contentsOf: game.dataDirectory.appendingPathComponent(
+                "China_Mon_Earthen_Greatwall_1.sg3"
+            )
+        ).images.count
         let cells = (0..<map.height).flatMap { y in
-            (0..<map.width).compactMap { x -> (UInt32, Int?, Int?, Int?, Int?, Int?)? in
+            (0..<map.width).compactMap { x -> (UInt32, Int?, Int?, Int?, Int?, Int?, Int?)? in
                 guard let imageID = map.imageID(x: x, y: y) else { return nil }
                 return (
                     imageID,
@@ -1236,7 +1241,12 @@ do {
                     ),
                     map.chinaElevationDirtSpriteID(x: x, y: y, imageCount: dirtElevationImageCount),
                     map.chinaGreatWall1SpriteID(x: x, y: y, imageCount: greatWallImageCount),
-                    map.chinaGrandCanalSpriteID(x: x, y: y, imageCount: grandCanalImageCount)
+                    map.chinaGrandCanalSpriteID(x: x, y: y, imageCount: grandCanalImageCount),
+                    map.chinaEarthenGreatWall1SpriteID(
+                        x: x,
+                        y: y,
+                        imageCount: earthenGreatWallImageCount
+                    )
                 )
             }
         }
@@ -1247,9 +1257,10 @@ do {
         let dirtElevation = cells.compactMap(\.3)
         let greatWall = cells.compactMap(\.4)
         let grandCanal = cells.compactMap(\.5)
+        let earthenGreatWall = cells.compactMap(\.6)
         let unresolved = cells.compactMap { cell in
             cell.0 != 0 && cell.1 == nil && cell.2 == nil && cell.3 == nil
-                && cell.4 == nil && cell.5 == nil ? cell.0 : nil
+                && cell.4 == nil && cell.5 == nil && cell.6 == nil ? cell.0 : nil
         }
         let parityCounts = (0..<map.height).reduce(into: [0, 0]) { result, y in
             for x in 0..<map.width where map.imageID(x: x, y: y) != 0 {
@@ -1261,7 +1272,7 @@ do {
         print("  global range=\(nonzero.min() ?? 0)...\(nonzero.max() ?? 0)")
         print("  China_Terrain local range=\(terrain.min() ?? 0)...\(terrain.max() ?? 0), mapped=\(terrain.count)")
         print("  China_Elevation local range=\(elevation.min() ?? 0)...\(elevation.max() ?? 0), mapped=\(elevation.count)")
-        print("  China_Elevation_dirt mapped=\(dirtElevation.count), China_Mon_GreatWall_1 mapped=\(greatWall.count), China_Mon_Grand_Canal mapped=\(grandCanal.count)")
+        print("  China_Elevation_dirt mapped=\(dirtElevation.count), China_Mon_GreatWall_1 mapped=\(greatWall.count), China_Mon_Grand_Canal mapped=\(grandCanal.count), China_Mon_Earthen_Greatwall_1 mapped=\(earthenGreatWall.count)")
         print("  unresolved nonzero=\(unresolved.count), unique=\(Set(unresolved).count), range=\(unresolved.min() ?? 0)...\(unresolved.max() ?? 0)")
         print("  unresolved common: \(Dictionary(grouping: unresolved, by: { $0 }).mapValues(\.count).sorted { $0.value > $1.value }.prefix(12).map { "\($0.key):\($0.value)" }.joined(separator: ", "))")
         print("  most common: \(Dictionary(grouping: nonzero, by: { $0 }).mapValues(\.count).sorted { $0.value > $1.value }.prefix(12).map { "\($0.key):\($0.value)" }.joined(separator: ", "))")
@@ -1427,6 +1438,102 @@ do {
             print(String(format: "%08x", rowOffset) + "  " + hex.padding(toLength: 47, withPad: " ", startingAt: 0) + "  " + ascii)
         }
 
+    case "map-find-hex":
+        guard arguments.count >= 3 else {
+            throw GameDataError.unsupported("usage: emperor-inspect map-find-hex <file> <hex-bytes>")
+        }
+        let compactHex = arguments[2]
+            .replacingOccurrences(of: " ", with: "")
+            .replacingOccurrences(of: "_", with: "")
+        guard compactHex.count >= 2, compactHex.count.isMultiple(of: 2),
+              compactHex.allSatisfy(\.isHexDigit) else {
+            throw GameDataError.unsupported("hex pattern must contain complete byte pairs")
+        }
+        let pattern = Data(stride(from: 0, to: compactHex.count, by: 2).compactMap { offset in
+            let start = compactHex.index(compactHex.startIndex, offsetBy: offset)
+            let end = compactHex.index(start, offsetBy: 2)
+            return UInt8(compactHex[start..<end], radix: 16)
+        })
+        let decoded = try SierraChunkedFile(
+            contentsOf: URL(fileURLWithPath: arguments[1])
+        ).decodedData
+        var offsets: [Int] = []
+        var searchStart = decoded.startIndex
+        while searchStart < decoded.endIndex,
+              let match = decoded.range(of: pattern, in: searchStart..<decoded.endIndex) {
+            offsets.append(match.lowerBound)
+            searchStart = match.lowerBound + 1
+        }
+        print("pattern=\(compactHex.lowercased()) matches=\(offsets.count)")
+        for offset in offsets.prefix(256) {
+            print(String(format: "  %8d 0x%08x", offset, offset))
+        }
+        if offsets.count > 256 {
+            print("  ... \(offsets.count - 256) more")
+        }
+
+    case "map-monument-record-probe":
+        guard arguments.count >= 2 else {
+            throw GameDataError.unsupported("usage: emperor-inspect map-monument-record-probe <file>")
+        }
+        let decoded = try SierraChunkedFile(
+            contentsOf: URL(fileURLWithPath: arguments[1])
+        ).decodedData
+        let className = Data("cMonumentBldg".utf8)
+        guard let classRange = decoded.range(of: className) else {
+            throw GameDataError.unsupported("map does not contain cMonumentBldg records")
+        }
+        let firstBuildingIDOffset = classRange.upperBound + 16
+        func uint16(at offset: Int) -> UInt16 {
+            UInt16(decoded[offset]) | UInt16(decoded[offset + 1]) << 8
+        }
+        func uint32(at offset: Int) -> UInt32 {
+            UInt32(decoded[offset])
+                | UInt32(decoded[offset + 1]) << 8
+                | UInt32(decoded[offset + 2]) << 16
+                | UInt32(decoded[offset + 3]) << 24
+        }
+        let firstBaseSchema = Int(uint16(at: firstBuildingIDOffset - 16))
+        let firstMonumentSchema = Int(uint16(at: firstBuildingIDOffset + 165))
+        let firstStateSchema = Int(uint16(at: firstBuildingIDOffset + 167))
+        let firstBuildingID = Int(uint16(at: firstBuildingIDOffset))
+        func isMatchingRecord(at offset: Int, subIndex: Int) -> Bool {
+            guard offset >= 16, offset + 223 < decoded.count else { return false }
+            return Int(uint16(at: offset)) == firstBuildingID
+                && Int(uint16(at: offset + 2)) == subIndex
+                && Int(uint16(at: offset - 16)) == firstBaseSchema
+                && Int(uint16(at: offset + 165)) == firstMonumentSchema
+                && Int(uint16(at: offset + 167)) == firstStateSchema
+        }
+        let nextSearchRange = (firstBuildingIDOffset + 280)...min(
+            firstBuildingIDOffset + 400,
+            decoded.count - 224
+        )
+        guard let secondBuildingIDOffset = nextSearchRange.first(where: {
+            isMatchingRecord(at: $0, subIndex: 1)
+        }) else {
+            throw GameDataError.unsupported(
+                "could not locate the second cMonumentBldg record"
+            )
+        }
+        let recordStride = secondBuildingIDOffset - firstBuildingIDOffset
+        print("className=0x\(String(classRange.lowerBound, radix: 16)) firstBuildingID=0x\(String(firstBuildingIDOffset, radix: 16)) firstBaseSchema=\(firstBaseSchema) firstMonumentSchema=\(firstMonumentSchema) firstStateSchema=\(firstStateSchema)")
+        print("recordStride=\(recordStride)")
+        print("record,offset,x,y,mapCellIndex,buildingID,subIndex,baseSchema,monumentSchema,stateSchema,currentSubPhase,wholePhase,deliveredAtPlus219")
+        var index = 0
+        var offset = firstBuildingIDOffset
+        while index < 256, offset + 223 < decoded.count,
+              isMatchingRecord(at: offset, subIndex: index) {
+            let baseSchema = Int(uint16(at: offset - 16))
+            let monumentSchema = Int(uint16(at: offset + 165))
+            let stateSchema = Int(uint16(at: offset + 167))
+            let buildingID = Int(uint16(at: offset))
+            let subIndex = Int(uint16(at: offset + 2))
+            print("\(index),0x\(String(offset, radix: 16)),\(uint16(at: offset - 8)),\(uint16(at: offset - 6)),\(uint32(at: offset - 4)),\(buildingID),\(subIndex),\(baseSchema),\(monumentSchema),\(stateSchema),\(uint32(at: offset + 173)),\(uint32(at: offset + 177)),\(uint32(at: offset + 219))")
+            index += 1
+            offset += recordStride
+        }
+
     case "map-cell":
         guard arguments.count >= 4,
               let x = Int(arguments[2]),
@@ -1446,6 +1553,84 @@ do {
             map.edgeValue(x: x, y: y) ?? 0,
             (0..<map.legacyByteGrids.count).map { String(map.legacyByteValue(grid: $0, x: x, y: y) ?? 0) }.joined(separator: ",")
         ))
+
+    case "map-flag-cells":
+        guard arguments.count >= 3 else {
+            throw GameDataError.unsupported(
+                "usage: emperor-inspect map-flag-cells <map> <raw-flags-hex>"
+            )
+        }
+        let rawText = arguments[2].lowercased().hasPrefix("0x")
+            ? String(arguments[2].dropFirst(2)) : arguments[2]
+        guard let requestedFlags = UInt32(rawText, radix: 16) else {
+            throw GameDataError.unsupported("raw flags must be hexadecimal")
+        }
+        let map = try EmperorMap(url: URL(fileURLWithPath: arguments[1]))
+        let cells = (0..<map.height).flatMap { y in
+            (0..<map.width).compactMap { x in
+                map.terrainFlags(x: x, y: y) == requestedFlags
+                    ? GridPoint(x: x, y: y) : nil
+            }
+        }
+        print(
+            "\(map.url.lastPathComponent): flags=0x\(String(requestedFlags, radix: 16)) "
+                + "cells=\(cells.count)"
+        )
+        print(cells.map { "(\($0.x),\($0.y))" }.joined(separator: ","))
+
+    case "map-image-layer-stats":
+        guard arguments.count >= 3,
+              let imageID = UInt32(arguments[2]) else {
+            throw GameDataError.unsupported("usage: emperor-inspect map-image-layer-stats <file> <global-image-id>")
+        }
+        let url = URL(fileURLWithPath: arguments[1])
+        let decoded = try SierraChunkedFile(contentsOf: url).decodedData
+        let map = try EmperorMap(url: url)
+        let x0 = map.startOffset % EmperorMap.gridSide
+        let y0 = map.startOffset / EmperorMap.gridSide
+        let targetOffsets = (0..<map.height).flatMap { y in
+            (0..<map.width).compactMap { x -> Int? in
+                map.imageID(x: x, y: y) == imageID
+                    ? map.startOffset + y * EmperorMap.gridSide + x
+                    : nil
+            }
+        }
+        guard !targetOffsets.isEmpty else {
+            throw GameDataError.unsupported("global image ID does not occur in the active map")
+        }
+        let targetSet = Set(targetOffsets)
+        print("\(url.lastPathComponent): image=\(imageID) targetCells=\(targetOffsets.count)")
+        for unit in 9..<64 {
+            let base = EmperorMap.headerByteCount + unit * EmperorMap.gridCellCount
+            guard base + EmperorMap.gridCellCount <= decoded.count else { break }
+            var targetCounts: [UInt8: Int] = [:]
+            var otherCounts: [UInt8: Int] = [:]
+            for y in y0..<(y0 + map.height) {
+                for x in x0..<(x0 + map.width) {
+                    let offset = y * EmperorMap.gridSide + x
+                    let value = decoded[base + offset]
+                    if targetSet.contains(offset) {
+                        targetCounts[value, default: 0] += 1
+                    } else {
+                        otherCounts[value, default: 0] += 1
+                    }
+                }
+            }
+            let targetTop = targetCounts.sorted { lhs, rhs in
+                lhs.value == rhs.value ? lhs.key < rhs.key : lhs.value > rhs.value
+            }.prefix(8).map { "\($0.key):\($0.value)" }.joined(separator: ",")
+            let otherTop = otherCounts.sorted { lhs, rhs in
+                lhs.value == rhs.value ? lhs.key < rhs.key : lhs.value > rhs.value
+            }.prefix(4).map { "\($0.key):\($0.value)" }.joined(separator: ",")
+            print(String(
+                format: "  unit=%02d target{%3d} [%@] other{%3d} [%@]",
+                unit,
+                targetCounts.count,
+                targetTop,
+                otherCounts.count,
+                otherTop
+            ))
+        }
 
     case "map-point-candidates":
         guard arguments.count >= 2 else {
@@ -1946,7 +2131,8 @@ do {
         let pixelsURL = archiveURL.deletingPathExtension().appendingPathExtension("555")
         let decoded = try SpriteDecoder.decode(
             image: archive.images[imageID],
-            pixelData: Data(contentsOf: pixelsURL, options: [.mappedIfSafe])
+            pixelData: Data(contentsOf: pixelsURL, options: [.mappedIfSafe]),
+            images: archive.images
         )
         guard let image = decoded.makeCGImage(),
               let destination = CGImageDestinationCreateWithURL(

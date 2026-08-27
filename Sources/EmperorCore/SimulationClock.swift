@@ -41,17 +41,44 @@ public struct SimulationClockAdvance: Sendable, Hashable, Codable {
 /// Optional storage on the city keeps saves written before the day clock valid.
 public struct MonthlyServiceCoverageAccumulator: Sendable, Equatable, Codable {
     public private(set) var servicedHouseIDsByService: [WalkerServiceKind: Set<Int>]
+    public private(set) var visitedRoadPointsByService: [WalkerServiceKind: Set<GridPoint>]
 
-    public init(servicedHouseIDsByService: [WalkerServiceKind: Set<Int>] = [:]) {
+    public init(
+        servicedHouseIDsByService: [WalkerServiceKind: Set<Int>] = [:],
+        visitedRoadPointsByService: [WalkerServiceKind: Set<GridPoint>] = [:]
+    ) {
         self.servicedHouseIDsByService = servicedHouseIDsByService
+        self.visitedRoadPointsByService = visitedRoadPointsByService
     }
 
-    public var isEmpty: Bool { servicedHouseIDsByService.values.allSatisfy(\.isEmpty) }
+    public var isEmpty: Bool {
+        servicedHouseIDsByService.values.allSatisfy(\.isEmpty)
+            && visitedRoadPointsByService.values.allSatisfy(\.isEmpty)
+    }
 
     public mutating func merge(_ movement: WalkerMovementSummary) {
         for (service, houseIDs) in movement.servicedHouseIDsByService {
             servicedHouseIDsByService[service, default: []].formUnion(houseIDs)
         }
+        for (service, points) in movement.visitedRoadPointsByService {
+            visitedRoadPointsByService[service, default: []].formUnion(points)
+        }
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case servicedHouseIDsByService, visitedRoadPointsByService
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        servicedHouseIDsByService = try container.decodeIfPresent(
+            [WalkerServiceKind: Set<Int>].self,
+            forKey: .servicedHouseIDsByService
+        ) ?? [:]
+        visitedRoadPointsByService = try container.decodeIfPresent(
+            [WalkerServiceKind: Set<GridPoint>].self,
+            forKey: .visitedRoadPointsByService
+        ) ?? [:]
     }
 }
 

@@ -41,8 +41,12 @@ public struct RoadNetwork: Sendable, Equatable, Codable {
         points.remove(point) != nil
     }
 
-    public func reachableDistances(from start: GridPoint, maximumSteps: Int) -> [GridPoint: Int] {
-        guard maximumSteps >= 0, points.contains(start) else { return [:] }
+    public func reachableDistances(
+        from start: GridPoint,
+        maximumSteps: Int,
+        avoidingPoints: Set<GridPoint> = []
+    ) -> [GridPoint: Int] {
+        guard maximumSteps >= 0, points.contains(start), !avoidingPoints.contains(start) else { return [:] }
         var distances = [start: 0]
         var queue = [start]
         var head = 0
@@ -55,7 +59,9 @@ public struct RoadNetwork: Sendable, Equatable, Codable {
             guard distance < maximumSteps else { continue }
             for direction in directions {
                 let next = GridPoint(x: current.x + direction.0, y: current.y + direction.1)
-                guard points.contains(next), distances[next] == nil else { continue }
+                guard points.contains(next),
+                      !avoidingPoints.contains(next),
+                      distances[next] == nil else { continue }
                 distances[next] = distance + 1
                 queue.append(next)
             }
@@ -69,11 +75,13 @@ public enum RoadServiceCoverage {
         houses: [ResidentialUnit],
         roadNetwork: RoadNetwork,
         serviceRoadStart: GridPoint,
-        maximumRoadSteps: Int
+        maximumRoadSteps: Int,
+        barrierPoints: Set<GridPoint> = []
     ) -> Set<Int> {
         let reachable = roadNetwork.reachableDistances(
             from: serviceRoadStart,
-            maximumSteps: maximumRoadSteps
+            maximumSteps: maximumRoadSteps,
+            avoidingPoints: barrierPoints
         )
         guard !reachable.isEmpty else { return [] }
         return Set(houses.compactMap { house in

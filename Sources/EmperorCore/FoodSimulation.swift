@@ -92,7 +92,10 @@ public struct FoodMill: Identifiable, Sendable, Hashable, Codable {
     public var foodQuality: FoodQuality { OriginalFoodCatalog.quality(in: inventoryByCommodityID) }
 
     public func policy(for commodityID: Int) -> WarehouseCommodityPolicy {
-        policyByCommodityID[commodityID] ?? .get
+        // The original mill opens with every food order set to Accept.  Get
+        // is an explicit player order that pulls a commodity from a nearby
+        // warehouse; it is not the default state.
+        policyByCommodityID[commodityID] ?? .accept
     }
 
     public func storageLimit(for commodityID: Int) -> Int {
@@ -101,7 +104,8 @@ public struct FoodMill: Identifiable, Sendable, Hashable, Codable {
 
     public func availableCapacity(for commodityID: Int) -> Int {
         guard OriginalFoodCatalog.isMillCommodity(commodityID),
-              policy(for: commodityID) != .doNotAccept else { return 0 }
+              policy(for: commodityID) != .doNotAccept,
+              policy(for: commodityID) != .empty else { return 0 }
         let commoditySpace = max(
             0,
             storageLimit(for: commodityID) - inventoryByCommodityID[commodityID, default: 0]

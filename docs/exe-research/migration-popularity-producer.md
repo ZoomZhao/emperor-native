@@ -1,0 +1,2493 @@
+# Migration and popularity producer (`FUN_00591200` / `FUN_004AD4A0`)
+
+Read-only control-flow recovery for automatic immigration. Binaries:
+`Emperor[EN].exe` (`8a6d2df1…6753`, canonical) and `Emperor[CH].exe`
+(`dbdeca1e…15a`). Named functions are CH/EN identical in
+`local/source/compare-report.tsv`.
+
+This note records recovered constants and the remaining blockers. It does
+**not** authorize a Native occupancy or automatic-migration producer.
+Production stays
+`AutomaticMigrationAvailability.unsupportedOriginalProducer`. The
+figure-`#11` / type-`0xB` arrival `house+0x20` write is recovered below
+(`FUN_004C9FD0` @ `0x4CA265`). War and several
+house-field semantics remain unresolved. The `FUN_00590F30` food
+walk is recovered in §3. The recovered normal market-delivery
+writer/path of `cHouseInfo+0x36` is `cMarket` vtable `+0x2c` @
+`0x5437B0` (§3); mill visit `+0x2c` is a `ret 0` stub. The
+complete `+0x36` writer set is not proven. Current Native
+`ResidentialUnit` food consumption, blending, and cadence are
+confirmed non-isomorphic to the recovered original, so those
+fields must not be substituted. The live `cStall+0x260` blend into
+`cMarket+0x180` is recovered. Mill-pickup cart `figure+0x13` is
+the mill vtable `+0x2E4` selected recipe type-count (§3); that is
+not a recovered player-facing quality name and is not Native
+`OriginalFoodCatalog.quality(in:)`. Peddler-vs-buyer spawn and
+think rows are exclusive; `FUN_004EACD0` / `cMarket+0x2C` is
+**not** exclusive to peddlers (§3). Native representation/mapping
+remain open, and food stays a fail-closed
+producer input. No implementation contract is authorized. The
+`FUN_0055AE30`
+monument walk is recovered in §3; Native mapping and save
+lifecycle are not, so monument stays a fail-closed producer
+input. `DAT_01311FD0` is **not**
+read by `FUN_005917E0` / `FUN_004AD4A0` or the recovered
+assignment/arrival chain (§6); any value of that dword is therefore
+not a numeric input to the recovered pressure / request / spawn /
+occupancy math. Init-zero and save/load are closed. The gameplay
+writer, full value domain, and source of any nonzero state remain
+`unknown`, so Native nonzero advisor/overlay modes (1 / 2 / other)
+stay unwired. The producer stays fail-closed. Never treat
+assigned/accounted `DAT_01311FCC` as an arrival success.
+
+## 1. Calendar cadence (confirmed)
+
+`FUN_004AC2B0` (`0x4AC2B0`) walks `DAT_00C82EF8` through `0…50`. Case
+`0x17` calls `FUN_004AD4A0`. After 51 steps the counter resets and
+`FUN_004AC650` advances one of 16 sub-month slices. Month length is
+`51 × 16 = 816` simulation steps, matching the already recovered canal
+clock adapter.
+
+A “2 calendar cycle” cooldown is two **day-ticks** (two case-`0x17`
+calls), not two months.
+
+## 2. Popularity (`DAT_0130F974`)
+
+| fact | value | class |
+| --- | --- | --- |
+| init | `FUN_00590A70` writes `0x3C` (60) | confirmed |
+| clamp | `0…100` after each update | confirmed |
+| update | `FUN_00591200` at slice `0` and `8` | confirmed |
+| per-update sum | `feng + repression + 1 + monument×2 + debt + food + wage + employment + tax` | confirmed |
+| `+1` | literal in `0x591200`, not a hero predicate | confirmed |
+| monument | `FUN_0055AE30` returns the matching building-goal pair count (each passing `(building, type-2 goal)` pair increments; the same goal may be counted once per matching root; **not** a distinct-goal count); `FUN_00591200` adds that count × 2. Empty list / no match returns `0` (§3) | confirmed |
+| festival | excluded from the per-update sum; applied only by `0x48EA40` / `0x48EAF0` | confirmed |
+
+Damping (`FUN_00591200` @ `0x591200`, `confirmed`). Per-update sum `n`
+is then biased. Bias `ret6`:
+
+| popularity | bias |
+| --- | --- |
+| `<11` (`0xB`) | +4 |
+| `<21` (`0x15`) | +3 |
+| `<31` (`0x1F`) | +2 |
+| `<41` (`0x29`) | +1 |
+| `<61` (`0x3D`) | 0 |
+| `<71` (`0x47`) | −1 |
+| `<81` (`0x51`) | −2 |
+| `<91` (`0x5B`) | −3 |
+| else | −4 |
+
+Exact apply branches (the `flag-1 & (bias+n)` form zeros when `flag` is
+true and otherwise keeps `bias+n`; it does **not** fall back to raw `n`
+in the damped arm):
+
+- If popularity `<41`: if `n >= 0`, apply raw `n`. If `n < 0`, apply
+  `bias+n` unless that sum is `>0` (crosses positive), in which case
+  apply `0`.
+- Else (popularity `>=41`): if popularity `<61` **or** `n < 0`, apply
+  raw `n`. Otherwise (popularity `>=61` and `n >= 0`), apply `bias+n`
+  unless that sum is `<0` (crosses negative), in which case apply `0`.
+
+Then `popularity = clamp(popularity + n, 0, 100)`.
+
+## 3. Factor formulas
+
+### Tax (`FUN_00591180`) — confirmed
+
+`EmperorTaxSentimentModel.txt` via `EconomyRulesEngine.taxSentiment`.
+Coverage `≤10%` forces the None row. Negative effects are suppressed
+while population `<350` and the city has never exceeded 349
+(`DAT_01312575`).
+
+### Wage (`FUN_005911D0`) — confirmed table
+
+Hash-matched `Emperor[EN].exe`
+(`8a6d2df1015cb75d797546d117da5f82b86fd08726090c2a13d853b9009d6753`;
+image base `0x400000`, `file_offset ≈ RVA` in initialized `.data`):
+
+- Effects at VA `0x85CC5C` (file offset `0x45CC5C`): six little-endian
+  `int32` values `[-10, -5, -2, 0, 2, 4]`.
+- Thresholds at VA `0x85CC74` (file offset `0x45CC74`): six little-endian
+  `int32` values `[0, 20, 26, 30, 34, 40]`.
+
+Object init at `0x592BB0`:
+`push DAT_01312214; push 0x11d; push 6; push 0x85CC74;`
+`mov ecx, DAT_0130F820; call FUN_00554730`. Matcher fields used by
+`FUN_00592BE0` are `[0]` = threshold pointer `0x85CC74`, `[1]` = count
+`6`, `[3]` = pointer to current wage `DAT_01312214`. The `0x11d`
+argument is not read by the nearest-match walk. `FUN_00592BD0`
+(`0x592BD0`) does `mov ecx, DAT_0130F820; jmp FUN_00592BE0`. `FUN_00592BE0` (`0x592BE0`)
+walks `abs(currentWage - threshold[i])` and keeps the nearest index;
+ties keep the **first** index because the update is
+`if ((n4 < 0) || (n < n3))` (strict `<`, not `<=`). `FUN_005911D0`
+indexes `*(int *)(&DAT_0085cc5c + result * 4)`. Negative effects are
+zeroed while population `<350` and `DAT_01312575 == 0`. City init and
+`CampaignMissionRuntime` baseline wage are `30` (effect `0`).
+
+### Employment (`FUN_00591130`) — confirmed
+
+`unemployed × 100 / workforce` (`FUN_00408BA0`). Bands from
+`DAT_01312208`:
+
+- unemployment `<5` → **immediate** `return (DAT_01312208 < 5)` (`+1`);
+  the population-`<350` / latch-clear zeroing is not reached.
+- `5…10` → **immediate** `return (DAT_01312208 < 5)` (`0`); same early
+  return, so low-population suppression is not reached.
+- `11…17` → `n = -1`, then maybe zeroed.
+- `18…25` → `n = -2`, then maybe zeroed.
+- `≥26` → `n = -3`, then maybe zeroed.
+
+Low-population suppression (`DAT_0130F988 < 0x15E` (350) and
+`DAT_01312575 == 0` → `n = 0`) applies **only** to those negative bands
+after the early return. Do not say `+1` is zeroed.
+
+### Debt (`FUN_00590F00`) — confirmed
+
+`DAT_01312630` consecutive debt **years** plus treasury `<0 → −2`.
+Years accumulate from twelve consecutive negative months
+(`FUN_004AC5B0`) and clear when treasury is non-negative.
+
+### Feng shui (`FUN_00591670`) — confirmed bands
+
+Population `<351` stores harmony `70` and returns `0`. Otherwise
+harmony% bands: `100 → +2`, `≥90 → +1`, `≥80 → 0`, `≥70 → −1`,
+`≥60 → −2`, `≥50 → −3`, `≥40 → −4`, else `−5`.
+
+### Repression (`FUN_005915C0`) — confirmed
+
+Count of building type `0x7F` (Watchtower `#127`). If
+`population > 350` and `population ≤ count×500`, return
+`−min(4, (count×500)/population)`.
+
+### Food (`FUN_00590F30`) — walk recovered; Native fields not isomorphic
+
+Canonical EN `.text` (`8a6d2df1…6753`). `FUN_00590F30` @ `0x590F30`
+returns the popularity food term. Empty building list
+(`FUN_00554C00` `this=0x8C7634`, `cmp eax, 1; jbe 0x59111F`) or an
+occupied-house set that never enters the average returns **0**
+(`confirmed`). Production stays `unsupportedOriginalProducer`. Do
+not drive that term from Native `lastSuppliedFoodQuality` or from
+`foodQualityRawValue` / `foodSupplyAmount`. No implementation
+contract.
+
+#### Authored house columns (`FUN_0044CC80`)
+
+`FUN_0044CC80` @ `0x44CC80` is
+`DAT_00A63BFC[column + row*0x18]` (`0x18` = 24 ints). Row is
+`sx(house+0x16)` (the same house-level index as capacity column
+`0x11`). `FUN_005D16D0` @ `0x5D16D0` fills `DAT_00A63BFC` from
+static `DAT_00870E04` plus `HOUSE MODS`, clamping each sum through
+`FUN_00445480(..., -99, 100)`. On-disk `DAT_00870E04` house 0
+matches `GameData/Model/EmperorBuildingModels.txt` `ALL HOUSES`
+“1: Shelter” (`confirmed`).
+
+The file’s own column comments (lines 30–53), not column position
+alone:
+
+| index | name in the model file | `FUN_00590F30` use |
+| ---: | --- | --- |
+| 8 | `EVO_FOOD_QUALITY` — “Food quality needed to evolve” | popularity average threshold |
+| 14 (`0xE`) | `EVO_CRIME_INC` — “Crime Risk Increment” | addend into `house+0x8C` |
+| 15 (`0xF`) | `EVO_CRIME_BASE` — “Crime Risk Base” | lower bound for `house+0x8C` |
+
+`ALL HOUSES` “1: Shelter”: col 8 `0`, col 14 `17`, col 15 `10`,
+capacity `7`. “3: Plain Cottage”: col 8 `20`, col 14 `15`,
+col 15 `5`, capacity `22`. Common-house col 8 is `0` (Shelter
+and Hut), then `20 / 30 / 50`; `70` is on later elite rows. Native `FoodQuality` raw values
+`0/20/30/50/70/90` are a **confirmed numeric correspondence**
+with that unit set (`Sources/EmperorCore/FoodSimulation.swift`).
+Native `ResidentialUnit` food fields are not isomorphic to the
+recovered `cHouseInfo+0x36` / `+0x12` consumption, blending, and
+cadence (§3), so they must not be substituted. `FUN_00545100` @ `0x545100` bands a byte as
+`>89→5, >69→4, >49→3, >29→2, >0→1, else 0`. `FUN_00590F30`
+compares the **raw** `cHouseInfo+0x36` quality byte to column 8,
+not that 1…5 band. `EmperorText` group 127 row 59 is the evolution
+`[food_quality]` sentence (`housing-evolution-reasons.md`); it is
+not this popularity walk’s input.
+
+Columns `0xE`/`0xF` are **not** food-stock columns. They feed
+`house+0x8C` in this walk. Do **not** name `house+0x8C`
+`crimeRisk`: the model-file labels name the columns, not the
+house dword; original field name and complete consumers are not
+closed. The popularity **return** does not use `+0x8C`.
+
+#### Occupied-house walk (confirmed EN sites)
+
+Same building vector as monument matching: `FUN_00413B40(1)`
+`this=0x8C7630` @ `0x590F4A`; index starts at **1**. Per house:
+
+| check | site | polarity |
+| --- | --- | --- |
+| Live | `FUN_00426D10` @ `0x590F8A` | `house+4` is 1 or 3 |
+| House class | vtable `+0xB8` @ `0x590F9B` | `house+9 != 0` (§5.8) |
+| Empty | `cmp word [esi+0x20], 0` @ `0x590FA9` | residents 0 → `house+0x8C = 0` @ `0x590FB0` and **skip** both the `+0x8C` update and the food average |
+| Elite skip of `+0x8C` only | `FUN_00516ED0(index)` cdecl @ `0x590FC0`; `this=0x8C7634` then `FUN_005188D0(building+0x14)` | true for types **11…17** inclusive (`cmp eax, 0xB` / `0x11` @ `0x5188D4`). Skips the `+0x8C` update; the food average still runs |
+| `+0x8C` update | @ `0x590FCC` | `+0x8C += col 0xE + (40-popularity)/2`; if `<` col `0xF`, raise to col `0xF`; if `>100`, cap `100` |
+| `(40-popularity)/2` | @ `0x590F3B` | popularity `DAT_0130F974` snapshotted once; signed toward-zero `/2` (`cdq; sub eax,edx; sar 1`) into `ebx` |
+| Average threshold | `FUN_0044CC80(house+0x16, 8)` @ `0x59102F` | required `0` → `house+0x5C = 0` @ `0x59109E` and **do not** count this house |
+| Quality compare | vtable `+0x1E4` @ `0x591046` then `movzx [eax+0x36]` @ `0x59104E` | `cHouseInfo+0x36` raw quality byte (object at `house+0xC8`, §5.9; same units as `FoodQuality` `0/20/30/50/70/90`). **`<` required**: increment streak byte `house+0x5C`, cap **3** (`jbe` @ `0x59106C`); streak `1→−1`, `2→−2`, `≥3→−3`. **`>=` required**: score `+2` and `house+0x5C = 0` @ `0x59105A` |
+
+Mean of those per-house scores: `sum / count` then round **away
+from zero** only when `abs(remainder) > count/2` (`cmp ebx, eax;
+jle` skip @ `0x5910F2`; exact half does **not** round). If the
+mean is `< 0` and `DAT_0130F988 < 0x15E` (350) and
+`DAT_01312575 == 0`, return `0` @ `0x591116`. Else return the
+mean (`mov eax, edi` @ `0x59111F`).
+
+#### Authored food-quality and delivery semantics
+
+`GameData/EmperorManual.pdf` p.48 (confirmed extract): five named
+qualities bland / plain / appetizing / tasty / delicious from mill
+food-type count plus salt and spices; delicious is **not** required
+for housing evolution (tasty is the highest evolution demand) but
+does affect hygiene (p.95). The type-count table on that page is
+the same decision table as Native `OriginalFoodCatalog.quality(in:)`
+(`confirmed` as mill/distribution **prose**; that Swift function is
+**not** a recovered `cHouseInfo+0x36` writer). p.48 “Food
+Distribution” defers to the Commerce Ministry (p.56). p.62: market
+right-click “current quality” is the quality in the food shop being
+distributed by **peddlers**; buyers fetch from the mill. p.82: Zao
+Jun “delivers delicious food (see p.48) to every house he passes”
+and can bless a food shop by one named level. `GameData/Readme1010.txt`
+line 145 is evolution devolution for poor food quality, not this
+popularity walk. `EmperorText` group 127 row 59 remains the
+evolution `[food_quality]` sentence, not `FUN_00590F30`.
+
+`GameData/Model/Trade.txt` `[DefaultPrices]` key order is Native
+`TradeRules` 0-based IDs (`LegacyModelParser.swift`): index **28**
+(`0x1c`) is **Dinners**. `EmperorFigureModels.txt` ID **23** is
+`peddler`, **24** is `Marketplace buyer`, **79** (`0x4F`) is
+`Player's Heroes`. Building ID **53** (`0x35`) is the mill, **66**
+(`0x42`) is the food shop (`OriginalFoodCatalog` / building models).
+
+#### `cHouseInfo+0x36` identity and writers
+
+Object: `HouseBldg+0x1E4` = `FUN_00416B50` (`lea eax,[ecx+0xC8];
+ret`; corpus gap). Constructor `FUN_00517190` @ `0x517190` writes
+`+0x36 = 0`. House serialize `FUN_00518910` calls base
+`FUN_00427430` then `cHouseInfo` vtable `+8` @ `0x517410` (EN
+`.text`; **no** `compare-report.tsv` row). Save of `+0x36` is 1
+byte @ `0x517570`.
+
+`HouseBldg+0x36` is a **different** byte (`FUN_00427430` 1-byte
+field; `FUN_00518B70` writes `idiv 0x28` remainder there). Do not
+conflate it with `cHouseInfo+0x36`.
+
+`FUN_00518490` starts @ `0x518490` and **reads**
+`cHouseInfo+0x36` at `0x518510` (`cmp byte [eax+0x36], 0x14` /
+`jb`; unsigned `< 0x14` skips, i.e. `> 0x13`) to count
+residents. Do not cite `0x5184A0` as that read: it is not an
+instruction start (`0x51849F`/`0x5184A1` zero `DAT_0130F98C`).
+`FUN_00517330` **reads** it through `FUN_00545100` into
+`cHouseInfo+0x38`.
+
+##### `cHouseInfo+0x12` — food stock slot 0 (confirmed)
+
+`FUN_00447600` @ `0x447600` (`identical`) maps commodity IDs onto
+`cHouseInfo` **word** slots at `+0x12 + slot*2`:
+
+| commodity | `Trade.txt` 0-based name | slot | address |
+| ---: | --- | ---: | --- |
+| `0x1c` (28) | Dinners | 0 | `+0x12` |
+| `0x13` (19) | Hemp | 1 | `+0x14` |
+| `0x19` (25) | Ceramics | 2 | `+0x16` |
+| `0x18` (24) | Silk | 3 | `+0x18` |
+| `0x17` (23) | Bronzeware | 4 | `+0x1A` |
+| `0x16` (22) | Lacquerware | 5 | `+0x1C` |
+| `0xd` (13) | Tea | 6 | `+0x1E` |
+| other | — | `0xFFFFFFFF` | not a house slot |
+
+Do **not** name the whole array from this table alone. Monthly
+food depletion (`FUN_00518690`) and the Dinners arm of `0x5437B0`
+touch slot 0. Other goods are delivered by the `DAT_00857344` loop
+inside `0x5437B0` (six records, stride `0x40`, through
+`0x8574C4`): Hemp/Tea/Ceramics/Bronzeware/Lacquerware/Silk into
+slots 1/6/2/4/5/3. That loop is not a `+0x36` writer.
+
+##### Monthly depletion — `FUN_00518690` (confirmed)
+
+`FUN_00518690` @ `0x518690` (`identical`) is called from
+`FUN_004AC650` @ `0x4AC650` (`identical`) when the 16-slice
+counter wraps (`DAT_00C82EF0 >= 0x10`) — **month rollover**, same
+function that snapshots `DAT_01311FCC`. `FUN_00503E20` @
+`0x503E20` (`identical`) returns `0x19` (25). `FUN_00408B80` @
+`0x408B80` (`identical`) is `(a * b) / 100`. Per live building
+(`p[1]==1`):
+
+- required = `FUN_0044CC80(house+0x16, 8)` (model column 8).
+- `ret2 = FUN_00408B80(sx(house+0x20), 25)` = `(residents * 25) / 100`.
+- If `DAT_00C5CDA0 != 0` (cheat): `+0x12 = ret2` and
+  `+0x36 = 0x14` @ `0x518721`.
+- If cheat==0 and required `> 0`: subtract `ret2` from word
+  `+0x12` (or drain the remainder); if `+0x12 < 1`, zero `+0x12`
+  and **`+0x36 = 0`** @ `0x5187BF`. If required is 0, this block
+  is skipped. Sum consumed → `DAT_0131252C`, then
+  `FUN_005482E0(0)`.
+
+##### Recovered normal market-delivery writer — `cMarket+0x2c` @ `0x5437B0` (confirmed store; complete writer set not proven)
+
+Unsplit EN `.text` at **`0x5437B0`** (`sub esp, 0x18`; `this` in
+`edi`; house stack-arg in `esi`; `ret 8`). **No**
+`compare-report.tsv` row; do **not** call it identical. Ghidra
+did not split it (`FUN_005436A0` is a nearby dtor). One PE
+pointer: `cMarket` vtable `0x7B6F3C+0x2C` = `0x5437B0`. MSVC
+RTTI TypeDescriptor `0x857E70` name `.?AVcMarket@@` (`confirmed`).
+`cMarket+0x28` = `FUN_00429DF0` @ `0x429DF0` (`identical`), which
+is `FUN_00429E10(figure, radius, this, 0)`.
+
+`cMillBldg` vtable `0x7B72C8` (RTTI `.?AVcMillBldg@@`): `+0x28`
+is the same `FUN_00429DF0`; **`+0x2C` = `0x42A210`** =
+`xor eax, eax; ret 8`. The mill visit callback does **not** write
+houses. Direct `E8` call xrefs to `0x5437B0` are none; the
+recovered market-delivery path is this vtable slot. That does
+**not** prove `0x5437B0` is the exhaustive unique normal writer
+of `cHouseInfo+0x36`.
+
+Walker cadence (`identical`): `FUN_004E7EB0` / `FUN_004E6D80`
+increment figure `+0x41`; EN `FUN_004E7EB0` @ `0x4E7EFE` is
+`cmp al, 0x14` / `jl` (call when the byte is `≥ 0x14` after
+`inc`). They call `FUN_004EACD0` @ `0x4EACD0`. That function:
+
+- figure `+0x12 == 0x26` (38, Elite Couple) → return 0;
+- figure `+0x12 == 0x4F` (79, Player's Heroes) →
+  `FUN_00429E10(figure, 2, 0, &LAB_00515120)` (hero visit,
+  **not** `cMarket+0x2c`);
+- else home building from figure `+0x62` → vtable `+0x28(figure, 2)`.
+
+For a figure whose home object is `cMarket`, that is
+`FUN_00429DF0` → Chebyshev radius **2** → `cMarket+0x2c(figure,
+house)` = `0x5437B0`. `FUN_004EACD0` does **not** test model 23
+versus 24. Model-24 states 6/7 enter this cadence (§3 below).
+
+`0x5437B0` body (EN `.text`, `confirmed` bytes):
+
+1. `ebx = FUN_00515770(this)` = `*(cMarket+0x180)` (`identical`
+   getter). Treat as the market food-quality **dword** until every
+   writer of `+0x180` is closed. `FUN_00544F10` (`identical`)
+   save/loads that dword as 4 bytes.
+2. Residential gate: `FUN_005188B0(house+0x14)` types **2…17**
+   (`identical`). Empty houses (`house+0x20==0`) also need
+   `FUN_005188D0` (elite **11…17**).
+3. Elite: `FUN_00545100(ebx)`; if the 1…5 band is **`< 3`**
+   (raw quality `≤ 49`), a flag at `[esp+0x30]` is cleared and
+   the quality write is skipped.
+4. Inventory: `FUN_00447600(0x1c)` → slot 0; `cMarket+0x264(0x1c)`
+   is market Dinners stock. Add `min(need, stock)` into word
+   `[cHouseInfo + slot*2 + 0x12]`; deduct via `cMarket+0x298`.
+   If Dinners stock is then `≤ 0`, `FUN_00545140(0)` zeros
+   `cMarket+0x180` @ `0x5438FE`.
+5. Quality write @ **`0x543A09`**: `mov byte [cHouseInfo+0x36], bl`
+   after `call [house+0x1E4]`.
+   - If `ebx > 0` and `ebx >` current `+0x36`, **replace** with
+     market quality.
+   - Else if delivered amount `ebp > 0`, **blend** current `+0x36`
+     with market quality using `r = delivered/existingStock`
+     (`r = 10.0` if existing stock `≤ 0`). Float constants:
+     `DAT_007B7248 = 3.0`, `DAT_007ACA38 = 2.0`,
+     `DAT_007ACA3C = 0.5`, `DAT_007B7244 ≈ 0.33`. Branches use
+     `fcomp` / `test ah, 0x41` (not-greater). Signed integer
+     blends (`confirmed` identities):
+     `r > 3` → `(current + 3*market) / 4`;
+     `r > 2` → `(current + 2*market) / 3`;
+     `r > 0.5` → `(current + market) / 2`;
+     `r > ≈0.33` → `(2*current + market) / 3`;
+     else `(3*current + market) / 4`.
+     (`/3` is `imul 0x55555556`; `/4` is MSVC signed `sar 2`.)
+
+`FUN_00545140` @ `0x545140` (`identical`) is
+`*(this+0x180) = param_2`. Recovered `E8` callers:
+
+| site | effect | class |
+| --- | --- | --- |
+| `0x5438FE` in `0x5437B0` | zero when Dinners stock `≤ 0` after house delivery | confirmed |
+| `FUN_00543450` @ `0x5435BB` | constructor zeros `+0x180` (`identical`; this is the `0x5435BB` `E8`) | confirmed |
+| `FUN_00544B30` @ `0x544D18` | `FUN_00544340(0x1c)` then `FUN_00545140(0)` iff that call returns 0 | confirmed (`identical`); not constructor/init |
+| `0x5411EA` in `cStall+0xC0` `FUN_00541180` | raise parent-market `+0x180` to `this+0x16c` if higher, only when `word this+0x14 == 0x42` (Food Shop 66) | confirmed bytes; `FUN_00541180` has **no** `compare-report` row |
+| `0x541858` in `cStall+0x260` `FUN_00541760` | rounded weighted blend onto parent market | confirmed arithmetic below; **no** `compare-report` row |
+| `FUN_00511080` case 4 | add up to `0x14` then store, capped so `FUN_00545100(new)` does not exceed `*(this+0x184)` | confirmed hero bless of the food shop / parent market |
+
+Mill-pickup cart `figure+0x13` is the mill `+0x2E4` selected
+recipe type-count (§3 below). Do **not** assign `cMarket+0x180`
+or its store to `cMillBldg`: the mill returns a type-count onto
+the cart; the stall blend writes the market. Do **not** treat
+Native `OriginalFoodCatalog.quality(in:)` or manual p.48 as that
+byte’s writer, and do **not** infer a 1…5 quality band merely
+from the `20 * byte` blend.
+
+##### `cMarket+0x180` live blend — `cStall+0x260` @ `0x541760`
+
+`cStall` vtable `0x7B6C5C` (RTTI `.?AVcStall@@`):
+
+- `+0x1C` = `FUN_00541130` @ `0x541130` (`identical`): spawn via
+  stall `+0x18`; parent market `FUN_00490700`; copy cargo plan
+  through market `+0x2D8`. If `word stall+0x14 == 0x42`,
+  `FUN_00515770(parent market)` → `figure+0x16c`. Ghidra drops
+  `ecx`; EN bytes @ `0x541169` are `mov ecx, ebx` (`ebx` = parent
+  market).
+- `+0x20` = `FUN_00541B80` @ `0x541B80` (`identical`): shop think;
+  spawns buyer via `FUN_00540B40`.
+- `+0x2C` = `0x42A210` (`xor eax, eax; ret 8`), same house-visit
+  stub as `cMillBldg+0x2C`. The recovered peddler path writes
+  houses through its home `cMarket+0x2C`; `cStall+0x2C` is that
+  stub. Buyer delivery remains `unknown`.
+- `+0xC0` = `FUN_00541180` @ `0x541180` (unsplit, no
+  `compare-report` row): figure-return raise described above.
+- `+0x260` = `FUN_00541760` @ `0x541760` (unsplit, no
+  `compare-report` row; `ret 0xC`).
+
+No direct `E8` to `0x541760`. The recovered virtual caller is
+unsplit cart think `0x4D2970` (type-table slot 0 for model **25**;
+no `compare-report` row) @ `0x4D2B15`:
+
+```
+push 0x64                 ; 100
+push byte figure+0x13
+push byte figure+0x88     ; commodity
+mov  ecx, edi             ; stall
+call [vtable+0x260]
+```
+
+`FUN_00540710` @ `0x540710` (`identical`) is `param == 0x1c`
+(Dinners). For that commodity `FUN_00541760` reads current
+`FUN_00515770(parent market)`, adds into the stall cargo slot
+through `FUN_005D2790` (clip to cap; return overflow), then if
+the added amount is food:
+
+```
+accepted = 100 - overflow
+new = round( (old_quality * old_dinners_stock
+              + 20 * accepted * (byte figure+0x13))
+            / (old_dinners_stock + accepted) )
+FUN_00545140(parent market, new)
+```
+
+`FUN_00541730` @ `0x541730` (`identical`) is the float→int round
+(`call 0x7650FC`, then `+1` when the discarded fraction is not
+`< 0.5`). This is the recovered **live store** of `cMarket+0x180`
+when mill cargo returns to a food shop. Arithmetic proves an
+incoming raw contribution of `20 * byte(figure+0x13)`. That
+arithmetic does **not** by itself prove the byte is a 1…5
+quality band: `FUN_00545100` would classify `20/40/60/80/100` as
+bands 1…5, which is a consumer of the blended dword, not a
+producer of `+0x13`.
+
+This pass searched `.text` for a consecutive dword/byte sequence
+`20,30,50,70,90` and did not find one. That is only a negative on
+that encoding; it does not require such a lookup to exist.
+`FUN_005557D0` / `FUN_005558D0` (`identical`) have **no** `E8`
+callers. They are the mill vtable `+0x2F0` / `+0x2E0` targets
+(only PE pointers `0x7B75B8` / `0x7B75A8` on `cMillBldg`
+`0x7B72C8`). They compute hundred-unit recipe availability for a
+1…5 type-count and salt/spice (8/9); they do **not** store
+`cMarket+0x180`. Overlay `FUN_00544240` (`identical`
+`FUN_00515770` / `FUN_00545100` on food-shop stalls) **reads**
+`+0x180` for sprite index `0x458 + commodity + (band-1)`; it does
+not write it.
+
+##### Mill pickup → Dinners carts (model 25); cart `+0x13` producer
+
+`FUN_005464E0` @ `0x5464E0` (`identical`) is mill pickup
+(`push 0x35` = building 53 on the **dest mill**, `ebp`). `this`
+(`mov ebx, ecx`) is the **market object**, not the mill and not
+the cart. Buyer think unsplit `0x4D1810` (no `compare-report`
+row) @ `0x4D1A04` calls `FUN_004E3C70` (`identical`, cdecl
+`add esp, 0xC`): figure id `DAT_010aeee4`,
+`*(parent_market+0xB4)` (building id; same `+0xB4` field as
+§3 monument), dest mill id `figure+0x68`. `FUN_005463A0`
+(`identical`) then `thiscall`s `FUN_005464E0` with that looked-up
+building as `this`. `FUN_004E3C70` replaces that `this` with
+`FUN_00490700(arg2)` only when arg2-building `+0xC8(-1)` is true.
+Mill `+0xC8(-1)` is false (type 53 ≠ −1 and ≠ −7). Whether
+`cMarket+0xC8(-1)` is live on this path is `unknown`;
+constructor `cMarket+0x154` is a shop-array pointer, not a
+building id. `FUN_00515780` / `FUN_00546C60`
+(`identical`) read **`cMarket+0x184` / `+0x188`**.
+`FUN_00543E50` (`identical`) is `this+0x264(0x1c)` (Dinners
+stock); `cMarket` and `cMillBldg` share `+0x264 = 0x5D4A60`.
+
+`cMillBldg` vtable `0x7B72C8` (RTTI `.?AVcMillBldg@@`) recipe
+slots (each has exactly one PE pointer, on this vtable):
+
+| slot | target | `compare-report` |
+| --- | --- | --- |
+| `+0x2E0` | `FUN_005558D0` @ `0x5558D0` | `identical` |
+| `+0x2E4` | unsplit `0x555330` | **no** row; do not call identical |
+| `+0x2E8` | unsplit `0x555E40` | **no** row |
+| `+0x2EC` | `FUN_00555410` @ `0x555410` | `identical` |
+| `+0x2F0` | `FUN_005557D0` @ `0x5557D0` | `identical` |
+
+No `E8` to `0x555330`. `FUN_005464E0` @ `0x5465C3` calls mill
+`+0x2E4` with `(cMarket+0x184, cMarket+0x188, capacity, &types,
+&amounts)` (`ret 0x14`). EN bytes @ `0x555406` are
+`mov eax, ebx; … ret 0x14`: the method **returns the selected
+type-count**, not the hundred-unit amount. Selection (EN bytes
+`0x555381…0x5553C3`): walk `i` ascending from `cMarket+0x188`
+through `cMarket+0x184`; `ebx` starts 0. Whenever mill
+`+0x2E0(i)` availability `> capacity/3` (`cmp` @ `0x555397`,
+`jg 0x5553A5`), that `i` **replaces** the current selection, so
+the result is the **highest** `i` whose availability exceeds
+`capacity/3`. Only if no `i` exceeds that threshold does it
+keep the **lowest** `i` with nonzero availability (`test ebx,ebx`
+/ `test ecx,ecx` @ `0x55539B`). If none are nonzero,
+return 0 and the type/amount arrays stay zero, so no cart spawn.
+`FUN_005558D0` (`identical`) switches on `dec(arg); cmp eax, 4;
+ja default` — valid args **1…5** — and uses mill `+0x2E8` plus
+stock of commodities 8/9. `FUN_00555F70` (`identical`) is foods
+**1…7** only (`FUN_005DB4C0` minus salt/spice). Then mill
+`+0x2EC(selected_i, min(amount, capacity, 600), &types,
+&amounts)` fills the bundle (`FUN_00555410`, `identical`;
+virtual mill `+0x2F0` = `FUN_005557D0`).
+
+`FUN_005467A0` (`identical`) converts a bundle slot into a 1…10
+cart count. `FUN_00546960` @ `0x546960` (`identical`,
+`ret 0x18`, six stdcall args) spawns figure model **`0x19` (25)**
+`Buyer's Servant` (`EmperorFigureModels.txt` 1-based row 25,
+range 50). After EH (`sub esp, 0x18` + four register pushes)
+EN bytes @ `0x546A10` / `0x546A14` / `0x546A1E` / `0x546A30`:
+
+- `figure+0x88` ← low byte of **arg1** (commodity);
+- `figure+0x13` ← low byte of **arg2**.
+
+Ghidra’s `FUN_00546960` store of `0xffffffff` into `+0x13` is
+the EH cookie, not this write. If `FUN_005DB4C0` (`identical`)
+is true (`1 ≤ commodity ≤ 9`), arg1 is **rewritten** to
+**`0x1c` Dinners** before those stores (`mov dword [esp+0x38],
+0x1c` @ `0x5469BF`). Cart `+0x62` copies the caller figure’s
+home. `FUN_005464E0` @ `0x54663B` pushes mill `+0x2E4`’s return
+as arg2, so mill-pickup cart `+0x13` **is** that selected
+type-count (`confirmed`). Commodities 8/9 skip cart spawn at
+`0x5465FB` / `0x546604` and deduct through mill `+0x298`.
+
+Operational semantic (`confirmed` as the mill recipe switch,
+not as an original symbol): the byte is the type-count integer
+mill `+0x2E0` / `+0x2EC` already use. Constructor
+`FUN_00543450` (`identical`) sets `cMarket+0x184` to **5** when
+`param_2 == 0x3C` (building 60 Grand Market Square) else **3**
+(Common Market 59 is `0x3B`); `FUN_00545160(1)` writes `+0x188`;
+then zeros `+0x180`. Factory `FUN_005D3580` passes the building
+type (`identical` `FUN_00543D90` gate). The scan range is
+therefore `[1, 3]` or `[1, 5]` unless some other writer changes
+those dwords. Hero case 4 uses `+0x184` as a max
+`FUN_00545100` band. `FUN_00544F10` (`identical`) save/loads
+both dwords as 4 bytes. Do **not** name cart `+0x13` a quality
+band, and do **not** treat `20 * byte` or manual p.48 named
+rows as that proof. p.48 remains mill/distribution **prose**.
+
+Sibling `FUN_00546440` (`identical`), from `FUN_005463F0`
+(`identical`) when a buyer slot dword at `figure+0xAC` is in
+**1…6**, calls `FUN_00546960` with **arg2 = 0** (`push 0` @
+`0x54649F`). That spawn writes cart `+0x13 = 0`. Whether those
+carts deposit through `cStall+0x260` is `unknown`.
+
+Figure ctor `FUN_004C72B0` (`identical`) zeros `+0x13`.
+Serializer `FUN_004C75C0` (`identical`) save/loads that byte
+via `FUN_004C95F0` (`identical`). Unsplit cart think `0x4D2970`
+@ `0x4D2B04` **reads** `byte [esi+0x13]` for the `+0x260` push
+and does not store the figure byte (local `[esp+0x13]` is a
+different flag). Other `+0x13` writers (`FUN_004EAD60` /
+`FUN_004EB420` hero-effect identity, `FUN_004CBA70` /
+`FUN_004CBC70` copy of `+0x88`) are not this mill-pickup chain.
+
+`Trade.txt` `[DefaultPrices]` 0-based IDs: foods 1…7, Salt 8,
+Spices 9, Dinners 28. `+0x184` is a market food-type **cap**
+(3 vs 5), not the mill’s current type count. The mill **selects**
+a type-count in that cap and copies it onto the cart.
+
+##### Peddler 23 vs buyer 24 — spawn/think exclusive; `FUN_004EACD0` shared
+
+Authored: `EmperorFigureModels.txt` 23 `peddler` range 60; 24
+`Marketplace buyer (Food/ Tea/ Hemp/ Bronzeware/ Lacquerware/ Silk/
+Ceramic)` range 50; 25 `Buyer's Servant` range 50. Both 23 and
+24 have speed field `i` = **8**. Buildings 53 Mill, 59/60
+Common/Grand Market Square, 66 Food Shop (`0x42`). Manual p.62
+(supporting prose only; not a code gate): right-click “current
+quality” is the food-shop quality distributed by **peddlers**;
+**buyers** fetch from the mill.
+
+Spawn (`identical`):
+
+- Peddler: `cMarket+0x20` = `FUN_00545170` → `FUN_00543ED0` @
+  `0x543ED0` → `FUN_004EA050(..., 0x17, ...)` model **23**,
+  `figure+0x40 = 1`, `figure+0x62 = market id`, `FUN_004E6A70`
+  roam init (`+0x41 = 0x14`, `+0x4E` 0 then 1).
+- Buyer: `cStall+0x20` = `FUN_00541B80` → `FUN_00540B40` @
+  `0x540B40` → `FUN_004EA050(..., 0x18, ...)` model **24**,
+  `figure+0x40 = 6` (or **7** if dest checks fail), `+0x62 =
+  market id`, `FUN_004EA8C0` destination (`figure vtable +0x20`),
+  `+0x68 = dest building`, seven dwords of cargo plan.
+
+`FUN_004EA050` → `FUN_004E1420` (`identical`) default case
+(neither 23 nor 24 is a special `param_2` arm) →
+`FUN_004C71D0` (`identical`) sets vtable `0x7AFE60`. That
+vtable `+0x114` = unsplit `FUN_004C9310` @ `0x4C9310` (**no**
+`compare-report` row): `DAT_00A5F60C[type*18 + selector]`.
+Selector **8** is authored field `i` (speed). PE
+`DAT_0086ADF4` rows 23/24 already hold those model dwords
+(speed **8**); `FUN_005D1E20` (`identical`) copies them into
+`DAT_00A5F60C`. `FUN_004EB9C0` (`identical`) is
+`vtable+0x114(arg)`.
+
+Think trampoline (same table as §5.1): `FUN_004E27E0`
+(`identical`) → figure vtable `+0x28` `FUN_004C7580` →
+`jmp [type*40 + 0x84E784]` (slot 0 of row `type`). Slot 0:
+
+| `figure+0x12` | authored row | slot 0 | class |
+| --- | --- | --- | --- |
+| `0x17` (23) | peddler | unsplit `0x4D0270` | no `compare-report` row |
+| `0x18` (24) | Marketplace buyer | unsplit `0x4D1810` | no `compare-report` row |
+| `0x19` (25) | Buyer's Servant | unsplit `0x4D2970` | no `compare-report` row |
+
+`0x4D0270` **always** `call FUN_004E3A80` (`identical` roam tick:
+states 1/2 → `FUN_004E6B70` / `FUN_004E47A0` → `FUN_004E7EB0` /
+`FUN_004E6D80` → `FUN_004EACD0`). Peddler home `+0x62` is the
+market id written at spawn (`confirmed`), so a live peddler on
+this think row is a recovered `0x5437B0` delivery walker.
+
+`0x4D1810` is a destination FSM on `figure+0x40 ∈ {4,5,6,7}`
+(`add eax, -4` / `cmp eax, 3` / `jmp [eax*4 + 0x4D1A64]`).
+Spawn uses 6/7. Prologue always `FUN_004EB9C0(figure, 8)` @
+`0x4D181D` into `ebx`. State 6 @ `0x4D1922`: if dest
+`building+4 == 1`, `FUN_004E47A0(id, ebx)` @ `0x4D196B`; else
+set `+0x40 = 7` and return. State 7 @ `0x4D1A0E`: always
+`FUN_004E47A0(id, ebx)` @ `0x4D1A15`. After state 6’s `47A0`,
+`+0x19 == 8` jumps to mill pickup `FUN_004E3C70` @ `0x4D19ED`.
+
+`FUN_004E47A0` (`identical`) `jmp [arg*4 + 0x4E4BBC]`. Speed 8
+is **case 8** @ `0x4E4921`, not case 6: if
+`figure+0x170 > 1` then `FUN_004E7EB0(id, 2)` @ `0x4E4B21`, else
+`FUN_004E7EB0(id, 1)` and `inc +0x170`. Case 6 @ `0x4E48E0` is
+unconditional `FUN_004E7EB0(id, 1)` (other speeds). Both cases
+enter `FUN_004E7EB0` with `param_2 ≥ 1`.
+
+`FUN_004E7EB0` (`identical`) @ `0x4E7F02` `call FUN_004EACD0`
+when `+0x41 ≥ 0x14` after `inc` (`cmp al, 0x14` / `jl`
+`0x4E7F52`). No model test. If `+0x42 < 1` and `+0x19 ≥ 8`
+(`cmp al, 8` / `jge 0x4E7F79`) the increment/ACD0 loop is
+skipped that tick (buyer standing at dest). Walking ticks
+(`+0x42 ≥ 1` or `+0x19 < 8`) run the loop. Ctor
+`FUN_004C72B0` zeros `+0x41`; peddler roam sets `0x14`, buyer
+spawn does not, so the buyer’s first ACD0 is after 20 `inc`s.
+
+`FUN_004EACD0` still does not test 23 vs 24. Buyer `+0x62` is
+the market id, so home `+0x28(figure, 2)` is `FUN_00429DF0` →
+`FUN_00429E10` Chebyshev 2 → `cMarket+0x2C` `0x5437B0`. That
+method has no 23-vs-24 test (EN `0x5437B0` body). **Spawn
+roles and type-table think rows are exclusive (`confirmed`).
+`FUN_004EACD0` / `cMarket+0x2C` is not exclusive to peddlers:
+model-24 states 6/7 can reach that writer (`confirmed`).**
+Manual p.62 does not override that path. Cart think `0x4D2970`
+remains the stall-deposit path, not house delivery.
+
+`cMarket+0x2C` remains the recovered normal house-delivery writer.
+Production stays `unsupportedOriginalProducer`. **No gameplay
+implementation contract.**
+
+##### Hero visit `0x5A` — unsplit `0x515120`, not `FUN_005149C0`
+
+`FUN_005149C0` / Ghidra name `Check_if_going_to_fire` @
+`0x5149C0` (`identical`) is a **constructor** that embeds the
+string “Check if going to fire” and returns around `0x51511E`.
+The `0x5A` store is in the **next**, unsplit function starting
+`0x515120` (`sub esp, 0xc`). **No** `compare-report.tsv` row.
+Do **not** cite `FUN_005149C0` @ `0x515259`. Do **not** use the
+Ghidra name as an original symbol.
+
+`0x515120` is the `FUN_004EACD0` hero callback
+(`&LAB_00515120`) for figure model `0x4F`. Switch on figure
+`+0x13` (hero-effect identity per `hero-effect-lifecycle.md`).
+**Case 4** @ `0x51522F`: if `house+0x92==0`, `inc word
+[cHouseInfo+0x12]` and set `house+0x92=1`; **always**
+`mov byte [cHouseInfo+0x36], 0x5A` @ `0x515259`. This is a
+hero house-visit effect (delicious = 90), **not** mill/peddler
+quality. Manual p.82 Zao Jun “delivers delicious food” is
+**supporting** player-facing prose for *a* hero delicious
+delivery; it does **not** prove identity `4` is Zao Jun
+(`hero-effect-lifecycle.md` identity `3` is Xi Wang Mu; the
+Eventmsg name list is a different numbering). Case-4 identity
+stays `unknown`. Do not treat this path as the recovered
+normal market-delivery writer.
+
+##### Store table (after `call [vtable+0x1E4]` unless noted)
+
+| site | value | class |
+| --- | --- | --- |
+| `FUN_00517190` | `0` | init, confirmed |
+| `FUN_00518690` @ `0x5187BF` | `0` when `cHouseInfo+0x12 < 1` | monthly food-slot drain, confirmed |
+| `FUN_00518690` @ `0x518721` | `0x14` (20) when `DAT_00C5CDA0 != 0` | debug/cheat path, confirmed |
+| `0x543A09` in `0x5437B0` | `bl` from `cMarket+0x180` (replace or ratio-blend) | recovered normal market-delivery store, confirmed; live `cMarket+0x180` blend at `0x541858` recovered; mill `+0x2E4` type-count producer of cart `+0x13` recovered; player-facing quality name/Native mapping and complete `+0x36` writer set not proven |
+| unsplit `0x515120` @ `0x515259` | `0x5A` (90) after optional `inc +0x12` | hero model 79 case 4, confirmed store; identity `unknown` |
+
+This pass does **not** claim those are the only writers. Further
+unencoded or indirect stores remain possible; the complete writer
+set is not proven.
+
+#### `house+0x5C` / `house+0x8C`
+
+`house+0x5C` is the food-average streak byte (`p+0x17`).
+`house+0x8C` is the dword `p[0x23]` updated from columns 14/15
+and zeroed on empty houses. Do **not** name it `crimeRisk`.
+Both are copied by `FUN_00426EA0` and saved/loaded as 1 byte /
+4 bytes in `FUN_00427430` schema 4 (`0x427430` @ `+0x5C` /
+`+0x8C`; `FUN_00518910` uses that base serializer). Complete
+constructor-zero set for the two fields is **unknown** beyond
+the empty-house `+0x8C = 0` write above. `FUN_0058A950` reads
+`house+0x8C / 10 < 7`; that is a confirmed read, not a recovered
+original name or a complete consumer set.
+
+#### Native mapping — not isomorphic; do not implement
+
+Numeric `FoodQuality` raw `0/20/30/50/70/90` matches
+`cHouseInfo+0x36`, model column 8, and the named mill table on
+manual p.48 (`confirmed` unit set only). Matching those enums does
+**not** make Native fields isomorphic. The recovered behaviors
+differ (`confirmed` mismatches):
+
+| Native `ResidentialUnit` | recovered original used here | verified behavioral mismatch |
+| --- | --- | --- |
+| `foodSupplyAmount` | word `cHouseInfo+0x12` (Dinners slot 0) | Native `consumeFood` requests `residents` when `foodQualityRequired > 0`. Original monthly drain is `(residents * 25) / 100` and only when model column 8 `> 0`. Cadence: Native settlement vs original `FUN_004AC650` month wrap |
+| `foodQualityRawValue` | live `cHouseInfo+0x36` | Native `addFoodSupply` **min**-blends and zeros quality whenever stock hits 0 on consume. Recovered market delivery **replaces** if market quality `>` current, else ratio-blends with floats 3/2/0.5/≈0.33. Original zeros `+0x36` on the monthly path when `+0x12 < 1`. Cheat writes `20`; hero case 4 writes `90` — they do **not** zero `+0x36` |
+| `lastSuppliedFoodQualityRawValue` | **no recovered original equivalent** in `cHouseInfo` or the `FUN_00590F30` consumer | Native `recordEvolutionSupplies` snapshots current quality iff `foodSupplyAmount >= residents`, else `.none`, on monthly market settlement. `FUN_00590F30` reads **live** `+0x36`. This is not an exhaustive proof that no original global snapshot exists. Do not substitute |
+| `suppliesByCommodityID` | `cHouseInfo+0x12` word array | Native consumes food through `foodSupplyAmount`, not a Dinners key in that dictionary. Original monthly food drain is Dinners slot 0 of the same word array as hemp/ceramics. Layout difference is supporting, not by itself proof of absence of an equivalent |
+
+Native has no `house+0x5C` streak and no `house+0x8C` dword from
+columns 14/15 on this cadence, no recovered hero `0x5A`
+house-visit, and no `(residents*25)/100` Dinners drain. The live
+`cStall+0x260` blend into `cMarket+0x180` is recovered; mill-pickup
+cart `figure+0x13` is the mill `+0x2E4` selected recipe
+type-count, not a recovered quality name and not Native
+`quality(in:)`. Swift
+`OriginalFoodCatalog.quality(in:)` matches **manual
+p.48**, not the recovered `+0x36` or `+0x180` stores. Do not
+substitute `lastSuppliedFoodQuality` for `FUN_00590F30`. Do not
+change Swift. Production stays `unsupportedOriginalProducer`.
+**No gameplay implementation contract** until Native
+representation/mapping of the recovered type-count→`20 * byte`
+blend, hero case-4 identity, and unencoded `+0x36` writer set
+required for fidelity are closed. Peddler-vs-buyer
+`FUN_004EACD0` exclusivity is closed in §3 (not exclusive).
+
+#### CH/EN (`compare-report.tsv` rows only)
+
+`identical`: `FUN_00408B80`, `FUN_00413B40`, `FUN_00426D10`,
+`FUN_00426EA0`, `FUN_00427430`, `FUN_00429DF0`, `FUN_00429E10`,
+`FUN_0044CC80`, `FUN_00447600`, `FUN_004AC650`, `FUN_004E6D80`,
+`FUN_004E7EB0`, `FUN_004EACD0`, `FUN_00503E20`, `FUN_00510C20`,
+`FUN_00511080`, `FUN_005149C0` (constructor only; the `0x5A` store
+is not in this function), `FUN_00515770`, `FUN_00516ED0`,
+`FUN_00517190`, `FUN_00517330`, `FUN_00518490`, `FUN_00518690`,
+`FUN_005188B0`, `FUN_005188D0`, `FUN_00518910`, `FUN_00540710`,
+`FUN_00540B40`, `FUN_00540E70`, `FUN_00540F80`, `FUN_00541130`,
+`FUN_00541730`, `FUN_00541B80`, `FUN_00543450`, `FUN_00543D90`,
+`FUN_00543E50`, `FUN_00543ED0`, `FUN_00544240`, `FUN_00544340`,
+`FUN_00544480`, `FUN_00544B30`, `FUN_00544F10`, `FUN_00545100`,
+`FUN_00545140`, `FUN_00545150`, `FUN_00545160`, `FUN_00545170`,
+`FUN_005463A0`, `FUN_005463F0`, `FUN_00546440`, `FUN_005464E0`,
+`FUN_005467A0`, `FUN_00546960`, `FUN_00546C60`, `FUN_00554C00`,
+`FUN_00555410`, `FUN_005557D0`, `FUN_005558D0`, `FUN_00555F40`,
+`FUN_00555F70`, `FUN_00590F30`, `FUN_005D16D0`, `FUN_005D3580`,
+`FUN_005DB4C0`, `FUN_004E3A80`, `FUN_004E3C70`, `FUN_004E44E0`,
+`FUN_004E47A0`, `FUN_004E6A70`, `FUN_004E6B70`, `FUN_004EA050`,
+`FUN_004EA8C0`, `FUN_004EB9C0`, `FUN_00515780`, `FUN_004C71D0`,
+`FUN_004C72B0`, `FUN_004C75C0`, `FUN_004C95F0`, `FUN_004E27E0`,
+`FUN_004E1420`, `FUN_005D1E20`.
+No `compare-report.tsv` row for `FUN_00416B50`, unsplit
+`0x5437B0`, unsplit `0x515120`, unsplit `0x541180`
+(`FUN_00541180`), unsplit `0x541760` (`FUN_00541760`), unsplit
+`0x4D0270` / `0x4D1810` / `0x4D2970` (figure type-table slot 0
+for models 23/24/25), unsplit mill `+0x2E4` `0x555330` /
+`+0x2E8` `0x555E40`, unsplit `FUN_004C9310` @ `0x4C9310`,
+`FUN_004C7580`, or `cHouseInfo` vtable `+8`
+@ `0x517410`; do **not** call them identical. `FUN_005149C0` @
+`0x5149C0` ends around `0x51511E`; `0x515120` is the next unsplit
+function.
+
+### Monument matching (`FUN_0055AE30`) — control flow recovered; Native unwired
+
+Canonical EN `.text` (`8a6d2df1…6753`, image base `0x400000`).
+`FUN_0055AE30` @ `0x55AE30` is `thiscall` (`mov esi, ecx` @
+`0x55AE35`). `FUN_0055BCB0` @ `0x55BCB0` is `mov eax, 0x12A4BA8; ret`.
+`FUN_00591200` @ `0x591281` and `FUN_0055B6A0` @ `0x55B6AB` call
+`FUN_0055AE30` on that object. Empty/no-match returns `0` and does
+**not** invent a completed monument. Production stays
+`unsupportedOriginalProducer`. Do not pass missing monuments as `0`
+and mark the producer supported. Do not guess completion from
+`buildingID` alone.
+
+#### Shared match predicate (`FUN_0055AE30` and `FUN_005604C0`)
+
+Both walks use the same ID / root / percent tests (`confirmed` EN
+bytes). Integer `cmp eax, 0x64` with `jl` skip / `jge` accept is
+`>= 100`, equivalently integer `> 99`.
+
+| check | EN site | polarity |
+| --- | --- | --- |
+| Building vector count | `FUN_00554C00` `this` = `0x8C7634` (`0x55AE4D`, `0x5604D9`) | `[ecx+4]==0` → `0`; else `([ecx+8]-[ecx+4])>>2`. `cmp eax, 1; jbe` → return `0` if count **≤ 1** (unsigned), i.e. `< 2` |
+| Walk start | `FUN_00413B40(1)` `this` = `0x8C7630` (`0x55AE39`, `0x5604C6`) | **Index 0 is never visited.** Slot pointer `+4` per iter; `inc` index; `cmp index, count; jb` |
+| Root only | `cmp word [building+0x16], 0` (`0x55AEC2`, `0x5604F0`) | nonzero sub-index skips the pair |
+| Exact ID | `sx(building+0x14) == goal+0xC` (`0x55AEE2`, `0x5604F7`) | first arm |
+| Special goal IDs | `goal+0xC` is `0x55` **or** `0x56`, **and** `0xFD ≤ (signed word)building+0x14 ≤ 0x10C` (`0x55AEF0` / `jle 0x10C`; `0x560505` / `jg` skip `0x10C`) | second arm; inclusive **253…268**. These `0x55`/`0x56` values are **goal `+0xC` IDs**, not placeable building types |
+| Percent | `FUN_00565410(building+0xB4, 0, 0)` (`push 0; push 0; push [building+0xB4]` @ `0x55AED1`, `0x56051D`) | need return **≥ 100** |
+
+`FUN_00565410` @ `0x565410` is `thiscall` with three stack args
+(`ret 0xC`). Prologue: `param_1 < 1` → `0`; lookup
+`FUN_0047F1B0(param_1)` with `ecx=0x8C7634`. The popularity /
+goal calls pass `param_2=0`, `param_3=0`. The `param_2==0`
+aggregate `(sumNumerator * 100) / sumDenominator`, or `100` when
+the denominator is `≤ 0`, is already closed in
+`docs/exe-research/great-wall-map-state.md` (`0x5666C4` /
+`0x5666DE`). This note does not re-open that formula.
+
+Call order differs; both predicates must still pass:
+
+- `FUN_0055AE30`: live + type gates, then root, then percent, then ID.
+- `FUN_005604C0` @ `0x5604C0`: zeros `goal+8`, no live/type gates,
+  then root, then ID, then percent; first hit sets `goal+8=1` and
+  returns `1`, else `0`.
+
+#### `FUN_0055AE30`-only gates and return
+
+| gate | EN site | polarity | class |
+| --- | --- | --- | --- |
+| Live building | `FUN_00426D10` @ `0x426D10`; `push 0; mov ecx, building; call` @ `0x55AE72` | `byte [this+4]` is **1 or 3**; else skip. Stack `0` unused (`ret 4`) | confirmed |
+| Monument type | `FUN_00562E80` cdecl thunk → `FUN_00562F70` @ `0x562F70` (`0x55AE85`) | jump table `id-0x4C` over `0…0xC0`: true for **76…86, 92, 93, 253…268** | confirmed |
+| Type-2 objects only | `cmp dword [object+4], 2` (`0x55AEB4`); object from `FUN_0047F1B0` with `ecx = this+0x10` | other goal types skipped | confirmed |
+| Match side effect | `0x55AF11` / `0x55AF08` | match: `goal+8 = 1` and increment the return count; mismatch in this arm: `goal+8 = 0`. Incomplete / non-root does **not** write `+8` | confirmed |
+| Return | `eax` = incremented count (`0x55AF5B`) | matching building-goal pair count: one increment per **(building, type-2 goal)** pair that passed the predicate. The same goal may be counted again for another matching root. **Not** a distinct-goal count. Empty list or no pair returns **0**. Later completed roots can clear an earlier `goal+8` without decrementing the already-added count | confirmed |
+
+`FUN_00591200` uses that matching building-goal pair count as the
+monument term of the per-update sum (`monument × 2`, §2). A zero
+return is a real zero contribution, not a stand-in for “monument
+complete”, and it is not a distinct-goal count.
+
+#### `cMonumentGoal` construct / copy
+
+Live object size `0x10` (`FUN_0055A8E0` @ `0x55A8E0` case `2`
+allocates `0x10` and calls `FUN_00559490`). Constructor
+`FUN_005603E0` @ `0x5603E0` writes `this+4 = 2`, `this+0xC = 0`,
+`this+8 = 0` (`confirmed`). Call `+0xC` only the **goal
+building/object ID**. Do not invent a second live value field
+from the archive’s extra `UInt32`.
+
+Mission load `FUN_0055F120` @ `0x55F120` constructs via
+`FUN_0055A8E0(static+4)` then calls the static record’s vtable
+`+0x44` with the live object. Canonical EN bytes immediately after
+`FUN_005604C0` at `0x560560` (`thiscall`, dest on the stack,
+`ret 4`) copy `[src+8] → [dst+8]` and `[src+0xC] → [dst+0xC]`.
+That copy is `confirmed` on the hash-matched EN `.text`. Ghidra
+did not split a named function at `0x560560`, and
+`compare-report.tsv` has **no** row for it; do **not** call it
+CH/EN `identical`. Binding vtable `+0x44` to `0x560560` is
+`inferred` from that adjacency and the `FUN_0055F120` call; this
+pass did not dump the `cMonumentGoal` vtable slot.
+
+Authored cross-map (`confirmed` file/row, not a completion
+oracle):
+
+| ID | source | note |
+| --- | --- | --- |
+| building types 76…84, 92, 93 | `GameData/Model/EmperorBuildingModels.txt` lines 160–168, 191–192 | `BUILD_TUMULUS` … `BUILD_UNDERGROUND_VAULT`, `BUILD_CLOCK_TOWER`, `BUILD_GRAND_PAGODA` |
+| building types 85, 86 | same file lines 169–170 | `BUILD_UNUSED4` / `BUILD_UNUSED5`. **Not** placeable layouts |
+| building types 253…268 (`0xFD…0x10C`) | same file lines 337–352 | `BUILD_GREAT_WALL_01` … `16`; each ID is one multipart layout (`Model/Mon_Great_Wall_NN_subs.txt`), not a construction phase |
+| goal `+0xC` `0x55` / `0x56` (decimal 85 / 86) | matching walk above; display-family mapping in `DESIGN.md` and `docs/exe-research/great-wall-map-state.md` | After city load, `0x5636B0 → 0x563720` selects earthen family for **task `#85`**, stone for **task `#86`**, ruin otherwise (`confirmed` in those notes). The special match arm uses these as **goal IDs** against layout buildings 253…268. Do **not** treat `0x55`/`0x56` as a building type that the player places |
+| Qin-4 archive `cMonumentGoal [85, 0]` | `great-wall-map-state.md`; Native `CampaignGoalArchive` `typeID == 2`, `values[0] == 85` | `typeID` 2 agrees with live `+4 == 2`. `values[0]` is the archive word that the copy path puts in `+0xC` |
+
+`GameData/Model/EmperorEventmsg.txt` has commemorative-monument
+and “construction complete” phrase families (e.g. lines 1466–1472,
+2350+). They are event text, not this popularity walk’s inputs.
+
+#### Native mapping — not isomorphic; do not implement
+
+Native `MonumentProject.completionPercent` (work + delivered
+materials / required), `GrandCanalProjectRuntime.completionPercent`
+(segment-stage fraction), and Earthen Great Wall stage counters
+are **not** a recovered mapping of `FUN_00565410`’s part-weight
+percent. Native `CampaignGoalEvaluation` tests
+`completedMonumentBuildingIDs.contains(buildingID)`, not this
+pair-count walk, and does not stamp live `goal+8`. There is no
+Native walk over a type-2 object vector at `DAT_012A4BA8`, no
+mapped `building+4 ∈ {1,3}`, no mapped `building+0xB4` list
+index, and no recovered save/load of the matching `goal+8`
+side effect.
+
+Missing any of those inputs, production stays
+`unsupportedOriginalProducer`. Do not fill a missing monument
+with `0`. Do not derive `FUN_00565410 >= 100` from `buildingID`
+alone.
+
+#### CH/EN (`compare-report.tsv` rows only)
+
+`identical`: `FUN_00413B40`, `FUN_00426D10`, `FUN_0047F1B0`,
+`FUN_004F8210`, `FUN_00554C00`, `FUN_00559490`, `FUN_0055A8E0`,
+`FUN_0055AE30`, `FUN_0055B6A0`, `FUN_0055BCB0`, `FUN_0055F120`,
+`FUN_005603E0`, `FUN_005604C0`, `FUN_00562E80`, `FUN_00562F70`,
+`FUN_00565410`, `FUN_00591200`. Canonical conclusions above are
+EN `.text` plus those rows. The copy at `0x560560` has **no**
+row. Non-canonical on-disk siblings are not used.
+
+## 4. Pressure and requests (`FUN_005917E0`) — confirmed
+
+| popularity | pressure |
+| --- | --- |
+| `<16` | −25 |
+| `16…25` | −17 |
+| `26…35` | −8 |
+| `36…49` | 0 |
+| `50…60` | 50 |
+| `61…70` | 75 |
+| `≥71` | 100 |
+
+Population `>199999` zeros pressure. War troop count `≥4`
+(`DAT_01312564`) zeros **positive** pressure only.
+
+`DAT_01312564` increment/decrement is `FUN_004EBB40` when
+`FUN_004E2560(figure+0x12)` is true: types `0x3A…0x3E` and `0x4E`
+(`confirmed`). Native military entities do not yet expose that
+lifecycle, so the count is **not** an implemented Native field.
+
+`FUN_005917E0` and `FUN_004AD4A0` do **not** read `DAT_01311FD0`
+(`confirmed` negative, §6). When signed pressure changes,
+`FUN_005917E0` calls `FUN_00548340(0)`, which **reads** that dword
+for overlay-message selection and does not write it.
+
+Request size `ceil(12 × |pressure| / 100)` (`FUN_0043B860`). Arrival
+requests use cooldown `DAT_01311FC8`; departure requests use
+`DAT_01311FC4`. Making an arrival sets the **departure** cooldown to
+2, and vice versa. Departures are suppressed while population `<101`.
+
+## 5. Assignment spawn versus occupancy write
+
+`FUN_004ADA10` house walk (`confirmed`). Local remaining request `i`
+starts as `param_1`. Every assignment pass requires
+`*(short *)(house + 0x24) > 0` (`confirmed` read). Lifecycle of that
+short is in §5.7. Native still has **no** mapped field for it
+(`unknown`). Do not summarize the walk as vacancy/capacity only, and
+do not equate `+0x24` to Native `observeHousing` road adjacency.
+
+Pass predicates, all conjoined with `house+0x24 > 0`:
+
+1. vacant (`house+0x20 == 0`) with capacity `house+0x22 != 0`, in
+   chunks of at most 6;
+2. capacity `house+0x22 > 11` with no in-flight immigrant
+   (`house+0x32 == 0`);
+3. remaining capacity `house+0x22 > 0` with `house+0x32 == 0`.
+
+After each `FUN_004ADE10` call the caller decrements `i` by the
+requested people count (`6`, remaining `i`, or `house+0x22`) **without
+reading spawn success**. Then `DAT_01311FB0 += (param_1 - i)` and
+`DAT_01311FCC += DAT_01311FB0`. Those values are **assigned/accounted**
+counts, not proven successfully spawned figure counts. They are
+accounted at this assignment, not at walker arrival.
+
+Failed-spawn edge (static control flow only; no runtime frequency is
+claimed): `FUN_004ADE10` writes figure fields only when
+`FUN_004EA050(...)` returns non-zero. If that spawn returns `0`,
+`FUN_004ADE10` returns without linking `house+0x32` or writing
+`figure+0x40/+0x64/+0x6e`. `FUN_004ADA10` still decrements `i` around
+the call, so `param_1 - i` / `DAT_01311FB0` / `DAT_01311FCC` can
+include accounted people for a spawn that did not occur. No guarantee
+that `FUN_004EA050` always succeeds is recovered here.
+
+`FUN_004ADE10` (`confirmed`):
+
+- `FUN_004EA050(1, 0xB, DAT_00C5CDFC, DAT_00C5CDFE, …)` spawns
+  figure type `0xB` (authored `EmperorFigureModels.txt` row 11
+  `immigrant`);
+- writes action state `figure+0x40 = 6`;
+- stores house id at `figure+0x64` (`immigrant_to` debug string);
+- stores people count at `figure+0x6e`;
+- links `house+0x32` to the figure id;
+- does **not** increment `house+0x20` residents.
+
+Contrast: emigrant spawn `FUN_004ADED0` **does** subtract
+`house+0x20` immediately, then spawns type `0xC` with state `6`.
+
+### 5.1 Immigrant `#11` / type `0xB` dispatch (confirmed)
+
+Authored `GameData/Model/EmperorFigureModels.txt` 1-based row **11** is
+`immigrant` (combat/speed stats match laborer row 10). Row 12 is
+`emmigrant`, row 13 `homeless`. Spawn stores model id **verbatim**:
+`FUN_004C9160` writes `figure+0x12` from the spawn type argument, so
+`FUN_004ADE10` yields `+0x12 == 0xB`. Default figure constructor
+`FUN_004C71D0` (vtable `PTR_LAB_007afe60`) does **not** attach
+`FigureFSA` @ `0x4D7310` to type `0xB`.
+
+Think dispatch (`confirmed`, hash-matched EN `8a6d2df1…6753`, image
+base `0x400000`):
+
+1. Simulation tick `FUN_005371A0` calls `FUN_004E27E0`.
+2. `FUN_004E27E0` walks live figures (`figure+0x16 != 0`) and calls
+   vtable `+0x28`.
+3. That slot is `FUN_004C7580` (`0x4C7580`):
+   `mov al, [ecx+0x12]`; `lea eax, [eax+eax*4]`;
+   `jmp dword ptr [eax*8 + 0x84E784]`.
+   Index is `type * 40 + 0x84E784`, i.e. slot 9 of table row
+   `type - 1`.
+4. Type `0xB` therefore jumps to **`FUN_004C9FD0`** (`0x4C9FD0`), the
+   `FIG_IMMIGRANT` think stored as table-row-10 slot 9.
+
+Type-table layout at `0x84E788` (10 dwords / row). Debug names sit on
+the row whose **slot 0** is indexed by `figure+0x12` in sprite tick
+`FUN_004D6C40`, while think uses the trampoline above. Do not treat the
+adjacent debug string `FIG_EMMIGRANT` on table row 11 as the immigrant
+think: type `0xB` think is `0x4C9FD0`, not `FUN_004CA340`.
+
+| `figure+0x12` | authored row | trampoline think | sprite slot 0 (`FUN_004D6C40`) |
+| --- | --- | --- | --- |
+| `0xB` (11) | immigrant | `FUN_004C9FD0` | `FUN_004D6D30` (sprite/frame only) |
+| `0xC` (12) | emmigrant | `FUN_004CA340` (leave-map; no `+0x64`/`+0x6e` occupancy) | `FUN_004D6CF0` (skipped when `param_1==0`) |
+| `0xD` (13) | homeless | `FUN_004CA960` | `FUN_004D6CF0` |
+
+`FUN_004D6D30` is not occupancy. Slot-9 functions have no direct
+`call rel32` sites; the trampoline is the recovered indirect edge.
+
+`FUN_004C9FD0`, `FUN_004C7580`, `FUN_004C9160`, and `FUN_004D6D30` are
+**absent** from `local/source/split-merged` / `compare-report.tsv`
+(corpus gap after `FUN_004D6C40`). Bodies were read from the
+hash-matched EN executable. The same byte ranges also match the sibling
+`Emperor[CH].exe` in that Wineskin folder; that sibling’s **full-file**
+SHA-256 is `0ca8fc07…`, not the documented `dbdeca1e…15a` CH build.
+Do not upgrade the new functions to documented-CH identity. Callers
+that **are** in `compare-report.tsv` (`FUN_004E27E0`, `FUN_004BA6F0`,
+`FUN_004E9620`, `FUN_005188B0`, `FUN_005188F0`, `FUN_0044CC80`,
+`FUN_00426D10`, `FUN_00591900`, `FUN_005919A0`, `FUN_004C8B70`,
+`FUN_004ADE10`) are listed `identical`.
+
+### 5.2 `FUN_004C9FD0` guards and states 6→7→8 (confirmed)
+
+Preamble (any failure → `figure+0x16 = 2` and return at `0x4CA330`;
+**does not** clear `house+0x32` here):
+
+- `esi` = current figure (`DAT_010AEEE4` via `FUN_0047F1B0`);
+- `FUN_004EB9C0(id, 8)` return value later passed to `FUN_004E47A0` as
+  the state-7 step count;
+- `figure+0x80 = 3`, `figure+0x194 = 0`;
+- house `edi` = `FUN_0047F1B0(figure+0x64)` (ecx `0x8C7634`);
+- `FUN_00426D10(house)` must be true (`house+4` is `1` or `3`);
+- `house+0x32` must equal the current figure id;
+- house vtable `+0xB8` must return true (`FUN_0042DD40`; §5.8);
+- `FUN_005188B0(house+0x14)` must be true:
+  `2 ≤ type ≤ 0x11` (building models **2…17**, Vacant House through
+  Heavenly Elite).
+
+Then `figure+5` increments and wraps at `0xC` (sprite phase). Switch
+on `figure+0x40`:
+
+| `+0x40` | behavior |
+| --- | --- |
+| `5` | `FUN_004E6280(id)` then sprite tail. Side state, not occupancy. |
+| `4` | `FUN_004E6470(id)` then sprite tail. Increments `+0x3e`; at `>= 0x80` sets `+0x16 = 2`. Side state, not occupancy. |
+| `6` | Spawn entry. `dec word [figure+0x3e]`; `+0x6f = 1`; `+5 = 0`. Signed `jg` if `+0x3e > 0`: wait (sprite tail only). Else `FUN_004BA6F0(house+0xA, house+0xC, house+7)`. Return `0`: `+0x16 = 2`. Return nonzero: `+0x40 = 7`; `+0x2c/+0x2e = DAT_010C72AC / DAT_010C72A8`; `+0x4c = 0`. |
+| `7` | Walk. `+0x6f = 0`; `FUN_004E47A0(id, ebp)`. Then `figure+0x19`: **9** → `+0x40 = 6`, `+0x3e = 1`, `FUN_004E8A30(id, 1)` (reroute). **10** → `house+0x32 = 0` **and** `house+0x24 = 0`, `figure+0x16 = 2` (failure unlink). **8** → `+0x40 = 8`; target `house+0xA/+0xC`; `FUN_004E98A0`; `+0x4c = 0`. Other `+0x19`: sprite tail, remain in 7. |
+| `8` | Approach / arrival. See §5.3. |
+| other | `+0x40 = 6`. |
+
+Spawn already wrote `+0x40 = 6` and the wait word
+`figure+0x3e = (house+0x51 & 0xFF7F) + *DAT_00D62418`, then
+`*DAT_00D62418 += 0x32`. `FUN_004AD4A0` does `DAT_00D62418 -= 0x33`
+(clamp `>= 0`) before assignment. State 6 decrements that **word**,
+matching spawn.
+
+`FUN_004BA6F0` (`confirmed` control flow; tile-flag meaning
+**unknown** beyond the recovered reads): walks up to `0x18` neighbor
+slots from `(&DAT_00820038 + rot*0x60)` against map cell
+`DAT_0101D0C8 + y*0xE4 + x`. On success writes
+`DAT_010C72AC = idx % 0xE4` and `DAT_010C72A8 = idx / 0xE4` and
+returns `1`; if no candidate remains (`n > 0xB`) returns `0`. Those
+two globals are the state-6→7 waypoint, **not** the house tile.
+State 7 direction **8** retargets to the house coordinates.
+
+Direction `figure+0x19` (`confirmed` writers; names below are
+operational, not original symbols):
+
+- `FUN_005B2730` returns compass `0…7`, or **`8` when current tile
+  equals target** (`param_1==param_3` and `param_2==param_4`).
+- `FUN_004E8B40` (from `FUN_004E7EB0`): if `figure+0x42 < 1`, set
+  `+0x19` from `FUN_005B2730`; if that value is not `8`, force
+  **`10`**. If path index `+0x46 <= +0x44`, `FUN_004E8A30` and set
+  **`8`**.
+- `FUN_004E8BC0` stores **`9`** on collision/block (see
+  `roadblock-path-blocking.md`).
+
+### 5.3 Arrival write (`0x4CA265`) and counters (confirmed)
+
+State `8`: `figure+0x14 = 1`; `FUN_004E9620(id, 1)`. That helper
+returns `1` when remaining Bresenham lengths
+`(short)figure+0x5C + (short)figure+0x5A < 1` (`confirmed` predicate).
+If the return is **not** `1`, skip the occupancy block (no
+`house+0x20` add, no `house+0x32` clear) and only set `+0x6f` from
+`figure+0x48`.
+
+If the return **is** `1`:
+
+1. `figure+0x16 = 2` **before** the resident write.
+2. Capacity `ebp = FUN_0044CC80(row, 0x11)` where `row` is `0xB`
+   when `house+0x14 == 0xB` (Unocc Elite), else `house+0x16`.
+3. If `house+0x20 == 0` (empty house):
+   - if capacity `< 0`, treat as `0`;
+   - if capacity `< (uint8)figure+0x6e`, clamp `figure+0x6e` down to
+     that capacity;
+   - `FUN_005188F0(house+0x14)` is true for `1 < type < 0xB`
+     (models **2…10**, common housing);
+   - if that is true **and** `DAT_00D62408 == 0`, call house vtable
+     `+0x230(3)` (`FUN_00518DE0`; §5.10);
+   - if that is false **and** `DAT_00D62408 == 0`, call
+     `+0x230(0xD)`;
+   - if `DAT_00D62408 != 0`, skip `+0x230`. Method identity and
+     this site’s skip polarity are §5.10. `DAT_00D62408` writer
+     and meaning remain **unknown**.
+4. `eax = house vtable +0x1E4()` (`FUN_00416B50`; §5.9). If
+   `*(byte *)(eax + 0x3C) != 0`, **skip** the add/`FUN_00591900`
+   pair. Original name of that `cHouseInfo` byte is **unknown**.
+5. If `+0x3C == 0` (`0x4CA260…0x4CA27E`):
+   - **`add word [house+0x20], movzx byte [figure+0x6e]` at
+     `0x4CA265`**;
+   - `house+0x22 = capacity - house+0x20`;
+   - `FUN_00591900((uint8)figure+0x6e)`.
+6. **Always** `house+0x32 = 0` after that block, even when `+0x3C`
+   skipped the add.
+
+`FUN_00591900` (`confirmed`): `DAT_01311F90 = count`; `push 5`;
+`FUN_005919A0(count)`. The immediate `5` is **unread**
+(`FUN_005919A0` uses only `esp+4`). Then
+`DAT_0130F988 += count` (city population), clamp `>= 0`,
+`jmp FUN_00590A50` (high-water `DAT_0131257C`). This is the
+population effect of a successful immigrant occupancy write. It is
+**not** `DAT_01311FCC`.
+
+Same-tick despawn: `FUN_004E27E0` after think, if `+0x16 == 2` and
+`+0x12 != 0`, calls `FUN_004EA080(id)`.
+
+### 5.4 `house+0x32` cleanup and failure (confirmed opcodes)
+
+| site | `house+0x32` | `house+0x24` | `figure+0x16` |
+| --- | --- | --- | --- |
+| State 8, `FUN_004E9620 == 1` | `0` | unchanged | `2` (before the add) |
+| State 7, `+0x19 == 10` | `0` | **`0`** | `2` |
+| State 6, `FUN_004BA6F0 == 0` | unchanged here | unchanged | `2` |
+| Preamble guard fail | unchanged here | unchanged | `2` |
+| `FUN_004ADA10` start-of-pass scavenger | `0` if linked figure `+0x16 != 1` | unchanged | n/a |
+
+`FUN_004C8B70` death tail (`0x4C909E`): tests **`figure+0x64 != 0`**,
+then looks up an object with **`figure+0x62`** and writes that
+object’s `+0x32 = 0`. Immigrant spawn writes the house id to
+`+0x64` only; `FUN_004C72B0` zeros `+0x62`. Whether type-`0xB`
+death therefore unlinks the target house is **not proven**. Do not
+cite this site as confirmed immigrant-house unlink. Stale
+`house+0x32` after preamble/state-6 fail is cleared by the
+`FUN_004ADA10` scavenger when the figure is no longer live
+(`+0x16 != 1`), or immediately on the state-7/`+0x19==10` path.
+
+Zeroing `house+0x24` on direction `10` is a **confirmed write**.
+Native mapping of `+0x24` remains **unknown**; lifecycle is §5.7.
+
+### 5.5 Distinct vagrant writer at `0x4CB1CD` (confirmed; not immigrant)
+
+A second `movzx` from `figure+0x6e` / `add word [house+0x20]` lives at
+`0x4CB1C9` / **`0x4CB1CD`**, inside `FUN_004CA960` (type-`0xD` /
+`FIG_VAGRANT` think). It calls **`FUN_00591930`**, not
+`FUN_00591900`: `DAT_01311F8C -= count` then `FUN_005919A0(count)`
+(unread immediate `4`). Emigrant think `FUN_004CA340` has **zero**
+`house+0x20 += figure+0x6e` adds. Do not use `0x4CB1CD` as the
+immigrant arrival write.
+
+### 5.6 Negative searches / false positives
+
+- `local/source/split-merged` C has **no** `house+0x20 += figure+0x6e`;
+  the writers exist only in the EN `.text` opcode scan (two sites
+  above). Corpus-only search is insufficient.
+- `FUN_00408B40` `+0x6e` is building labor, not figure people count.
+- `immigrant_to` string is a debug overlay (`Not_watching_a_figure` @
+  `0x5BE170`), not the think dispatcher.
+- Type-table `case 0xb` hits in `FUN_004E47A0` are movement-mode
+  enums, not figure model id.
+- `FigureFSA` @ `0x4D7310` is a generic constructor, not type-`0xB`
+  occupancy.
+- `FUN_004AE1A0` writes `house+0x20` only on negative-capacity
+  homeless spawn (`FUN_004AE150` type `0xD`), not immigrant arrival.
+- Assigned `DAT_01311FB0` / `DAT_01311FCC` remain assignment
+  accounting, **not** arrival success.
+
+Folding walker travel into instant `admitResidents` remains
+forbidden. The original write is this per-model immigrant
+think/state machine, not an assignment-tick side effect.
+Production still must not spawn walkers or enable the
+migration producer: Native food mapping / Native monument mapping /
+war / mode / `house+0x24` / `DAT_00D62408` writer and meaning remain
+unresolved. The `FUN_00590F30` and `FUN_0055AE30` walks themselves
+are §3.
+`cHouseInfo+0x3C` method identity and `FUN_004C9FD0` gate polarity
+are closed (§5.9); original semantic name, complete writer/lifecycle
+set, and Native mapping are not. House vtable `+0x230` method
+identity and empty-house skip polarity are closed (§5.10). The
+post-call pairs `(+0x14,+0x16)=(3,0)` and `(13,10)` map to Native
+`houseLevelID` 0 and 10. Original vacant types are building IDs 2
+and 11. Native `ResidentialUnit` representation/lifecycle of those
+two states, walker-arrival type-switch timing `2→3` / `11→13`,
+complete caller set, and original symbol name remain unclosed.
+
+`FUN_004ADC90` departure assignment walks occupied houses by
+`house+0x16` buckets and calls `FUN_004ADED0`. It does **not** read
+`house+0x24` (`confirmed` negative). Road-adjacent-only departure
+filtering is **not** a recovered house-walk predicate.
+
+### 5.7 Residential `+0x24` lifecycle (2026-08-14)
+
+Same signed short as `FUN_004ADA10` and the immigrant state-7
+direction-10 zero at `0x4CA157`. Object layout matches the
+`FUN_005177B0` → `DAT_010BFEF0` house list: `+0xA/+0xC` tile,
+`+0x14` model, `+0x16` evolution, `+0x20` residents, `+0x22`
+remaining capacity, `+0x32` in-flight figure, `+0xB4` id.
+
+**Value source (`confirmed`).** Refresh methods zero `house+0x24`,
+then store the low 16 bits of per-cell DWORD `DAT_01391FE0[cell]`.
+`FUN_00416400` does **not** search for an access cell: it uses
+`building+0x10` as the cell index and copies its own `+0xA/+0xC`
+into `+0x2A/+0x2C`. Direct store @ `0x416424`:
+`mov dx, word ptr [edi*4 + 0x1391FE0]`; `mov [esi+0x24], dx`.
+Type-specific sister refreshers (`FUN_00426DF0`, `FUN_004F01F0`,
+`FUN_00507950`, `FUN_00508D50`, `FUN_005E1D40`) choose an access
+cell with `FUN_004BAF40` / `FUN_004BA6F0` (the latter already used
+by immigrant state 6) before the same table store. Several of those
+also copy `DAT_010C72AC/A8` into `house+0x2A/+0x2C`.
+`FUN_00507950` requires terrain bit `0x40` (road) on the candidate
+cell before the store.
+
+**Table fill (`confirmed`).** `DAT_01391FE0` is a `0xCB10`-DWORD
+cell map. `FUN_004ACFC0` (calendar case `0x15`, immediately before
+capacity case `0x16` and assignment case `0x17`) calls
+`FUN_005AE140(DAT_00C5CDFC, DAT_00C5CDFE, …)` — the same land-entry
+tile used to spawn type `0xB` — then walks live buildings, zeros
+`+0x2A/+0x2C`, and calls vtable `+0x84` (the refresher family
+above). `FUN_005AE140` flood-fills the map from that seed
+(`[seed]=1`, 4-neighbors `n+1` when the pass predicate holds).
+A later `FUN_004AD3D0` (case `0x16`) includes a house in
+`DAT_0130F994` / `DAT_0130F998` capacity totals only when
+`(short)house+0x24 > 0`.
+
+**Other same-layout readers of `+0x24 > 0` (`confirmed`):**
+`FUN_004ADD60` (nearest house with capacity and `+0x32==0`) and
+`FUN_004ADFB0` (add residents), besides assignment `FUN_004ADA10`
+and capacity `FUN_004AD3D0`.
+
+**Unclassified opcode candidates (not confirmed same-layout).**
+An EN `.text` `cmp word [r+0x24], 0` scan also hits
+`FUN_004AFC50`, `FUN_004E38E0`, `FUN_004AEBD0`, `FUN_004AEEB0`,
+and later sites `0x506DCA`, `0x54132E`, `0x541404`, `0x5D2D50`,
+`0x5D2FF1`, `0x5D3231`, `0x5D59A7`, `0x5D6122`, `0x5DB79C`,
+`0x5DDDA0`, `0x5E1352`. Those sites were **not** re-traced; they
+are candidate / negative-search evidence only. Do not treat them
+as confirmed house `+0x24` readers.
+
+**Other lifecycle writers/copies (`confirmed`).** Zero writer:
+`FUN_005447F0` writes `+0x24 = 0` (function pointer appears as a
+vtable entry at `0x7B7070`; also zeros `+0x4A/+0x4C` and sets
+`+0x5D` from `param_2`; no direct `call rel32`). Refresh-then-store
+writer: `FUN_00543DC0` first zeros `+0x24`, then selects a cell
+through vtable `+0x194` and repopulates `+0x24` from
+`DAT_01391FE0` in the same refresher. Copy helpers:
+`FUN_00426EA0` copies `+0x20…+0x32` including `+0x24`;
+`FUN_00540880` (function pointer appears as a vtable entry at
+`0x7B6CE0`, no direct `call`) copies `+0x24/+0x2A/+0x2C` from
+`FUN_0047F1B0(*(this+0x154))` and returns `+0x24 != 0`. Whether
+every house uses that `+0x154` object is **unknown**.
+
+**Debug overlay (`confirmed` strings, not Native names).** Watching
+a building (`Not_over_a_building.c`) prints `*(short *)(obj+0x24)`
+with label `rome`, `*(byte *)(obj+0x18)` with `roadnet`, and
+`*(short *)(obj+0x22)` with `spare_room`. Do not call `+0x24`
+`roadnet`; that overlay word is `+0x18`. Do not ship `rome` as a
+Native identifier.
+
+**Rejected names (`confirmed` negatives).** Not remaining capacity
+(`+0x22` / overlay `spare_room`). Not the in-flight immigrant slot
+(`+0x32`; zeroing `+0x24` also drops the house from city capacity
+totals). `GameData/Model/EmperorBuildingModels.txt` house columns
+are evolve requirements, not this runtime short. No authored model
+field maps to it.
+
+**Not named (`inferred` only).** Snapshot of the land-entry cell
+flood, gated on a road-bit access cell in some refreshers, is
+consistent with “reachable from the immigrant entry road.” That is
+**not** a recovered original symbol and is **not** Native
+`observeHousing` adjacency. Native mapping remains `unknown`.
+Production stays fail-closed.
+
+**False positives / negatives.** Figure `+0x24` is a byte delay in
+`FUN_004E9620`; `FUN_004C72B0` zeros figure `+0x24`.
+`FUN_0054CC60` `+0x24` is a `0xB4`-stride record, not a house.
+`FUN_004090F0` `param_1+0x24` is an `int*` slot (byte `+0x90`).
+Immediate `mov word [r+0x24], imm16` with `modrm=0x44` is SIB/disp
+noise, not this field. `FUN_004C9FD0` is absent from
+`split-merged`; the direction-10 write is EN `.text` @ `0x4CA157`.
+Callers/helpers that exist in `compare-report.tsv`
+(`FUN_004ADA10`, `FUN_004AD3D0`, `FUN_004ACFC0`, `FUN_00416400`,
+`FUN_00426DF0`, `FUN_004F01F0`, `FUN_00507950`, `FUN_00508D50`,
+`FUN_004BAF40`, `FUN_005AE140`, `FUN_005447F0`, `FUN_00540880`,
+`FUN_004ADC90`) are listed `identical`.
+
+### 5.8 House vtable `+0xB8` (`FUN_0042DD40`, 2026-08-14)
+
+Object factory `FUN_0042D360` (`confirmed`). First call is
+`FUN_005188B0(param_1)`: `cmp eax, 2` / `jl` fail; `cmp eax, 0x11` /
+`jg` fail; else `mov al, 1; ret` (fail `xor al, al; ret`). Every
+building ID **2…17** returns true and takes the house arm:
+`FUN_0040AE80(0x10C)` then `FUN_0042D480`. Those IDs do **not** enter
+`FUN_0051C660`. `FUN_005188D0` (elite 11…17) is **not** used here;
+common and elite share one class.
+
+`FUN_0042D480` (`confirmed` last vfptr write). `FUN_00426C90()` on
+`this`; `lea ecx, [esi+0xC8]` / `FUN_00517190()` (subobject, vtable
+`0x7B5C44`, **not** the house vfptr); then
+`mov dword [esi], 0x7ABA38`. `FUN_00516AB0` is the same allocator +
+`FUN_0042D480`.
+
+Final vtable `0x7ABA38` (`confirmed` RTTI). Dword at `0x7ABA34` is
+COL `0x7CFAD0`; type descriptor `0x817938` name `.?AVHouseBldg@@`.
+Slot `+0xB8` @ `0x7ABAF0` is **`FUN_0042DD40` @ `0x42DD40`**.
+
+`FUN_0042DD40` (`confirmed` EN `.text`; corpus gap):
+`mov dl, [ecx+9]; xor eax, eax; test dl, dl; setne al; ret`.
+Returns 1 iff `house+9 != 0`. No stack args.
+
+Call polarity (`confirmed`; any `al==0` skips):
+`FUN_004C9FD0` call `[edx+0xB8]` @ `0x4CA03F`, `test al, al` @
+`0x4CA045`, `je 0x4CA330` @ `0x4CA047`;
+`FUN_004ADD60` call `[eax+0xB8]` @ `0x4ADDA5`, `test al, al` @
+`0x4ADDAB`, `je 0x4ADDEA` @ `0x4ADDAD`;
+`FUN_004ADFB0` call `[edx+0xB8]` @ `0x4AE039`, `test al, al` @
+`0x4AE03F`, `je 0x4AE0E5` @ `0x4AE041`.
+The three sites require a **true** return, then apply their own
+`+0x24` / capacity / type checks. This predicate is **not**
+`house+0x24`, remaining capacity `+0x22`, live-state
+`FUN_00426D10` (`+4` is `1` or `3`), or the `+0x1E4` / `+0x3C` gate.
+
+Byte `+9` writers (same layout; **not** a recovered original name):
+`FUN_00518B70` writes `+9 = 1` after `FUN_00428C10` zeros it.
+`FUN_0042AAA0` first calls `+0xB8`; only if that returns true **and**
+`(short)param_1[8]` (`house+0x20` residents) is nonzero does it call
+`FUN_00591920`, zero `+0x20`, and zero `+9`. Overlay
+`Not_over_a_building.c` tests `obj+9 == 0` as a skip; no debug label
+for that byte. `GameData` house columns do not map to it. Native name
+remains **unknown**. Do not treat `+9` as occupancy.
+
+**Rejected class (`confirmed` negative).** `FUN_0051C9A0` /
+vtable `0x7B65E4` is `.?AVcIndustrialBldg@@`. Its `+0xB8` is
+`FUN_00413A00` (`xor al, al; ret`). IDs 2…17 never take that path
+from `FUN_0042D360`.
+
+CH/EN: `FUN_0042D360`, `FUN_0042D480`, `FUN_005188B0`,
+`FUN_00517190`, `FUN_00516AB0`, `FUN_00426C90`, `FUN_004ADD60`,
+`FUN_004ADFB0`, `FUN_00426D10`, `FUN_00518B70` are `identical` in
+`compare-report.tsv`. `FUN_0042DD40` and `FUN_004C9FD0` are absent
+from `split-merged` / `compare-report.tsv` (EN `.text` only).
+
+### 5.9 House vtable `+0x1E4` / `cHouseInfo+0x3C` (2026-08-14)
+
+`HouseBldg` `0x7ABA38 + 0x1E4` @ `0x7ABC1C` is **`FUN_00416B50` @
+`0x416B50`** (`confirmed` EN `.text`; corpus gap):
+`lea eax, [ecx+0xC8]; ret`. Returns the subobject constructed in
+`FUN_0042D480` (`lea ecx, [esi+0xC8]; call FUN_00517190`).
+
+That subobject’s vfptr is `0x7B5C44`. COL `0x7D3408` / type
+descriptor `0x854300` name `.?AVcHouseInfo@@` (`confirmed` RTTI).
+`cHouseInfo+0x3C` is `HouseBldg+0x104`, **not** `HouseBldg+0x3C`.
+
+`FUN_004C9FD0` state-8 arrival gate (`confirmed` opcodes), after the
+empty-house `+0x230` block and before the occupancy add:
+call `[eax+0x1E4]` @ `0x4CA253`; `mov cl, [eax+0x3C]` @ `0x4CA259`;
+`test cl, cl` @ `0x4CA25C`; `jne 0x4CA281` @ `0x4CA25E`.
+Nonzero **skips** `house+0x20 += figure+0x6e` @ `0x4CA265` and
+`FUN_00591900`. Zero falls through to that add. `house+0x32 = 0` at
+`0x4CA281` runs either way. Distinct from `house+0x24`, `house+9`,
+remaining capacity `+0x22`, and occupancy `+0x20`.
+
+**Writers of `cHouseInfo+0x3C` via this object (`confirmed`; not a
+complete map).** Constructor `FUN_00517190` @ `0x51724F` /
+`0x51725E`: `lea ecx, [esi+0x3C]`; `mov byte [ecx], 0`.
+`FUN_004681A0` after `+0x1E4()`: call `FUN_00591920(count)` on the
+converted count, then subtract the same count from `house+0x20`,
+then write `cHouseInfo+0x3C = param_2` and `house+0x98`
+(`p[0x26]`) `= 0x20`. Proven caller `FUN_00468420` passes `2`.
+After `FUN_004681A0(param_1, 2)`, `FUN_00468420` loops three times
+calling `FUN_004EA050(..., 0x12, ...)`.
+`GameData/Model/EmperorFigureModels.txt` decimal ID 18 (`0x12`) is
+“Disease Carrier”. Confirmed relationship: the value-`2` path
+subsequently generates three Disease Carriers. That associates
+`cHouseInfo+0x3C` with disease-carrier handling; it does not name
+the byte, recover a threshold, or close its semantics. Calendar
+case `6` (`FUN_004AC2B0`) calls `FUN_005185C0`: live `+0xB8` houses
+with `+0x3C != 0` and `+0x98 > 0` decrement `+0x98` and write
+`+0x3C = 0` when residents are 0 or the counter hits 0.
+
+**Same-identity readers (`confirmed`, not a name).**
+`FUN_004AD3D0` (capacity totals use current residents instead of
+model capacity when `+0x3C != 0`); `FUN_00519F30`; `FUN_0058C420`
+(`+0xB8` then `+0x3C != 0` sets a status bit). Overlay
+`Not_over_a_building.c` prints other `+0x1E4` bytes (`+0x2A…+0x38`)
+and has **no** label for `+0x3C`. This pass did not find a mapping
+in authored house columns. Do not ship `cHouseInfo` or
+“needs-object” as a Native field identifier for this byte.
+
+**Rejected (`confirmed` negatives).** `FUN_004C9C80` writes figure
+`+0x3C`. `FUN_00426EA0` copies `HouseBldg+0x3C` as a short, not
+`cHouseInfo+0x3C`. `cIndustrialBldg` `0x7B65E4+0x1E4` is
+`0x40E630`, not `FUN_00416B50`.
+
+CH/EN: `FUN_00517190`, `FUN_004681A0`, `FUN_00468420`,
+`FUN_005185C0`, `FUN_004AD3D0`, `FUN_00519F30`, `FUN_0058C420`,
+`FUN_004AC2B0` are `identical`. `FUN_00416B50` and `FUN_004C9FD0`
+are absent from `split-merged` / `compare-report.tsv`.
+
+### 5.10 House vtable `+0x230` / `DAT_00D62408` (2026-08-14)
+
+`HouseBldg` `0x7ABA38 + 0x230` @ `0x7ABC68` is **`FUN_00518DE0` @
+`0x518DE0`** (`confirmed` EN `.text`; corpus gap). `thiscall` /
+`ret 4`. `ecx` is the `HouseBldg`. The dword `0x518DE0` occurs
+once in the image, at that slot. No `E8` rel32 to it.
+
+`FUN_004C9FD0` state-8 empty-house gate (`confirmed` opcodes), after
+`house+0x20 == 0` @ `0x4CA1FC` and the capacity clamp, before
+`+0x1E4`. Execution order: `call FUN_005188F0` @ `0x4CA21C`;
+`test al, al` @ `0x4CA224`; `mov eax, [0xD62408]` @ `0x4CA226`
+(does not change flags); `je 0x4CA23F` @ `0x4CA22B`. The `JE`
+uses the common predicate from `0x4CA224`, not the DAT load.
+Common-true (`0x4CA22D`): `test eax, eax` / `jne 0x4CA24F`;
+`push 3`; `call [eax+0x230]` @ `0x4CA237`; `jmp 0x4CA24F`.
+Common-false (`0x4CA23F`): `test eax, eax` / `jne 0x4CA24F`;
+`push 0xD`; `call [edx+0x230]` @ `0x4CA249`. Nonzero
+`DAT_00D62408` **skips** both calls (`test eax` in each arm). The
+method’s `al` is unread. Occupied houses (`+0x20 != 0`) jump to
+`0x4CA24F` and never call it. Distinct from `house+0x24`,
+`house+9`, occupancy `+0x20`, remaining capacity `+0x22`, and
+`cHouseInfo+0x3C`.
+
+`FUN_00518DE0` (`confirmed` opcodes). Saves old `house+0x14` /
+`+0x16`. `bl = FUN_005188F0(old +0x14)` (common IDs **2…10**);
+elite flag `= FUN_005188D0(old +0x14)` (IDs **11…17**). Then
+`house+0x14 = param` and `house+0x16 = 0` if `param <= 3`, else
+`param - 3`. If `FUN_005188F0(new +0x14)`: require old-common else
+restore both words and `return 0`; else table
+`[new+0x16]*4 + 0x8232F8`. If new type is not common: require
+old-elite else restore and `return 0`; else table
+`[new+0x14]*4 + 0x85410C`. Success arms call `FUN_00408170` on that
+dword, optionally add `(*(byte *)(*(house+0x10) + 0xF1E780)) & 1`
+(skipped in the non-common arm when `+0x14 == 0xB`), then
+`FUN_004B72B0`, and `return 1`. Meaning of `0xF1E780` is
+**unknown**. `FUN_004B72B0` writes map cells including
+`DAT_00FC3750`; this pass does not name those helpers.
+
+**Authored cross-evidence (`confirmed` relationship, not a method
+name).** `GameData/Model/EmperorBuildingModels.txt` decimal ID 3
+(line 87) is “Shelter House”; ID 13 (`0xD`, line 97) is “Modest
+Elite”. `GameData/Audio/BuildingSounds.txt` rows 26 / 36 use the
+same IDs. `FUN_004C9FD0` passes those immediates into a method that
+writes `house+0x14` (the building-type word already used as
+`Unocc Elite` `0xB` / common 2…10). That associates the
+empty-house call with those model IDs. It does not name
+`FUN_00518DE0`. Original empty-house types are authored ID 2
+(line 86) “Vacant House” and ID 11 (line 95) “Unocc Elite”;
+`BuildingSounds.txt` rows 25 / 34 use the same names.
+`BuildingSpriteCatalog` already has vacant common/elite sprites.
+`GameData/Model/EmperorFigureModels.txt` decimal 3 / 13 are
+“zguy” / “homeless”; those are **not** this parameter.
+`EmperorBuildingModels.txt` `ALL HOUSES` “1: Shelter” is a
+1-based house-tier label; Native `houseLevelID` is 0-based, so
+tier 1 Shelter corresponds to Native level 0. That is not the
+building ID / `house+0x14` numbering.
+`EmperorText.txt` / event tables: this pass did not find a mapping
+for `DAT_00D62408` or for this method.
+
+**Native post-call values (`confirmed` relationship; not the whole
+original layout).** `ResidentialUnit.houseLevelID` and
+`BuildingSpriteCatalog.housingBuildingID(forHouseLevelID:)` use
+`buildingID = levelID + 3`. After `+0x230(3)`: `house+0x14 = 3`,
+`house+0x16 = 0` → Native `houseLevelID` 0 / building ID 3. After
+`+0x230(0xD)`: `house+0x14 = 13`, `house+0x16 = 10` → Native
+`houseLevelID` 10 / building ID 13. Do not extrapolate that formula
+to other `+0x14` / `+0x16` pairs. Original vacant type IDs 2 and
+11 are **confirmed**. Still unclosed: Native `ResidentialUnit` /
+simulation representation and lifecycle of those two pre-arrival
+states, walker-arrival type-switch timing `2→3` / `11→13`,
+complete `+0x230` caller set, and original symbol name.
+
+**`DAT_00D62408` (`confirmed` reads; writer/meaning `unknown`).**
+RVA `0x962408` sits in `.data` BSS (beyond the `0x7B000` raw
+range), so the image does not initialize it (loader zero). Whole
+file search for `08 24 D6 00` hit **three** `.text` disp32 bytes
+and **no** `.rdata` / initialized-`.data` address constant. The
+`mov` instruction starts are `mov eax, [0xD62408]` @ `0x42D9A0`
+(`FUN_0042D9A0`, skip its walk when **`== 1`**);
+`mov ecx, [0xD62408]` @ `0x4ACD00` (`FUN_004ACD00`, return `!= 0`);
+this site @ `0x4CA226` (skip `+0x230` when **`!= 0`**). The pattern
+hits at `0x42D9A1` / `0x4ACD02` / `0x4CA227` are the disp32, not
+the `mov` addresses. No absolute writer (`C7 05` / `A3` /
+`89 0D` and the same disp32) was found. Neighbor BSS dwords
+`DAT_00D62400` / `04` / `0C` have their own writers; they are
+**not** this dword. Register-indirect stores remain possible and
+**unknown**.
+
+**Same-identity extras (not a complete caller map).**
+`FUN_00519180` / `FUN_00519200` (`identical`) call `[this+0x230]`
+with `3` / `4` after `FUN_004ACD00` (nonzero DAT skips). They read
+`house+0x20` and `+0x1E4`. Other `[r+0x230]` opcode hits are **not**
+this method unless the object’s vfptr slot holds `0x518DE0`.
+
+**Rejected (`confirmed` negatives).** `cIndustrialBldg`
+`0x7B65E4+0x230` is `0x51CF40`, not `FUN_00518DE0`. Do not treat
+param `3` / `0xD` as figure types, `house+0x24`, `house+9`,
+capacity, occupancy, or `cHouseInfo+0x3C`.
+
+CH/EN: `FUN_005188F0`, `FUN_005188D0`, `FUN_00408170`,
+`FUN_004B72B0`, `FUN_004ACD00`, `FUN_0042D9A0`, `FUN_00519180`,
+`FUN_00519200` are `identical`. `FUN_00518DE0` and `FUN_004C9FD0`
+are absent from `split-merged` / `compare-report.tsv`.
+
+## 6. `DAT_01311FD0` (advisor-mode dword)
+
+City-stats object `DAT_0130F960` + `0x2670` is `DAT_01311FD0`
+(`confirmed` arithmetic: `0x0130F960 + 0x2670 = 0x01311FD0`). The
+dword lives in BSS (PE `.data` virtual size `0x1645F9C`, raw
+`0x7B000`; loader zeros it unless written). Do **not** treat the
+Ghidra name or advisor-string cluster as an original symbol.
+
+This dword is an **advisor / overlay-message selector**.
+`FUN_0053B850` branches on **0 / 1 / 2 / other**. It is **not**
+read by `FUN_005917E0`, `FUN_004AD4A0`, or the recovered
+assignment/arrival producer chain (`FUN_004ADA10` /
+`FUN_004ADE10` / `FUN_004C9FD0`), so **any** value of the field
+is outside that recovered pressure / request / spawn / occupancy
+math. Init-zero and save/load writers are below. The gameplay /
+runtime writer, the full value domain, and the source of any
+nonzero state remain `unknown`. Native must not approximate the
+field as always-0 to enable migration, and must not wire nonzero
+advisor/overlay modes (1 / 2 / other). A loaded save may persist
+whatever dword the stream held, not only 1 or 2.
+
+### 6.1 Authored data (not a variable mapping)
+
+Searched 2026-08-14. Hits are player-facing copy or walker audio.
+None is a model field, campaign flag, or ini key that writes this
+dword. Do not guess the strings below as the DAT’s original name.
+
+| source | what was searched | result |
+| --- | --- | --- |
+| `GameData/Model/*.txt` | `immig` / `emig` / `migrat` / `open city` / `closed city` (ASCII) | only `EmperorFigureModels.txt` line 116 figure ID **11** `immigrant` |
+| `GameData/Emperor.ini` | same ASCII | no hit (`CDDrive`/`RAM`/`CPU`/`PlayIntroMovie` only) |
+| `GameData/DATA/status.txt` | same ASCII | no hit |
+| `GameData/Audio/*.txt` | same ASCII plus GB18030 `移民` | `FigureSounds.txt` line 152 figure key `immigrant` (hit/die sounds) |
+| `GameData/Campaigns/*.pak`, `Cities/*.map` | ASCII `immig`/`emig`/`migrat`/`OpenCity`/`ClosedCity`/`open_city` | no hit |
+| `GameData/Model/EmperorEventmsg.txt` | GB18030 `移民`/`迁入`/`迁出` | `PHRASE_road_to_rome2_initial_announcement` (inspectors cleared a road-blocking building so immigrants and caravans can enter/leave). Access-event copy, not this dword |
+| `GameData/EmperorText.eng` / `.txt` group 55 | rows consumed by `FUN_0053B850` | see consumer table; **not** a writer |
+| `GameData/EmperorMM.eng` / `.txt` | immigration/emigration help | in-game manual prose (housing, popularity, walkers). No open/close-city toggle |
+| `GameData/EmperorManual.pdf` | pypdf text extract, 151 pages | p.27–28 Population Ministry “Migration Status” / “Cause or Effect of Migration Status” describe the advisor display from popularity; p.34 “Attracting Immigrants” / “City Popularity”; p.35 Immigrant/Emigrant walkers. **No** player control that opens or closes the city to immigrants |
+| `GameData/Emperor.chm` | `strings` on the compressed ITSF | no recoverable `Open city` / `Closed city` / `Immigration` body text in this environment (no CHM extractor). TOC-like `immig`/`emig` hits only; not used as a field mapping |
+
+Group 55 rows 20–23 (`EmperorText.eng` exact; Chinese from
+`EmperorText.txt` GB18030, the cluster already used by
+`FUN_0053B850`):
+
+| row | English | Chinese |
+| --- | --- | --- |
+| 20 | `People wish to come to the city.` | `人们希望迁居你的城市` |
+| 21 | `People are leaving the city.` | `人们正在离开你的城市` |
+| 22 | `Population migration is stable.` | `人口数较稳定` |
+| 23 | `Immigration and emigration are balanced.` | `迁入人数和离开人数基本平衡` |
+
+Row 24 `Immigrants aren't coming.` / `移民还没有来.` is the next
+authored string; `FUN_0053B850` “other mode” draws **row 23**
+(`0x17`), not row 24.
+
+`FUN_0053B850` draws status `0x14…0x17` as group 55 rows 20–23
+(`confirmed` in `population-advisor-housing-capacity.md`). Those
+rows are **outputs** of the mode check, not evidence of a writer.
+
+### 6.2 Direct `.text` xrefs (canonical EN `8a6d2df1…6753`)
+
+Whole-file pattern `D0 1F 31 01` (`0x01311FD0`): **three** hits, all
+in `.text`, all instruction-start `A1` loads. No `.rdata` / initialized
+`.data` address constant. No `push 0x01311FD0`, `mov r32, 0x01311FD0`,
+or `lea r, [0x01311FD0]`.
+
+**Reads** (instruction starts, not the disp32):
+
+| VA | bytes | function | next control flow |
+| --- | --- | --- | --- |
+| `0x53B8FC` | `A1 D0 1F 31 01` | `FUN_0053B850` @ `0x53B850` | `sub eax, 0` then mode 0 / `== 1` / `!= 2` (group-55 status 20–23) |
+| `0x54835A` | same | `FUN_00548340` @ `0x548340` | `test eax,eax` / `jne 0x54853B`; mode 1 at `!= 1` returns |
+| `0x5D7F86` | same | `FUN_005D7F70` @ `0x5D7F70` | `test eax,eax` / `jne 0x5D811B` |
+
+**Absolute write-class opcodes targeting `0x01311FD0`:** none
+(`confirmed` negative). Scanned `A3`, `89 05/0D/15/1D`, `C7 05`,
+`C6 05`, `01/09/21/29/31/87 05…`, `FF 05/0D`, `81/83` rmw, `F7 05`.
+
+**`[reg+0x2670]` dword stores (`89` / `C7` mod=2):** one site,
+`0x59000F` `89 8A 70 26 00 00` = `mov [edx+0x2670], ecx` in
+`FUN_0058FE40` (legacy-layout copy, §6.4). No `add r32, 0x2670`.
+
+**`lea r, [reg+0x2670]`:** eight sites, all inside `FUN_00593140`,
+all `push 4; push ptr; call` stream I/O (§6.4). Those are
+save/load pointer formation, not a recovered gameplay store of a
+mode immediate.
+
+### 6.3 Init / reset writer (`confirmed`)
+
+`FUN_00590A70` @ `0x590A70`:
+
+```
+0x590A72  mov ecx, 0xBDA
+0x590A77  xor eax, eax
+0x590A79  mov edi, 0x0130F960
+0x590A7E  xor ebx, ebx
+0x590A80  rep stosd
+```
+
+Range `[0x0130F960, 0x0130F960 + 0xBDA×4) = [0x0130F960, 0x013128C8)`.
+`DAT_01311FD0` is inside that range (offset `0x2670`). This **zeros**
+the dword. The same function then writes popularity `0x3C` and other
+explicit fields; it has no later store to `+0x2670`.
+
+Immediate `0xBDA` appears once as this count (`0x590A73`). The other
+`.text` `DA 0B 00 00` at `0x72AE32` is a `call` rel32, not this loop.
+
+Callers (`E8` to `0x590A70` only):
+
+| call VA | function | when |
+| --- | --- | --- |
+| `0x42ECBC` | `FUN_0042E6A0` @ `0x42E6A0` | new-city path when `*(i+0x58)==0` |
+| `0x5D141D` | `FUN_005D1400` @ `0x5D1400` | reset; afterwards copies a **string** from `DAT_010DE0E4` to `DAT_0130F930` (before `F960`, not this field) |
+
+`rep movsd` sites that mention `0x0130F960` nearby copy the city
+**name** to `0x0130F930` (`0x42EDA8`, `0x5D125E`) or use `ecx=F960` as
+a `this` for a different call (`0x5B4ED8`, dest is not `F960`). None
+bulk-copies onto `DAT_01311FD0`.
+
+### 6.4 Save / load writers (`confirmed` object identity)
+
+`FUN_00593140` @ `0x593140` prologue: `mov esi, ecx`. Every `.text`
+caller sets `ecx = 0x0130F960` immediately before the `call`
+(`push esi; mov ecx, 0x130F960` at nine sites). No `mov esi, …`
+between `0x593149` and the first `+0x2670` lea, so `esi` is still
+the city-stats object at the save-arm serialize.
+
+`FUN_0041FBF0` (`mov ax, [ecx+4]` with `ecx=0x0130F958`) supplies
+the load `switch` cases **1…7**. `FUN_0040CF90` non-zero takes the
+save arm (`FUN_00780642`); zero takes the load arm
+(`FUN_00780533`).
+
+| kind | instruction start | bytes / call | effect on `DAT_01311FD0` |
+| --- | --- | --- | --- |
+| save | `0x593410` | `lea eax, [esi+0x2670]`; `push 4`; `push eax`; `call 0x780642` | **read** 4 bytes to the stream |
+| load case 1 | `0x5943A4` | `lea ecx, [esi+0x2670]`; `call 0x780533` | **write** 4 bytes from the stream |
+| load case 2 | `0x5952C9` | same shape | write |
+| load case 3 | `0x595EA7` | same shape | write |
+| load case 4 | `0x596D95` | same shape | write |
+| load case 5 | `0x597C79` | same shape | write |
+| load case 6 | `0x5985E2` | same shape | write |
+| load case 7 | `0x59946C` | same shape | write |
+
+`FUN_00780642` copies memory → stream. `FUN_00780533` copies stream
+→ memory. Both take a pointer + length 4 at `this+0x2670`.
+
+Nine `call 0x593140` sites, all `mov ecx, 0x0130F960` at call−6 or
+call−5: `0x52FE9E`, `0x53069E`, `0x530C93`, `0x531293`,
+`0x531A7B`, `0x532085`, `0x532674`, `0x532E22`, `0x533629` (inside
+`FUN_0052FDA0` @ `0x52FDA0`).
+
+**Legacy blob remap** (`FUN_0058FE40` @ `0x58FE40`):
+`this` = source buffer, `[esp+4]` = dest. At `0x590009`
+`mov ecx, [eax+0x2740]` then `0x59000F` `mov [edx+0x2670], ecx`.
+Reached from `FUN_0052FDA0` @ `0x5335EB` `cmp ebx, 2; jg 0x533623`:
+the `ebx <= 2` arm `push 0x3014; call 0x780533` into a stack
+buffer, then `push 0x130F960; lea ecx, [esp+…] ; call 0x58FE40`.
+The `jg` arm is the `FUN_00593140` path. `ebx` is a version
+discriminator in that function (`inferred` from the two-arm shape;
+the exact word’s original name is not recovered). No `.text` store
+to `[reg+0x2740]` exists; `+0x2740` is only read as a source field
+of that old blob.
+
+A loaded save can therefore contain **any** persisted dword at this
+offset, including nonzero values other than 1 or 2. That does not
+identify a gameplay/runtime writer.
+
+### 6.5 Consumer meaning (closed for UI; not a producer contract)
+
+Already tabulated in `population-advisor-housing-capacity.md`:
+
+| value | `FUN_0053B850` status row | notes |
+| --- | --- | --- |
+| 0 | checker (war / newcomers / housing / signed pressure) | Native’s only wired branch is the screenshot-confirmed zero-capacity arm |
+| 1 | row 21 + `FUN_0053B790` reasons | same row as mode-0 negative pressure |
+| 2 | row 22 | same row as mode-0 zero pressure |
+| other | row 23 | |
+
+`FUN_00548340` / `FUN_005D7F70` use the same 0 / 1 / other split for
+overlay / help IDs. No original semantic name is assigned here.
+
+`DAT_01311FD0` is not read by `FUN_005917E0` / `FUN_004AD4A0` or
+the recovered assignment/arrival producer chain, so **any** value
+of the field is outside that recovered pressure / request / spawn /
+occupancy math (`confirmed` non-input). Remaining unknowns are the
+gameplay/runtime writer, the full value domain, and the source of
+any nonzero state.
+
+### 6.6 Strict negatives (reusable)
+
+Opcode-bounded. These are not a claim that every x86 form was
+exhausted (no C6/66-width, arithmetic RMW, SIB, or other-base
+alias scan is treated as complete).
+
+- No absolute `.text` hit among the scanned write-class opcodes
+  targeting `0x01311FD0` (`A3`, `89 05/0D/15/1D`, `C7 05`,
+  `C6 05`, `01/09/21/29/31/87 05…`, `FF 05/0D`, `81/83` rmw,
+  `F7 05`).
+- No `89` / `C7` mod=2 **dword** store to `[reg+0x2670]` except
+  `0x59000F` in `FUN_0058FE40`. `lea [reg+0x2670]` sites are the
+  §6.4 stream pointer, not that store encoding. `add r32, 0x2670`
+  was not found; SIB and other displacements were not scanned as
+  a closed set.
+- No second `rep stosd` / `rep movsd` whose dest range is proven
+  to include this dword besides `FUN_00590A70`.
+- Neighbor `DAT_01311FD4` is a different dword (`FUN_004AF020`
+  touches `FD4`, not `FD0`).
+- Known consumers `FUN_0053B850`, `FUN_00548340`, and
+  `FUN_005D7F70` only read. Event phrase
+  `PHRASE_road_to_rome2_initial_announcement` is unrelated access
+  copy. This pass did not recover a write in those consumers or
+  in the scans above; indirect writers outside that scope remain
+  possible and `unknown`.
+- Corpus `DAT_01311fd0 =` assignment: **none** (reads only in the
+  three consumer functions). That corpus gap is closed for
+  **absolute** assignments; it never was proof of “no writer”
+  because of the stosd / serialize aliases above.
+
+### 6.7 CH/EN
+
+`FUN_0053B850`, `FUN_00548340`, `FUN_005D7F70`, `FUN_005917E0`,
+`FUN_00590A70`, `FUN_0042E6A0`, `FUN_005D1400`, `FUN_0058FE40`,
+`FUN_00593140`, `FUN_0052FDA0` are `identical` in
+`local/source/compare-report.tsv`. Canonical conclusions above are
+EN `.text` plus those identical rows. `decompiled-ch.c` shows the
+same three `DAT_01311fd0` reads; no CH-only assignment is in the
+corpus. On-disk CH siblings that are **not** hash
+`dbdeca1e…15a` are not used.
+
+## 7. Month rollover (confirmed)
+
+`FUN_004AC650` copies `DAT_01311FCC` → `DAT_01312604` and zeros
+`DAT_01311FCC` when the 16th slice wraps.
+
+## 8. Native implementation contract (fail-closed)
+
+The original immigrant arrival state machine in §5 is recovered.
+That does **not** authorize enabling automatic migration. War,
+`house+0x24`, and `DAT_00D62408` writer/meaning remain
+unresolved. The `FUN_00590F30` walk is recovered in §3; the
+recovered normal market-delivery writer/path of `cHouseInfo+0x36`
+is `cMarket+0x2c` @ `0x5437B0` (complete writer set not proven).
+Current Native `ResidentialUnit` food consumption, blending, and
+cadence are confirmed non-isomorphic, so those fields must not be
+substituted. The live `cStall+0x260` blend/store into
+`cMarket+0x180` is recovered. Mill-pickup cart `figure+0x13` is
+the mill `+0x2E4` selected recipe type-count (§3); player-facing
+quality name, Native `quality(in:)` mapping, and the correct Native
+representation/mapping remain open. Peddler-vs-buyer
+`FUN_004EACD0` exclusivity is closed in §3 (model 24 states 6/7
+can reach `cMarket+0x2C`). Food
+stays a fail-closed producer input.
+No food implementation contract. The `FUN_0055AE30` walk is recovered in §3; Native
+percent / object-vector / `+0xB4` / `goal+8` save mapping is
+not, so monument stays a fail-closed producer input.
+`DAT_01311FD0` init-zero and save/load are
+§6; it is not a numeric input to the recovered producer chain.
+The gameplay/runtime writer, full value domain, and nonzero-state
+source are still `unknown`, so Native nonzero advisor/overlay
+modes (1 / 2 / other) stay unwired and the field must not be
+forced to 0 as a production default.
+`cHouseInfo+0x3C` method identity and `FUN_004C9FD0` gate polarity
+are closed (§5.9); original semantic
+name, complete writer/lifecycle set, and Native mapping are not.
+House vtable `+0x230` method identity and empty-house skip polarity
+are closed (§5.10). The post-call pairs `(+0x14,+0x16)=(3,0)` and
+`(13,10)` map to Native `houseLevelID` 0 and 10. Original vacant
+types are building IDs 2 and 11. Native `ResidentialUnit`
+representation/lifecycle of those two states, walker-arrival
+type-switch timing `2→3` / `11→13`, complete caller set, and
+original symbol name are not. Do not spawn walkers or call
+`admitResidents` from the production tick.
+
+**Do:**
+
+- observe Native road-adjacent vacant housing (this Native filter is
+  **not** a recovered mapping of original `house+0x24`);
+- keep `automaticMigrationAvailability = unsupportedOriginalProducer`;
+- leave residents unchanged on the production tick;
+- decode legacy count fields, then zero them on the first production
+  tick;
+- keep confirmed constants and control flow in this research note;
+  do not expose them as a production API.
+
+**Do not:**
+
+- fold figure `#11` travel into occupancy;
+- drive popularity from `lastSuppliedFoodQuality`,
+  `foodQualityRawValue`, `foodSupplyAmount`, or an invented
+  shortage streak;
+- pass monument / war / mode as `0` and mark the producer supported;
+- upgrade `unsupportedOriginalProducer` saves to a supported tag;
+- spawn immigrant walkers;
+- implement nonzero advisor/overlay modes (1 / 2 / other) or
+  render group-55 row 11;
+- invent a Great-Wall first-playable state.
+
+## 9. Remaining unknowns
+
+- Original semantic name of `HouseBldg+9` (the byte `FUN_0042DD40`
+  tests; complete writer set is not recovered). House vtable
+  `+0xB8` itself is §5.8.
+- Original semantic name of `cHouseInfo+0x3C`, complete
+  writer/lifecycle set, and Native mapping (method identity and
+  `FUN_004C9FD0` gate polarity are §5.9).
+- Original method name of `FUN_00518DE0`, complete `+0x230` caller
+  set, Native `ResidentialUnit` representation/lifecycle of
+  pre-arrival vacant building IDs 2 and 11, and walker-arrival
+  type-switch timing `2→3` / `11→13` (method identity, empty-house
+  skip polarity, original vacant type IDs, and the two post-call
+  Native `houseLevelID` pairs are §5.10).
+- `DAT_00D62408` writer and meaning (empty-house `+0x230` skipped
+  when nonzero; three absolute `.text` reads, no absolute writer).
+- `FUN_004BA6F0` neighbor-slot / terrain-flag meaning beyond the
+  recovered reads and the `DAT_010C72AC` / `DAT_010C72A8` writes.
+- Whether `FUN_004C8B70` type-`0xB` death unlinks the spawn house
+  (`+0x64` test vs `+0x62` lookup).
+- Gameplay/runtime writer of `DAT_01311FD0`, the full value
+  domain, the source of any nonzero state, and the original
+  semantic name of the dword (`FUN_0053B850` branches 0 / 1 / 2 /
+  other; absolute xrefs, `FUN_00590A70` zero, and `FUN_00593140` /
+  `FUN_0058FE40` persistence are §6; non-input to the recovered
+  producer chain is confirmed). Do not treat “no
+  `DAT_01311FD0 =` in the decompiled corpus” as the full writer
+  story, and do not treat 1/2 as the only persistable nonzero.
+- Native military-figure mapping for `DAT_01312564`
+  (`FUN_004EBB40` / `FUN_004E2560` types `0x3A…0x3E`, `0x4E`).
+- Native mapping of the recovered `FUN_0055AE30` walk: live
+  `building+4` values 1 vs 3, why index 0 is skipped, `building+0xB4`
+  list-index lifecycle, a Native `FUN_00565410` part-weight percent
+  (existing `MonumentProject` / Grand Canal / Earthen Great Wall
+  percents are not that formula), the live type-2 object vector at
+  `DAT_012A4BA8`, and save/load of `goal+8`. Vtable `+0x44` →
+  `0x560560` pointer identity (copy bytes themselves are §3).
+  Why skip index 0 and the 1-vs-3 live-byte distinction remain
+  `unknown`; do not guess.
+- Mill-pickup cart `figure+0x13` producer is closed (§3): mill
+  vtable `+0x2E4` selected recipe type-count, copied by
+  `FUN_00546960` arg2; stall blend incoming raw contribution is
+  `20 * byte(figure+0x13)`. Do **not** infer a 1…5 quality band
+  merely from that product, and do **not** treat
+  `OriginalFoodCatalog.quality(in:)` or manual p.48 as that
+  byte’s writer. Player-facing quality name and Native mapping of
+  `20 * type-count` vs Native `20/30/50/70/90` remain `unknown`.
+  Do **not** assign the `cMarket+0x180` **store** to `cMillBldg`.
+  Peddler (23) vs buyer (24) spawn and type-table think rows are exclusive
+  (`confirmed`); model-24 states 6/7 **can** reach
+  `FUN_004EACD0` → `cMarket+0x2c` (`confirmed`). Hero model-79
+  case-4 identity for the `0x5A` store. Unencoded `+0x36` writers
+  beyond §3; the complete writer set is not proven. Current Native
+  `ResidentialUnit` food consumption, blending, and cadence are
+  confirmed non-isomorphic (§3), so those fields must not be
+  substituted. No gameplay implementation contract is authorized. Do not
+  name `house+0x8C` `crimeRisk`.
+- Complete constructor-zero set for `house+0x5C` / `house+0x8C`
+  beyond the empty-house `+0x8C = 0` write and `FUN_00427430`
+  save/load.
+- `DAT_01312214` runtime writers besides init (player wage buttons
+  write `DAT_01312218`).
+- Native mapping of `house+0x24` (lifecycle and
+  `DAT_01391FE0` snapshot are in §5.7; overlay label is `rome`, not
+  `roadnet`; no Native field is authorized).
+
+## 10. 2026-08-16 closures: `DAT_00D62408` writer-negative, `+0x230` caller set, `cHouseInfo+0x3C` gate scope
+
+Method: read-only byte-level scans of the hash-matched canonical EN
+(`8a6d2df1…6753`) and CH (`dbdeca1e…15a`) executables at
+`Exe/ghidra/input/`, plus corpus reads of the indexed functions that are
+present in `local/source/split-merged`. No runtime observation was used.
+
+### 10.1 `DAT_00D62408` has no static writer in EN or CH (`confirmed` negative)
+
+Whole-file scan for the little-endian address constant `08 24 D6 00`
+(`0x00D62408`) finds exactly **three** occurrences in each build, at the
+identical file offsets / VAs:
+
+| VA | function | read form | context |
+| --- | --- | --- | --- |
+| `0x42D9A1` | `FUN_0042D9A0` | `mov eax, [0xD62408]` | `if (DAT_00d62408 != 1)` gates the monthly maintenance risk-slot update (`FUN_004189a0() % DAT_00817748`, building vtable `+0x30`) and route-cache refresh |
+| `0x4ACD02` | `FUN_004ACD00` | `mov ecx, [0xD62408]` | `return DAT_00d62408 != 0;` — boolean gate called by house type-switch / evolution paths (`FUN_00519180`, `FUN_00519200`, …) |
+| `0x4CA227` | `FUN_004C9FD0` (immigrant arrival) | `mov eax, [0xD62408]` | when nonzero, skips the empty-house `+0x230` type-switch calls (§5.3) |
+
+Write-class opcode scan (same classes as §6.2: `A3`, `89 05/0D/15/1D`,
+`C7 05`, `C6 05`, `01/09/21/29/31/87 05`, `FF 05/0D`, `81/83` rmw,
+`F7 05`), plus every `FF /r` / `89 /r` / `C7` form whose mod=10 disp32 equals
+`0x00D62408`, and any imm32 form (`B8/68/BA/…`) containing the constant:
+**zero hits** in both builds. Any instruction referencing the address,
+directly or via `[reg+disp32]`, would contain the 4-byte constant and was
+caught by the raw scan.
+
+**Classification:** `confirmed` negative for a static direct writer.
+Remaining caveat (unchanged policy): a block copy (`rep movsd` with computed
+source/destination) could still write the BSS byte without the constant
+appearing in the instruction stream; no such site is known, and the byte is
+inside a standalone BSS region (`0xD62408` is far below the city-stats
+object `0x0130F960…` saved by `FUN_00593140` / `FUN_0058FE40`).
+
+**Consequence for the migration contract:** in the shipped EN/CH builds the
+flag is always `0`, so `FUN_004ACD00` always returns false and the
+immigrant-arrival `+0x230` calls are never skipped. The `DAT_00D62408 != 0`
+skip branches are unreachable in these builds; Native may implement the
+empty-house type switch unconditionally, with a save-migration guard that
+treats an unknown persisted value the same way (a nonzero value would only
+disable a branch these builds can never take).
+
+### 10.2 `FUN_00518DE0` / house vtable `+0x230` caller set (partial closure)
+
+EN `.text` scan for `FF /r` with mod=10 and disp32 `0x230` finds **39** call /
+jump sites; scan for direct `E8` rel32 calls to `0x00518DE0` finds **zero**
+(vtable-only reach, as documented). The two immigrant-arrival sites are
+`0x4CA237 call [eax+0x230]` (common housing, arg `3`) and
+`0x4CA249 call [edx+0x230]` (elite, arg `0xD`) inside `FUN_004C9FD0`
+(§5.3). Other callers of the same slot:
+
+- `0x4CB1A1` / `0x4CB1AF` — `FUN_004CA960` (vagrant think, type `0xD`).
+- `0x4E1AB2 jmp [eax+0x230]` / `0x4E1AD2 call [eax+0x230]` — generic
+  type-change path in the missing `0x4E` block.
+- `0x5191EA` … `0x519F75` — corpus-visible evolution/eviction cluster
+  (`FUN_00519180` calls `+0x230(3)` after the `FUN_004ACD00` gate;
+  `FUN_00519200` calls `+0x230(4)`; `FUN_00519F30` falls back to
+  `+0x230(param_2)` when its `cHouseInfo+0x3C` / `+0x2E` gate fails).
+- `0x51CFF8`, and six sites in the missing `0x5E` block (`0x5E4686`,
+  `0x5E74AB`, `0x5E7725`, `0x5E79C8`, `0x5E7EBE`, `0x5E8176`).
+
+Corpus evidence for the sibling method `FUN_00519060`:
+`FUN_00519060` writes `(+0x14,+0x16) = (3,0)` when `FUN_005188F0` is true
+(common) and `(0xC,9)` when `FUN_005188D0` is true (elite), then rebuilds
+the map object — the same family as `FUN_00518DE0`'s `(3,0)/(13,10)`
+(§5.10), confirming that `+0x230` arguments select distinct vacant-type
+conversions and that the conversion methods are called from many systems,
+not only immigration. `FUN_00519F30` additionally shows the
+`cHouseInfo+0x3C` byte gating **both** the occupancy add (immigrant
+arrival) and the vacant-type switch path, strengthening the reading that
+`+0x3C != 0` marks a house whose arrival/occupancy transition must not run.
+
+### 10.3 Updated status of §9 items
+
+- `DAT_00D62408` writer: **closed as confirmed-negative** (no static writer
+  in EN/CH; always `0`; skip branches unreachable). Meaning: a global gate
+  that, if nonzero, would suppress maintenance risk-slot updates and house
+  type-switch/occupancy transitions; no shipped writer produces it. Native
+  mapping: implement as "always absent/zero" with the save-migration guard
+  in §10.1 — no runtime field is required.
+- `+0x230` complete caller set: **partially closed** (39 sites enumerated;
+  immigrant/vagrant sites confirmed; `0x4E`/`0x5E` block callers recorded
+  but not function-mapped). For the migration contract only the
+  `0x4CA237`/`0x4CA249` sites matter.
+- `cHouseInfo+0x3C` gate scope: **widened** (also gates `FUN_00519F30` /
+  `FUN_00519060`); original semantic name, complete writer/lifecycle set,
+  and Native mapping remain `unknown`.
+- `house+0x24` flood (`DAT_01391FE0`, seed `DAT_00C5CDFC/CDFE`, case `0x15`
+  via `FUN_004ACFC0 → FUN_005AE140`): pass predicate inside `FUN_005AE140`
+  remains `unknown`; Native mapping stays `unknown` (not road adjacency).
+
+No implementation contract beyond §8 is authorized by this section; the
+producer remains `unsupportedOriginalProducer` until the remaining
+`unknown` inputs are closed.
+
+### 10.4 `FUN_005AE140` flood pass predicate recovered (`confirmed`)
+
+2026-08-16, second pass: disassembled the hash-matched EN executable
+(`llvm-objdump -d` over `Exe/ghidra/input/EmperorEN.exe`) for
+`FUN_005AE140` (`0x5AE140`) and its expander `FUN_005AE240` (`0x5AE240`).
+The calendar case-`0x15` refresh (`FUN_004ACFC0`, corpus-visible) calls
+`FUN_005AE140(DAT_00C5CDFC, DAT_00C5CDFE, …)` — the authored land-entry
+seed — then walks live buildings and calls vtable `+0x84` refreshers that
+store `DAT_01391FE0[cell]` into `house+0x24` (§5.7).
+
+`FUN_005AE140` (`0x5AE140`–`0x5AE231`):
+
+- `DAT_01391FE0[seed] = 1`; queue head/tail in `DAT_013C4C20` /
+  `DAT_0131FC48`; iteration counter `DAT_0131FC4C` walks `0…0xCB0F`
+  (`0xCB10` = 51984 cells).
+- Each queued cell calls `FUN_005AE240(cell, depth+1, floodMap, queue)`.
+
+`FUN_005AE240` (`0x5AE240`–`0x5AE37A`) expands four neighbours in the
+order **north, east, south, west**, and for each neighbour with
+`flood[neighbour] == 0`:
+
+```
+pass  ⇔  (word[DAT_013789C0 + 2*neighbour] & 0xB7C) != 0
+```
+
+The four table bases are exactly `DAT_013789C0 + 2*offset` for
+`offset ∈ {-228, +1, +228, -1}` (`0x13787F8`, `0x13789C2`, `0x1378B88`,
+`0x13789BE`; verified arithmetic), i.e. the predicate reads the
+**neighbour cell's** word of the main derived route cache
+(`DAT_013789C0`, rebuilt by `FUN_005AD8F0`). On pass, the neighbour gets
+`depth+1` and is appended to the queue; the loop ends when the queue tail
+catches the head or the counter exceeds `0xCB0F`.
+
+Mask `0xB7C` bits: `0x4 | 0x8 | 0x10 | 0x20 | 0x40 | 0x100 | 0x200 | 0x800`.
+Against the recovered main-cache write domain (`1/2/4/0x10/0x20/0x80/
+0x100/0x400/0x1000/0x4000` + ferry `0x200/0x800`; `0x8` has no producer in
+this build), the flood therefore passes through road `0x4`, clear-land
+`0x10`, `0x20`, road+elevation `0x100`, and ferry links `0x200/0x800`; it
+does **not** pass through blocked `0x2`, `0x80`, elevation-only `0x400`,
+`0x1000`, or `0x4000`.
+
+Fallback `FUN_005AE380` → `FUN_005AE480` (used by `FUN_004ACFC0`'s
+recovery loop when the entry check cell is unreached) uses mask `0x17C`
+(`0x4|0x8|0x10|0x20|0x40|0x100`) and, on a blocked neighbour whose
+`dword[0xF6A650 + 4*cell] & 0x4020` (or `0xF6A9E4` for east) is set,
+performs side writes (`byte[0xFDCC8C+cell] |= 0x40`,
+`byte[0xF9D53C+cell] &= 0xF0`,
+`dword[0xF6A650+4*cell] &= 0x93872790`) and stores
+`DAT_00D62400 = cell ± offset`. That fallback is the blocked-entry recovery
+path, not the daily `house+0x24` refresh; its full semantics remain
+`unknown` and are not part of the migration eligibility contract.
+
+**Classification:** `confirmed` — direct machine code, EN hash
+`8a6d2df1…6753`. CH identical range not re-disassembled; `compare-report.tsv`
+does not cover the missing `0x5A` block, so CH identity is `inferred` from
+the sibling byte-range checks in §5.1.
+
+**Consequence for the migration contract:** Native can implement
+`house+0x24` as a deterministic flood over its own main derived route
+cache (the same cache contract already implemented and tested for the
+Grand Canal work): seed = authored land-entry tile, 4-neighbour expansion
+N/E/S/W, pass mask `0xB7C` on the neighbour word, depth `n+1`, refresh
+per calendar day (case `0x15`) and on cache-rebuild events. Native's cache
+derivation must be verified bit-identical against the recovered write
+domain before wiring; if any cache bit diverges, this mapping stays
+`unknown` and the producer stays fail-closed.
+
+**Native verification (2026-08-16): partial** — plan 006 Phase 1a added
+`testNativePrimaryRoutingCacheMatchesRecoveredWriteDomainAndFloodMask` and
+`testFerryOccupancyStaysFailClosedUntilPostPassIsWired` to
+`Tests/EmperorCoreTests/GrandCanalSimulationTests.swift`; both pass. On the
+real Haunxian map every primary-cache value stays inside the recovered write
+domain, and the `0xB7C` flood mask discriminates produced values exactly as
+the original does.
+
+**Recorded divergence:** the ferry post-pass (`0x800` over the 6×6 footprint,
+`0x200` along the stored `0/2/4/6` connector chain, `FUN_004C6D30`) is
+documented in `PrimaryRoutingClassRule` but **not applied** by the Native
+city grid projection: `workerRoutingGrids` only maps per-cell derivation, and
+a placed Ferry (building 210) reaches the unclassified generic-footprint
+branch and throws `missingGenericFootprintPredicate` (fail-closed). The
+ferry connector-chain selection rule at placement is also not recovered.
+Therefore `house+0x24` is exact for ferry-free maps, but remains `unknown`
+on maps containing a Ferry; the migration producer stays
+`unsupportedOriginalProducer` until the ferry post-pass and connector-state
+contract are recovered and wired (tracked in plan 006 Phase 1a).
+
+### 10.5 `cHouseInfo+0x36` writer set (2026-08-16, improved)
+
+Byte-level scan of EN `.text` for stores to offset `0x36`, cross-filtered by
+proximity to a `call [r+0x1E4]` (the house vtable cHouseInfo getter) and by
+disassembly of each candidate, yields this `cHouseInfo+0x36` writer set:
+
+| site | function | value | class |
+| --- | --- | --- | --- |
+| `0x543A09` | `FUN_005437B0` (cMarket vtable `+0x2c`, market delivery) | blended quality byte (`bl` from the `cStall+0x260`-style mix) | confirmed |
+| `0x51870D` / `0x51871B` | `FUN_00518690` (month settlement) | `0` when `cHouseInfo+0x12 < 1` | confirmed |
+| `0x5187A9` / `0x5187B9` | `FUN_00518690` (same; `DAT_00C5CDA0` branch) | `0x14` (20) | confirmed |
+| `0x515259` | `Check_if_going_to_fire` (`0x5149C0`) branch gated by `house+0x92` | `0x5A` (90) | confirmed site; object identity is the `+0x1E4` result of `esi` |
+
+Discriminated non-writers: `FUN_00518B70` `0x518C32` writes
+`house+0x36 = random % 40` (maintenance tick offset, not cHouseInfo);
+`0x519DDE` / `0x519E60` copy `house+0x36` on `edi`; `FUN_00518490`
+`0x51850A` is a `cmp byte [cHouseInfo+0x36], 0x13` **read** (population
+with food quality ≥ 20 into `DAT_0130F98C`), not a write.
+
+The complete-writer-set question is now narrowed to these four sites plus
+any writer whose base is not within `±0x200` of a `+0x1E4` call. The
+remaining **Native mapping** blocker is unchanged: current
+`ResidentialUnit` food consumption/blending/cadence is confirmed
+non-isomorphic, and the player-facing quality name for the
+`20 * type-count` contribution remains `unknown`, so the food factor stays
+fail-closed.
+
+### 10.6 `cHouseInfo+0x3C` lifecycle (2026-08-16, closed)
+
+`cHouseInfo+0x3C` is a **post-removal occupancy lock**, not an
+immigrant-specific field:
+
+- Setter `FUN_004681A0` (`0x4681A0`, corpus): subtracts residents
+  (`house+0x20 -= count`), calls `FUN_00591920` (population decrease
+  effect), stores `cHouseInfo+0x3C = param_2`, arms `house+0x98 = 0x20`
+  (32-step countdown), clears `house+0xA4`, refreshes the map object.
+- Its only direct caller `FUN_00468420` (`0x468420`, corpus) passes
+  `param_2 = 2` and spawns three type-`0x12` walkers (state 6,
+  `+0x3E = 600`, `+0x62 = house id`) — the eviction/removal displacement
+  path.
+- Clear `FUN_005185C0` (`0x5185C0`, corpus): daily walk over houses with
+  `vtable +0xB8` true and `cHouseInfo+0x3C != 0`: if `house+0x20 == 0`
+  clear `+0x3C` and `house+0x98` immediately; else decrement `house+0x98`
+  and clear `+0x3C` when it reaches `0`. Counts locked houses into
+  `DAT_0131289C`.
+
+Consequence for the arrival contract (§5.3, §5.9): after residents are
+removed, the house suppresses immigrant occupancy writes for up to 32 steps;
+the gate `cHouseInfo+0x3C != 0` at `0x4CA260` is therefore a real gameplay
+path (eviction settling lock), not dead state. Native mapping: the
+`ResidentialUnit` needs a `settlingLock` byte (values `0`/`2`) plus the
+`house+0x98` countdown, decremented daily by the `FUN_005185C0` equivalent;
+the immigrant arrival write must skip while nonzero. Remaining unknown:
+complete writer set beyond `FUN_004681A0` (negative search: no other
+`+0x1E4`-adjacent `+0x3C` store), and the original semantic name of the
+byte. Classification: setter/clearer/lifecycle `confirmed` for the sites
+above; completeness `inferred`.
+
+### 10.7 War count `DAT_01312564` lifecycle (2026-08-16, mechanism confirmed)
+
+Direct disassembly (EN `8a6d2df1…6753`):
+
+- `FUN_004E2560` (`0x4E2560`–`0x4E2578`) is a pure type gate:
+  `mov eax, [esp+4]; cmp eax, 0x3A; jl false; cmp eax, 0x3E; jle true;
+  cmp eax, 0x4E; jne false; true`. So it accepts exactly
+  **types 58…62 and 78** = `EmperorFigureModels.txt` rows
+  Enemy Infantry (58), Enemy Archer/Crossbow (59), Enemy Cavalry (60),
+  Enemy Chariot (61), Enemy Catapult (62), Enemy's Heroes (78).
+  The 0x4E25A0+ collision-table body belongs to a separate function and is
+  not part of the gate.
+- `FUN_004EBB40` (`0x4EBB40`) takes `(figureID, flag)`: looks up the
+  figure, and if `FUN_004E2560(figure+0x12)` is true, does
+  `DAT_01312564 += flag ? 1 : -1`, clamped at 0; then a second gate
+  `FUN_004E2510` maintains `DAT_01312570` the same way.
+- Lifecycle call sites (all `confirmed`): increment on figure creation at
+  `0x4E199A` and `0x4EA01B` (`push 1`); decrement on figure death at
+  `0x4C90D7` (`push 0`, in the `FUN_004C8B70` death tail). Init/reset zeroes
+  both dwords at `0x4EBBD0`.
+- Pressure rule (`FUN_005917E0`, corpus): `if DAT_01312564 < 4` the normal
+  request/cooldown path runs; `else if pressure > 0` pressure is forced to
+  `0` (war suppresses positive migration pressure); population > 199999
+  also zeroes pressure. `DAT_01312570` is not read by the pressure function.
+
+**Native mapping (candidate, one open question):** Native models enemy
+units as `EnemyMilitaryForce(enemyTypeID:soldierCount:)`, not individual
+figures, so the count maps to
+`Σ soldierCount` over alive enemy forces whose `enemyTypeID ∈ {58…62, 78}`,
+decrementing when a force resolves to `.repelled` (figures died) and
+keeping `.cityBreached` forces counted (figures still alive).
+`MilitarySimulation.enemyTypeID(for:)` currently maps the Qin Nomad Camps
+(secondarySelectionID 10) to Xiongnu Infantry (6), which yields war count 0
+for Qin. **Open question:** whether the original Qin invasions spawn models
+58–62/78 (generic enemy types) or regional models (6/8/…); if the latter,
+count-0 for Qin is correct and the mapping is complete for Qin; if the
+former, Native's `enemyTypeID` mapping must change. This needs the invasion
+figure-spawn control flow (military research), not migration research.
+
+### 10.8 Monument factor Native mapping contract (2026-08-16)
+
+The original `FUN_0055AE30` pair-count walk (§3) is recovered and the
+Native side is now fully specifiable:
+
+- `FUN_00591200` adds `matching-pair-count × 2` to the per-update popularity
+  sum (§2, §3). A pair is `(live root monument building, type-2 goal)`
+  passing: live (`building+4 ∈ {1,3}`), monument family
+  (`76…86, 92, 93, 253…268`), root (`sub-index == 0`), ID match
+  (`building+0x14 == goal+0xC`, or `goal+0xC ∈ {85,86}` with
+  `building+0x14 ∈ 253…268`), and part-weight percent `≥ 100`
+  (`FUN_00565410(building+0xB4, 0, 0) >= 100`).
+- Percent `≥ 100` is the **completion test**: the part-weight aggregate is
+  100 exactly when every part is at its authored final phase, so for the
+  factor a building contributes iff it is complete. Native completion flags
+  are therefore isomorphic for this predicate:
+  `MonumentProject.isComplete` (legacy 76–84/92/93),
+  `PhasedMonumentProjectRuntime.isComplete` (77, 84),
+  `LargePalaceProjectRuntime.isComplete` (82),
+  canal `completedMonumentBuildingIDs.contains(83)` (33 parts at final
+  phase), and Great Wall layout roots whose `sub-index 0` part is at its
+  final phase (253…268).
+- Native inputs: `CampaignMissionGoal` already exposes type-2 monument goals
+  as `kind == .monument` / `requirement = .monument(buildingID: value(at: 0))`
+  (including `85`/`86` for the Great Wall special arm), and
+  `DeterministicAestheticState` holds all monument families above.
+
+**Implementation contract (Phase 3/4):** add
+`monumentPopularityTerm(goals:aesthetics:)` returning
+`2 × count of (goal, complete root) pairs` per the predicate, recomputed
+each popularity update; no `goal+8` stamp persistence is needed because the
+original popularity walk recounts fresh each update and the pair count is
+not decremented by later mismatches (§3). Verification: unit tests with a
+synthetic city — completed tumulus 77 + goal `[77,0]` → term 2; two
+completed roots for one goal → 4; partial → 0; wall goal `[85,0]` with a
+complete layout root 253…268 → 2. Classification: predicate and completion
+equivalence `confirmed`; the exact enumeration of Native wall roots and the
+legacy monument ID set must be asserted in the implementation test.
+
+### 10.9 Ferry post-pass and connector selection (2026-08-16, mechanisms recovered)
+
+Qin relevance: ferry (building 210, menu 46) is constructible in Qin
+missions 2–5 (`buildingMenuIDs` includes `46`), so the ferry gap is a Qin
+blocker, not just a canal edge case. Direct disassembly (EN
+`8a6d2df1…6753`):
+
+- **Ferry vtable** base `0x7AFE48` (the only `.rdata` pointer to
+  `FUN_004C6D30`): `+0x00` = `FUN_004C6C50` (connector init),
+  `+0x04` = `FUN_004C6C70` (connector computation),
+  `+0x08` = `FUN_004C6D30` (route-cache post-pass).
+- **Init** `FUN_004C6C50` (`0x4C6C50`): `[+0x924] = 0` and
+  `rep stosd` fills `+0x154` (500 dwords) with `-1` — the connector array is
+  empty by default.
+- **Post-pass** `FUN_004C6D30` (`0x4C6D30`): reads `[+7]` = footprint side
+  (6), double-loops the `6×6` offset table `0x81FF18` (6 rows × 6 dword
+  offsets, 8-byte stride) and ORs `0x800` into the primary cache
+  (`DAT_013789C0 + 2*cell`); then reads connector count `[+0x924]` and the
+  dword array `[+0x154]`, and for each connector ORs `0x200` into the cache
+  along the stored direction (cardinal cell deltas `±228` / `±1`).
+- **Connector computation** `FUN_004C6C70` (`0x4C6C70`, ferry vtable
+  `+0x04`): calls `FUN_005B3670` with the connector array (`&ferry+0x154`)
+  and limit `1001`, then stores the returned count into `[+0x924]`.
+- **Selection walk** `FUN_005B3670` (`0x5B3670`): from the ferry perimeter,
+  each step examines the **four cardinal** candidates (table `0x85DE64`,
+  4 entries × 8 bytes; offsets `-228 / +1 / +228 / -1` = N/E/S/W; the bytes
+  after `0x85DE84` belong to a neighbouring table) and reads the **flood
+  map** `DAT_01391FE0[cell]`; it picks the candidate with the minimum
+  nonzero flood value (ties broken by a bound compare against
+  `DAT_00F1E780[cell] & 3` when the rotation argument is 1), i.e. it walks
+  the min-flood gradient toward the seed, advances the current cell by the
+  chosen cardinal delta (`ebx ∈ {0,2,4,6}` → N/E/S/W), stores each chosen
+  direction byte into a 500-entry buffer, and stops when the flood value
+  reaches `≤ 1` (the seed) or the buffer is full; the direction bytes are
+  then copied into the connector array and the count returned.
+- **Placement flood** `FUN_005B33C0` (`0x5B33C0`): a second flood variant
+  seeded from a ferry-adjacent cell whose per-cell byte layer
+  (`0x136BEB0` / `0x136BEEC`) is not `-1`, filling `DAT_01391FE0` with its
+  own pass predicates before the gradient walk runs. Its exact pass rules
+  and the `DAT_010C773C & 3` tie-break source still need one more pass
+  (`inferred`). The expansion loop (`0x5B3447`+) is recovered: a neighbour
+  passes iff `flood[neighbour] == 0`, the neighbour is neither the seed
+  (`DAT_0131FC44`) nor the footprint-edge bound (`ebp`), its byte layer is
+  not `-1` (per-direction bases near `0x136BEB0`), and
+  `(terrain[neighbour] >> 16) & 1 == 0` (the `test byte [4*cell + 0xF6A9E2],
+  1` check; `DAT_00F6A9E0` is the serialized terrain layer). The exact
+  per-direction byte-base arithmetic (north base `0x136BFD0` vs
+  `0x136BEB0` for E/S/W) and the `DAT_010C773C & 3` tie-break source remain
+  implementation-verification items.
+
+**Classification:** vtable/init/post-pass mechanics, the gradient-walk
+shape, and the flood pass predicate are `confirmed`; the exact per-direction
+byte-layer bases, the `DAT_010C773C & 3` tie-break source, and the placement
+call path are `inferred` implementation-verification items.
+**Implementation consequence:** the ferry post-pass contract is now fully
+specifiable — persist the connector array (`+0x154`, direction bytes
+`0/2/4/6`) and count (`+0x924`) per ferry object (new optional-backed Native
+state), compute connectors at placement with the flood-guided gradient walk,
+and apply `0x800` footprint + `0x200` connectors after base derivation in
+the primary cache. Until it lands, ferry maps stay fail-closed
+(`house+0x24` unknown on ferry maps, plan 006 Phase 1a).
+
+### 10.10 Food factor contract (2026-08-16, research closed)
+
+The `cHouseInfo+0x36` byte is a **0–100 raw quality value in the same units
+as Native `OriginalFoodCatalog.quality(in:)`** (`0/20/30/50/70/90` nominal;
+blends produce intermediates). Player-facing names come from
+`FUN_00545100`: `>89 → 5 delicious, >69 → 4 tasty, >49 → 3 appetizing,
+>29 → 2 plain, >0 → 1 bland, 0 → none`. The popularity walk
+`FUN_00590F30` compares the **raw byte** against the model's required
+`EVO_FOOD_QUALITY` (column 8), not the band.
+
+Recovered lifecycle (all `confirmed` sites in §3):
+
+1. **House food stock**: word slots at `cHouseInfo+0x12 + slot*2`
+   (`FUN_00447600`); slot 0 = Dinners (`Trade.txt` 0-based ID 28). Monthly
+   depletion `FUN_00518690` (month rollover) consumes
+   `(residents * 25) / 100` from slot 0; when the remaining stock is
+   `< 1`, it zeroes the word **and** `+0x36 = 0`.
+2. **Market quality** `cMarket+0x180` (0–100 dword): constructor zero;
+   `cStall+0x260` (`FUN_00541760`) weighted blend on mill-cart return —
+   `new = round((old*oldStock + 20*accepted*(byte figure+0x13)) /
+   (oldStock+accepted))`; zero when Dinners stock depletes; hero bless
+   (`FUN_00511080` case 4) raises up to `+0x184` cap.
+3. **House delivery** `cMarket+0x2c` (`FUN_005437B0`): adds Dinners into
+   slot 0; writes `cHouseInfo+0x36` at `0x543A09` — replace when the
+   market quality is higher, else blend with `r = delivered/existingStock`
+   using the five documented ratio arms (3.0 / 2.0 / 0.5 / ≈0.33 thresholds;
+   `(c+3m)/4, (c+2m)/3, (c+m)/2, (2c+m)/3, (3c+m)/4`).
+4. **Consumer**: `FUN_00590F30` scores `+2` when raw `+0x36 ≥ required`,
+   otherwise increments the streak byte `house+0x5C` (capped 3, mapped
+   `1→−1, 2→−2, ≥3→−3`); mean across occupied houses with required > 0,
+   round-away-from-zero only when `abs(remainder) > count/2`, and `< 0`
+   returns 0 when population < 350 and never exceeded 349.
+
+**Native implementation contract (Phase 3/4):** `ResidentialUnit` must carry
+the Dinners stock word and the raw `+0x36` quality byte (both save-backed),
+with monthly depletion and the market-delivery replace/blend per the
+recovered arms; `cMarket+0x180` per-market quality must be maintained by the
+existing peddler/buyer delivery path with the stall blend. The existing
+`OriginalFoodCatalog` 0/20/30/50/70/90 values are the correct units; the
+non-isomorphism to remove is the current consumption/blending cadence, not
+the unit scale. Player-facing text uses the `FUN_00545100` bands.
+Classification: lifecycle and arithmetic `confirmed`; the complete
+`+0x36` writer set remains `inferred`-complete (four sites + market blend
+enumerated, §10.5).
+
+### 10.11 Implementation status (2026-08-17)
+
+Phase 3 pieces landed in Native (all green, 322 tests):
+
+- **Land-entry flood** (`DeterministicMigration.landEntryFloodDepths`):
+  4-neighbour N/E/S/W flood over the main derived cache with mask `0xB7C`,
+  depths `n+1`; tested on Haunxian (mask consistency + determinism).
+- **Settling lock**: `ResidentialUnit.settlingLock`/`RemainingSteps`,
+  `startSettlingLock` (32), daily `advanceSettlingLock` (empty clears
+  immediately, §10.6), armed by housing-devolution displacement; arrival
+  write skips while set.
+- **Vacant lifecycle**: `ResidentialUnit.vacantTypeID` (`2`/`11`), set by
+  `constructHouse`; `activateVacantHouse` applies the `+0x230` switch on
+  first occupancy (common stays level 0, elite 8 → 10).
+- **Immigrant figure #11** (`ImmigrantWalker`): states `6→7→8`, wait word
+  from the recovered `(house+0x51 & 0xFF7F) + DAT_00D62418` formula
+  (`house+0x51` semantics unknown → 0, recorded inference), movement with
+  the 1/1/2 substep cadence and 20-substep route steps, arrival via the
+  `0x4CA265` write (`settling` gate → vacant switch → clamped residents
+  add); route from the authored land entry via the recovered mode-1/mode-19
+  worker pathfinder; Native-day bridge `floor(day×816/30) −
+  floor((day−1)×816/30)`. Spawned only by fixtures while the producer is
+  unsupported.
+
+Still pending (Phase 3/4): the popularity/pressure/request producer with the
+food/monument/war factor wiring, the ferry post-pass, and the final
+save-migration + playthrough-test gate. The producer remains
+`unsupportedOriginalProducer` in production until then.
+
+### 10.12 Implementation and verification status (2026-08-17, second pass)
+
+The producer is **implemented and enabled in production**:
+
+- `GameSessionController.startCampaignMission` sets
+  `AutomaticMigrationAvailability.supportedOriginalProducer` and the
+  `CampaignMigrationContext` (monument goals, wage, debt months) at mission
+  start and each monthly advance.
+- The daily tick runs the popularity update (slice days 1/16), the
+  `FUN_005917E0` pressure/request/cooldown pass, and the `FUN_004AD4A0` +
+  `FUN_004ADA10` three-pass assignment (with the in-flight skip on all three
+  passes), spawning `ImmigrantWalker` figures that walk from the authored
+  land entry and perform the `0x4CA265` occupancy write.
+- Fixed en route: the city routing-cache projection now treats every placed
+  building as blocking (`+0xCC == false` default) and non-wall/non-canal
+  monuments as blocked in the fallback cache, so the grid no longer throws
+  for normal cities (wells/shrines/towers/palace/ruins); the housing
+  evolution now gates on the **target** level's authored requirements
+  (Plain Cottage needs food 20, ancestor; Spacious needs herbalist/music),
+  so the missing-market counterexample correctly cannot win.
+- Verified playthroughs (all with the real producer, no state injection):
+  Xia tutorial 0 victory + counterexample, **Qin 1 (Zheng Guo's Canal +
+  iron 1800)**, and **Qin 2 (First Emperor's City, elite housing chain)**.
+  Full suite: 324 tests, 0 failures; the only remaining skip is the Xia-2
+  continuation, blocked on a separate new-map food-coverage item (some
+  inherited houses fall outside the added markets' peddler coverage and
+  devolve).
+
+Remaining for the producer: departures (emigration) still fail-closed
+(§4), the ferry post-pass (§10.9) for ferry maps, the Qin invasion enemy
+model runtime observation (§10.7), and Qin 3/5 player playthrough tests +
+the Qin-4 Great Wall first-playable state.
+
+### 10.13 Qin playthrough status (2026-08-17, third pass)
+
+- **Qin 1 (Zheng Guo's Canal)** and **Qin 2 (First Emperor's City)** player
+  playthroughs pass end-to-end with the real producer (no state injection).
+- **Qin 3 (Land of Annam)** playthrough scaffolding is in place but **not yet
+  verified**: the rice-farm → mill food chain does not produce on the
+  Xiangjun map (mill stays empty, houses remain below the food-20 gate, and
+  the treasury sinks to continuous debt). The diagnostic loop shows
+  `mills=[[:]] buyers=0 peddlers=0 foodAtHouses=0` while the lacquer chain
+  partially produces, pointing at farm-field placement / worker allocation
+  on this map rather than the migration producer. Test is skipped with this
+  note.
+- The full suite is green: 325 tests, 2 skips (Xia-2 continuation coverage,
+  Qin-3 WIP), 0 failures.
+
+### 10.14 Qin-3 progress (2026-08-17, fourth pass)
+
+The Qin-3 playthrough city now has a working food chain: the mill holds
+rice/fish/meat (three food types → appetizing 50), food quality 50 reaches
+residents, and the yearly lacquer goal (1,800) is met. The precise remaining
+blocker is the **trade-station delivery**: imported hemp (19) and jade input
+(17) stay in the stations (`active=nil`, correct `importingCommodityIDs`)
+and never move to the warehouses/shops, so houses stall below level 3 (no
+hemp) and the city sinks to continuous debt. The station→warehouse pair at
+access (76,86)/(77,86) is the next trace target in `createTradeDelivery` /
+`bestWarehouseDestination`. The test stays skipped with this note.
+
+### 10.15 Qin-3 progress (2026-08-17, fifth pass)
+
+Root cause of the stalled trade delivery found: the warehouses fill to their
+3,200 capacity with production/exports, leaving `availableCapacity(for:)`
+zero for imported hemp/jade, so `bestWarehouseDestination` returns nil. After
+adding warehouse capacity, the **hemp import now delivers** (a
+`tradingBuilding → warehouse` delivery walker is observed and the station's
+hemp is consumed). The remaining blocker is layout on the constrained
+Xiangjun map: the jade input station has no warehouse/workshop site within
+the deliveryman's 24-step range, so jade (26) stays at 0 and the city sinks
+to continuous debt. Next step: place trade stations + warehouses before the
+houses congest the district (or widen the placement search). The test stays
+skipped with this note.
+
+### 10.16 Qin-3 progress (2026-08-17, sixth pass)
+
+The Qin-3 city is now economically solvent end-to-end and the carved-jade
+chain is closed:
+
+- **Jade delivery** (§10.15) fixed by layout: placing the trade cluster
+  (hemp station → jade workshop → jade station → warehouses) **before** the
+  food chain/markets/houses keeps the workshop inside the export station's
+  24-road-step range. Observed live walkers:
+  `productionBuilding → tradingBuilding:26x100` (carved-jade export) and
+  `tradingBuilding → productionBuilding:17x100` (jade input). Treasury
+  stays positive for 12 simulated years; the carved-jade yearly goal
+  (1,200) is met.
+- **House food-quality write** (`ResidentialUnit.addFoodSupply`) now follows
+  the recovered §10.10 `0x543A09` contract: a better market delivery
+  **replaces** the house quality byte; a worse one blends by the confirmed
+  five-ratio integer table (`r = delivered/existingStock`, branches
+  `3/2/0.5/≈0.33`; integer `/3` `/4` per the `imul`/`sar` identities).
+  The previous min-blend locked houses at the first delivered quality
+  (30 = fish+meat) and blocked food-50 evolution. Elite houses (level ≥ 8)
+  skip the quality write while market quality ≤ 49 (`FUN_005188D0` gate).
+  Evidence class: `confirmed` (bytes/arithmetic in §10.10).
+- **Warehouse policy**: refusing food commodities (1…7) at every warehouse
+  keeps capacity for hemp/jade/carved-jade; stock-managed hemp import
+  (pause ≥ 3,000, resume ≤ 500) prevents the export station from filling
+  with hemp.
+- **Residential service cadence — superseded by recovered control flow
+  (2026-08-26)**: the one-road-tile/day and ten-road-tiles/day models were both
+  Native inferences and are withdrawn. The executable closes the original
+  month as 816 scheduler/figure steps, with service spawning at scheduler
+  phase `0x1F`, coverage decay at `0x23/0x30`, one movement micro-step per
+  figure update for the recovered code-6/code-8 paths, finite outbound range,
+  and a non-covering return path. Coverage uses independent countdown bytes,
+  not a monthly reset. Native now distributes the exact 816-step month over
+  its 30-day compatibility calendar. Full addresses, provider-specific worker
+  thresholds, selector-15 range scaling, coverage constants, junction fields,
+  provider exit-heading persistence, and unsupported figure FSMs are recorded in
+  `residential-service-roamer-lifecycle.md`. Any Qin/Xia fixture conclusion
+  derived specifically from the former ten-tiles/day cadence is no longer
+  fidelity evidence and must be revalidated against the recovered lifecycle.
+- **Qin 3 player-replay boundary (2026-08-26)**: a map-aware, player-command-only
+  layout anchored on the largest clear authored-groundwater district closes
+  three-food delivery and raises housing through levels 0...3. After the full
+  generic roamer recovery (including `0x4E71D0` signed fallback rotation,
+  coverage eligibility and sixteen-sector occlusion), a fresh 120-month run
+  still services only 27 of the initial 40 houses and ends with population 265,
+  no level-6 residents, lacquer 1,200/1,600 and carved jade 1,200/1,200. Its
+  final live missing requirements include water and music; music figure `#34`
+  uses the separate `0x48A9A0` venue FSM, while the water `+0x32/+0x34` split,
+  market-peddler coverage, and desirability chain remain outside the closed
+  generic bridge. Further layout tuning is not evidence of original behavior.
+  The full Qin-3 playthrough therefore remains fail-closed/skipped. The closed
+  generic lifecycle is tracked in `residential-service-roamer-lifecycle.md`.
+- Rice harvests only in month 10 (one 100-unit load per field), so the
+  mill's rice stock drains and market food quality oscillates 30/50 between
+  harvests; salt/spices are not available in this mission. Map/economy
+  constraint, not a producer defect.

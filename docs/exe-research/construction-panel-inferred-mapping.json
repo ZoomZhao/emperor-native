@@ -1,0 +1,3954 @@
+{
+  "generatedAt": "2026-08-11T03:33:47.582593+00:00",
+  "evidencePolicy": "ALL rows in native-inferred sections are evidenceType=inferred. Asset sheet geometry alone is confirmed elsewhere; do not upgrade these associations to confirmed without exe/runtime closure.",
+  "layoutInferred": {
+    "canvas": {
+      "w": 1024,
+      "h": 768
+    },
+    "hudHeight": 40,
+    "panel": {
+      "x": 800,
+      "y": 40,
+      "w": 224,
+      "h": 728
+    },
+    "categoryRail": {
+      "x": 800,
+      "y": 40,
+      "w": 54
+    },
+    "categoryButtonFrame": {
+      "w": 48,
+      "h": 37,
+      "padX": 3,
+      "offsetY": -2,
+      "spacing": 1
+    },
+    "advisorHeight": 280,
+    "catalogTopY_canvas": 321,
+    "catalogContentX": 858,
+    "cell": {
+      "w": 54,
+      "h": 53
+    },
+    "columns": 3,
+    "utilityStripHeight": 36,
+    "minimapBlockHeight": 154,
+    "navHeight": 40,
+    "source": "EmperorTheme.swift + ContentView ClassicControlPanel (inferred native layout, not exe-measured)"
+  },
+  "catalogBuildingRows": 53,
+  "sharedFamilies": [
+    {
+      "sharedFamily": "furnace_smelter",
+      "baseImageId": 1524,
+      "buildingIds": [
+        39,
+        40
+      ],
+      "stateImageIds": [
+        1524,
+        1525,
+        1526
+      ]
+    },
+    {
+      "sharedFamily": "market_pavilion",
+      "baseImageId": 1546,
+      "buildingIds": [
+        59,
+        60
+      ],
+      "stateImageIds": [
+        1546,
+        1547,
+        1548
+      ]
+    },
+    {
+      "sharedFamily": "daoist_shrine_temple",
+      "baseImageId": 1599,
+      "buildingIds": [
+        215,
+        216
+      ],
+      "stateImageIds": [
+        1599,
+        1600,
+        1601
+      ]
+    },
+    {
+      "sharedFamily": "guild_camp",
+      "baseImageId": 1650,
+      "buildingIds": [
+        52,
+        235,
+        236
+      ],
+      "stateImageIds": [
+        1650,
+        1651,
+        1652
+      ]
+    }
+  ],
+  "sections": {
+    "asset-confirmed-reference": {
+      "description": "See construction-bbutton-families.*; image families only — no buildingId",
+      "confirmedFamilyCount": 45
+    },
+    "native-inferred": {
+      "buildingButtonRows": [
+        {
+          "section": "native-inferred",
+          "category": "住宅",
+          "categoryKey": "residential",
+          "slot": 0,
+          "buildingId": 2,
+          "buildingName": "住宅",
+          "nativeTool": "house",
+          "imageId": 1491,
+          "frame": 0,
+          "stateImageIds": [
+            1491,
+            1492,
+            1493
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 0,
+              "slot": 0
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "common housing",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "住宅",
+          "categoryKey": "residential",
+          "slot": 1,
+          "buildingId": 11,
+          "buildingName": "贵族住宅",
+          "nativeTool": "eliteHouse",
+          "imageId": 1494,
+          "frame": 0,
+          "stateImageIds": [
+            1494,
+            1495,
+            1496
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 0,
+              "slot": 1
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "elite housing",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "农业",
+          "categoryKey": "agriculture",
+          "slot": 12,
+          "buildingId": 31,
+          "buildingName": "捕鱼码头",
+          "nativeTool": "fishingWharf",
+          "imageId": 1512,
+          "frame": 0,
+          "stateImageIds": [
+            1512,
+            1513,
+            1514
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 533,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 4,
+              "slot": 12
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "fishing wharf",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "农业",
+          "categoryKey": "agriculture",
+          "slot": 13,
+          "buildingId": 33,
+          "buildingName": "猎场",
+          "nativeTool": "huntingCamp",
+          "imageId": 1506,
+          "frame": 0,
+          "stateImageIds": [
+            1506,
+            1507,
+            1508
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 533,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 4,
+              "slot": 13
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "hunting camp",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "工业",
+          "categoryKey": "industry",
+          "slot": 0,
+          "buildingId": 35,
+          "buildingName": "粘土坑",
+          "nativeTool": "clayPit",
+          "imageId": 1515,
+          "frame": 0,
+          "stateImageIds": [
+            1515,
+            1516,
+            1517
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 0,
+              "slot": 0
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "clay pit",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "工业",
+          "categoryKey": "industry",
+          "slot": 3,
+          "buildingId": 36,
+          "buildingName": "石料场",
+          "nativeTool": "quarry",
+          "imageId": 1518,
+          "frame": 0,
+          "stateImageIds": [
+            1518,
+            1519,
+            1520
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 1,
+              "slot": 3
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "quarry / stoneworks",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "工业",
+          "categoryKey": "industry",
+          "slot": 1,
+          "buildingId": 43,
+          "buildingName": "窑炉",
+          "nativeTool": "kiln",
+          "imageId": 1521,
+          "frame": 0,
+          "stateImageIds": [
+            1521,
+            1522,
+            1523
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 0,
+              "slot": 1
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "kiln",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "工业",
+          "categoryKey": "industry",
+          "slot": 5,
+          "buildingId": 39,
+          "buildingName": "青铜熔炉",
+          "nativeTool": "bronzeWorks",
+          "imageId": 1524,
+          "frame": 0,
+          "stateImageIds": [
+            1524,
+            1525,
+            1526
+          ],
+          "sharedFamily": "furnace_smelter",
+          "screenRect": {
+            "x": 966,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 1,
+              "slot": 5
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "bronze smelter",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "工业",
+          "categoryKey": "industry",
+          "slot": 4,
+          "buildingId": 40,
+          "buildingName": "炼铁炉",
+          "nativeTool": "ironMine",
+          "imageId": 1524,
+          "frame": 0,
+          "stateImageIds": [
+            1524,
+            1525,
+            1526
+          ],
+          "sharedFamily": "furnace_smelter",
+          "screenRect": {
+            "x": 912,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 1,
+              "slot": 4
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "iron smelter shares the furnace button",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "工业",
+          "categoryKey": "industry",
+          "slot": 2,
+          "buildingId": 38,
+          "buildingName": "伐木棚",
+          "nativeTool": "lumberMill",
+          "imageId": 1527,
+          "frame": 0,
+          "stateImageIds": [
+            1527,
+            1528,
+            1529
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 966,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 0,
+              "slot": 2
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "lumber mill",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "商业",
+          "categoryKey": "commerce",
+          "slot": 0,
+          "buildingId": 54,
+          "buildingName": "仓库",
+          "nativeTool": "warehouse",
+          "imageId": 1528,
+          "frame": 0,
+          "stateImageIds": [
+            1528,
+            1529,
+            1530
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 0,
+              "slot": 0
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "low",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "warehouse",
+          "contradictions": [
+            {
+              "type": "alias_excluded_from_classic_grid",
+              "buildingId": 54,
+              "tool": "granary",
+              "detail": "granary aliases warehouse and is excluded from ClassicControlPanel catalog"
+            },
+            {
+              "type": "catalog_base_vs_index_family_start",
+              "buildingId": 54,
+              "catalogBase": 1528,
+              "containingFamily": {
+                "familyStart": 1527,
+                "states": [
+                  1527,
+                  1528,
+                  1529
+                ],
+                "offsetInFamily": 1
+              },
+              "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+            }
+          ],
+          "indexFamilyStartIfDifferent": 1527,
+          "catalogOffsetInIndexFamily": 1
+        },
+        {
+          "section": "native-inferred",
+          "category": "商业",
+          "categoryKey": "commerce",
+          "slot": 3,
+          "buildingId": 66,
+          "buildingName": "食物铺",
+          "nativeTool": "foodShop",
+          "imageId": 1531,
+          "frame": 0,
+          "stateImageIds": [
+            1531,
+            1532,
+            1533
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 1,
+              "slot": 3
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "low",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "food shop",
+          "contradictions": [
+            {
+              "type": "catalog_base_vs_index_family_start",
+              "buildingId": 66,
+              "catalogBase": 1531,
+              "containingFamily": {
+                "familyStart": 1530,
+                "states": [
+                  1530,
+                  1531,
+                  1532
+                ],
+                "offsetInFamily": 1
+              },
+              "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+            }
+          ],
+          "indexFamilyStartIfDifferent": 1530,
+          "catalogOffsetInIndexFamily": 1
+        },
+        {
+          "section": "native-inferred",
+          "category": "农业",
+          "categoryKey": "agriculture",
+          "slot": 9,
+          "buildingId": 53,
+          "buildingName": "磨坊",
+          "nativeTool": "mill",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": [],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 480,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 3,
+              "slot": 9
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "unknown",
+          "source": "Original Chinese runtime 商业 rail capture (2026-08-12); semantic building ID not recovered",
+          "catalogComment": "Former sheet-order mill guess withdrawn; observed family begins at #1533",
+          "contradictions": [
+            {
+              "type": "catalog_base_vs_index_family_start",
+              "buildingId": 53,
+              "catalogBase": 1534,
+              "containingFamily": null,
+              "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "工业",
+          "categoryKey": "industry",
+          "slot": 8,
+          "buildingId": 47,
+          "buildingName": "织布坊",
+          "nativeTool": "weaver",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": [],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 966,
+            "y": 427,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 2,
+              "slot": 8
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "unknown",
+          "source": "Original Chinese runtime 商业 rail capture (2026-08-12); semantic building ID not recovered",
+          "catalogComment": "Former sheet-order weaver guess withdrawn; observed family begins at #1536",
+          "contradictions": [
+            {
+              "type": "catalog_base_vs_index_family_start",
+              "buildingId": 47,
+              "catalogBase": 1537,
+              "containingFamily": {
+                "familyStart": 1536,
+                "states": [
+                  1536,
+                  1537,
+                  1538
+                ],
+                "offsetInFamily": 1
+              },
+              "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+            }
+          ],
+          "indexFamilyStartIfDifferent": 1536,
+          "catalogOffsetInIndexFamily": 1
+        },
+        {
+          "section": "native-inferred",
+          "category": "商业",
+          "categoryKey": "commerce",
+          "slot": 5,
+          "buildingId": 65,
+          "buildingName": "陶器铺",
+          "nativeTool": "ceramicsShop",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": [],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 966,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 1,
+              "slot": 5
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "unknown",
+          "source": "Original Chinese runtime 商业 rail capture (2026-08-12); semantic building ID not recovered",
+          "catalogComment": "Former sheet-order ceramics-shop guess withdrawn; observed family begins at #1539",
+          "contradictions": [
+            {
+              "type": "catalog_base_vs_index_family_start",
+              "buildingId": 65,
+              "catalogBase": 1540,
+              "containingFamily": {
+                "familyStart": 1539,
+                "states": [
+                  1539,
+                  1540,
+                  1541
+                ],
+                "offsetInFamily": 1
+              },
+              "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+            }
+          ],
+          "indexFamilyStartIfDifferent": 1539,
+          "catalogOffsetInIndexFamily": 1
+        },
+        {
+          "section": "native-inferred",
+          "category": "商业",
+          "categoryKey": "commerce",
+          "slot": 4,
+          "buildingId": 67,
+          "buildingName": "麻布铺",
+          "nativeTool": "hempShop",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": [],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 1,
+              "slot": 4
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "unknown",
+          "source": "Original Chinese reference video; tutorial runtime capture pending",
+          "catalogComment": "Former sheet-order hemp-shop guess withdrawn; family #1542–#1544 remains video-only",
+          "contradictions": [
+            {
+              "type": "catalog_base_vs_index_family_start",
+              "buildingId": 67,
+              "catalogBase": 1543,
+              "containingFamily": {
+                "familyStart": 1542,
+                "states": [
+                  1542,
+                  1543,
+                  1544
+                ],
+                "offsetInFamily": 1
+              },
+              "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+            }
+          ],
+          "indexFamilyStartIfDifferent": 1542,
+          "catalogOffsetInIndexFamily": 1
+        },
+        {
+          "section": "native-inferred",
+          "category": "商业",
+          "categoryKey": "commerce",
+          "slot": 1,
+          "buildingId": 59,
+          "buildingName": "市场",
+          "nativeTool": "market",
+          "imageId": 1546,
+          "frame": 0,
+          "stateImageIds": [
+            1546,
+            1547,
+            1548
+          ],
+          "sharedFamily": "market_pavilion",
+          "screenRect": {
+            "x": 912,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 0,
+              "slot": 1
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "low",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "common market",
+          "contradictions": [
+            {
+              "type": "catalog_base_vs_index_family_start",
+              "buildingId": 59,
+              "catalogBase": 1546,
+              "containingFamily": {
+                "familyStart": 1545,
+                "states": [
+                  1545,
+                  1546,
+                  1547
+                ],
+                "offsetInFamily": 1
+              },
+              "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+            }
+          ],
+          "indexFamilyStartIfDifferent": 1545,
+          "catalogOffsetInIndexFamily": 1
+        },
+        {
+          "section": "native-inferred",
+          "category": "商业",
+          "categoryKey": "commerce",
+          "slot": 2,
+          "buildingId": 60,
+          "buildingName": "大市场",
+          "nativeTool": "grandMarket",
+          "imageId": 1546,
+          "frame": 0,
+          "stateImageIds": [
+            1546,
+            1547,
+            1548
+          ],
+          "sharedFamily": "market_pavilion",
+          "screenRect": {
+            "x": 966,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 0,
+              "slot": 2
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "low",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "grand market shares the market pavilion family",
+          "contradictions": [
+            {
+              "type": "catalog_base_vs_index_family_start",
+              "buildingId": 60,
+              "catalogBase": 1546,
+              "containingFamily": {
+                "familyStart": 1545,
+                "states": [
+                  1545,
+                  1546,
+                  1547
+                ],
+                "offsetInFamily": 1
+              },
+              "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+            }
+          ],
+          "indexFamilyStartIfDifferent": 1545,
+          "catalogOffsetInIndexFamily": 1
+        },
+        {
+          "section": "native-inferred",
+          "category": "安全",
+          "categoryKey": "safety",
+          "slot": 0,
+          "buildingId": 72,
+          "buildingName": "水井",
+          "nativeTool": "well",
+          "imageId": 1551,
+          "frame": 0,
+          "stateImageIds": [
+            1551,
+            1552,
+            1553
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 0,
+              "slot": 0
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "well",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "安全",
+          "categoryKey": "safety",
+          "slot": 1,
+          "buildingId": 207,
+          "buildingName": "药草铺",
+          "nativeTool": "herbalist",
+          "imageId": 1554,
+          "frame": 0,
+          "stateImageIds": [
+            1554,
+            1555,
+            1556
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 0,
+              "slot": 1
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "herbalist",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "安全",
+          "categoryKey": "safety",
+          "slot": 2,
+          "buildingId": 208,
+          "buildingName": "针灸所",
+          "nativeTool": "acupuncture",
+          "imageId": 1557,
+          "frame": 0,
+          "stateImageIds": [
+            1557,
+            1558,
+            1559
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 966,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 0,
+              "slot": 2
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "acupuncture clinic",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": null,
+          "categoryKey": null,
+          "slot": null,
+          "buildingId": 124,
+          "buildingName": "inspector tower",
+          "nativeTool": null,
+          "imageId": 1560,
+          "frame": 0,
+          "stateImageIds": [
+            1560,
+            1561,
+            1562
+          ],
+          "sharedFamily": null,
+          "screenRect": null,
+          "evidenceType": "inferred",
+          "confidence": "low",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "inspector tower",
+          "contradictions": [
+            {
+              "type": "catalog_building_not_in_classic_grid_filter",
+              "buildingId": 124,
+              "tool": null,
+              "detail": "Mapped in sprite catalog but excluded from classic grid filters or missing tool"
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "安全",
+          "categoryKey": "safety",
+          "slot": 4,
+          "buildingId": 127,
+          "buildingName": "瞭望塔",
+          "nativeTool": "watchtower",
+          "imageId": 1563,
+          "frame": 0,
+          "stateImageIds": [
+            1563,
+            1564,
+            1565
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 1,
+              "slot": 4
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "watchtower",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "行政",
+          "categoryKey": "government",
+          "slot": 2,
+          "buildingId": 209,
+          "buildingName": "行政城",
+          "nativeTool": "administrativeCity",
+          "imageId": 1566,
+          "frame": 0,
+          "stateImageIds": [
+            1566,
+            1567,
+            1568
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 966,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 0,
+              "slot": 2
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "administrative city",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "行政",
+          "categoryKey": "government",
+          "slot": 3,
+          "buildingId": 110,
+          "buildingName": "宫殿",
+          "nativeTool": "palace",
+          "imageId": 1569,
+          "frame": 0,
+          "stateImageIds": [
+            1569,
+            1570,
+            1571
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 1,
+              "slot": 3
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "palace",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "行政",
+          "categoryKey": "government",
+          "slot": 1,
+          "buildingId": 125,
+          "buildingName": "税务所",
+          "nativeTool": "taxOffice",
+          "imageId": 1572,
+          "frame": 0,
+          "stateImageIds": [
+            1572,
+            1573,
+            1574
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 0,
+              "slot": 1
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "tax office",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "农业",
+          "categoryKey": "agriculture",
+          "slot": 10,
+          "buildingId": 203,
+          "buildingName": "灌溉水车",
+          "nativeTool": "irrigationPump",
+          "imageId": 1575,
+          "frame": 0,
+          "stateImageIds": [
+            1575,
+            1576,
+            1577
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 480,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 3,
+              "slot": 10
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "irrigation pump",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "娱乐",
+          "categoryKey": "entertainment",
+          "slot": 0,
+          "buildingId": 211,
+          "buildingName": "音乐学校",
+          "nativeTool": "musicSchool",
+          "imageId": 1584,
+          "frame": 0,
+          "stateImageIds": [
+            1584,
+            1585,
+            1586
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 0,
+              "slot": 0
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "music school",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "娱乐",
+          "categoryKey": "entertainment",
+          "slot": 1,
+          "buildingId": 212,
+          "buildingName": "杂技学校",
+          "nativeTool": "acrobatSchool",
+          "imageId": 1587,
+          "frame": 0,
+          "stateImageIds": [
+            1587,
+            1588,
+            1589
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 0,
+              "slot": 1
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "low",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "acrobat school",
+          "contradictions": [
+            {
+              "type": "catalog_base_vs_index_family_start",
+              "buildingId": 212,
+              "catalogBase": 1587,
+              "containingFamily": null,
+              "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "娱乐",
+          "categoryKey": "entertainment",
+          "slot": 2,
+          "buildingId": 213,
+          "buildingName": "戏剧学校",
+          "nativeTool": "dramaSchool",
+          "imageId": 1590,
+          "frame": 0,
+          "stateImageIds": [
+            1590,
+            1591,
+            1592
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 966,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 0,
+              "slot": 2
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "low",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "drama school",
+          "contradictions": [
+            {
+              "type": "catalog_base_vs_index_family_start",
+              "buildingId": 213,
+              "catalogBase": 1590,
+              "containingFamily": null,
+              "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "宗教",
+          "categoryKey": "religious",
+          "slot": 0,
+          "buildingId": 214,
+          "buildingName": "祖先祠堂",
+          "nativeTool": "ancestralShrine",
+          "imageId": 1596,
+          "frame": 0,
+          "stateImageIds": [
+            1596,
+            1597,
+            1598
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 0,
+              "slot": 0
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "ancestral shrine",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "宗教",
+          "categoryKey": "religious",
+          "slot": 2,
+          "buildingId": 215,
+          "buildingName": "道观",
+          "nativeTool": "daoistShrine",
+          "imageId": 1599,
+          "frame": 0,
+          "stateImageIds": [
+            1599,
+            1600,
+            1601
+          ],
+          "sharedFamily": "daoist_shrine_temple",
+          "screenRect": {
+            "x": 966,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 0,
+              "slot": 2
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "Daoist shrine",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "宗教",
+          "categoryKey": "religious",
+          "slot": 3,
+          "buildingId": 216,
+          "buildingName": "道教大庙",
+          "nativeTool": "bathhouse",
+          "imageId": 1599,
+          "frame": 0,
+          "stateImageIds": [
+            1599,
+            1600,
+            1601
+          ],
+          "sharedFamily": "daoist_shrine_temple",
+          "screenRect": {
+            "x": 858,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 1,
+              "slot": 3
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "large Daoist temple shares the Daoist button family",
+          "contradictions": [
+            {
+              "type": "tool_title_vs_model_semantics",
+              "buildingId": 216,
+              "tool": "bathhouse",
+              "title": "道教大庙",
+              "detail": "Swift case is bathhouse but title is 道教大庙; shares Daoist button family with shrine 215"
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "宗教",
+          "categoryKey": "religious",
+          "slot": 4,
+          "buildingId": 218,
+          "buildingName": "佛塔",
+          "nativeTool": "magistrate",
+          "imageId": 1602,
+          "frame": 0,
+          "stateImageIds": [
+            1602,
+            1603,
+            1604
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 1,
+              "slot": 4
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "Buddhist pagoda",
+          "contradictions": [
+            {
+              "type": "tool_title_vs_model_semantics",
+              "buildingId": 218,
+              "tool": "magistrate",
+              "title": "佛塔",
+              "detail": "Swift case is magistrate but title is 佛塔"
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "宗教",
+          "categoryKey": "religious",
+          "slot": 1,
+          "buildingId": 219,
+          "buildingName": "儒家书院",
+          "nativeTool": "confucianAcademy",
+          "imageId": 1605,
+          "frame": 0,
+          "stateImageIds": [
+            1605,
+            1606,
+            1607
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 0,
+              "slot": 1
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "Confucian academy",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "军事",
+          "categoryKey": "military",
+          "slot": 5,
+          "buildingId": 220,
+          "buildingName": "弩兵堡",
+          "nativeTool": "fort",
+          "imageId": 1608,
+          "frame": 0,
+          "stateImageIds": [
+            1608,
+            1609,
+            1610
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 966,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 1,
+              "slot": 5
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "crossbow fort",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "军事",
+          "categoryKey": "military",
+          "slot": 1,
+          "buildingId": 221,
+          "buildingName": "步兵堡",
+          "nativeTool": "barracks",
+          "imageId": 1611,
+          "frame": 0,
+          "stateImageIds": [
+            1611,
+            1612,
+            1613
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 0,
+              "slot": 1
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "infantry fort",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "军事",
+          "categoryKey": "military",
+          "slot": 7,
+          "buildingId": 224,
+          "buildingName": "骑兵堡",
+          "nativeTool": "cavalryFort",
+          "imageId": 1614,
+          "frame": 0,
+          "stateImageIds": [
+            1614,
+            1615,
+            1616
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 427,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 2,
+              "slot": 7
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "cavalry fort",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "军事",
+          "categoryKey": "military",
+          "slot": 8,
+          "buildingId": 225,
+          "buildingName": "战车堡",
+          "nativeTool": "chariotFort",
+          "imageId": 1617,
+          "frame": 0,
+          "stateImageIds": [
+            1617,
+            1618,
+            1619
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 966,
+            "y": 427,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 2,
+              "slot": 8
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "low",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "chariot fort",
+          "contradictions": [
+            {
+              "type": "catalog_base_vs_index_family_start",
+              "buildingId": 225,
+              "catalogBase": 1617,
+              "containingFamily": null,
+              "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "军事",
+          "categoryKey": "military",
+          "slot": 6,
+          "buildingId": 223,
+          "buildingName": "投石车堡",
+          "nativeTool": "catapultFort",
+          "imageId": 1620,
+          "frame": 0,
+          "stateImageIds": [
+            1620,
+            1621,
+            1622
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 427,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 2,
+              "slot": 6
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "low",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "catapult fort",
+          "contradictions": [
+            {
+              "type": "catalog_base_vs_index_family_start",
+              "buildingId": 223,
+              "catalogBase": 1620,
+              "containingFamily": null,
+              "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "美化",
+          "categoryKey": "aesthetics",
+          "slot": 1,
+          "buildingId": 116,
+          "buildingName": "装饰雕塑",
+          "nativeTool": "decorativeSculpture",
+          "imageId": 1623,
+          "frame": 0,
+          "stateImageIds": [
+            1623,
+            1624,
+            1625
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 0,
+              "slot": 1
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "decorative sculpture",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "美化",
+          "categoryKey": "aesthetics",
+          "slot": 0,
+          "buildingId": 115,
+          "buildingName": "花园",
+          "nativeTool": "garden",
+          "imageId": 1626,
+          "frame": 0,
+          "stateImageIds": [
+            1626,
+            1627,
+            1628
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 0,
+              "slot": 0
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "garden",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "美化",
+          "categoryKey": "aesthetics",
+          "slot": 2,
+          "buildingId": 117,
+          "buildingName": "华丽雕塑",
+          "nativeTool": "ornateSculpture",
+          "imageId": 1629,
+          "frame": 0,
+          "stateImageIds": [
+            1629,
+            1630,
+            1631
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 966,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 0,
+              "slot": 2
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "ornate sculpture",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "美化",
+          "categoryKey": "aesthetics",
+          "slot": 5,
+          "buildingId": 120,
+          "buildingName": "池塘",
+          "nativeTool": "pond",
+          "imageId": 1632,
+          "frame": 0,
+          "stateImageIds": [
+            1632,
+            1633,
+            1634
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 966,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 1,
+              "slot": 5
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "low",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "pond",
+          "contradictions": [
+            {
+              "type": "catalog_base_vs_index_family_start",
+              "buildingId": 120,
+              "catalogBase": 1632,
+              "containingFamily": null,
+              "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "美化",
+          "categoryKey": "aesthetics",
+          "slot": 6,
+          "buildingId": 121,
+          "buildingName": "太极园",
+          "nativeTool": "taiChiPark",
+          "imageId": 1635,
+          "frame": 0,
+          "stateImageIds": [
+            1635,
+            1636,
+            1637
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 427,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 2,
+              "slot": 6
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "low",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "tai chi park",
+          "contradictions": [
+            {
+              "type": "catalog_base_vs_index_family_start",
+              "buildingId": 121,
+              "catalogBase": 1635,
+              "containingFamily": null,
+              "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "美化",
+          "categoryKey": "aesthetics",
+          "slot": 4,
+          "buildingId": 119,
+          "buildingName": "路亭",
+          "nativeTool": "waysidePavilion",
+          "imageId": 1638,
+          "frame": 0,
+          "stateImageIds": [
+            1638,
+            1639,
+            1640
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 1,
+              "slot": 4
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "wayside pavilion",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "美化",
+          "categoryKey": "aesthetics",
+          "slot": 3,
+          "buildingId": 118,
+          "buildingName": "花树",
+          "nativeTool": "floweringTree",
+          "imageId": 1641,
+          "frame": 0,
+          "stateImageIds": [
+            1641,
+            1642,
+            1643
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 1,
+              "slot": 3
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "flowering tree",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "美化",
+          "categoryKey": "aesthetics",
+          "slot": 7,
+          "buildingId": 122,
+          "buildingName": "私家园林",
+          "nativeTool": "privateGarden",
+          "imageId": 1644,
+          "frame": 0,
+          "stateImageIds": [
+            1644,
+            1645,
+            1646
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 427,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 2,
+              "slot": 7
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "private garden",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred",
+          "category": "纪念",
+          "categoryKey": "monuments",
+          "slot": 5,
+          "buildingId": 233,
+          "buildingName": "劳工营",
+          "nativeTool": "laborersCamp",
+          "imageId": 1647,
+          "frame": 0,
+          "stateImageIds": [
+            1647,
+            1648,
+            1649
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 966,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 1,
+              "slot": 5
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "low",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "laborers camp",
+          "contradictions": [
+            {
+              "type": "catalog_base_vs_index_family_start",
+              "buildingId": 233,
+              "catalogBase": 1647,
+              "containingFamily": null,
+              "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "纪念",
+          "categoryKey": "monuments",
+          "slot": 6,
+          "buildingId": 52,
+          "buildingName": "木匠行会",
+          "nativeTool": "carpentersGuild",
+          "imageId": 1650,
+          "frame": 0,
+          "stateImageIds": [
+            1650,
+            1651,
+            1652
+          ],
+          "sharedFamily": "guild_camp",
+          "screenRect": {
+            "x": 858,
+            "y": 427,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 2,
+              "slot": 6
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "low",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "carpenters guild",
+          "contradictions": [
+            {
+              "type": "catalog_base_vs_index_family_start",
+              "buildingId": 52,
+              "catalogBase": 1650,
+              "containingFamily": null,
+              "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "纪念",
+          "categoryKey": "monuments",
+          "slot": 7,
+          "buildingId": 235,
+          "buildingName": "石匠行会",
+          "nativeTool": "masonsGuild",
+          "imageId": 1650,
+          "frame": 0,
+          "stateImageIds": [
+            1650,
+            1651,
+            1652
+          ],
+          "sharedFamily": "guild_camp",
+          "screenRect": {
+            "x": 912,
+            "y": 427,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 2,
+              "slot": 7
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "low",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "masons guild shares the guild button family",
+          "contradictions": [
+            {
+              "type": "catalog_base_vs_index_family_start",
+              "buildingId": 235,
+              "catalogBase": 1650,
+              "containingFamily": null,
+              "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "纪念",
+          "categoryKey": "monuments",
+          "slot": 8,
+          "buildingId": 236,
+          "buildingName": "陶工行会",
+          "nativeTool": "ceramistsGuild",
+          "imageId": 1650,
+          "frame": 0,
+          "stateImageIds": [
+            1650,
+            1651,
+            1652
+          ],
+          "sharedFamily": "guild_camp",
+          "screenRect": {
+            "x": 966,
+            "y": 427,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 2,
+              "slot": 8
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "low",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "ceramists guild shares the guild button family",
+          "contradictions": [
+            {
+              "type": "catalog_base_vs_index_family_start",
+              "buildingId": 236,
+              "catalogBase": 1650,
+              "containingFamily": null,
+              "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "纪念",
+          "categoryKey": "monuments",
+          "slot": 14,
+          "buildingId": 93,
+          "buildingName": "大佛塔",
+          "nativeTool": "grandPagoda",
+          "imageId": 1653,
+          "frame": 0,
+          "stateImageIds": [
+            1653,
+            1654,
+            1655
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 966,
+            "y": 533,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 4,
+              "slot": 14
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (inferredFromSheet); Sources/EmperorNative/ConstructionToolbar.swift NativeConstructionTool; Sources/EmperorNative/ContentView.swift ClassicControlPanel constructionCatalog",
+          "catalogComment": "grand pagoda",
+          "contradictions": []
+        }
+      ],
+      "cropButtonRows": [
+        {
+          "section": "native-inferred",
+          "category": "农业",
+          "categoryKey": "agriculture",
+          "slot": 0,
+          "buildingId": null,
+          "buildingName": "小麦农场",
+          "nativeTool": "cropFarm",
+          "cropKey": "wheat",
+          "imageId": 1497,
+          "frame": 0,
+          "stateImageIds": [
+            1497,
+            1498,
+            1499
+          ],
+          "sharedFamily": "crop_field",
+          "screenRect": {
+            "x": 858,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 0,
+              "slot": 0
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "OriginalConstructionButtonSpriteCatalog.cropImageID + ContentView cropOrder",
+          "catalogComment": "crop button; farm placement uses producer building via crop selection",
+          "contradictions": [
+            {
+              "type": "crop_shares_sprite_across_crops",
+              "detail": "Multiple crops share base 1497 via isRice/isOrchard branching",
+              "sharedFamily": "crop_field"
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "农业",
+          "categoryKey": "agriculture",
+          "slot": 1,
+          "buildingId": null,
+          "buildingName": "大豆农场",
+          "nativeTool": "cropFarm",
+          "cropKey": "soybeans",
+          "imageId": 1497,
+          "frame": 0,
+          "stateImageIds": [
+            1497,
+            1498,
+            1499
+          ],
+          "sharedFamily": "crop_field",
+          "screenRect": {
+            "x": 912,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 0,
+              "slot": 1
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "OriginalConstructionButtonSpriteCatalog.cropImageID + ContentView cropOrder",
+          "catalogComment": "crop button; farm placement uses producer building via crop selection",
+          "contradictions": [
+            {
+              "type": "crop_shares_sprite_across_crops",
+              "detail": "Multiple crops share base 1497 via isRice/isOrchard branching",
+              "sharedFamily": "crop_field"
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "农业",
+          "categoryKey": "agriculture",
+          "slot": 2,
+          "buildingId": null,
+          "buildingName": "稻米农场",
+          "nativeTool": "cropFarm",
+          "cropKey": "rice",
+          "imageId": 1500,
+          "frame": 0,
+          "stateImageIds": [
+            1500,
+            1501,
+            1502
+          ],
+          "sharedFamily": "crop_rice",
+          "screenRect": {
+            "x": 966,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 0,
+              "slot": 2
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "OriginalConstructionButtonSpriteCatalog.cropImageID + ContentView cropOrder",
+          "catalogComment": "crop button; farm placement uses producer building via crop selection",
+          "contradictions": [
+            {
+              "type": "crop_shares_sprite_across_crops",
+              "detail": "Multiple crops share base 1500 via isRice/isOrchard branching",
+              "sharedFamily": "crop_rice"
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "农业",
+          "categoryKey": "agriculture",
+          "slot": 3,
+          "buildingId": null,
+          "buildingName": "小米农场",
+          "nativeTool": "cropFarm",
+          "cropKey": "millet",
+          "imageId": 1497,
+          "frame": 0,
+          "stateImageIds": [
+            1497,
+            1498,
+            1499
+          ],
+          "sharedFamily": "crop_field",
+          "screenRect": {
+            "x": 858,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 1,
+              "slot": 3
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "OriginalConstructionButtonSpriteCatalog.cropImageID + ContentView cropOrder",
+          "catalogComment": "crop button; farm placement uses producer building via crop selection",
+          "contradictions": [
+            {
+              "type": "crop_shares_sprite_across_crops",
+              "detail": "Multiple crops share base 1497 via isRice/isOrchard branching",
+              "sharedFamily": "crop_field"
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "农业",
+          "categoryKey": "agriculture",
+          "slot": 4,
+          "buildingId": null,
+          "buildingName": "卷心菜农场",
+          "nativeTool": "cropFarm",
+          "cropKey": "cabbage",
+          "imageId": 1497,
+          "frame": 0,
+          "stateImageIds": [
+            1497,
+            1498,
+            1499
+          ],
+          "sharedFamily": "crop_field",
+          "screenRect": {
+            "x": 912,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 1,
+              "slot": 4
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "OriginalConstructionButtonSpriteCatalog.cropImageID + ContentView cropOrder",
+          "catalogComment": "crop button; farm placement uses producer building via crop selection",
+          "contradictions": [
+            {
+              "type": "crop_shares_sprite_across_crops",
+              "detail": "Multiple crops share base 1497 via isRice/isOrchard branching",
+              "sharedFamily": "crop_field"
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "农业",
+          "categoryKey": "agriculture",
+          "slot": 5,
+          "buildingId": null,
+          "buildingName": "麻农场",
+          "nativeTool": "cropFarm",
+          "cropKey": "hemp",
+          "imageId": 1497,
+          "frame": 0,
+          "stateImageIds": [
+            1497,
+            1498,
+            1499
+          ],
+          "sharedFamily": "crop_field",
+          "screenRect": {
+            "x": 966,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 1,
+              "slot": 5
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "OriginalConstructionButtonSpriteCatalog.cropImageID + ContentView cropOrder",
+          "catalogComment": "crop button; farm placement uses producer building via crop selection",
+          "contradictions": [
+            {
+              "type": "crop_shares_sprite_across_crops",
+              "detail": "Multiple crops share base 1497 via isRice/isOrchard branching",
+              "sharedFamily": "crop_field"
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "农业",
+          "categoryKey": "agriculture",
+          "slot": 6,
+          "buildingId": null,
+          "buildingName": "茶农场",
+          "nativeTool": "cropFarm",
+          "cropKey": "tea",
+          "imageId": 1509,
+          "frame": 0,
+          "stateImageIds": [
+            1509,
+            1510,
+            1511
+          ],
+          "sharedFamily": "crop_orchard",
+          "screenRect": {
+            "x": 858,
+            "y": 427,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 2,
+              "slot": 6
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "OriginalConstructionButtonSpriteCatalog.cropImageID + ContentView cropOrder",
+          "catalogComment": "crop button; farm placement uses producer building via crop selection",
+          "contradictions": [
+            {
+              "type": "crop_shares_sprite_across_crops",
+              "detail": "Multiple crops share base 1509 via isRice/isOrchard branching",
+              "sharedFamily": "crop_orchard"
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "农业",
+          "categoryKey": "agriculture",
+          "slot": 7,
+          "buildingId": null,
+          "buildingName": "桑树农场",
+          "nativeTool": "cropFarm",
+          "cropKey": "mulberry",
+          "imageId": 1509,
+          "frame": 0,
+          "stateImageIds": [
+            1509,
+            1510,
+            1511
+          ],
+          "sharedFamily": "crop_orchard",
+          "screenRect": {
+            "x": 912,
+            "y": 427,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 2,
+              "slot": 7
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "OriginalConstructionButtonSpriteCatalog.cropImageID + ContentView cropOrder",
+          "catalogComment": "crop button; farm placement uses producer building via crop selection",
+          "contradictions": [
+            {
+              "type": "crop_shares_sprite_across_crops",
+              "detail": "Multiple crops share base 1509 via isRice/isOrchard branching",
+              "sharedFamily": "crop_orchard"
+            }
+          ]
+        },
+        {
+          "section": "native-inferred",
+          "category": "农业",
+          "categoryKey": "agriculture",
+          "slot": 8,
+          "buildingId": null,
+          "buildingName": "漆树农场",
+          "nativeTool": "cropFarm",
+          "cropKey": "lacquer",
+          "imageId": 1509,
+          "frame": 0,
+          "stateImageIds": [
+            1509,
+            1510,
+            1511
+          ],
+          "sharedFamily": "crop_orchard",
+          "screenRect": {
+            "x": 966,
+            "y": 427,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 2,
+              "slot": 8
+            }
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "OriginalConstructionButtonSpriteCatalog.cropImageID + ContentView cropOrder",
+          "catalogComment": "crop button; farm placement uses producer building via crop selection",
+          "contradictions": [
+            {
+              "type": "crop_shares_sprite_across_crops",
+              "detail": "Multiple crops share base 1509 via isRice/isOrchard branching",
+              "sharedFamily": "crop_orchard"
+            }
+          ]
+        }
+      ],
+      "categoryRailRows": [
+        {
+          "section": "native-inferred-category-rail",
+          "category": "住宅",
+          "categoryKey": "residential",
+          "slot": 0,
+          "buildingId": null,
+          "buildingName": "住宅",
+          "nativeTool": null,
+          "imageId": 1323,
+          "frame": 0,
+          "stateImageIds": [
+            1323,
+            1324,
+            1325,
+            1326
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 803,
+            "y": 38,
+            "w": 48,
+            "h": 37,
+            "coordSpace": "classicCanvas_1024x768",
+            "railIndex": 0
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "OriginalInterfaceIconSpriteCatalog bases + ConstructionToolCategory.originalInterfaceIcon + ContentView categoryRail",
+          "note": "Category icons use 4-state families; safety→#1339 and entertainment→#1347 follow native semantic remap",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred-category-rail",
+          "category": "农业",
+          "categoryKey": "agriculture",
+          "slot": 1,
+          "buildingId": null,
+          "buildingName": "农业",
+          "nativeTool": null,
+          "imageId": 1327,
+          "frame": 0,
+          "stateImageIds": [
+            1327,
+            1328,
+            1329,
+            1330
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 803,
+            "y": 76,
+            "w": 48,
+            "h": 37,
+            "coordSpace": "classicCanvas_1024x768",
+            "railIndex": 1
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "OriginalInterfaceIconSpriteCatalog bases + ConstructionToolCategory.originalInterfaceIcon + ContentView categoryRail",
+          "note": "Category icons use 4-state families; safety→#1339 and entertainment→#1347 follow native semantic remap",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred-category-rail",
+          "category": "工业",
+          "categoryKey": "industry",
+          "slot": 2,
+          "buildingId": null,
+          "buildingName": "工业",
+          "nativeTool": null,
+          "imageId": 1331,
+          "frame": 0,
+          "stateImageIds": [
+            1331,
+            1332,
+            1333,
+            1334
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 803,
+            "y": 114,
+            "w": 48,
+            "h": 37,
+            "coordSpace": "classicCanvas_1024x768",
+            "railIndex": 2
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "OriginalInterfaceIconSpriteCatalog bases + ConstructionToolCategory.originalInterfaceIcon + ContentView categoryRail",
+          "note": "Category icons use 4-state families; safety→#1339 and entertainment→#1347 follow native semantic remap",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred-category-rail",
+          "category": "商业",
+          "categoryKey": "commerce",
+          "slot": 3,
+          "buildingId": null,
+          "buildingName": "商业",
+          "nativeTool": null,
+          "imageId": 1335,
+          "frame": 0,
+          "stateImageIds": [
+            1335,
+            1336,
+            1337,
+            1338
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 803,
+            "y": 152,
+            "w": 48,
+            "h": 37,
+            "coordSpace": "classicCanvas_1024x768",
+            "railIndex": 3
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "OriginalInterfaceIconSpriteCatalog bases + ConstructionToolCategory.originalInterfaceIcon + ContentView categoryRail",
+          "note": "Category icons use 4-state families; safety→#1339 and entertainment→#1347 follow native semantic remap",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred-category-rail",
+          "category": "安全",
+          "categoryKey": "safety",
+          "slot": 4,
+          "buildingId": null,
+          "buildingName": "安全",
+          "nativeTool": null,
+          "imageId": 1339,
+          "frame": 0,
+          "stateImageIds": [
+            1339,
+            1340,
+            1341,
+            1342
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 803,
+            "y": 190,
+            "w": 48,
+            "h": 37,
+            "coordSpace": "classicCanvas_1024x768",
+            "railIndex": 4
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "OriginalInterfaceIconSpriteCatalog bases + ConstructionToolCategory.originalInterfaceIcon + ContentView categoryRail",
+          "note": "Category icons use 4-state families; safety→#1339 and entertainment→#1347 follow native semantic remap",
+          "contradictions": [
+            {
+              "type": "category_icon_semantic_remap",
+              "detail": "safety uses OriginalInterfaceIcon.entertainment (#1339); entertainment uses .culture (#1347)"
+            }
+          ]
+        },
+        {
+          "section": "native-inferred-category-rail",
+          "category": "行政",
+          "categoryKey": "government",
+          "slot": 5,
+          "buildingId": null,
+          "buildingName": "行政",
+          "nativeTool": null,
+          "imageId": 1343,
+          "frame": 0,
+          "stateImageIds": [
+            1343,
+            1344,
+            1345,
+            1346
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 803,
+            "y": 228,
+            "w": 48,
+            "h": 37,
+            "coordSpace": "classicCanvas_1024x768",
+            "railIndex": 5
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "OriginalInterfaceIconSpriteCatalog bases + ConstructionToolCategory.originalInterfaceIcon + ContentView categoryRail",
+          "note": "Category icons use 4-state families; safety→#1339 and entertainment→#1347 follow native semantic remap",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred-category-rail",
+          "category": "娱乐",
+          "categoryKey": "entertainment",
+          "slot": 6,
+          "buildingId": null,
+          "buildingName": "娱乐",
+          "nativeTool": null,
+          "imageId": 1347,
+          "frame": 0,
+          "stateImageIds": [
+            1347,
+            1348,
+            1349,
+            1350
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 803,
+            "y": 266,
+            "w": 48,
+            "h": 37,
+            "coordSpace": "classicCanvas_1024x768",
+            "railIndex": 6
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "OriginalInterfaceIconSpriteCatalog bases + ConstructionToolCategory.originalInterfaceIcon + ContentView categoryRail",
+          "note": "Category icons use 4-state families; safety→#1339 and entertainment→#1347 follow native semantic remap",
+          "contradictions": [
+            {
+              "type": "category_icon_semantic_remap",
+              "detail": "safety uses OriginalInterfaceIcon.entertainment (#1339); entertainment uses .culture (#1347)"
+            }
+          ]
+        },
+        {
+          "section": "native-inferred-category-rail",
+          "category": "宗教",
+          "categoryKey": "religious",
+          "slot": 7,
+          "buildingId": null,
+          "buildingName": "宗教",
+          "nativeTool": null,
+          "imageId": 1351,
+          "frame": 0,
+          "stateImageIds": [
+            1351,
+            1352,
+            1353,
+            1354
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 803,
+            "y": 304,
+            "w": 48,
+            "h": 37,
+            "coordSpace": "classicCanvas_1024x768",
+            "railIndex": 7
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "OriginalInterfaceIconSpriteCatalog bases + ConstructionToolCategory.originalInterfaceIcon + ContentView categoryRail",
+          "note": "Category icons use 4-state families; safety→#1339 and entertainment→#1347 follow native semantic remap",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred-category-rail",
+          "category": "军事",
+          "categoryKey": "military",
+          "slot": 8,
+          "buildingId": null,
+          "buildingName": "军事",
+          "nativeTool": null,
+          "imageId": 1355,
+          "frame": 0,
+          "stateImageIds": [
+            1355,
+            1356,
+            1357,
+            1358
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 803,
+            "y": 342,
+            "w": 48,
+            "h": 37,
+            "coordSpace": "classicCanvas_1024x768",
+            "railIndex": 8
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "OriginalInterfaceIconSpriteCatalog bases + ConstructionToolCategory.originalInterfaceIcon + ContentView categoryRail",
+          "note": "Category icons use 4-state families; safety→#1339 and entertainment→#1347 follow native semantic remap",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred-category-rail",
+          "category": "美化",
+          "categoryKey": "aesthetics",
+          "slot": 9,
+          "buildingId": null,
+          "buildingName": "美化",
+          "nativeTool": null,
+          "imageId": 1359,
+          "frame": 0,
+          "stateImageIds": [
+            1359,
+            1360,
+            1361,
+            1362
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 803,
+            "y": 380,
+            "w": 48,
+            "h": 37,
+            "coordSpace": "classicCanvas_1024x768",
+            "railIndex": 9
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "OriginalInterfaceIconSpriteCatalog bases + ConstructionToolCategory.originalInterfaceIcon + ContentView categoryRail",
+          "note": "Category icons use 4-state families; safety→#1339 and entertainment→#1347 follow native semantic remap",
+          "contradictions": []
+        },
+        {
+          "section": "native-inferred-category-rail",
+          "category": "纪念",
+          "categoryKey": "monuments",
+          "slot": 10,
+          "buildingId": null,
+          "buildingName": "纪念",
+          "nativeTool": null,
+          "imageId": 1319,
+          "frame": 0,
+          "stateImageIds": [
+            1319,
+            1320,
+            1321,
+            1322
+          ],
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 803,
+            "y": 418,
+            "w": 48,
+            "h": 37,
+            "coordSpace": "classicCanvas_1024x768",
+            "railIndex": 10
+          },
+          "evidenceType": "inferred",
+          "confidence": "medium",
+          "source": "OriginalInterfaceIconSpriteCatalog bases + ConstructionToolCategory.originalInterfaceIcon + ContentView categoryRail",
+          "note": "Category icons use 4-state families; safety→#1339 and entertainment→#1347 follow native semantic remap",
+          "contradictions": []
+        }
+      ]
+    },
+    "runtime-unknown": {
+      "description": "No Wine/LLDB capture; classic-grid tools lacking Bbutton catalog rows",
+      "unmappedClassicGridRows": [
+        {
+          "section": "runtime-unknown-image",
+          "category": "农业",
+          "categoryKey": "agriculture",
+          "slot": 11,
+          "buildingId": 193,
+          "buildingName": "农田",
+          "nativeTool": "farmland",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 966,
+            "y": 480,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 3,
+              "slot": 11
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": 193,
+              "tool": "farmland",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "工业",
+          "categoryKey": "industry",
+          "slot": 6,
+          "buildingId": 44,
+          "buildingName": "漆器作坊",
+          "nativeTool": "lacquerwareWorkshop",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 427,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 2,
+              "slot": 6
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": 44,
+              "tool": "lacquerwareWorkshop",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "工业",
+          "categoryKey": "industry",
+          "slot": 7,
+          "buildingId": 46,
+          "buildingName": "玉雕坊",
+          "nativeTool": "jadeWorkshop",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 427,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 2,
+              "slot": 7
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": 46,
+              "tool": "jadeWorkshop",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "商业",
+          "categoryKey": "commerce",
+          "slot": 6,
+          "buildingId": 70,
+          "buildingName": "茶铺",
+          "nativeTool": "teaShop",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 427,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 2,
+              "slot": 6
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": 70,
+              "tool": "teaShop",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "商业",
+          "categoryKey": "commerce",
+          "slot": 7,
+          "buildingId": 69,
+          "buildingName": "丝绸铺",
+          "nativeTool": "silkShop",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 427,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 2,
+              "slot": 7
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": 69,
+              "tool": "silkShop",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "商业",
+          "categoryKey": "commerce",
+          "slot": 8,
+          "buildingId": 68,
+          "buildingName": "漆器铺",
+          "nativeTool": "lacquerwareShop",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 966,
+            "y": 427,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 2,
+              "slot": 8
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": 68,
+              "tool": "lacquerwareShop",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "商业",
+          "categoryKey": "commerce",
+          "slot": 9,
+          "buildingId": 64,
+          "buildingName": "青铜器铺",
+          "nativeTool": "bronzewareShop",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 480,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 3,
+              "slot": 9
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": 64,
+              "tool": "bronzewareShop",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "安全",
+          "categoryKey": "safety",
+          "slot": 3,
+          "buildingId": 126,
+          "buildingName": "路障",
+          "nativeTool": "roadblock",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 1,
+              "slot": 3
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": 126,
+              "tool": "roadblock",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "行政",
+          "categoryKey": "government",
+          "slot": 0,
+          "buildingId": null,
+          "buildingName": "巡察塔",
+          "nativeTool": "inspectorTower",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 0,
+              "slot": 0
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": null,
+              "tool": "inspectorTower",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "军事",
+          "categoryKey": "military",
+          "slot": 0,
+          "buildingId": null,
+          "buildingName": "部队集结",
+          "nativeTool": "rally",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 0,
+              "slot": 0
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": null,
+              "tool": "rally",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "军事",
+          "categoryKey": "military",
+          "slot": 2,
+          "buildingId": 129,
+          "buildingName": "城墙",
+          "nativeTool": "cityWall",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 966,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 0,
+              "slot": 2
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": 129,
+              "tool": "cityWall",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "军事",
+          "categoryKey": "military",
+          "slot": 3,
+          "buildingId": 130,
+          "buildingName": "城门",
+          "nativeTool": "gatehouse",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 1,
+              "slot": 3
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": 130,
+              "tool": "gatehouse",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "军事",
+          "categoryKey": "military",
+          "slot": 4,
+          "buildingId": 131,
+          "buildingName": "城防塔",
+          "nativeTool": "tower",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 1,
+              "slot": 4
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": 131,
+              "tool": "tower",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "纪念",
+          "categoryKey": "monuments",
+          "slot": 0,
+          "buildingId": null,
+          "buildingName": "郑国渠分段",
+          "nativeTool": "grandCanalSegment",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 0,
+              "slot": 0
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": null,
+              "tool": "grandCanalSegment",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "纪念",
+          "categoryKey": "monuments",
+          "slot": 1,
+          "buildingId": null,
+          "buildingName": "土长城分段",
+          "nativeTool": "earthenGreatWallSegment",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 0,
+              "slot": 1
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": null,
+              "tool": "earthenGreatWallSegment",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "纪念",
+          "categoryKey": "monuments",
+          "slot": 2,
+          "buildingId": 82,
+          "buildingName": "大宫殿",
+          "nativeTool": "largePalace",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 966,
+            "y": 321,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 0,
+              "slot": 2
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": 82,
+              "tool": "largePalace",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "纪念",
+          "categoryKey": "monuments",
+          "slot": 3,
+          "buildingId": null,
+          "buildingName": "大宫殿施工",
+          "nativeTool": "largePalacePhase",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 1,
+              "slot": 3
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": null,
+              "tool": "largePalacePhase",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "纪念",
+          "categoryKey": "monuments",
+          "slot": 4,
+          "buildingId": null,
+          "buildingName": "陵墓分段施工",
+          "nativeTool": "phasedMonumentPhase",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 374,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 1,
+              "slot": 4
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": null,
+              "tool": "phasedMonumentPhase",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "纪念",
+          "categoryKey": "monuments",
+          "slot": 9,
+          "buildingId": 76,
+          "buildingName": "陵冢",
+          "nativeTool": "tumulus",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 480,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 3,
+              "slot": 9
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": 76,
+              "tool": "tumulus",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "纪念",
+          "categoryKey": "monuments",
+          "slot": 10,
+          "buildingId": 77,
+          "buildingName": "大陵冢",
+          "nativeTool": "grandTumulus",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 480,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 3,
+              "slot": 10
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": 77,
+              "tool": "grandTumulus",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "纪念",
+          "categoryKey": "monuments",
+          "slot": 11,
+          "buildingId": 84,
+          "buildingName": "地下兵马俑坑",
+          "nativeTool": "undergroundVault",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 966,
+            "y": 480,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 2,
+              "row": 3,
+              "slot": 11
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": 84,
+              "tool": "undergroundVault",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "纪念",
+          "categoryKey": "monuments",
+          "slot": 12,
+          "buildingId": 78,
+          "buildingName": "大庙",
+          "nativeTool": "greatTemple",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 858,
+            "y": 533,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 0,
+              "row": 4,
+              "slot": 12
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": 78,
+              "tool": "greatTemple",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        },
+        {
+          "section": "runtime-unknown-image",
+          "category": "纪念",
+          "categoryKey": "monuments",
+          "slot": 13,
+          "buildingId": 79,
+          "buildingName": "宏伟庙宇",
+          "nativeTool": "splendidTemple",
+          "imageId": null,
+          "frame": null,
+          "stateImageIds": null,
+          "sharedFamily": null,
+          "screenRect": {
+            "x": 912,
+            "y": 533,
+            "w": 54,
+            "h": 53,
+            "coordSpace": "classicCanvas_1024x768_unscrolled",
+            "grid": {
+              "col": 1,
+              "row": 4,
+              "slot": 13
+            }
+          },
+          "evidenceType": "unknown",
+          "confidence": "low",
+          "source": "NativeConstructionTool present in ClassicControlPanel grid; no OriginalConstructionButtonSpriteCatalog row",
+          "catalogComment": "",
+          "contradictions": [
+            {
+              "type": "missing_bbutton_mapping",
+              "buildingId": 79,
+              "tool": "splendidTemple",
+              "detail": "Classic grid can show this tool (SF Symbol fallback) without an exe/sheet Bbutton association"
+            }
+          ]
+        }
+      ],
+      "orphanSheetFamiliesWithoutCatalogBuilding": [
+        1503,
+        1530,
+        1536,
+        1539,
+        1542,
+        1545,
+        1548,
+        1578,
+        1581
+      ]
+    }
+  },
+  "contradictions": [
+    {
+      "type": "alias_excluded_from_classic_grid",
+      "buildingId": 54,
+      "tool": "granary",
+      "detail": "granary aliases warehouse and is excluded from ClassicControlPanel catalog"
+    },
+    {
+      "type": "catalog_building_not_in_classic_grid_filter",
+      "buildingId": 124,
+      "tool": null,
+      "detail": "Mapped in sprite catalog but excluded from classic grid filters or missing tool"
+    },
+    {
+      "type": "tool_title_vs_model_semantics",
+      "buildingId": 216,
+      "tool": "bathhouse",
+      "title": "道教大庙",
+      "detail": "Swift case is bathhouse but title is 道教大庙; shares Daoist button family with shrine 215"
+    },
+    {
+      "type": "tool_title_vs_model_semantics",
+      "buildingId": 218,
+      "tool": "magistrate",
+      "title": "佛塔",
+      "detail": "Swift case is magistrate but title is 佛塔"
+    },
+    {
+      "type": "catalog_base_vs_index_family_start",
+      "buildingId": 54,
+      "catalogBase": 1528,
+      "containingFamily": {
+        "familyStart": 1527,
+        "states": [
+          1527,
+          1528,
+          1529
+        ],
+        "offsetInFamily": 1
+      },
+      "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+    },
+    {
+      "type": "catalog_base_vs_index_family_start",
+      "buildingId": 66,
+      "catalogBase": 1531,
+      "containingFamily": {
+        "familyStart": 1530,
+        "states": [
+          1530,
+          1531,
+          1532
+        ],
+        "offsetInFamily": 1
+      },
+      "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+    },
+    {
+      "type": "catalog_base_vs_index_family_start",
+      "buildingId": 53,
+      "catalogBase": 1534,
+      "containingFamily": null,
+      "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+    },
+    {
+      "type": "catalog_base_vs_index_family_start",
+      "buildingId": 47,
+      "catalogBase": 1537,
+      "containingFamily": {
+        "familyStart": 1536,
+        "states": [
+          1536,
+          1537,
+          1538
+        ],
+        "offsetInFamily": 1
+      },
+      "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+    },
+    {
+      "type": "catalog_base_vs_index_family_start",
+      "buildingId": 65,
+      "catalogBase": 1540,
+      "containingFamily": {
+        "familyStart": 1539,
+        "states": [
+          1539,
+          1540,
+          1541
+        ],
+        "offsetInFamily": 1
+      },
+      "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+    },
+    {
+      "type": "catalog_base_vs_index_family_start",
+      "buildingId": 67,
+      "catalogBase": 1543,
+      "containingFamily": {
+        "familyStart": 1542,
+        "states": [
+          1542,
+          1543,
+          1544
+        ],
+        "offsetInFamily": 1
+      },
+      "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+    },
+    {
+      "type": "catalog_base_vs_index_family_start",
+      "buildingId": 59,
+      "catalogBase": 1546,
+      "containingFamily": {
+        "familyStart": 1545,
+        "states": [
+          1545,
+          1546,
+          1547
+        ],
+        "offsetInFamily": 1
+      },
+      "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+    },
+    {
+      "type": "catalog_base_vs_index_family_start",
+      "buildingId": 60,
+      "catalogBase": 1546,
+      "containingFamily": {
+        "familyStart": 1545,
+        "states": [
+          1545,
+          1546,
+          1547
+        ],
+        "offsetInFamily": 1
+      },
+      "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+    },
+    {
+      "type": "catalog_base_vs_index_family_start",
+      "buildingId": 212,
+      "catalogBase": 1587,
+      "containingFamily": null,
+      "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+    },
+    {
+      "type": "catalog_base_vs_index_family_start",
+      "buildingId": 213,
+      "catalogBase": 1590,
+      "containingFamily": null,
+      "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+    },
+    {
+      "type": "catalog_base_vs_index_family_start",
+      "buildingId": 225,
+      "catalogBase": 1617,
+      "containingFamily": null,
+      "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+    },
+    {
+      "type": "catalog_base_vs_index_family_start",
+      "buildingId": 223,
+      "catalogBase": 1620,
+      "containingFamily": null,
+      "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+    },
+    {
+      "type": "catalog_base_vs_index_family_start",
+      "buildingId": 120,
+      "catalogBase": 1632,
+      "containingFamily": null,
+      "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+    },
+    {
+      "type": "catalog_base_vs_index_family_start",
+      "buildingId": 121,
+      "catalogBase": 1635,
+      "containingFamily": null,
+      "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+    },
+    {
+      "type": "catalog_base_vs_index_family_start",
+      "buildingId": 233,
+      "catalogBase": 1647,
+      "containingFamily": null,
+      "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+    },
+    {
+      "type": "catalog_base_vs_index_family_start",
+      "buildingId": 52,
+      "catalogBase": 1650,
+      "containingFamily": null,
+      "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+    },
+    {
+      "type": "catalog_base_vs_index_family_start",
+      "buildingId": 235,
+      "catalogBase": 1650,
+      "containingFamily": null,
+      "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+    },
+    {
+      "type": "catalog_base_vs_index_family_start",
+      "buildingId": 236,
+      "catalogBase": 1650,
+      "containingFamily": null,
+      "detail": "OriginalConstructionButtonSpriteCatalog base is not a confirmed INDEX 54×53 family start (consecutive-triple packing from sheet order). Commerce stretch is especially misaligned; treat imageId as inferred sheet-look ID, not confirmed family origin."
+    },
+    {
+      "type": "sheet_size_break",
+      "imageId": 1535,
+      "size": [
+        54,
+        52
+      ],
+      "detail": "Breaks naive +3 family packing near mill/commerce (#1534 catalog base has no clean 54×53 triple)"
+    }
+  ],
+  "inferenceRules": [
+    "buildingId→imageId from OriginalConstructionButtonSpriteCatalog only (inferredFromSheet)",
+    "category from NativeConstructionTool.category (native taxonomy, not exe enum)",
+    "slot = index in ClassicControlPanel filter order: enum CaseIterable order, excluding utility/agriculturalProducer/alias tools; agriculture prefixes cropOrder; NOT mission available-first sort",
+    "buildingName from NativeConstructionTool.title (Chinese)",
+    "frame=0 means normal state; hover/selected are imageId+1/+2 for buildings, +0..+3 for category rail",
+    "screenRect absolute coords assume unscrolled catalog under 1024×768 classic shell (HUD 40 + advisor 281 → catalog top y=321); scrolling invalidates Y",
+    "sharedFamily groups multiple buildingIds on one baseImageId; do not invent duplicate sprites",
+    "Live UI reorders available tools first — that ordering is mission-dependent and is a known contradiction vs stableSlot",
+    "Bbutton family starts are taken from construction-bbutton-families.csv (not a naive 1491+3i sequence); after lumber #1527 the next family is warehouse #1528",
+    "Confidence drops to low when catalog baseImageId is not an INDEX-confirmed family start (see catalog_base_vs_index_family_start). Do not “fix” by shifting to familyStart without runtime/exe evidence."
+  ],
+  "exeClosureGaps": [
+    "No exe-confirmed buildingId→Bbutton writer (see construction-bbuttons.md)",
+    "screenRect not measured from original pixels — derived from native SwiftUI theme",
+    "Category/slot order is native reproduction, may diverge from original mission filters",
+    "Rosetta/Wine runtime capture is active; 商业 families #1533–#1535, #1536–#1538, and #1539–#1541 are observed but their semantic IDs remain unknown",
+    "Commerce/light-industry catalog bases (#1528/#1531/…) disagree with consecutive INDEX family starts; withdrawn 53/47/65/67 sheet-order guesses must not be restored without a writer, tooltip, or placement callback"
+  ]
+}

@@ -34,7 +34,7 @@ final class XiaTutorialEconomyTests: XCTestCase {
         XCTAssertEqual(OriginalProductionCatalog.recipe(forBuildingID: 33)?.outputCommodityID, 4)
     }
 
-    func testUnifiedWorkforceStartsAtZeroThenReallocatesAfterMigrationAndDemolition() throws {
+    func testUnifiedWorkforceStartsAtZeroThenReallocatesAfterResidentsAndDemolition() throws {
         let original = try OriginalEconomyModels(source: requireOriginalData())
         let rules = EconomyRulesEngine(models: original)
         var city = try makeRoadCity(rules: rules, houseCount: 4)
@@ -54,17 +54,22 @@ final class XiaTutorialEconomyTests: XCTestCase {
         XCTAssertEqual(workforce.assignments.map(\.assignedWorkers), [0, 0])
         XCTAssertTrue(city.production.buildings.allSatisfy { $0.assignedWorkers == 0 })
 
+        // Fixture-only population setup isolates workforce allocation while
+        // automatic migration waits for the original popularity producer.
+        XCTAssertEqual(city.admitResidents(5, models: original.buildings), 5)
         _ = city.advanceTick(rules: rules)
         workforce = city.workforceSnapshot(models: original.buildings)
         XCTAssertEqual(workforce.availableWorkers, 5)
         XCTAssertEqual(workforce.assignments.map(\.assignedWorkers), [5, 0])
         XCTAssertTrue(city.production.buildings.allSatisfy { $0.assignedWorkers == 0 })
 
+        XCTAssertEqual(city.admitResidents(10, models: original.buildings), 10)
         for _ in 0..<2 { _ = city.advanceTick(rules: rules) }
         workforce = city.workforceSnapshot(models: original.buildings)
         XCTAssertEqual(workforce.assignments.map(\.assignedWorkers), [15, 0])
         XCTAssertEqual(city.production.buildings.first(where: { $0.id == first })?.assignedWorkers, 15)
 
+        XCTAssertEqual(city.admitResidents(5, models: original.buildings), 5)
         _ = city.advanceTick(rules: rules)
         workforce = city.workforceSnapshot(models: original.buildings)
         XCTAssertEqual(workforce.assignments.map(\.assignedWorkers), [15, 5])
@@ -91,17 +96,24 @@ final class XiaTutorialEconomyTests: XCTestCase {
         var assignment = try XCTUnwrap(city.workforceAssignment(for: placement, models: original.buildings))
         XCTAssertEqual(assignment.requiredWorkers, 4)
         XCTAssertEqual(assignment.assignedWorkers, 0)
+        XCTAssertEqual(city.admitResidents(4, models: original.buildings), 4)
         _ = city.advanceTick(rules: rules)
         assignment = try XCTUnwrap(city.workforceAssignment(for: placement, models: original.buildings))
         XCTAssertEqual(assignment.assignedWorkers, 4)
         XCTAssertTrue(assignment.isFullyStaffed)
     }
 
-    func testMeatMovesThroughPhysicalMillBuyerAndPeddlerAndServicesDriveHousing() throws {
+    func testMeatMovesThroughPhysicalMillBuyerAndPeddlerAndRecoveredServicesWriteCoverage() throws {
         let original = try OriginalEconomyModels(source: requireOriginalData())
         let rules = EconomyRulesEngine(models: original)
-        var city = try makeRoadCity(rules: rules, houseCount: 24, houseStartX: 40)
+        // Keep all 24 houses between two original common markets. A single
+        // peddler's 60-step route cannot cover every occupied address once
+        // the corrected service cadence evolves the whole row together.
+        var city = try makeRoadCity(rules: rules, houseCount: 24, houseStartX: 34)
         try placeTutorialFacilities(in: &city, rules: rules)
+        // Fixture-only seeding lets this test continue validating the authored
+        // downstream food/service chain without pretending migration is known.
+        XCTAssertEqual(city.admitResidents(150, models: original.buildings), 150)
 
         var sawProducerStock = false
         var sawDeliveryWalker = false
@@ -115,8 +127,11 @@ final class XiaTutorialEconomyTests: XCTestCase {
         var sawAncestor = false
         var sawInspection = false
 
-        for _ in 0..<(30 * 5) {
-            _ = city.advanceTick(rules: rules)
+        // The recovered producer gates each evolution on the **target** level's
+        // food requirement, so houses only rise after the market delivers food
+        // to them; give the far end of the row two years to be fed.
+        for _ in 0..<(30 * 12 * 2) {
+            let tick = city.advanceTick(rules: rules)
             sawProducerStock = sawProducerStock || city.production.buildings.contains {
                 $0.buildingID == 33 && $0.outputInventoryByCommodityID[4, default: 0] > 0
             }
@@ -131,9 +146,15 @@ final class XiaTutorialEconomyTests: XCTestCase {
             }
             sawMillStock = sawMillStock || city.logistics.mills.contains {
                 $0.inventoryByCommodityID[4, default: 0] > 0
+            } || tick.movement.market.purchasedLoads.contains {
+                $0.commodityID == 4 && $0.amount > 0
             }
-            sawBuyer = sawBuyer || !city.markets.buyers.isEmpty
-            sawPeddler = sawPeddler || !city.markets.peddlers.isEmpty
+            sawBuyer = sawBuyer
+                || !city.markets.buyers.isEmpty
+                || !tick.movement.market.purchasedLoads.isEmpty
+            sawPeddler = sawPeddler
+                || !city.markets.peddlers.isEmpty
+                || !tick.movement.market.householdDeliveries.isEmpty
             sawHouseFood = sawHouseFood || city.houses.contains { $0.foodSupplyAmount > 0 }
             sawWater = sawWater || city.houses.contains { $0.serviceCoverage.contains(.water) }
             sawAncestor = sawAncestor || city.houses.contains { $0.serviceCoverage.contains(.ancestor) }
@@ -150,11 +171,13 @@ final class XiaTutorialEconomyTests: XCTestCase {
         XCTAssertTrue(sawHouseFood)
         XCTAssertTrue(sawWater)
         XCTAssertTrue(sawAncestor)
-        XCTAssertTrue(sawInspection)
-        XCTAssertGreaterThanOrEqual(
-            city.houses.filter { $0.houseLevelID + 3 >= 5 }.reduce(0) { $0 + $1.residents },
-            150
-        )
+        // Inspector figure #39 dispatches to its own 0x4CD230 FSM. The generic
+        // residential-service bridge must not fabricate inspector coverage.
+        XCTAssertFalse(sawInspection)
+        // This fixture intentionally injects residents and still uses the
+        // separate market-peddler approximation. The observations above prove
+        // physical inventory movement and recovered service writes only; they
+        // do not establish an original housing-evolution deadline or outcome.
     }
 
     private func requireOriginalData() throws -> GameDataSource {
@@ -201,9 +224,19 @@ final class XiaTutorialEconomyTests: XCTestCase {
             at: GridPoint(x: 2, y: 18),
             rules: rules
         ))
-        XCTAssertNotNil(city.constructMill(at: GridPoint(x: 6, y: 15), rules: rules))
+        XCTAssertNotNil(city.constructProductionBuilding(
+            buildingID: 33,
+            at: GridPoint(x: 6, y: 18),
+            rules: rules
+        ))
+        XCTAssertNotNil(city.constructMill(at: GridPoint(x: 12, y: 15), rules: rules))
         XCTAssertNotNil(city.constructMarket(
             at: GridPoint(x: 30, y: 16),
+            shopBuildingIDs: [OriginalFoodCatalog.foodShopBuildingID],
+            rules: rules
+        ))
+        XCTAssertNotNil(city.constructMarket(
+            at: GridPoint(x: 60, y: 16),
             shopBuildingIDs: [OriginalFoodCatalog.foodShopBuildingID],
             rules: rules
         ))
@@ -211,15 +244,16 @@ final class XiaTutorialEconomyTests: XCTestCase {
             (72, 40, 0x101),
             (72, 48, 0x202),
             (72, 56, 0x303),
-            (124, 62, 0x404),
-            (214, 64, 0x505),
+            (124, 38, 0x404),
+            (214, 67, 0x505),
+            (214, 44, 0x606),
         ] {
             XCTAssertNotNil(city.constructResidentialServiceBuilding(
                 buildingID: buildingID,
                 at: GridPoint(x: x, y: 18),
                 replaySeed: UInt64(seed),
                 rules: rules
-            ))
+            ), "service \(buildingID) at x=\(x)")
         }
     }
 }
