@@ -7212,3 +7212,51 @@ constructor bodies under `local/source/split-merged/code/0x040000/` and their
 common registration helper, thunk order, and EN/CH instruction parity;
 **unknown** for registration call timing, archive-side specialization,
 provider registry assignment, route/collision, and venue/house settlement.
+
+## 2026-09-05 Entertainment Area figure bootstrap preserves manager-slot handoff
+
+`FUN_0048CE90 @ 0x48CE90` is the concrete `+0x280` callback for an already
+instantiated Entertainment Area (model `71`).  The canonical EN and CH
+instruction slices `0x48CE90…0x48D009` are byte-identical (378 bytes;
+SHA-256 `1006068873b293d12a12f572f0f856edba175d10b4c2968d336b364314c679d6`)
+and the split corpus marks row `0x48CE90` `identical`.
+
+The callback's gate/order is exact: when provider word `+0x1C` is below `1`
+it writes byte `+0x65 = 2`; it then requires virtual `+0x4C(0x25)`, global
+`FUN_004AFDB0(0xAC)` to be false, and virtual `+0x58`.  After the worker gate
+passes it clears provider byte `+0x36`, calls `FUN_004EA050` for figure model
+`0x25` (GameData figure `37`, Festival Performer), and returns low byte `1`
+even when that allocator returns zero.  A failed earlier gate returns low
+byte `0` and does not clear `+0x36`.
+
+For a non-zero figure result, manager cursor `+0x55` selects one status in
+the provider's `+0x71` array: cursor `0` writes `1`; an interior cursor writes
+`2`; the last cursor (`slotCount - 1`) writes `3`; the remaining edge invokes
+`FUN_0048DF30` then `FUN_0048F420` and stores that selector.  The new figure ID
+is written at the matching `+0x58` slot and figure `+0x62` receives the
+provider's signed-short registry index.  Status `1` alone invokes provider
+virtual `+0x22C` and `FUN_004E6A70`; other statuses instead copy the referenced
+figure's registry ID to figure `+0x72`, copy its heading `+0x19`, and update
+figure progress `+0x41` with the source's wrapped-byte rule: `byte - 0x12`,
+then add `0x14` only when the result has its sign bit set.  The manager cursor
+increments after a successful allocation.
+
+`OriginalResidentialServiceCatalog.entertainmentAreaFigureBootstrap` records
+this branch and byte-level handoff as a pure helper.  It requires callers to
+provide allocator output, `FUN_0048F420`'s selector, and the referenced figure
+fields; missing values are returned as unresolved rather than guessed.  This
+closes the Entertainment Area's actor/performer bootstrap boundary but still
+does not connect a Qin generic archive row to a live provider, route/collision
+graph, or house settlement, so Qin entertainment remains fail-closed.
+
+**Sources:** canonical EN/CH PE slices and hashes above; `local/source/
+split-merged/code/0x040000/FUN_0048ce90.c`; `local/source/compare-report.tsv`
+row `0x48CE90`; `FUN_0048DF30.c`, `FUN_0048F420.c`, `FUN_004EA050.c`,
+`GameData/Model/EmperorFigureModels.txt` row `37`; and
+`Sources/EmperorCore/HousingEvolution.swift` with
+`testEntertainmentAreaFigureBootstrapPreservesSlotBranchAndProgressCopy`.
+
+**Evidence class:** **confirmed** for gate order, model/field offsets,
+manager status branches, return byte, wrapped progress arithmetic, and EN/CH
+parity; **unknown** for allocator ownership, selector semantics, archive-side
+specialization, provider registry timing, route/collision, and settlement.

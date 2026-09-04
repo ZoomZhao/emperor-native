@@ -6411,6 +6411,105 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testEntertainmentAreaFigureBootstrapPreservesSlotBranchAndProgressCopy() {
+        let first = OriginalResidentialServiceCatalog.entertainmentAreaFigureBootstrap(
+            providerPopulationWord: 0,
+            providerFigureGatePassed: true,
+            globalGatePassed: true,
+            providerWorkerGatePassed: true,
+            providerRegistryIndex: 0x1_0001,
+            managerCursor: 0,
+            managerSlotCount: 3,
+            allocatedFigureRegistryIndex: 12
+        )
+        XCTAssertEqual(first.providerByte65After, 2)
+        XCTAssertEqual(first.providerByte36After, 0)
+        XCTAssertEqual(first.requestedFigureModelID, 0x25)
+        XCTAssertEqual(first.managerSlotStatus, 1)
+        XCTAssertTrue(first.directFigureInitialization)
+        XCTAssertEqual(first.figureParentProviderIndex, 1)
+        XCTAssertEqual(first.managerCursorAfter, 1)
+
+        let middle = OriginalResidentialServiceCatalog.entertainmentAreaFigureBootstrap(
+            providerPopulationWord: 1,
+            providerFigureGatePassed: true,
+            globalGatePassed: true,
+            providerWorkerGatePassed: true,
+            providerRegistryIndex: 7,
+            managerCursor: 1,
+            managerSlotCount: 4,
+            allocatedFigureRegistryIndex: 20,
+            referencedFigureRegistryIndex: 3,
+            referencedFigureHeading: 6,
+            referencedFigureProgress: 10
+        )
+        XCTAssertEqual(middle.providerByte65After, 0)
+        XCTAssertEqual(middle.managerSlotStatus, 2)
+        XCTAssertFalse(middle.directFigureInitialization)
+        XCTAssertEqual(middle.figureReferenceRegistryIndex, 3)
+        XCTAssertEqual(middle.figureHeadingAfter, 6)
+        XCTAssertEqual(middle.figureProgressAfter, 12)
+
+        let wrappedProgress = OriginalResidentialServiceCatalog.entertainmentAreaFigureBootstrap(
+            providerPopulationWord: 1,
+            providerFigureGatePassed: true,
+            globalGatePassed: true,
+            providerWorkerGatePassed: true,
+            providerRegistryIndex: 7,
+            managerCursor: 1,
+            managerSlotCount: 4,
+            allocatedFigureRegistryIndex: 22,
+            referencedFigureRegistryIndex: 3,
+            referencedFigureHeading: 6,
+            referencedFigureProgress: -120
+        )
+        XCTAssertEqual(wrappedProgress.figureProgressAfter, 118)
+
+        let last = OriginalResidentialServiceCatalog.entertainmentAreaFigureBootstrap(
+            providerPopulationWord: 1,
+            providerFigureGatePassed: true,
+            globalGatePassed: true,
+            providerWorkerGatePassed: true,
+            providerRegistryIndex: 7,
+            managerCursor: 3,
+            managerSlotCount: 4,
+            allocatedFigureRegistryIndex: 21,
+            referencedFigureRegistryIndex: 4,
+            referencedFigureHeading: 2,
+            referencedFigureProgress: 20
+        )
+        XCTAssertEqual(last.managerSlotStatus, 3)
+        XCTAssertEqual(last.figureProgressAfter, 2)
+
+        let allocationMiss = OriginalResidentialServiceCatalog.entertainmentAreaFigureBootstrap(
+            providerPopulationWord: 1,
+            providerFigureGatePassed: true,
+            globalGatePassed: true,
+            providerWorkerGatePassed: true,
+            providerRegistryIndex: 2,
+            managerCursor: 0,
+            managerSlotCount: 3,
+            allocatedFigureRegistryIndex: nil
+        )
+        XCTAssertEqual(allocationMiss.returnLowByte, 1)
+        XCTAssertEqual(allocationMiss.providerByte36After, 0)
+        XCTAssertNil(allocationMiss.figureRegistryIndex)
+
+        let blocked = OriginalResidentialServiceCatalog.entertainmentAreaFigureBootstrap(
+            providerPopulationWord: 1,
+            providerFigureGatePassed: false,
+            globalGatePassed: true,
+            providerWorkerGatePassed: true,
+            providerRegistryIndex: 2,
+            managerCursor: 0,
+            managerSlotCount: 3,
+            allocatedFigureRegistryIndex: 1
+        )
+        XCTAssertEqual(blocked.returnLowByte, 0)
+        XCTAssertNil(blocked.requestedFigureModelID)
+        XCTAssertNil(blocked.providerByte36After)
+    }
+
     func testEntertainmentRuntimeClassRecordsKeepVenueSchoolHierarchy() {
         XCTAssertEqual(
             OriginalResidentialServiceCatalog.entertainmentRuntimeClassDescriptors,

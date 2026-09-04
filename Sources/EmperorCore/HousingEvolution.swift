@@ -2599,6 +2599,236 @@ public enum OriginalResidentialServiceCatalog {
         }
     }
 
+    /// Raw transition emitted by the Entertainment Area callback
+    /// `FUN_0048CE90 @ 0x48CE90`.  This callback is reached only after a
+    /// concrete model-71 provider already exists; it is not an archive-row
+    /// specialization rule.  The slot/status words retain their executable
+    /// values (`1`, `2`, `3`, or the selector returned by `FUN_0048F420`)
+    /// because their player-facing names are not recovered.
+    public struct EntertainmentAreaFigureBootstrapTransition: Sendable, Hashable, Codable {
+        public let providerByte65After: UInt8
+        public let providerByte36After: UInt8?
+        public let returnLowByte: UInt8
+        public let requestedFigureModelID: Int?
+        public let figureRegistryIndex: Int?
+        public let managerCursorBefore: Int?
+        public let managerCursorAfter: Int?
+        public let managerSlotStatus: Int?
+        public let managerSlotFigureRegistryIndex: Int?
+        public let figureParentProviderIndex: Int16?
+        public let directFigureInitialization: Bool
+        public let figureReferenceRegistryIndex: Int?
+        public let figureHeadingAfter: UInt8?
+        public let figureProgressAfter: Int8?
+
+        public init(
+            providerByte65After: UInt8,
+            providerByte36After: UInt8?,
+            returnLowByte: UInt8,
+            requestedFigureModelID: Int?,
+            figureRegistryIndex: Int?,
+            managerCursorBefore: Int?,
+            managerCursorAfter: Int?,
+            managerSlotStatus: Int?,
+            managerSlotFigureRegistryIndex: Int?,
+            figureParentProviderIndex: Int16?,
+            directFigureInitialization: Bool,
+            figureReferenceRegistryIndex: Int?,
+            figureHeadingAfter: UInt8?,
+            figureProgressAfter: Int8?
+        ) {
+            self.providerByte65After = providerByte65After
+            self.providerByte36After = providerByte36After
+            self.returnLowByte = returnLowByte
+            self.requestedFigureModelID = requestedFigureModelID
+            self.figureRegistryIndex = figureRegistryIndex
+            self.managerCursorBefore = managerCursorBefore
+            self.managerCursorAfter = managerCursorAfter
+            self.managerSlotStatus = managerSlotStatus
+            self.managerSlotFigureRegistryIndex = managerSlotFigureRegistryIndex
+            self.figureParentProviderIndex = figureParentProviderIndex
+            self.directFigureInitialization = directFigureInitialization
+            self.figureReferenceRegistryIndex = figureReferenceRegistryIndex
+            self.figureHeadingAfter = figureHeadingAfter
+            self.figureProgressAfter = figureProgressAfter
+        }
+    }
+
+    public static let entertainmentAreaFigureBootstrapAddress: UInt32 = 0x0048CE90
+    public static let entertainmentAreaFigureModelID = 0x25
+    public static let entertainmentAreaProviderByte65Offset = 0x65
+    public static let entertainmentAreaProviderByte36Offset = 0x36
+    public static let entertainmentAreaManagerCursorOffset = 0x55
+    public static let entertainmentAreaManagerSlotCountOffset = 0x57
+    public static let entertainmentAreaManagerFigureIDOffset = 0x58
+    public static let entertainmentAreaManagerStatusOffset = 0x71
+    public static let entertainmentAreaFigureParentOffset = 0x62
+    public static let entertainmentAreaFigureReferenceOffset = 0x72
+    public static let entertainmentAreaFigureHeadingOffset = 0x19
+    public static let entertainmentAreaFigureProgressOffset = 0x41
+    public static let entertainmentAreaProviderFigureGateVTableSlot: UInt32 = 0x4C
+    public static let entertainmentAreaProviderWorkerGateVTableSlot: UInt32 = 0x58
+    public static let entertainmentAreaFigureInitializeVTableSlot: UInt32 = 0x22C
+    public static let entertainmentAreaFigureBootstrapSeedAddress: UInt32 = 0x004E6A70
+
+    /// Replays the field-level branch order of `FUN_0048CE90` after its
+    /// caller has supplied the unresolved virtual/global gate results and the
+    /// allocator output.  `rotationSelector` is the already-resolved return
+    /// from `FUN_0048F420`; a missing selector/reference is rejected instead
+    /// of inventing a manager slot or figure link.
+    public static func entertainmentAreaFigureBootstrap(
+        providerPopulationWord: Int,
+        providerFigureGatePassed: Bool,
+        globalGatePassed: Bool,
+        providerWorkerGatePassed: Bool,
+        providerRegistryIndex: Int,
+        managerCursor: Int,
+        managerSlotCount: Int,
+        allocatedFigureRegistryIndex: Int?,
+        rotationSelector: Int? = nil,
+        referencedFigureRegistryIndex: Int? = nil,
+        referencedFigureHeading: UInt8? = nil,
+        referencedFigureProgress: Int8? = nil
+    ) -> EntertainmentAreaFigureBootstrapTransition {
+        let providerByte65After: UInt8 = providerPopulationWord < 1 ? 2 : 0
+        guard providerFigureGatePassed, globalGatePassed, providerWorkerGatePassed else {
+            return .init(
+                providerByte65After: providerByte65After,
+                providerByte36After: nil,
+                returnLowByte: 0,
+                requestedFigureModelID: nil,
+                figureRegistryIndex: nil,
+                managerCursorBefore: nil,
+                managerCursorAfter: nil,
+                managerSlotStatus: nil,
+                managerSlotFigureRegistryIndex: nil,
+                figureParentProviderIndex: nil,
+                directFigureInitialization: false,
+                figureReferenceRegistryIndex: nil,
+                figureHeadingAfter: nil,
+                figureProgressAfter: nil
+            )
+        }
+
+        // The source clears +0x36 before calling FUN_004EA050, even when the
+        // allocator returns zero.
+        guard let figureRegistryIndex = allocatedFigureRegistryIndex else {
+            return .init(
+                providerByte65After: providerByte65After,
+                providerByte36After: 0,
+                returnLowByte: 1,
+                requestedFigureModelID: entertainmentAreaFigureModelID,
+                figureRegistryIndex: nil,
+                managerCursorBefore: nil,
+                managerCursorAfter: nil,
+                managerSlotStatus: nil,
+                managerSlotFigureRegistryIndex: nil,
+                figureParentProviderIndex: nil,
+                directFigureInitialization: false,
+                figureReferenceRegistryIndex: nil,
+                figureHeadingAfter: nil,
+                figureProgressAfter: nil
+            )
+        }
+
+        let status: Int
+        if managerCursor == 0 {
+            status = 1
+        } else if managerCursor < 1 || managerSlotCount - 2 < managerCursor {
+            if managerCursor == managerSlotCount - 1 {
+                status = 3
+            } else {
+                guard let rotationSelector else {
+                    return .init(
+                        providerByte65After: providerByte65After,
+                        providerByte36After: 0,
+                        returnLowByte: 1,
+                        requestedFigureModelID: entertainmentAreaFigureModelID,
+                        figureRegistryIndex: figureRegistryIndex,
+                        managerCursorBefore: managerCursor,
+                        managerCursorAfter: managerCursor + 1,
+                        managerSlotStatus: nil,
+                        managerSlotFigureRegistryIndex: figureRegistryIndex,
+                        figureParentProviderIndex: Int16(truncatingIfNeeded: providerRegistryIndex),
+                        directFigureInitialization: false,
+                        figureReferenceRegistryIndex: nil,
+                        figureHeadingAfter: nil,
+                        figureProgressAfter: nil
+                    )
+                }
+                status = rotationSelector
+            }
+        } else {
+            status = 2
+        }
+
+        let parentIndex = Int16(truncatingIfNeeded: providerRegistryIndex)
+        guard status == 1 else {
+            guard let referencedFigureRegistryIndex,
+                  let referencedFigureHeading,
+                  let referencedFigureProgress else {
+                return .init(
+                    providerByte65After: providerByte65After,
+                    providerByte36After: 0,
+                    returnLowByte: 1,
+                    requestedFigureModelID: entertainmentAreaFigureModelID,
+                    figureRegistryIndex: figureRegistryIndex,
+                    managerCursorBefore: managerCursor,
+                    managerCursorAfter: managerCursor + 1,
+                    managerSlotStatus: status,
+                    managerSlotFigureRegistryIndex: figureRegistryIndex,
+                    figureParentProviderIndex: parentIndex,
+                    directFigureInitialization: false,
+                    figureReferenceRegistryIndex: nil,
+                    figureHeadingAfter: nil,
+                    figureProgressAfter: nil
+                )
+            }
+            // The source performs an 8-bit `sub al, 0x12`, tests the sign
+            // flag, and adds `0x14` only for a negative byte. Preserve that
+            // wrap/sign behavior for the full Int8 domain.
+            let rawProgress = UInt8(bitPattern: referencedFigureProgress)
+            let subtracted = rawProgress &- 0x12
+            let progressByte = (subtracted & 0x80) == 0
+                ? subtracted
+                : subtracted &+ 0x14
+            let progress = Int8(bitPattern: progressByte)
+            return .init(
+                providerByte65After: providerByte65After,
+                providerByte36After: 0,
+                returnLowByte: 1,
+                requestedFigureModelID: entertainmentAreaFigureModelID,
+                figureRegistryIndex: figureRegistryIndex,
+                managerCursorBefore: managerCursor,
+                managerCursorAfter: managerCursor + 1,
+                managerSlotStatus: status,
+                managerSlotFigureRegistryIndex: figureRegistryIndex,
+                figureParentProviderIndex: parentIndex,
+                directFigureInitialization: false,
+                figureReferenceRegistryIndex: referencedFigureRegistryIndex,
+                figureHeadingAfter: referencedFigureHeading,
+                figureProgressAfter: progress
+            )
+        }
+
+        return .init(
+            providerByte65After: providerByte65After,
+            providerByte36After: 0,
+            returnLowByte: 1,
+            requestedFigureModelID: entertainmentAreaFigureModelID,
+            figureRegistryIndex: figureRegistryIndex,
+            managerCursorBefore: managerCursor,
+            managerCursorAfter: managerCursor + 1,
+            managerSlotStatus: status,
+            managerSlotFigureRegistryIndex: figureRegistryIndex,
+            figureParentProviderIndex: parentIndex,
+            directFigureInitialization: true,
+            figureReferenceRegistryIndex: nil,
+            figureHeadingAfter: nil,
+            figureProgressAfter: nil
+        )
+    }
+
     /// The three rotating entertainment figure buckets maintained by
     /// `FUN_0048F140 @ 0x48F140` and consumed by `FUN_0048F420 @ 0x48F420`.
     ///
