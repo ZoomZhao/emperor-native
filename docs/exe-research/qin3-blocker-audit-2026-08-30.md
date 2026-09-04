@@ -6401,3 +6401,65 @@ contracts recorded in `FUN_0051BC00.c`, `FUN_00517AD0.c`, and
 **Evidence class:** **confirmed** for the Native diagnostic setup and recorded
 terminal trajectory; **unknown** for the original producer, provider
 projection, water/food settlement ordering, and peddler algorithm.
+
+## 2026-09-04 Provider `+0x1FC` callbacks expose fixed output envelopes, not registration
+
+The provider vtables carry a `+0x1FC` callback which is reached only after the
+provider load path has allocated its auxiliary object. The vtable targets in
+the canonical English executable are Well `0x51BB60`, Herbalist `0x51BCD0`,
+Acupuncture `0x51BDE0`, Music School `0x48B030`, Acrobat School `0x48B1E0`,
+and Drama School `0x48B3D0`. The corresponding 76-byte (the first three) or
+106-byte (the last three) code slices at the same addresses are byte-for-byte
+identical in the Chinese executable; this was checked directly against
+`Exe/ghidra/input/EmperorEN.exe` and `Exe/ghidra/input/EmperorCH.exe`.
+
+The first three callbacks unconditionally write three caller-provided output
+words and return `1`:
+
+| provider | output word 0 | output word 1 | output word 2 |
+| --- | ---: | ---: | ---: |
+| Well | `0x4C55` | `4` | `100` |
+| Herbalist | `0x4C1E` | `4` | `88` |
+| Acupuncture | `0x4C03` | `4` | `80` |
+
+The school callbacks branch on their object word at `+0x2E`, then write the
+following fixed envelopes and return `1`:
+
+| provider | `word +0x2E != 0` | `word +0x2E == 0` |
+| --- | --- | --- |
+| Music School | `0x4C67, 4, 100` | `0x4C69, 0, 100` |
+| Acrobat School | `0x4C94, 4, 80` | `0x4C96, 0, 80` |
+| Drama School | `0x4C6B, 4, 100` | `0x4C6D, 0, 100` |
+
+These bytes establish the targets, output order, constants, return value, and
+the school branch input. They do **not** establish the semantic names of the
+three output words: neither `0x4Cxx` nor the values `4/0`, `80/88/100` may be
+treated as a capacity, quality, figure ID, coverage radius, or provider-slot
+index without a caller that consumes them. The callbacks also do not write the
+object `+0xB4` provider index, the global object vector, map cells, or
+`cHouseInfo`.
+
+The call ordering is source-backed: `FUN_0051CB80.c` (the provider `+0xC0`
+load override) and `FUN_0051CAD0.c` allocate `0x20` bytes, construct the
+auxiliary object through `FUN_00526830.c`, store it at provider `+0x14C`, and
+then invoke the provider vtable `+0x1FC`; `FUN_00418D90.c` refreshes an
+existing auxiliary object on a later pass. Thus this callback family is a
+fixed auxiliary descriptor/refresh surface, not evidence that the Qin archive
+rows have been projected into live provider objects. The provider projection,
+registry bridge, and downstream migration/coverage/settlement consumers remain
+unknown and Native remains fail-closed.
+
+**Sources:** canonical English executable SHA-256
+`8a6d2df1015cb75d797546d117da5f82b86fd08726090c2a13d853b9009d6753`, Chinese
+executable SHA-256
+`dbdeca1ec2720f2387e1673bfbb901e9bad832179355ea897cfa7536e17ac15a`, direct
+PE slices at the addresses above, `local/source/split-merged/code/0x050000/`
+`FUN_0051cb80.c`, `FUN_0051cad0.c`, `FUN_00526830.c`, and
+`local/source/split-merged/code/0x040000/FUN_00418D90.c`; provider vtable words
+and `local/source/compare-report.tsv` (the shared auxiliary constructor at
+`0x526830` is marked `identical`).
+
+**Evidence class:** **confirmed** for callback targets, EN/CH byte parity,
+constants, branch input, return value, and call ordering; **unknown** for the
+three output-word semantics, provider registration/projection, and any Qin
+migration or settlement effect.
