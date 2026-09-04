@@ -7777,3 +7777,35 @@ append/erase operation classes; **confirmed negative** for a direct
 getter-mediated archive-specific `Creating(...)` path; **unknown** for
 alternate aliases/table consumers, Qin archive construction trigger, load
 ordering, route/collision, coverage, and settlement.
+
+## 2026-09-05 Entertainment-manager global has no direct `.text` aliases
+
+The direct-call census above was supplemented with a raw absolute-reference
+scan of the full `.text` section in both canonical PE images. The global
+address returned by `FUN_0048A340` is `DAT_00C702C0`; the little-endian
+immediate `0x00C702C0` occurs exactly three times in each image, at
+`0x48A2A1`, `0x48A2C1`, and `0x48A341`. The first two sites are the nearby
+constructor/initialization thunks that load the manager-global address into
+`ECX`; `0x48A341` is the getter's own `mov eax, 0x00C702C0` return. There are
+no other absolute `.text` reads or writes of that global in either image, and
+the EN/CH hit lists are byte-for-byte identical.
+
+Together with the eleven direct `CALL 0x0048A340` sites recorded above, this
+is a confirmed negative for a direct global-alias path that could populate or
+consume the entertainment manager without going through the indexed getter.
+It is not a proof against register-propagated pointers, imported callbacks,
+or data-table/virtual dispatch: those remain outside this immediate scan.
+The Qin archive-to-venue construction trigger, provider projection, route,
+coverage, and settlement therefore remain **unknown** and Native stays
+fail-closed.
+
+**Sources:** canonical EN/CH PE `.text` sections (`0x00401000…0x007A8FFF`)
+for hashes `8a6d2df1015cb75d797546d117da5f82b86fd08726090c2a13d853b9009d6753`
+and `dbdeca1ec2720f2387e1673bfbb901e9bad832179355ea897cfa7536e17ac15a`,
+raw little-endian scan for `DAT_00C702C0`, direct disassembly around
+`0x48A2A0…0x48A345`, and the getter call-site table above.
+
+**Evidence class:** **confirmed negative** for direct absolute `.text` aliases
+of `DAT_00C702C0` outside the getter/initialization neighborhood and for
+EN/CH parity; **unknown** for indirect/table-driven consumers, archive
+construction, load ordering, route/collision, coverage, and settlement.
