@@ -6316,3 +6316,48 @@ relative-call scans, `Sources/EmperorCore/HousingEvolution.swift`, and
 global and virtual-slot gates, and EN/CH parity; **confirmed negative** for a
 second direct `E8` caller; **unknown** for indirect dispatch, object-vector
 projection, predicate-input writers, and house settlement.
+
+## 2026-09-04 Qin-3 player-flow diagnostic separates construction gating from migration
+
+The Qin-3 player-command test was run once with its explicit skip gate removed
+and once with both Music School placements made optional.  This was a
+temporary diagnostic only; the test skip and required placements were restored
+afterward, and no diagnostic switch was committed.  With the original required
+placement, the flow stops before simulation because campaign construction
+rejects building `211` (Music School).  That rejection is deliberate in
+`CitySimulation.isBuildingAvailableInCampaign`: the campaign bridge excludes
+models `211…213` while their provider registry, venue route/collision, and
+coverage/settlement contracts remain unrecovered.
+
+With Music School construction omitted, the same player-command sequence runs
+through the full 120-month diagnostic.  The recorded terminal state is
+`population=0`, `water=0`, food quality `0`, `buyers=0`, `peddlers=0`, and
+`level6=0`; the migration state remains
+`.unsupportedOriginalProducer`.  The trace starts with 40 houses and
+`reach=27/40`, then loses houses and eventually its mill and jade workshop as
+the resident/production systems have no population to staff them.  This is a
+Native diagnostic, not evidence of original executable values, but it
+establishes that the current observed failure occurs before any entertainment
+figure FSM or peddler settlement can be evaluated.
+
+The source-backed cause remains the same: the original generic archive rows
+carry no live provider projection, while the actual migration producer and
+arrival writer are still fail-closed.  The diagnostic therefore must not be
+“fixed” by changing the Qin-3 layout, forcing Music School placement, or
+inventing residents/worker counts.  The next required evidence is the
+archive/object-vector projection and the source-backed migration producer
+inputs; until then the skip is the faithful result.
+
+**Sources:** `Tests/EmperorGameplayTests/Qin3PlayerPlaythroughTests.swift`
+(temporary diagnostic run, restored afterward),
+`Sources/EmperorCore/HousingEvolution.swift`
+(`campaignConstructionUnsupportedBuildingIDs`),
+`Sources/EmperorCore/CitySimulation.swift`
+(`isBuildingAvailableInCampaign` and fail-closed migration branch),
+`local/source/split-merged/code/0x040000/FUN_0042D360.c`,
+`FUN_0051C660.c`, and the 120-month test stderr trajectory.
+
+**Evidence class:** **confirmed** for the Native campaign gate and recorded
+diagnostic output; **source-backed/confirmed** for the entertainment provider
+factory dispatch; **unknown** for the original archive-to-provider projection,
+migration input producer, route, and settlement.
