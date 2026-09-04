@@ -6229,3 +6229,54 @@ migration is ready to enable.
 byte-access behavior, callback arithmetic, and fail-closed absence handling;
 **unknown** for dynamic layer mutation, object-registry ownership, and the
 remaining migration arrival writer.
+
+## 2026-09-04 `DAT_00FDCD70` dynamic-writer census leaves Way direction production open
+
+The indexed corpus and both canonical PE images were searched for every
+reference to the serialized direction layer `DAT_00FDCD70`.  The recovered
+writers separate into three classes:
+
+* Geometry placement helpers (`FUN_004B72B0`, `FUN_004B84B0`, and the sibling
+  `FUN_004B87E0`) copy the low six bits from the fixed footprint-offset table
+  `DAT_0081FF1C` and optionally add bit `0x40` to the terminal cell.  Their
+  callers are building/terrain placement and repair routines; none is called
+  by the generic map-record insertion path `FUN_0042D790`, whose load callback
+  is `FUN_004271B0`.
+* The only recovered full-byte generator writes are in `FUN_00421ED0 @
+  0x421ED0`, whose vtable is `CBGRand` (`0x007AB42C`, RTTI
+  `.?AVCBGRand@@`).  Its four explicit cases emit `0x42`, `0x50`, `0xC2`, and
+  `0xD0` while creating random/generated map objects.  A complete relative-
+  `E8` scan of both canonical PEs finds no direct caller of `0x421ED0`; the
+  edge is virtual/table-driven and is not a Qin archive-load hook in the
+  recovered map chain.  The EN/CH function row is `identical`.
+* All other recovered stores in the inspected Qin-relevant paths are flag
+  maintenance: terrain/repair passes set
+  or preserve `0x40` (`FUN_004B2D00`, `FUN_004B67B0`, `FUN_004B8B80`,
+  `FUN_004EDC30`, `FUN_005251D0`, `FUN_0053EE00`, `FUN_0053F240`,
+  `FUN_0053F840`, and related helpers), while `FUN_004B5290` toggles only
+  `0x80`.  None introduces a new low-direction value; serializer functions
+  only copy/clear the 228×228 byte array.
+
+This is a confirmed negative for treating a generic post-load callback or a
+road-bit refresh as the missing Way-direction producer.  It also narrows the
+remaining dynamic question: a virtual/table-driven `CBGRand` edge or an
+unindexed editor/runtime path could still mutate the layer, but no such edge
+is established for Qin map loading.  Native therefore keeps the authored
+`roadDirectionRawValues` optional and rejects Way perimeter candidates when
+that layer is absent; it must not synthesize direction bytes from current
+road bits.  Provider/object registry projection and the immigrant arrival
+writer remain unresolved, so automatic migration stays fail-closed.
+
+**Sources:** `local/source/split-merged/code/0x040000/FUN_00421ED0.c`,
+`FUN_004B72B0.c`, `FUN_004B84B0.c`, `FUN_004B87E0.c`, `FUN_004B8B80.c`,
+`FUN_004B5290.c`, `FUN_004B67B0.c`, `FUN_004B2D00.c`, `FUN_004EDC30.c`,
+`local/source/split-merged/code/0x050000/FUN_0052E7C0.c`,
+`FUN_0053EE00.c`, `FUN_0053F240.c`, `FUN_0053F840.c`,
+`FUN_005251D0.c`, `local/source/compare-report.tsv` row `0x421ED0`, and
+direct EN/CH relative-call/vtable scans around `0x421ED0` and
+`0x007AB42C`.
+
+**Evidence class:** **confirmed** for the enumerated writer classes,
+fixed-byte values, serializer/placement separation, and EN/CH parity;
+**unknown** for any indirect `CBGRand` caller, editor-only mutation, complete
+object registry, and downstream migration/arrival semantics.
