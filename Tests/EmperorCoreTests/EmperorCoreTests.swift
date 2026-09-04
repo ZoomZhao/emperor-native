@@ -6236,6 +6236,27 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testProviderRegistryRefreshDirectCallsitesRemainPostCreationBoundaries() {
+        let callsites = OriginalResidentialServiceCatalog.providerRegistryRefreshDirectCallsites
+        XCTAssertEqual(callsites.map(\.callsiteAddress), [0x0048AEB9, 0x004C1288])
+        XCTAssertEqual(callsites.map(\.callerAddress), [0x0048AE30, 0x004C1240])
+        XCTAssertEqual(
+            callsites.map(\.role),
+            [
+                .entertainmentOpportunityDecay,
+                .objectModelStatisticsRefresh,
+            ]
+        )
+        XCTAssertEqual(
+            OriginalResidentialServiceCatalog.providerRegistryRefreshCallsite(at: 0x0048AEB9)?.role,
+            .entertainmentOpportunityDecay
+        )
+        XCTAssertNil(
+            OriginalResidentialServiceCatalog.providerRegistryRefreshCallsite(at: 0x0042D790),
+            "the generic map loader has no direct refresh callsite"
+        )
+    }
+
     func testEntertainmentProviderObjectCountsSeparateSchoolsAndVenues() {
         let counts = OriginalResidentialServiceCatalog.EntertainmentProviderObjectCounts
             .rebuilt(

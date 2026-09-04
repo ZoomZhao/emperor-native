@@ -10371,3 +10371,42 @@ regressions in `Tests/EmperorCoreTests/EmperorCoreTests.swift`.
 word-level comparison/copy arithmetic, untouched tenth slot, selector order,
 and vector traversal; **unknown** for source-word semantics, pool semantics,
 provider registration, and downstream settlement.
+
+### 10.117 Provider-statistics refresh has two post-creation direct callers (confirmed, 2026-09-05)
+
+The complete canonical EN/CH relative-`E8` census for
+`FUN_0051CCA0 @ 0x51CCA0` finds exactly two direct callsites, with identical
+addresses and call bytes in both executables:
+
+| callsite | indexed caller | recovered input update before refresh |
+| --- | --- | --- |
+| `0x0048AEB9` | `FUN_0048AE30 @ 0x48AE30` | decrements entertainment opportunity bytes `+0x5D`, `+0x5E`, and `+0x5F` when non-zero, counts the pre-decrement non-zero bytes into record `+0x5C` |
+| `0x004C1288` | `FUN_004C1240 @ 0x4C1240` | increments the model-class counter for `FUN_004C18C0(object+0x14)` and, when object `+0x44 > 0`, the corresponding staffed counter |
+
+The indexed bodies show that `FUN_0051CCA0` is reached only after an object
+or provider record is already resolved.  `FUN_0048AE30` operates on the
+provider record returned by the object's `+0x1E8` callback and then refreshes;
+`FUN_004C1240` derives a model class from the object model word and updates
+global counters before refreshing.  Neither caller is part of the generic
+map-loader chain `FUN_0042D790 → FUN_0042D0E0`, and no direct refresh callsite
+was found there.
+
+Native records this boundary in
+`OriginalResidentialServiceCatalog.providerRegistryRefreshDirectCallsites`.
+The metadata is deliberately separate from `refreshProviderRegistry(...)`:
+it confirms caller identity and pre-refresh inputs but does not synthesize a
+provider object, populate the unresolved map archive `+0xB4` field, or settle
+water, entertainment, market, or household coverage.  Qin provider
+registration therefore remains fail-closed.
+
+**Sources:** canonical `Exe/ghidra/input/EmperorEN.exe` and
+`EmperorCH.exe` complete relative-`E8` scans to `0x0051CCA0`; indexed
+`local/source/split-merged/code/0x040000/FUN_0048AE30.c` and
+`FUN_004C1240.c`; `local/source/compare-report.tsv` rows `0x48AE30` and
+`0x4C1240`; and `Sources/EmperorCore/HousingEvolution.swift` with
+`testProviderRegistryRefreshDirectCallsitesRemainPostCreationBoundaries`.
+
+**Evidence class:** **confirmed** for the two-callsite census, caller roles,
+pre-refresh field/counter updates, EN/CH parity, and absence of a direct
+generic-loader edge; **unknown** for indirect/table dispatch, registry
+provenance, archive specialization, and all downstream settlement.

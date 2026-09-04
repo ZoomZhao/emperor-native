@@ -2048,6 +2048,47 @@ public enum OriginalResidentialServiceCatalog {
     /// These values identify executable storage only; they are not a Native
     /// registry schema and must not be used to synthesize Qin trade state.
     public static let providerRegistryRefreshAddress: UInt32 = 0x0051CCA0
+    /// Direct PE callsites that invoke the refresh after an object/provider
+    /// record is already live.  These are not map-loader edges and do not
+    /// establish how a Qin archive row acquires its `+0xB4` registry value.
+    public struct ProviderRegistryRefreshCallsite: Sendable, Hashable, Codable {
+        public enum Role: String, Sendable, Hashable, Codable {
+            case entertainmentOpportunityDecay
+            case objectModelStatisticsRefresh
+        }
+
+        public let callsiteAddress: UInt32
+        public let callerAddress: UInt32
+        public let role: Role
+
+        public init(callsiteAddress: UInt32, callerAddress: UInt32, role: Role) {
+            self.callsiteAddress = callsiteAddress
+            self.callerAddress = callerAddress
+            self.role = role
+        }
+    }
+
+    public static let providerRegistryRefreshDirectCallsites: [ProviderRegistryRefreshCallsite] = [
+        .init(
+            callsiteAddress: 0x0048AEB9,
+            callerAddress: 0x0048AE30,
+            role: .entertainmentOpportunityDecay
+        ),
+        .init(
+            callsiteAddress: 0x004C1288,
+            callerAddress: 0x004C1240,
+            role: .objectModelStatisticsRefresh
+        ),
+    ]
+
+    public static func providerRegistryRefreshCallsite(
+        at address: UInt32
+    ) -> ProviderRegistryRefreshCallsite? {
+        providerRegistryRefreshDirectCallsites.first {
+            $0.callsiteAddress == address
+        }
+    }
+
     public static let providerRegistryModelClassifierAddress: UInt32 = 0x005E1720
     public static let providerModelCountArrayAddress: UInt32 = 0x00A5AF64
     public static let providerStaffedCountArrayAddress: UInt32 = 0x00A5AB30
