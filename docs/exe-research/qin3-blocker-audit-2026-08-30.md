@@ -7659,3 +7659,67 @@ catalog comments that keep these cache passes separate from live providers.
 **Evidence class:** **confirmed negative** for a direct provider projection
 edge in the complete `FUN_0053D100` sequence and for EN/CH parity;
 **unknown** for indirect consumers outside that sequence.
+
+## 2026-09-05 Explicit factory and object-vector boundary for entertainment providers
+
+The remaining map-to-provider question was traced one level past the generic
+factory.  `FUN_0042D360 @ 0x42D360` is the only indexed caller of
+`FUN_0051C660 @ 0x51C660`.  Its order is explicit: it first checks the base
+building predicate (`FUN_005188B0`), then the specialized-factory predicate
+(`FUN_0051C620`), and only then dispatches the model factory.  Inside
+`FUN_0051C660`, the entertainment branch is the `FUN_0048A7E0` test followed
+by `FUN_0048A800`; that branch admits school IDs `0xD3/0xD4/0xD5` and creates
+the three school vtables through `FUN_0048A8E0/0x48A900/0x48A920`.
+`FUN_0048A800` then performs the separate venue test `FUN_0048B540` and, for
+IDs `0x47/0x4B`, dispatches `FUN_0048B560` to the Entertainment Area or
+Theatre Pavilion constructors (`FUN_0048CB10` / `FUN_0048BBA0`).  The
+constructors initialize their own counters and install their own vtables;
+they do not insert themselves into the map object vector in these bodies.
+
+The object-vector write is recovered in `Creating_pctd_type_pctd @ 0x42D540`.
+It obtains a slot from `FUN_00413B40(index)`, calls `FUN_0042D360(model)`,
+writes the returned object pointer into that slot, stores the slot index at
+object `+0x2D`, and then invokes the object's `+0x94` placement callback.
+`FUN_0052F030 @ 0x52F030` is the post-load pass that traverses the same
+`FUN_00413B40(1)` vector; its `FUN_0052F1D0` whitelist decides which serialized
+records are passed to `Creating_pctd_type_pctd`.  The Qin `Building` records
+have model word `0`, while the specialized entertainment factory requires
+the explicit IDs above, so this recovered vector path cannot specialize a Qin
+record into a school or venue.
+
+The provider consumers confirm that this vector is the shared map-object list,
+not a hidden entertainment-only registration table: `FUN_0048F140` scans
+`FUN_00413B40(1)` and counts active school objects by their `+0x1BC` work
+callback; `FUN_0048A420` uses the separate vector accessor
+`FUN_00490230` to scan Entertainment Area objects (`+0x14 == 0x47`) before
+returning one to the manager.  The two consumers therefore read existing
+objects; neither body contains a provider-registry insertion from a generic
+archive row.  The EN/CH compare rows for `0x42D360`, `0x42D540`, `0x51C660`,
+`0x51C620`, `0x52F030`, `0x48A800`, `0x48B560`, and the provider constructors
+are `identical`.
+
+This closes the direct factory/vector boundary (**confirmed**): a serialized
+Qin `Building` reaches a specialized entertainment provider only if an
+explicit caller supplies a school or venue model ID to `FUN_0042D360`; the
+ordinary post-load vector pass supplies no such ID.  It does not identify the
+separate `FUN_00490230` container's owner or exclude an unindexed table-driven
+replacement elsewhere.  Provider registry assignment, route/collision,
+coverage, and house settlement therefore remain **unknown**, and Native keeps
+Qin music/acrobat/drama construction and live figures fail-closed.
+
+**Sources:**
+`local/source/split-merged/code/0x040000/FUN_0042d360.c`,
+`FUN_0042d050.c`, `FUN_0048a7e0.c`, `FUN_0048a800.c`, `FUN_0048b540.c`,
+`FUN_0048b560.c`, `FUN_0048a420.c`, `FUN_0048f140.c`, `FUN_00490230.c`,
+`FUN_00413b40.c`, `FUN_004f8210.c`,
+`local/source/split-merged/code/0x050000/FUN_0051c620.c`,
+`FUN_0051c660.c`, `FUN_0051bef0.c`, `FUN_0052f030.c`,
+`local/source/split-merged/code/0x040000/Creating_pctd_type_pctd.c`,
+`FUN_0048a8e0.c`, `FUN_0048a900.c`, `FUN_0048a920.c`,
+`FUN_0048bba0.c`, `FUN_0048cb10.c`, and `local/source/compare-report.tsv`.
+
+**Evidence class:** **confirmed** for the explicit factory call chain,
+specialized ID gates, object-vector slot write, post-load whitelist boundary,
+consumer scans, and EN/CH parity; **unknown** for the separate vector-owner
+identity, indirect replacement/table consumers, provider registration timing,
+route/collision, and settlement.
