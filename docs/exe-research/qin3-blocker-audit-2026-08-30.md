@@ -6523,3 +6523,51 @@ and `local/source/compare-report.tsv` (the shared auxiliary constructor at
 input, return value, and indexed callsites; **unknown** for the three
 output-word semantics, provider registration/projection, and any Qin migration
 or settlement effect.
+
+## 2026-09-05 Provider `+0x230` census separates Well, Herbalist, and Acupuncture
+
+The provider vtable census was extended from the shared spawn slot `+0x234`
+to the threshold slot `+0x230`. Direct little-endian reads of the canonical
+English and Chinese PE `.rdata` words are byte-identical and produce this
+mapping:
+
+| provider model(s) | vtable | `+0x230` target | raw method slice SHA-256 (EN = CH) | extra raw input |
+| ---: | ---: | ---: | --- | --- |
+| 72/73 Well | `0x007B5EB4` | `0x0051BAE0` | `db017f30d81a2c977d1e2f9ce9f45292a93ce245c4bc17854ef3f1447ba2d05b` (95 bytes) | calls provider `+0x224`; non-zero doubles input |
+| 207 Herbalist | `0x007B6114` | `0x00507E40` | `aeeceba2acf86e445d34631ec3c8c6b35dea1eb22fcaac09fc91588599b7f680` (77 bytes) | none in method slice |
+| 208 Acupuncture | `0x007B6374` | `0x0051CF40` | `4fd8ba43f29e3b45cb041805bbf61a3efc50befe9093bfa9d53b60f470ae003c` (76 bytes) | none in method slice |
+| 211 Music | `0x007ACEDC` | `0x005AB330` | `9df2164bb7ae0ee6aa407cf410edf6087d7d02eb83e94ab945b4f6dcd7603d68` (76 bytes) | none in method slice |
+| 212 Acrobat | `0x007AD140` | `0x005AB330` | same as Music | none in method slice |
+| 213 Drama | `0x007AD3A4` | `0x0048B380` | `3ac2b12d8c9799e9c5e10131b6261ab287181d9428a451de342af4823d87747e` (76 bytes) | none in method slice |
+
+The direct method bodies are threshold selectors over the worker input. Well
+and Herbalist return the `1/3/5/10/15` non-zero bands; Acupuncture returns
+`1/3/7/15/29`; Music/Acrobat return `3/6/12/24/32`; Drama returns
+`6/12/24/32/48`. As with the existing strict `counter > threshold` contract,
+the zero-worker branch is not a reachable spawn path because `FUN_0051CF90`
+rejects non-positive workers before advancing its counter. The Well callback
+result is preserved as an explicit input; its predicate meaning is not
+recovered.
+
+This corrects the earlier Native grouping that treated Well, Herbalist, and
+Acupuncture as all using `0x51CF40`. Native now records the six vtable rows in
+`OriginalResidentialServiceCatalog.providerVTableSlot230Descriptors` and
+uses the Well-specific threshold row only when the unresolved `+0x224` result
+is supplied. No provider registry, map-object projection, route/collision,
+coverage writer, figure allocation, or house settlement is enabled by this
+metadata; Qin playthrough gates therefore remain fail-closed.
+
+**Sources:** canonical English PE SHA-256
+`8a6d2df1015cb75d797546d117da5f82b86fd08726090c2a13d853b9009d6753`, Chinese
+PE SHA-256
+`dbdeca1ec2720f2387e1673bfbb901e9bad832179355ea897cfa7536e17ac15a`, direct
+`.rdata` vtable reads and `.text` slices at the five unique targets,
+`local/source/split-merged/code/0x050000/FUN_0051cf90.c`,
+`docs/exe-research/residential-service-roamer-lifecycle.md` §§4.1–4.3,
+`Sources/EmperorCore/HousingEvolution.swift`, and
+`Tests/EmperorCoreTests/EmperorCoreTests.swift`.
+
+**Evidence class:** **confirmed** for all six `+0x230` target words, method
+slice parity, threshold rows, and the Well `+0x224` call/doubling branch;
+**unknown** for the callback's semantic state, provider registration and
+archive projection, routing, coverage, and settlement.

@@ -4318,8 +4318,8 @@ final class EmperorCoreTests: XCTestCase {
     func testResidentialProviderSpawnThresholdsUseRecoveredFigureTables() {
         let cases: [(figureID: Int, expected: [Int])] = [
             (27, [1, 3, 5, 10, 15]),
-            (28, [1, 3, 7, 15, 29]),
-            (30, [1, 3, 7, 15, 29]),
+            (28, [1, 3, 5, 10, 15]),
+            (30, [1, 3, 5, 10, 15]),
             (31, [1, 3, 7, 15, 29]),
             (35, [3, 6, 12, 24, 32]),
         ]
@@ -4343,6 +4343,56 @@ final class EmperorCoreTests: XCTestCase {
             OriginalResidentialServiceCatalog.residentialSpawnThreshold(
                 figureID: 34,
                 workerPercent: 100
+            )
+        )
+        XCTAssertEqual(
+            OriginalResidentialServiceCatalog.residentialSpawnThreshold(
+                figureID: 28,
+                workerPercent: 50,
+                wellVTable224ReturnsNonZero: true
+            ),
+            1
+        )
+        XCTAssertEqual(
+            OriginalResidentialServiceCatalog.residentialSpawnThreshold(
+                figureID: 28,
+                workerPercent: 25,
+                wellVTable224ReturnsNonZero: true
+            ),
+            5
+        )
+    }
+
+    func testProviderVTableSlot230DescriptorsMatchCanonicalTargets() {
+        let descriptors = OriginalResidentialServiceCatalog.providerVTableSlot230Descriptors
+        XCTAssertEqual(descriptors.count, 6)
+        let expected: [([Int], UInt32, UInt32, Bool)] = [
+            ([72, 73], 0x007B5EB4, 0x0051BAE0, true),
+            ([207], 0x007B6114, 0x00507E40, false),
+            ([208], 0x007B6374, 0x0051CF40, false),
+            ([211], 0x007ACEDC, 0x005AB330, false),
+            ([212], 0x007AD140, 0x005AB330, false),
+            ([213], 0x007AD3A4, 0x0048B380, false),
+        ]
+        for (descriptor, expected) in zip(descriptors, expected) {
+            XCTAssertEqual(descriptor.providerModelIDs, expected.0)
+            XCTAssertEqual(descriptor.providerVTableAddress, expected.1)
+            XCTAssertEqual(descriptor.slotOffset, 0x230)
+            XCTAssertEqual(descriptor.targetAddress, expected.2)
+            XCTAssertFalse(descriptor.targetIndexedInCorpus)
+            XCTAssertEqual(
+                descriptor.doublesInputWhenVTable224ReturnsNonZero,
+                expected.3
+            )
+        }
+        XCTAssertEqual(
+            OriginalResidentialServiceCatalog
+                .providerVTableSlot230Descriptor(forProviderModelID: 72)?.targetAddress,
+            0x0051BAE0
+        )
+        XCTAssertNil(
+            OriginalResidentialServiceCatalog.providerVTableSlot230Descriptor(
+                forProviderModelID: 214
             )
         )
     }

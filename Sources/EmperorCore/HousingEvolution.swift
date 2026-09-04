@@ -326,31 +326,44 @@ public enum OriginalResidentialServiceCatalog {
     /// Returns the provider spawn threshold used by the common
     /// `FUN_0051CF90 @ 0x51CF90` routine after its worker/access gates pass.
     /// The routine increments provider byte `+0x36` and creates a figure only
-    /// when the new value is strictly greater than this threshold. Tax uses
-    /// its `0x507E40` override; Well, Herbalist, Acupuncture, and Religion
-    /// retain their recovered provider-specific selectors. A non-positive
+    /// when the new value is strictly greater than this threshold. Tax and
+    /// Herbalist use `0x507E40`; Well uses its `0x51BAE0` override; Acupuncture
+    /// uses `0x51CF40`; and Religion uses `0x5AB330`. A non-positive
     /// worker value still returns the selector's threshold, but callers must
     /// apply the separate `worker > 0` gate before advancing the counter.
+    ///
+    /// Well's `0x51BAE0` method first calls provider vtable `+0x224`; when
+    /// that raw callback returns non-zero, it doubles the worker input before
+    /// applying the same bands.  The callback result is an explicit input so
+    /// this helper never invents the unresolved Well predicate state.
     ///
     /// This is a pure source-backed table. It does not model the unresolved
     /// provider registry, access callback, figure allocation, route, or
     /// coverage side effects.
     public static func residentialSpawnThreshold(
         figureID: Int,
-        workerPercent: Int
+        workerPercent: Int,
+        wellVTable224ReturnsNonZero: Bool = false
     ) -> Int? {
         let thresholds: [Int]
         switch figureID {
         case 27:
             thresholds = [1, 3, 5, 10, 15]
-        case 28, 30, 31:
+        case 28:
+            thresholds = [1, 3, 5, 10, 15]
+        case 30:
+            thresholds = [1, 3, 5, 10, 15]
+        case 31:
             thresholds = [1, 3, 7, 15, 29]
         case 35:
             thresholds = [3, 6, 12, 24, 32]
         default:
             return nil
         }
-        switch workerPercent {
+        let effectiveWorkerPercent = figureID == 28 && wellVTable224ReturnsNonZero
+            ? workerPercent * 2
+            : workerPercent
+        switch effectiveWorkerPercent {
         case 100...: return thresholds[0]
         case 75..<100: return thresholds[1]
         case 50..<75: return thresholds[2]
@@ -379,11 +392,13 @@ public enum OriginalResidentialServiceCatalog {
         workerPercent: Int,
         counter: UInt8,
         providerAccessAllowed: Bool,
-        providerWorkerGatePassed: Bool
+        providerWorkerGatePassed: Bool,
+        wellVTable224ReturnsNonZero: Bool = false
     ) -> ResidentialSpawnCounterTransition? {
         guard let threshold = residentialSpawnThreshold(
             figureID: figureID,
-            workerPercent: workerPercent
+            workerPercent: workerPercent,
+            wellVTable224ReturnsNonZero: wellVTable224ReturnsNonZero
         ) else { return nil }
 
         guard providerAccessAllowed,
@@ -1418,6 +1433,88 @@ public enum OriginalResidentialServiceCatalog {
         forProviderModelID providerModelID: Int
     ) -> ProviderVTableSlot234Descriptor? {
         providerVTableSlot234Descriptors.first {
+            $0.providerModelIDs.contains(providerModelID)
+        }
+    }
+
+    /// Provider-vtable threshold method targets in slot `+0x230`.
+    ///
+    /// The six provider families do not share one threshold body: direct
+    /// canonical EN/CH vtable reads select three residential methods and two
+    /// entertainment methods.  Well's `0x51BAE0` additionally calls the
+    /// provider's raw `+0x224` virtual slot and doubles its input when that
+    /// callback returns non-zero.  This is executable metadata only; the
+    /// callback input and all provider/figure side effects remain unresolved.
+    public struct ProviderVTableSlot230Descriptor: Sendable, Hashable, Codable {
+        public let providerModelIDs: [Int]
+        public let providerVTableAddress: UInt32
+        public let slotOffset: Int
+        public let targetAddress: UInt32
+        public let targetIndexedInCorpus: Bool
+        public let doublesInputWhenVTable224ReturnsNonZero: Bool
+
+        public init(
+            providerModelIDs: [Int],
+            providerVTableAddress: UInt32,
+            slotOffset: Int = 0x230,
+            targetAddress: UInt32,
+            targetIndexedInCorpus: Bool,
+            doublesInputWhenVTable224ReturnsNonZero: Bool = false
+        ) {
+            self.providerModelIDs = providerModelIDs
+            self.providerVTableAddress = providerVTableAddress
+            self.slotOffset = slotOffset
+            self.targetAddress = targetAddress
+            self.targetIndexedInCorpus = targetIndexedInCorpus
+            self.doublesInputWhenVTable224ReturnsNonZero =
+                doublesInputWhenVTable224ReturnsNonZero
+        }
+    }
+
+    public static let providerVTableSlot230Descriptors: [ProviderVTableSlot230Descriptor] = [
+        .init(
+            providerModelIDs: [72, 73],
+            providerVTableAddress: 0x007B5EB4,
+            targetAddress: 0x0051BAE0,
+            targetIndexedInCorpus: false,
+            doublesInputWhenVTable224ReturnsNonZero: true
+        ),
+        .init(
+            providerModelIDs: [207],
+            providerVTableAddress: 0x007B6114,
+            targetAddress: 0x00507E40,
+            targetIndexedInCorpus: false
+        ),
+        .init(
+            providerModelIDs: [208],
+            providerVTableAddress: 0x007B6374,
+            targetAddress: 0x0051CF40,
+            targetIndexedInCorpus: false
+        ),
+        .init(
+            providerModelIDs: [211],
+            providerVTableAddress: 0x007ACEDC,
+            targetAddress: 0x005AB330,
+            targetIndexedInCorpus: false
+        ),
+        .init(
+            providerModelIDs: [212],
+            providerVTableAddress: 0x007AD140,
+            targetAddress: 0x005AB330,
+            targetIndexedInCorpus: false
+        ),
+        .init(
+            providerModelIDs: [213],
+            providerVTableAddress: 0x007AD3A4,
+            targetAddress: 0x0048B380,
+            targetIndexedInCorpus: false
+        ),
+    ]
+
+    public static func providerVTableSlot230Descriptor(
+        forProviderModelID providerModelID: Int
+    ) -> ProviderVTableSlot230Descriptor? {
+        providerVTableSlot230Descriptors.first {
             $0.providerModelIDs.contains(providerModelID)
         }
     }

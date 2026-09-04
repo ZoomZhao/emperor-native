@@ -93,7 +93,7 @@ routine at vtable `+0x234 → 0x51CF90`. This routine:
    `0x4E6A70` bootstrap tail. A zero allocator result still leaves the
    counter cleared.
 
-The common threshold selector at interior entry `0x51CF40` is:
+The Acupuncture provider threshold selector at interior entry `0x51CF40` is:
 
 | Worker percentage | Threshold | Spawn opportunity interval |
 | ---: | ---: | ---: |
@@ -103,10 +103,22 @@ The common threshold selector at interior entry `0x51CF40` is:
 | `>=25` | 15 | 16 slices |
 | `1…24` | 29 | 30 slices |
 
-This table applies to water, herbalist and acupuncture providers in the closed
-scope.
+This table applies to Acupuncture (`208`) in the closed scope. The Well and
+Herbalist rows are distinct overrides; their direct vtable targets and raw
+threshold bodies are recorded below.
 
-### 4.2 Tax office override
+### 4.2 Well and Herbalist threshold overrides
+
+Direct reads of the canonical EN/CH provider vtables show that Well
+(`72/73`, vtable `0x7B5EB4`) dispatches `+0x230` to `0x51BAE0`, while
+Herbalist (`207`, vtable `0x7B6114`) dispatches it to `0x507E40`. Both raw
+methods use the `1/3/5/10/15` non-zero worker bands shown for Tax below. The
+Well method first calls its provider `+0x224` virtual slot; when that callback
+returns non-zero it doubles the worker input before selecting a band. The
+callback result is an unresolved provider-state input, so Native exposes it
+explicitly and does not infer it from house or map state.
+
+### 4.2a Tax office override
 
 Tax wrapper interior entry `0x507E30` passes figure `27` to the same
 `0x51CF90` spawn routine. Its vtable `+0x230` override at `0x507E40` returns
@@ -124,9 +136,9 @@ preserves the strict `counter > threshold` comparison in
 | Figure | Original selector | Thresholds (`100+ / 75…99 / 50…74 / 25…49 / 1…24 / 0`) |
 | ---: | --- | --- |
 | 27 | tax override `0x507E40` | `1 / 3 / 5 / 10 / 15 / 15` |
-| 28 | Well/common service | `1 / 3 / 7 / 15 / 29 / 29` |
-| 30 | Herbalist/common service | `1 / 3 / 7 / 15 / 29 / 29` |
-| 31 | Acupuncture/common service | `1 / 3 / 7 / 15 / 29 / 29` |
+| 28 | Well override `0x51BAE0` | `1 / 3 / 5 / 10 / 15 / 15` (input may be doubled by `+0x224`) |
+| 30 | Herbalist override `0x507E40` | `1 / 3 / 5 / 10 / 15 / 15` |
+| 31 | Acupuncture `0x51CF40` | `1 / 3 / 7 / 15 / 29 / 29` |
 | 35 | Religion selector `0x5AB330` | `3 / 6 / 12 / 24 / 32 / 32` |
 
 The helper deliberately returns the selector row even for zero workers so
