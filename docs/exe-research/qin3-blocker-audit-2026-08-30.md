@@ -7171,3 +7171,44 @@ and `testEntertainmentRuntimeClassRecordsKeepVenueSchoolHierarchy`.
 create callbacks, base-class pointers, EN/CH byte parity, and authored model
 crosswalk; **unknown** for archive-side specialization, provider registry
 assignment, route/collision, and venue/house settlement.
+
+## 2026-09-05 Entertainment runtime-class registration thunks are separate from map loading
+
+The executable also exposes one accessor and one registration thunk for each
+of the eight entertainment runtime records.  In the canonical EN build the
+accessors are tiny `mov eax, record; ret` bodies; each following thunk jumps to
+a body that pushes that same record and calls the common runtime registry
+helper `0x40AA80`.  The EN and CH instruction slices at these addresses are
+identical, and the record pointer values match the table above:
+
+| class | accessor | registration thunk | record passed |
+| --- | ---: | ---: | ---: |
+| `cEntertainmentBldg` | `0x48A7B0` | `0x48A7C0` | `0x82BC70` |
+| `cMusicSchool` | `0x48AFC0` | `0x48AFD0` | `0x82BC88` |
+| `cAcrobatSchool` | `0x48B170` | `0x48B180` | `0x82BCA0` |
+| `cDramaSchool` | `0x48B320` | `0x48B330` | `0x82BCB8` |
+| `cEntertainmentVenue` | `0x48B510` | `0x48B520` | `0x82BCD0` |
+| `cTheatre` | `0x48BA70` | `0x48BA80` | `0x82BCE8` |
+| `cTheatreSpectator` | `0x48BB50` | `0x48BB60` | `0x82BD00` |
+| `cEntertainmentSquare` | `0x48CAE0` | `0x48CAF0` | `0x82BD18` |
+
+`OriginalResidentialServiceCatalog.entertainmentRuntimeClassRegistrationDescriptors`
+records these exact addresses and keeps the shared helper address explicit.
+This proves the classes are registered with the executable's runtime-class
+system; it does not prove that map deserialization invokes any of these thunks.
+The recovered Qin map loader still requests `Building`, and its archive class
+declarations contain no entertainment class.  The trigger that would connect
+the registered class records to a generic map object, provider slot, and live
+object registry remains **unknown**; Native therefore keeps venue/provider
+projection and all route/settlement effects fail-closed.
+
+**Sources:** canonical EN/CH PE instruction slices around the accessor/thunk
+pairs above and `.data` records at `0x82BC58…0x82BD2F`; the corresponding
+constructor bodies under `local/source/split-merged/code/0x040000/` and their
+`compare-report.tsv` rows; `Sources/EmperorCore/HousingEvolution.swift`; and
+`testEntertainmentRuntimeClassRegistrationThunksUseSharedHelper`.
+
+**Evidence class:** **confirmed** for accessor addresses, record pointers,
+common registration helper, thunk order, and EN/CH instruction parity;
+**unknown** for registration call timing, archive-side specialization,
+provider registry assignment, route/collision, and venue/house settlement.

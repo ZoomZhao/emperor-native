@@ -6506,6 +6506,45 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testEntertainmentRuntimeClassRegistrationThunksUseSharedHelper() {
+        XCTAssertEqual(
+            OriginalResidentialServiceCatalog.entertainmentRuntimeClassRegistrationHelperAddress,
+            0x0040AA80
+        )
+        let registrations = OriginalResidentialServiceCatalog
+            .entertainmentRuntimeClassRegistrationDescriptors
+        XCTAssertEqual(registrations.count, 8)
+        XCTAssertEqual(
+            registrations.map(\.className),
+            [
+                "cEntertainmentBldg", "cMusicSchool", "cAcrobatSchool",
+                "cDramaSchool", "cEntertainmentVenue", "cTheatre",
+                "cTheatreSpectator", "cEntertainmentSquare",
+            ]
+        )
+        XCTAssertEqual(
+            registrations.map(\.runtimeClassAddress),
+            [
+                0x0082BC70, 0x0082BC88, 0x0082BCA0, 0x0082BCB8,
+                0x0082BCD0, 0x0082BCE8, 0x0082BD00, 0x0082BD18,
+            ]
+        )
+        XCTAssertEqual(
+            registrations.map(\.accessorAddress),
+            [
+                0x0048A7B0, 0x0048AFC0, 0x0048B170, 0x0048B320,
+                0x0048B510, 0x0048BA70, 0x0048BB50, 0x0048CAE0,
+            ]
+        )
+        XCTAssertEqual(
+            registrations.map(\.registrationThunkAddress),
+            [
+                0x0048A7C0, 0x0048AFD0, 0x0048B180, 0x0048B330,
+                0x0048B520, 0x0048BA80, 0x0048BB60, 0x0048CAF0,
+            ]
+        )
+    }
+
     func testEntertainmentManagerRegistrationDescriptorSeparatesPlacementFromLoad() {
         let descriptor = OriginalResidentialServiceCatalog
             .entertainmentManagerRegistrationDescriptor

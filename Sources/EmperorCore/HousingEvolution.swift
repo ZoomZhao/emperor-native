@@ -1700,6 +1700,41 @@ public enum OriginalResidentialServiceCatalog {
         }
     }
 
+    /// Accessor/registration thunks for the same entertainment runtime-class
+    /// records.  The thunks pass the record address to the common MFC runtime
+    /// registry helper; they are kept separate from the class hierarchy so a
+    /// caller cannot mistake registration for map-object specialization.
+    public struct EntertainmentRuntimeClassRegistrationDescriptor: Sendable, Hashable, Codable {
+        public let className: String
+        public let runtimeClassAddress: UInt32
+        public let accessorAddress: UInt32
+        public let registrationThunkAddress: UInt32
+
+        public init(
+            className: String,
+            runtimeClassAddress: UInt32,
+            accessorAddress: UInt32,
+            registrationThunkAddress: UInt32
+        ) {
+            self.className = className
+            self.runtimeClassAddress = runtimeClassAddress
+            self.accessorAddress = accessorAddress
+            self.registrationThunkAddress = registrationThunkAddress
+        }
+    }
+
+    public static let entertainmentRuntimeClassRegistrationHelperAddress: UInt32 = 0x0040AA80
+    public static let entertainmentRuntimeClassRegistrationDescriptors: [EntertainmentRuntimeClassRegistrationDescriptor] = [
+        .init(className: "cEntertainmentBldg", runtimeClassAddress: 0x0082BC70, accessorAddress: 0x0048A7B0, registrationThunkAddress: 0x0048A7C0),
+        .init(className: "cMusicSchool", runtimeClassAddress: 0x0082BC88, accessorAddress: 0x0048AFC0, registrationThunkAddress: 0x0048AFD0),
+        .init(className: "cAcrobatSchool", runtimeClassAddress: 0x0082BCA0, accessorAddress: 0x0048B170, registrationThunkAddress: 0x0048B180),
+        .init(className: "cDramaSchool", runtimeClassAddress: 0x0082BCB8, accessorAddress: 0x0048B320, registrationThunkAddress: 0x0048B330),
+        .init(className: "cEntertainmentVenue", runtimeClassAddress: 0x0082BCD0, accessorAddress: 0x0048B510, registrationThunkAddress: 0x0048B520),
+        .init(className: "cTheatre", runtimeClassAddress: 0x0082BCE8, accessorAddress: 0x0048BA70, registrationThunkAddress: 0x0048BA80),
+        .init(className: "cTheatreSpectator", runtimeClassAddress: 0x0082BD00, accessorAddress: 0x0048BB50, registrationThunkAddress: 0x0048BB60),
+        .init(className: "cEntertainmentSquare", runtimeClassAddress: 0x0082BD18, accessorAddress: 0x0048CAE0, registrationThunkAddress: 0x0048CAF0),
+    ]
+
     /// Concrete targets recovered for provider vtable slot `+0x268`.
     ///
     /// The slot is polymorphic in the executable: its callers use the return
