@@ -10990,6 +10990,27 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testOriginalMarketResourceGroupCommodityMapPreservesExecutableSwitch() {
+        XCTAssertEqual(
+            (0...6).compactMap {
+                OriginalMarketResourceGroupCommodityMap.commodityID(
+                    forResourceGroupIndex: $0
+                )
+            },
+            [0x1C, 0x13, 0x19, 0x18, 0x17, 0x16, 0x0D]
+        )
+        XCTAssertNil(
+            OriginalMarketResourceGroupCommodityMap.commodityID(
+                forResourceGroupIndex: -1
+            )
+        )
+        XCTAssertNil(
+            OriginalMarketResourceGroupCommodityMap.commodityID(
+                forResourceGroupIndex: 7
+            )
+        )
+    }
+
     func testOriginalMarketProviderKeyAvailabilityPreservesDivisibilityAndCapacityGates() {
         XCTAssertFalse(
             OriginalMarketProviderKeyAvailability.isAvailable(

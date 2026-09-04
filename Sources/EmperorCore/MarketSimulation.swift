@@ -2027,6 +2027,28 @@ public enum OriginalMarketProviderCandidateReduction {
     }
 }
 
+/// Exact commodity-key lookup used by the alternate branch of
+/// `FUN_00541220`. This seven-entry switch is independent of the authored
+/// shop-row order in `OriginalMarketProviderSlotCatalog`; callers must not
+/// substitute that table when reproducing the source's resource-group index.
+public enum OriginalMarketResourceGroupCommodityMap {
+    public static let sourceAddress: UInt32 = 0x004475A0
+    public static let supportedGroupIndices = 0...6
+
+    public static func commodityID(forResourceGroupIndex index: Int) -> Int? {
+        switch index {
+        case 0: return 0x1C
+        case 1: return 0x13
+        case 2: return 0x19
+        case 3: return 0x18
+        case 4: return 0x17
+        case 5: return 0x16
+        case 6: return 0x0D
+        default: return nil
+        }
+    }
+}
+
 /// The cMarket `+0x25C` readiness predicate (`FUN_005D4900`). The caller
 /// supplies values read from the selected provider container: the slot count,
 /// the number of records for which `FUN_004B04F0` returned false, the matching

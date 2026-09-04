@@ -6995,3 +6995,26 @@ executable SHA-256
 comparison, collection-order ties, source-identity field, and primary-group
 split; **unknown** for the primary helper, candidate admission producers,
 cache projection, provider registration, routing, and settlement.
+
+## 2026-09-05 cMarket alternate-branch resource groups use a dedicated commodity switch
+
+`FUN_004475A0 @ 0x4475A0` is the exact seven-case lookup used by the
+alternate/storage branch of `FUN_00541220`, not a lookup into the authored shop
+row table. For resource-group indices `0…6` it returns, in order,
+`0x1C, 0x13, 0x19, 0x18, 0x17, 0x16, 0x0D`; every other input returns
+`0xFFFFFFFF`. The EN and CH functions are marked `identical` at row
+`0x4475A0` in `local/source/compare-report.tsv`.
+
+`OriginalMarketResourceGroupCommodityMap` preserves this switch with a nil
+result outside the recovered seven-index domain. It is a data-only contract;
+it does not populate provider records or turn the mapping into a Qin market
+settlement path.
+
+**Sources:** `local/source/split-merged/code/0x040000/FUN_004475A0.c`,
+`local/source/compare-report.tsv` row `0x4475A0`, and
+`Sources/EmperorCore/MarketSimulation.swift` with
+`testOriginalMarketResourceGroupCommodityMapPreservesExecutableSwitch`.
+
+**Evidence class:** **confirmed** for all seven literal cases, the default
+sentinel, and EN/CH parity; **unknown** for the caller's provider-record
+population, storage semantics, cache projection, routing, and settlement.
