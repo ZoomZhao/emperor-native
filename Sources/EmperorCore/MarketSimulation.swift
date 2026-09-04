@@ -1407,8 +1407,9 @@ public enum OriginalMarketCreationBoundaryCatalog {
     public static let marketFactoryAddress: UInt32 = 0x005D3580
     public static let marketConstructorAddress: UInt32 = 0x00543450
 
-    /// `FUN_005D36E0` recognizes the shared trade/market family; only the
-    /// final two IDs select the cMarket constructor/vtable.
+    /// `FUN_005D36E0` recognizes the shared trade/market model set. All six
+    /// IDs enter the same cMarket-family constructor/vtable; `0x3C` selects
+    /// its Grand-specific five-slot/layout branch inside the constructor.
     public static let tradeAndMarketPredicateModelIDs = [
         0x35, 0x36, 0x38, 0x3A, 0x3B, 0x3C,
     ]
