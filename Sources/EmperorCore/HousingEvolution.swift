@@ -1345,6 +1345,83 @@ public enum OriginalResidentialServiceCatalog {
         }
     }
 
+    /// The shared provider figure-spawn target in vtable slot `+0x234`.
+    ///
+    /// Direct reads of the canonical EN/CH vtables show that Well,
+    /// Herbalist, Acupuncture, Music, Acrobat, and Drama all point this slot
+    /// at `FUN_0051CF90 @ 0x51CF90`.  The common routine still depends on
+    /// unresolved provider callbacks, registry ownership, figure routing,
+    /// and coverage/settlement consumers; this catalog is therefore raw
+    /// evidence only and must not enable Qin provider spawning.
+    public struct ProviderVTableSlot234Descriptor: Sendable, Hashable, Codable {
+        public let providerModelIDs: [Int]
+        public let providerVTableAddress: UInt32
+        public let slotOffset: Int
+        public let targetAddress: UInt32
+        public let targetIndexedInCorpus: Bool
+
+        public init(
+            providerModelIDs: [Int],
+            providerVTableAddress: UInt32,
+            slotOffset: Int = 0x234,
+            targetAddress: UInt32,
+            targetIndexedInCorpus: Bool
+        ) {
+            self.providerModelIDs = providerModelIDs
+            self.providerVTableAddress = providerVTableAddress
+            self.slotOffset = slotOffset
+            self.targetAddress = targetAddress
+            self.targetIndexedInCorpus = targetIndexedInCorpus
+        }
+    }
+
+    public static let providerVTableSlot234Descriptors: [ProviderVTableSlot234Descriptor] = [
+        .init(
+            providerModelIDs: [72, 73],
+            providerVTableAddress: 0x007B5EB4,
+            targetAddress: 0x0051CF90,
+            targetIndexedInCorpus: true
+        ),
+        .init(
+            providerModelIDs: [207],
+            providerVTableAddress: 0x007B6114,
+            targetAddress: 0x0051CF90,
+            targetIndexedInCorpus: true
+        ),
+        .init(
+            providerModelIDs: [208],
+            providerVTableAddress: 0x007B6374,
+            targetAddress: 0x0051CF90,
+            targetIndexedInCorpus: true
+        ),
+        .init(
+            providerModelIDs: [211],
+            providerVTableAddress: 0x007ACEDC,
+            targetAddress: 0x0051CF90,
+            targetIndexedInCorpus: true
+        ),
+        .init(
+            providerModelIDs: [212],
+            providerVTableAddress: 0x007AD140,
+            targetAddress: 0x0051CF90,
+            targetIndexedInCorpus: true
+        ),
+        .init(
+            providerModelIDs: [213],
+            providerVTableAddress: 0x007AD3A4,
+            targetAddress: 0x0051CF90,
+            targetIndexedInCorpus: true
+        ),
+    ]
+
+    public static func providerVTableSlot234Descriptor(
+        forProviderModelID providerModelID: Int
+    ) -> ProviderVTableSlot234Descriptor? {
+        providerVTableSlot234Descriptors.first {
+            $0.providerModelIDs.contains(providerModelID)
+        }
+    }
+
     /// MFC runtime-class records recovered from the canonical provider
     /// executables.  These are registration metadata only: the generic Qin
     /// map loader still requests `Building`, and these descriptors must not

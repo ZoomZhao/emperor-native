@@ -6469,6 +6469,36 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testProviderVTableSlot234DescriptorsShareCanonicalSpawnTarget() {
+        let descriptors = OriginalResidentialServiceCatalog.providerVTableSlot234Descriptors
+        XCTAssertEqual(descriptors.count, 6)
+        let expected: [([Int], UInt32)] = [
+            ([72, 73], 0x007B5EB4),
+            ([207], 0x007B6114),
+            ([208], 0x007B6374),
+            ([211], 0x007ACEDC),
+            ([212], 0x007AD140),
+            ([213], 0x007AD3A4),
+        ]
+        for (descriptor, expected) in zip(descriptors, expected) {
+            XCTAssertEqual(descriptor.providerModelIDs, expected.0)
+            XCTAssertEqual(descriptor.providerVTableAddress, expected.1)
+            XCTAssertEqual(descriptor.slotOffset, 0x234)
+            XCTAssertEqual(descriptor.targetAddress, 0x0051CF90)
+            XCTAssertTrue(descriptor.targetIndexedInCorpus)
+        }
+        XCTAssertEqual(
+            OriginalResidentialServiceCatalog
+                .providerVTableSlot234Descriptor(forProviderModelID: 211)?.targetAddress,
+            0x0051CF90
+        )
+        XCTAssertNil(
+            OriginalResidentialServiceCatalog.providerVTableSlot234Descriptor(
+                forProviderModelID: 214
+            )
+        )
+    }
+
     func testProviderLoadAuxiliaryOutcomePreservesGateAndCallbackOrder() {
         let closed = OriginalResidentialServiceCatalog
             .providerLoadAuxiliaryOutcome(

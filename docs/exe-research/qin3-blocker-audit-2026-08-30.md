@@ -5093,6 +5093,53 @@ used to enable Qin entertainment figures. Provider registry ownership,
 staffing-word production, route/collision, and venue-to-house settlement
 remain **unknown**, so the campaign music bridge stays fail-closed.
 
+## 2026-09-05 Six service families share the provider spawn vtable target
+
+The provider figure-spawn edge is now bounded at the vtable level.  Direct
+little-endian reads from the canonical English and Chinese PE `.rdata`
+sections show that vtable slot `+0x234` points to the same
+`FUN_0051CF90 @ 0x51CF90` target for all six service families:
+
+| provider model(s) | vtable | `+0x234` target |
+| --- | ---: | ---: |
+| Well `72/73` | `0x7B5EB4` | `0x51CF90` |
+| Herbalist `207` | `0x7B6114` | `0x51CF90` |
+| Acupuncture `208` | `0x7B6374` | `0x51CF90` |
+| Music `211` | `0x7ACEDC` | `0x51CF90` |
+| Acrobat `212` | `0x7AD140` | `0x51CF90` |
+| Drama `213` | `0x7AD3A4` | `0x51CF90` |
+
+The bytes at each of these sixteen-byte locations are identical between the
+hash-identified EN and CH inputs.  The target is present in the indexed split
+corpus and is the common provider generator already described in §10.17b and
+the provider-spawn aggregate section above.  Its body still applies the
+provider/global/worker gates and then dispatches the provider-specific
+threshold through virtual `+0x230`; the shared `+0x234` target does not itself
+allocate a figure, populate the provider registry, construct a route, or
+write house coverage.
+
+Native records this exact six-family mapping in
+`OriginalResidentialServiceCatalog.providerVTableSlot234Descriptors` and
+locks the model/vtable/slot/target tuples in
+`testProviderVTableSlot234DescriptorsShareCanonicalSpawnTarget`.  This is
+research metadata only.  It confirms that Music/Acrobat/Drama use the same
+spawn-generator entry as Well/Herbalist/Acupuncture, but it does not recover
+the missing provider-object projection, callback inputs, figure route, or
+house/market settlement; Qin automatic migration and entertainment coverage
+therefore remain fail-closed.
+
+**Sources:** canonical `Exe/ghidra/input/EmperorEN.exe` and
+`EmperorCH.exe` vtable words at the six bases and offset `+0x234`,
+`local/source/split-merged/code/0x050000/FUN_0051CF90.c`,
+`local/source/compare-report.tsv` row `0x51CF90`,
+`Sources/EmperorCore/HousingEvolution.swift`, and
+`Tests/EmperorCoreTests/EmperorCoreTests.swift`.
+
+**Evidence class:** **confirmed** for the six direct vtable targets, slot
+offset, EN/CH parity, and common generator identity; **unknown** for provider
+registry ownership, callback input production, figure routing, and all
+downstream coverage/settlement semantics.
+
 **Sources:** `local/source/split-merged/code/0x040000/FUN_00410620.c`,
 `FUN_0048A7E0.c`, `FUN_0048B540.c`, `local/source/compare-report.tsv` rows
 `0x410620` and `0x48B540`, `GameData/Model/EmperorBuildingModels.txt` rows
