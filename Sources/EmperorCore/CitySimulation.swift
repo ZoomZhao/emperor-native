@@ -2182,16 +2182,17 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
                     y: location.y + offset.y
                 )
                 guard inBounds(point) else { return false }
-                if let objectIDs = occupiedBuildingIDsByPoint[point] {
-                    guard objectIDs.count == 1,
+                let raw = rawTerrain[point.y * width + point.x]
+                if raw & 0x8 != 0 {
+                    guard let objectIDs = occupiedBuildingIDsByPoint[point],
+                          objectIDs.count == 1,
                           let objectID = objectIDs.first,
                           OriginalGrandCanalLayoutCatalog
                               .HouseAccessPerimeterObjectCatalog
                               .ordinaryObjectPathDecision(forBuildingID: objectID) == true
                     else { return false }
                 }
-                let raw = rawTerrain[point.y * width + point.x]
-                return raw & 0x8 == 0
+                return true
             }
             guard perimeterIsResolved else { continue }
 
