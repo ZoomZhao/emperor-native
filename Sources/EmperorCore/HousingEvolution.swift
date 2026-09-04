@@ -3417,6 +3417,21 @@ public enum OriginalHouseVacantTypeTransition {
 /// `DAT_00F11C70` buffer by `0x4273F0 → 0x44F180`; `threshold` is the runtime
 /// value returned by `FUN_0044CC50(buildingID, 10)`.
 public enum OriginalWaterProviderState {
+    /// Direct-call metadata for the original provider state scheduler.
+    /// The scheduler is entered from calendar phase `0x24` only in the
+    /// canonical direct-call census; its object-vector and vtable dispatch
+    /// remain source evidence rather than a Native provider bridge.
+    public struct ProviderSchedulerBoundary: Sendable, Hashable, Codable {
+        public static let schedulerAddress: UInt32 = 0x00517AD0
+        public static let phaseDispatcherAddress: UInt32 = 0x004AC2B0
+        public static let phaseValue: Int = 0x24
+        public static let directCallSites: [UInt32] = [0x004AC473]
+        public static let directCallerAddresses: [UInt32] = [0x004AC2B0]
+        public static let providerEligibilityVTableOffset: UInt32 = 0xB8
+        public static let providerUpdateVTableOffset: UInt32 = 0x218
+        public static let globalGateAddress: UInt32 = 0x00426D10
+    }
+
     /// The only direct caller of `FUN_00511860 @ 0x511860` in the
     /// hash-matched EN/CH PEs is the omitted/interior eHIB command dispatcher
     /// at `0x515800`.  Its command switch subtracts 100 from

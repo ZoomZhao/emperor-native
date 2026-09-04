@@ -6280,3 +6280,39 @@ direct EN/CH relative-call/vtable scans around `0x421ED0` and
 fixed-byte values, serializer/placement separation, and EN/CH parity;
 **unknown** for any indirect `CBGRand` caller, editor-only mutation, complete
 object registry, and downstream migration/arrival semantics.
+
+## 2026-09-04 Well provider state scheduler has one calendar entry
+
+The canonical English and Chinese PE `.text` sections were scanned with a
+relative-`E8` decoder using image base `0x00400000`.  `FUN_00517AD0 @
+0x00517AD0` has exactly one direct call in each image: call site `0x004AC473`,
+from `FUN_004AC2B0 @ 0x004AC2B0`.  The call bytes and target are identical in
+both variants.  In the caller's calendar-phase switch, case `0x24` invokes
+`FUN_005177B0` and then `FUN_00517AD0`, after which the phase advances; no
+second direct `E8` caller was found.
+
+`FUN_00517AD0` is a provider-state update boundary, not a house-coverage
+writer.  It walks the live provider vector through `FUN_004F8210` /
+`FUN_00554C00`, first requiring the global gate at `FUN_00426D10(0)` and each
+provider's virtual eligibility slot `+0xB8`, then dispatching the provider
+update slot `+0x218`.  The separate Well coverage path remains virtual
+dispatch at provider slot `+0x2C` into `FUN_0051BC00`; that function has no
+direct relative call sites in either image.
+
+Negative result: no direct map-load, monthly-popularity, migration-assignment,
+or generic water-visit entry reaches this scheduler.  Indirect/table-driven
+edges, the provider object-vector projection, writers for the Well predicate
+inputs (`+0x16` / `+0x6F`), and downstream house settlement remain unknown.
+Native therefore records the calendar boundary but keeps the Qin provider
+registry and water bridge fail-closed.
+
+**Sources:** `local/source/split-merged/code/0x040000/FUN_004AC2B0.c`,
+`local/source/split-merged/code/0x050000/FUN_00517AD0.c`, the EN/CH rows for
+`0x4AC2B0` and `0x517AD0` in `local/source/compare-report.tsv`, canonical PE
+relative-call scans, `Sources/EmperorCore/HousingEvolution.swift`, and
+`testOriginalWaterProviderSchedulerBoundaryMatchesCanonicalCallCensus`.
+
+**Evidence class:** **confirmed** for the sole direct call site, phase/order,
+global and virtual-slot gates, and EN/CH parity; **confirmed negative** for a
+second direct `E8` caller; **unknown** for indirect dispatch, object-vector
+projection, predicate-input writers, and house settlement.

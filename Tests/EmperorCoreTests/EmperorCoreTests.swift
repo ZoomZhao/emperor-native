@@ -6929,6 +6929,18 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testOriginalWaterProviderSchedulerBoundaryMatchesCanonicalCallCensus() {
+        let boundary = OriginalWaterProviderState.ProviderSchedulerBoundary.self
+        XCTAssertEqual(boundary.schedulerAddress, 0x00517AD0)
+        XCTAssertEqual(boundary.phaseDispatcherAddress, 0x004AC2B0)
+        XCTAssertEqual(boundary.phaseValue, 0x24)
+        XCTAssertEqual(boundary.directCallSites, [0x004AC473])
+        XCTAssertEqual(boundary.directCallerAddresses, [0x004AC2B0])
+        XCTAssertEqual(boundary.providerEligibilityVTableOffset, 0xB8)
+        XCTAssertEqual(boundary.providerUpdateVTableOffset, 0x218)
+        XCTAssertEqual(boundary.globalGateAddress, 0x00426D10)
+    }
+
     func testProviderSpawnAggregatePreservesThreeSourceGatesAndReturnReduction() {
         // FUN_00517A40 admits a vector row only after the global gate, +0xB8,
         // and +0x204 gates; +0x234's already-resolved return is then summed.
