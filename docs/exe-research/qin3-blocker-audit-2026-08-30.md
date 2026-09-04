@@ -6060,3 +6060,107 @@ market bridge remains fail-closed.
 identity, EN/CH parity, and the absence of a direct archive-loader edge;
 **unknown** for indirect/table-driven dispatch, strategy semantics,
 provider projection, route, and settlement.
+
+## 2026-09-04 Qin routing census: Iron Smelter and Ruin +0xCC predicates
+
+The first supported-producer experiment exposed a concrete cache boundary,
+`missingGenericFootprintPredicate(..., buildingID: 40)`, before any house
+perimeter or migration arithmetic ran. Static tracing closes the two
+Qin-relevant missing classes without generalizing an unknown default.
+
+For authored building IDs `39...41`, the object factory path is exact in both
+executables: `FUN_00559010 @ 0x559010` accepts only `0x24` (36),
+`FUN_0042DD60 @ 0x42DD60` accepts only `0x30` (48), and
+`FUN_00558570 @ 0x558570` accepts `0x27...0x29` (39, 40, 41).
+That branch allocates `0x150` bytes and calls `FUN_005590A0 @ 0x5590A0`,
+which calls `FUN_00558F70 @ 0x558F70` and installs vtable `0x007B7E24`.
+Direct little-endian reads of the canonical EN and CH PE images at
+`0x007B7E24 + 0xCC` return `0x00416A50` in both builds. The target body is
+the already recovered two-argument constant-false callback
+(`xor al, al; ret 8`). These rows therefore take the `+0xCC == false`
+branch: primary occupied cells are class `2`, and generic fallback cells are
+class `4` (subject to their separate explicit building-ID branches).
+
+The archived Qin map also carries building ID `161` (Ruin). Its generic object
+factory classification is direct: `FUN_005188B0 @ 0x5188B0`,
+`FUN_0051C620 @ 0x51C620`, `FUN_00562E80 @ 0x562E80`,
+`FUN_00562E90 @ 0x562E90`, and the special-class predicates in
+`FUN_0051C660 @ 0x51C660` reject `0xA1`; `FUN_00426C90 @ 0x426C90` therefore
+constructs the base object and installs vtable `0x007AB59C`.
+Direct EN/CH PE reads of `0x007AB59C + 0xCC` again return `0x00416A50`.
+The map's Ruin occupancy consequently has the same confirmed constant-false
+predicate and is safe to project as class `2`/`4`.
+
+The EN/CH comparison report marks all selector/constructor functions above
+(`0x426C90`, `0x42DD60`, `0x558570`, `0x558F70`, `0x559010`, `0x5590A0`)
+`identical`; vtable words and the callback body were read directly from both
+hash-matched PE files. Native now includes IDs `39`, `40`, `41`, and `161` in
+`BuildingFootprintPredicateCatalog.constantFalseBuildingIDs`, with a pure
+regression that preserves `nil` for an unrelated unsupported ID.
+
+This closes the first observed routing-cache error only. It does **not** prove
+the unresolved map-object projection, `FUN_004BA6F0` house perimeter object
+callbacks, road-component derivation, or the migration arrival writer; the Qin
+automatic-migration producer remains fail-closed until those boundaries are
+recovered.
+
+**Sources:** `local/source/split-merged/code/0x050000/`
+`FUN_00559010.c`, `FUN_0042DD60.c`, `FUN_00558570.c`, `FUN_005590A0.c`,
+`FUN_00558F70.c`, `FUN_005188B0.c`, `FUN_0051C620.c`, `FUN_00562E80.c`,
+`FUN_00562E90.c`, `FUN_0051C660.c`; `local/source/split-merged/code/0x040000/`
+`FUN_00426C90.c`; `local/source/compare-report.tsv`; direct reads from
+`Exe/ghidra/input/EmperorEN.exe` and `EmperorCH.exe` at vtable slots
+`0x7B7EF0` and `0x7AB668`.
+
+**Evidence class:** **confirmed** for the factory predicates, constructor/vtable
+assignments, `+0xCC` target, callback body, EN/CH parity, and routing output
+classes; **unknown** for all remaining object/grid and migration-writer
+semantics listed above.
+
+## 2026-09-04 House-perimeter object callbacks are shared, with one auxiliary-layer input
+
+`FUN_004BA6F0 @ 0x4BA6F0` and its collector sibling
+`FUN_004BA870 @ 0x4BA870` do not reject every perimeter cell carrying source
+bit `0x8`. They load the live object ID from `DAT_00FC3750[cell]`, resolve the
+object vtable, and then apply three virtual callbacks before reusing the same
+road/terrain admission test. Direct EN/CH PE reads show the canonical base,
+HouseBldg, Qin production (`39...41`), warehouse `54`, Well `72`, and
+Inspector `124` vtables all share these entries:
+
+| slot | target | recovered body | effect in `FUN_004BA6F0` |
+| ---: | ---: | --- | --- |
+| `+0xE4` | `0x00416A60` | `xor eax,eax; cmp word [ecx+0x14],0x7e; sete al; ret` | reject only object type `0x7E` (Road Block) |
+| `+0x190` | `0x00426D30` | returns true only for object types `0x6F`/`0x71` (Grand/Imperial Way) | enables the directional-offset adjustment branch |
+| `+0x194` | `0x00426D50` | returns its input unchanged except for types `0x6F`/`0x71`, which call `0x420EB0` | adjusts a Way cell using the auxiliary direction byte |
+
+`FUN_00420EB0 @ 0x420EB0` is exact: if `DAT_00F6A9E0[cell]` lacks bit
+`0x40`, it reads `DAT_00FDCD70[cell]`; low bits `1`/other move one column,
+and direction groups `0x08`/otherwise move one row, while bit `0x40` leaves
+the index unchanged. The callbacks and their callers are identical in the
+English and Chinese builds (`compare-report.tsv` rows `0x4BA6F0`,
+`0x4BA870`, `0x426D50`; the two omitted callback bodies are verified by direct
+PE bytes). This closes the callback control flow and the ordinary-object
+identity/no-adjustment case; the Way adjustment still depends on the authored
+or runtime `DAT_00FDCD70` layer and a complete `DAT_00FC3750` object registry.
+
+Native intentionally does not yet reinterpret every raw `0x8` perimeter cell
+as passable. The missing registry ownership and object-to-building/model
+projection are still required to know which object callback applies at each
+cell; treating `0x8` as globally clear would admit Road Blocks and would be
+incorrect. The temporary Qin1 supported-producer probe, after the confirmed
+`39...41`/`161` `+0xCC` rows were added, produced `grandCanalWorkerRoutingGrids`
+success and completed its Native mission fixture (population `161`; 8/24
+houses received access words, 17/24 received capacity words). This is a
+Native diagnostic only, not evidence that the original automatic producer or
+arrival writer is complete, so production remains fail-closed.
+
+**Sources:** `local/source/split-merged/code/0x040000/FUN_004BA6F0.c`,
+`FUN_004BA870.c`, `FUN_00420EB0.c`, `FUN_00426D50.c`, direct EN/CH vtable
+words at `0x7AB680`, `0x7ABB1C`, `0x7B7F08`, `0x7BE2A0`, `0x7B5F98`, and
+`0x7B61F8`, plus `local/source/compare-report.tsv`.
+
+**Evidence class:** **confirmed** for callback targets, type tests, ordinary
+object no-adjustment behavior, Way adjustment formula, and EN/CH parity;
+**diagnostic/inferred** for the Native probe result; **unknown** for object
+registry ownership, per-cell object projection, and the remaining migration
+writer/arrival semantics.

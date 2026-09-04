@@ -1765,20 +1765,20 @@ public enum OriginalGrandCanalLayoutCatalog {
     /// unresolved and must not be treated as a default.
     public enum BuildingFootprintPredicateCatalog {
         /// HouseBldg IDs `3...17`, Stoneworks `36`, Qin production/service
-        /// classes `27...29`, `31`, `33`, `35`, `37`, `43`, `46`, `48`, `53`,
+        /// classes `27...29`, `31`, `33`, `35`, `37`, `39...41`, `43`, `46`, `48`, `53`,
         /// Decorative Sculpture `116/117` and its expanded variants `243...248`,
         /// `54/56/58`, Common/Grand Market Squares `59/60`, Road Block `126`,
         /// Entertainment
         /// Area `71`, Well `72/73`, Inspector Tower `124`, Tax Office `125`,
         /// Herbalist `207`, Acupuncturist `208`, Music School `211`,
         /// agricultural and lacquer classes `192/193/194...199/237...239`, and
-        /// ancestral-shrine classes `214...219`.
+        /// ancestral-shrine classes `214...219`, and generic Ruin `161`.
         public static let constantFalseBuildingIDs: Set<Int> =
-            Set(3...17)
+                Set(3...17)
                 .union([
-                    27, 28, 29, 31, 33, 35, 36, 37, 43, 46, 48, 53, 54, 56,
+                    27, 28, 29, 31, 33, 35, 36, 37, 39, 40, 41, 43, 46, 48, 53, 54, 56,
                     58, 59, 60, 71, 72, 73, 116, 117, 124, 125, 126, 192, 193,
-                    194, 195, 196, 197, 198, 199, 207, 208, 211, 214, 215, 216,
+                    194, 195, 196, 197, 198, 199, 161, 207, 208, 211, 214, 215, 216,
                     217, 218, 219, 233, 237,
                     238, 239, 243, 244, 245, 246, 247, 248
                 ])
