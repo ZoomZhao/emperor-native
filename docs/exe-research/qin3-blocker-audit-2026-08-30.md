@@ -6931,3 +6931,33 @@ executable SHA-256
 commodity predicate, strict `400`/`200` thresholds, and EN/CH parity;
 **unknown** for the selected provider record's runtime meaning and all
 downstream allocation, route, coverage, and settlement behavior.
+
+## 2026-09-05 cMarket model-23 spawn placement preserves cache residual fields
+
+The model-23 figure initializer `FUN_00543DC0 @ 0x543DC0` has a small but
+independent placement boundary. It clears the figure's map-cell word, asks
+the figure/object vtable at `+0x194` for a map-cache address, subtracts the
+global cache base `DAT_0101D0C8`, and writes the signed-short heading from
+`DAT_01391FE0[idx]` to figure `+0x24`. The same delta is divided by cell
+stride `0xE4` (228) with C signed-integer truncation; the quotient is stored at
+`+0x0B`, while `(short)delta - quotient * 0xE4` is stored at `+0x2A`. The
+initializer returns false exactly when the heading word is zero.
+
+`OriginalMarketPeddlerSpawnPlacementBoundary.initialize(...)` records these
+raw fields and signed-short conversions after the vtable lookup is supplied.
+It does not claim that the cache address is a road-access point or that the
+resulting figure enters the Native route/coverage/settlement graph.
+
+**Sources:** canonical English executable SHA-256
+`8a6d2df1015cb75d797546d117da5f82b86fd08726090c2a13d853b9009d6753`, Chinese
+executable SHA-256
+`dbdeca1ec2720f2387e1673bfbb901e9bad832179355ea897cfa7536e17ac15a`,
+`local/source/split-merged/code/0x050000/FUN_00543dc0.c`,
+`local/source/compare-report.tsv` row `0x543dc0`, and
+`Sources/EmperorCore/MarketSimulation.swift` with
+`testOriginalMarketPeddlerSpawnPlacementPreservesCacheQuotientAndResidual`.
+
+**Evidence class:** **confirmed** for cache-base subtraction, `0xE4` stride,
+signed-short writes, zero-heading return, and EN/CH parity; **unknown** for
+the vtable cache-address producer and every downstream road, provider,
+coverage, and settlement interpretation.

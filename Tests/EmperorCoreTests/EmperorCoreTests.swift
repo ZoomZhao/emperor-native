@@ -12277,6 +12277,31 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testOriginalMarketPeddlerSpawnPlacementPreservesCacheQuotientAndResidual() throws {
+        let placement = try XCTUnwrap(
+            OriginalMarketPeddlerSpawnPlacementBoundary.initialize(
+                mapCacheAddress: 10_000 + 3 * 0xE4 + 17,
+                mapCacheBaseAddress: 10_000,
+                headingValue: 0xFFFF
+            )
+        )
+        XCTAssertEqual(placement.mapRow, 3)
+        XCTAssertEqual(placement.mapColumnResidual, 17)
+        XCTAssertEqual(placement.headingValue, -1)
+        XCTAssertTrue(placement.hasHeading)
+
+        let negative = try XCTUnwrap(
+            OriginalMarketPeddlerSpawnPlacementBoundary.initialize(
+                mapCacheAddress: 10_000 - 0xE4 - 7,
+                mapCacheBaseAddress: 10_000,
+                headingValue: 0
+            )
+        )
+        XCTAssertEqual(negative.mapRow, -1)
+        XCTAssertEqual(negative.mapColumnResidual, -7)
+        XCTAssertFalse(negative.hasHeading)
+    }
+
     func testOriginalMarketCreationBoundaryKeepsMapLoadFailClosed() {
         XCTAssertEqual(
             OriginalMarketCreationBoundaryCatalog.creatingAddress,

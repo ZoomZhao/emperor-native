@@ -1806,6 +1806,72 @@ public enum OriginalMarketPeddlerSpawnSelector {
     }
 }
 
+/// Raw map-cache placement fields initialized by the model-23 figure creator
+/// (`FUN_00543DC0 @ 0x543DC0`). The source clears the figure's map-cell word,
+/// asks the object vtable for a cache address, subtracts the global map-cache
+/// base `DAT_0101D0C8`, and stores the signed-short heading and the quotient /
+/// residual pair produced with cell stride `0xE4` (228).
+public struct OriginalMarketPeddlerSpawnPlacement: Sendable, Hashable, Codable {
+    public let mapCacheAddress: Int
+    public let mapCacheBaseAddress: Int
+    public let headingValue: Int
+    public let mapRow: Int
+    public let mapColumnResidual: Int
+
+    public var hasHeading: Bool { headingValue != 0 }
+
+    public init(
+        mapCacheAddress: Int,
+        mapCacheBaseAddress: Int,
+        headingValue: Int,
+        mapRow: Int,
+        mapColumnResidual: Int
+    ) {
+        self.mapCacheAddress = mapCacheAddress
+        self.mapCacheBaseAddress = mapCacheBaseAddress
+        self.headingValue = headingValue
+        self.mapRow = mapRow
+        self.mapColumnResidual = mapColumnResidual
+    }
+}
+
+public enum OriginalMarketPeddlerSpawnPlacementBoundary {
+    public static let sourceAddress: UInt32 = 0x00543DC0
+    public static let mapCacheBaseAddressGlobal: UInt32 = 0x0101D0C8
+    public static let mapCacheCellStride = 0xE4
+    public static let headingOffset: UInt32 = 0x24
+    public static let mapRowOffset: UInt32 = 0x0B
+    public static let mapColumnResidualOffset: UInt32 = 0x2A
+
+    /// Replays the source's quotient/residual arithmetic after the vtable
+    /// cache lookup has supplied `mapCacheAddress` and the global base. The
+    /// source stores all three fields as signed shorts; `nil` marks an
+    /// address subtraction that cannot be represented by the host integer.
+    public static func initialize(
+        mapCacheAddress: Int,
+        mapCacheBaseAddress: Int,
+        headingValue: Int
+    ) -> OriginalMarketPeddlerSpawnPlacement? {
+        let (delta, overflow) = mapCacheAddress.subtractingReportingOverflow(
+            mapCacheBaseAddress
+        )
+        guard !overflow else { return nil }
+        let row = Int16(truncatingIfNeeded: delta / mapCacheCellStride)
+        let residual = Int16(
+            truncatingIfNeeded:
+                Int(Int16(truncatingIfNeeded: delta))
+                - Int(row) * mapCacheCellStride
+        )
+        return .init(
+            mapCacheAddress: mapCacheAddress,
+            mapCacheBaseAddress: mapCacheBaseAddress,
+            headingValue: Int(Int16(truncatingIfNeeded: headingValue)),
+            mapRow: Int(row),
+            mapColumnResidual: Int(residual)
+        )
+    }
+}
+
 public enum OriginalMarketProviderAvailability {
     /// Reproduces `FUN_005D4AC0 @ 0x5D4AC0` after the cMarket provider
     /// container has yielded its contiguous records. Null/empty containers
