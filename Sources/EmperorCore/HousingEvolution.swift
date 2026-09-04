@@ -2223,6 +2223,25 @@ public enum OriginalResidentialServiceCatalog {
         }
     }
 
+    /// Exact model admission for the entertainment object factory boundary.
+    /// `FUN_0048A7E0` admits the three school models directly and delegates
+    /// the venue cases to `FUN_0048B540`, whose only true results are model
+    /// `0x47` (Entertainment Area, authored ID 71) and `0x4B` (Theatre
+    /// Pavilion, authored ID 75).  This is deliberately an admission
+    /// predicate only: it does not construct an object, populate the venue
+    /// manager, assign a provider registry slot, or enable Qin coverage.
+    public static let entertainmentFactoryAdmissionModelIDs: Set<Int> = [
+        71, 75, 211, 212, 213
+    ]
+    public static let entertainmentFactoryAdmissionPredicateAddress: UInt32 =
+        0x0048A7E0
+    public static let entertainmentVenueAdmissionPredicateAddress: UInt32 =
+        0x0048B540
+
+    public static func entertainmentFactoryAdmits(modelID: Int) -> Bool {
+        entertainmentFactoryAdmissionModelIDs.contains(modelID)
+    }
+
     /// The recovered entertainment-manager registration edges for venue
     /// objects.  The two venue vtables override both relevant base slots:
     /// their `+0x90` placement callbacks call `FUN_0048B6D0` directly, while

@@ -6345,6 +6345,31 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testEntertainmentFactoryAdmissionPreservesVenueAndSchoolModelSet() {
+        XCTAssertEqual(
+            OriginalResidentialServiceCatalog.entertainmentFactoryAdmissionModelIDs,
+            Set([71, 75, 211, 212, 213])
+        )
+        XCTAssertEqual(
+            OriginalResidentialServiceCatalog.entertainmentFactoryAdmissionPredicateAddress,
+            0x0048A7E0
+        )
+        XCTAssertEqual(
+            OriginalResidentialServiceCatalog.entertainmentVenueAdmissionPredicateAddress,
+            0x0048B540
+        )
+        for modelID in [71, 75, 211, 212, 213] {
+            XCTAssertTrue(
+                OriginalResidentialServiceCatalog.entertainmentFactoryAdmits(modelID: modelID)
+            )
+        }
+        for modelID in [70, 76, 210, 214, 219] {
+            XCTAssertFalse(
+                OriginalResidentialServiceCatalog.entertainmentFactoryAdmits(modelID: modelID)
+            )
+        }
+    }
+
     func testEntertainmentManagerRegistrationDescriptorSeparatesPlacementFromLoad() {
         let descriptor = OriginalResidentialServiceCatalog
             .entertainmentManagerRegistrationDescriptor

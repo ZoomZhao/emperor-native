@@ -7041,3 +7041,38 @@ fail-closed.
 **Evidence class:** **confirmed** for the 27-slot scan, first-nonzero rule,
 and all-zero no-write behavior; **unknown** for the output consumer's provider
 registry, route construction, and household settlement.
+
+## 2026-09-05 Entertainment factory admission is exactly five model IDs
+
+The entertainment factory admission boundary is now represented as one
+explicit model set. `FUN_0048A7E0 @ 0x48A7E0` returns true directly for school
+models `0xD3…0xD5` (GameData building IDs `211…213`) and otherwise delegates to
+`FUN_0048B540 @ 0x48B540`. The delegate returns true only for model `0x47`
+(Entertainment Area, GameData ID `71`) and `0x4B` (Theatre Pavilion, GameData
+ID `75`). No other model enters this factory-admission predicate. The next
+dispatch remains split: `FUN_0048A800` allocates `0x150` for the three schools
+and calls their distinct initializers; for the two venue models it delegates
+to `FUN_0048B560`, whose constructors allocate `0x230` (Entertainment Area)
+or `0x184` (Theatre Pavilion).
+
+`OriginalResidentialServiceCatalog.entertainmentFactoryAdmits` records the
+confirmed five-ID admission set and both predicate addresses. It is a pure
+factory boundary only. It does not imply that a Qin generic `Building` archive
+row is specialized into one of these classes: the Qin map loader's repaired
+model whitelist still excludes `0x47`, `0x4B`, and `0xD3…0xD5`, while the
+archive rows retain base model `0` and provider slot `-1`. Provider/object
+registry projection, route/collision, coverage, and settlement therefore
+remain unknown and Qin entertainment stays fail-closed.
+
+**Sources:** `local/source/split-merged/code/0x040000/FUN_0048A7E0.c`,
+`FUN_0048A800.c`, `FUN_0048B540.c`, `FUN_0048B560.c`, `FUN_0048A8E0.c`,
+`FUN_0048A900.c`, `FUN_0048A920.c`, `FUN_0048BBA0.c`, `FUN_0048CB10.c`,
+`local/source/compare-report.tsv` rows `0x48A7E0`, `0x48A800`, and `0x48B540`,
+`GameData/Model/EmperorBuildingModels.txt` rows `71`, `75`, and `211…213`,
+`Sources/EmperorCore/HousingEvolution.swift`, and
+`testEntertainmentFactoryAdmissionPreservesVenueAndSchoolModelSet`.
+
+**Evidence class:** **confirmed** for the five admitted model IDs, predicate
+delegation, allocation sizes, constructor split, and EN/CH parity;
+**unknown** for archive-side specialization, provider registry assignment,
+route/collision, and venue/house settlement.
