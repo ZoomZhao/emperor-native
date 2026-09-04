@@ -7324,6 +7324,41 @@ final class EmperorCoreTests: XCTestCase {
             OriginalMapArchiveRepairCatalog.genericClassToken,
             "Building"
         )
+        XCTAssertEqual(
+            OriginalMapArchiveRepairCatalog.existingObjectRevalidationVTableOffset,
+            0xF8
+        )
+        XCTAssertEqual(
+            OriginalMapArchiveRepairCatalog.existingObjectRevalidationCallbackAddress,
+            0x00416A90
+        )
+        XCTAssertEqual(
+            OriginalMapArchiveRepairCatalog.existingObjectRevalidationStateWordOffset,
+            0x1C
+        )
+        XCTAssertTrue(
+            OriginalMapArchiveRepairCatalog.existingObjectRevalidationRequiresPositiveStateWord
+        )
+        XCTAssertEqual(
+            OriginalMapArchiveRepairCatalog.existingObjectRevalidationVTableDescriptors.count,
+            13
+        )
+        XCTAssertTrue(
+            OriginalMapArchiveRepairCatalog.existingObjectRevalidationVTableDescriptors.allSatisfy {
+                $0.callbackAddress == 0x00416A90
+            }
+        )
+        XCTAssertEqual(
+            OriginalMapArchiveRepairCatalog.existingObjectRevalidationDescriptor(
+                forVTableAddress: 0x007B5EB4
+            )?.label,
+            "Well"
+        )
+        XCTAssertNil(
+            OriginalMapArchiveRepairCatalog.existingObjectRevalidationDescriptor(
+                forVTableAddress: 0x007B1234
+            )
+        )
     }
 
     func testMapLinkedObjectCallbackVTableBoundaryKeepsGenericQinRowsFailClosed() {

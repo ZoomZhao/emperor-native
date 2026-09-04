@@ -7809,3 +7809,50 @@ raw little-endian scan for `DAT_00C702C0`, direct disassembly around
 of `DAT_00C702C0` outside the getter/initialization neighborhood and for
 EN/CH parity; **unknown** for indirect/table-driven consumers, archive
 construction, load ordering, route/collision, coverage, and settlement.
+
+## 2026-09-05 Existing-object `+0xF8` revalidation is a pure state predicate
+
+The two map-startup paths that were previously described only by their
+indirect call shape are now bounded at the concrete callback. `FUN_004E1E40 @
+0x4E1E40` (called from the main `FUN_0052FDA0` load wrapper) and
+`FUN_00534BF0 @ 0x534BF0` both resolve an object from the existing vector and
+call its vtable slot `+0xF8`. Direct little-endian reads of both canonical EN
+and CH vtables show the same target `FUN_00416A90 @ 0x416A90` for the Qin
+relevant `Building`, `HouseBldg`, Well, Herbalist, Acupuncture, Common/Grand
+Market, Entertainment Area, Music/Acrobat/Drama School, Laborers' Camp,
+Residential Wall, and Residential Gate tables.
+
+The direct PE body at `0x416A90` is only:
+
+```text
+xor eax, eax
+cmp word ptr [ecx + 0x1C], 0
+setg al
+ret
+```
+
+It returns whether the object's signed state word at `+0x1C` is positive. It
+does not call `FUN_0042D360`, a provider constructor, `Creating(...)`, a
+provider-vector insertion/erase helper, or a `+0xB4/+0x2D` writer. The
+`+0xF8` dispatch is therefore a revalidation/selection predicate, not the
+missing Qin generic-record specialization edge. EN and CH vtable words and
+callback bytes are identical.
+
+Native records the slot, callback, state offset, and the 13 inspected vtable
+descriptors in `OriginalMapArchiveRepairCatalog` as metadata only; the live
+Qin object bridge remains unchanged and fail-closed. This closes the
+`FUN_0052FDA0 → FUN_004E1E40`/`FUN_00534BF0 → +0xF8` hypothesis while leaving
+non-virtual data-table dispatch, archive provider identity, route/coverage,
+and settlement **unknown**.
+
+**Sources:** `local/source/split-merged/code/0x040000/FUN_004e1e40.c`,
+`local/source/split-merged/code/0x050000/FUN_00534bf0.c`, canonical EN/CH PE
+vtable words at `0x7AB59C`, `0x7ABA38`, `0x7B5EB4`, `0x7B6114`, `0x7B6374`,
+`0x7B6F3C`, `0x7AD878`, `0x7ACEDC`, `0x7AD140`, `0x7AD3A4`, `0x7B4FF8`,
+`0x7AAAB8`, `0x7AAFB0`, direct body bytes at `0x416A90`, and the focused
+regression in `Tests/EmperorCoreTests/EmperorCoreTests.swift`.
+
+**Evidence class:** **confirmed negative** for this `+0xF8` callback as a
+provider/archive projection edge and for EN/CH parity; **unknown** for
+unlisted classes, non-virtual/table-driven consumers, archive construction,
+route/collision, coverage, and settlement.

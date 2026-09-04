@@ -4189,6 +4189,56 @@ public enum OriginalMapArchiveRepairCatalog {
     /// name is intentionally unresolved.
     public static let loadCallbackEligibilityFieldOffset: Int = 0x04
 
+    /// Existing-object map-load/revalidation passes call vtable `+0xF8`
+    /// (`FUN_004E1E40` and the main setup wrapper `FUN_00534BF0`).  The
+    /// Qin-relevant vtables inspected in the canonical EN/CH images all point
+    /// at the same pure predicate: `xor eax,eax; cmp word [ecx+0x1C],0;
+    /// setg al; ret`.  This is evidence metadata only; it is not a provider
+    /// registration or archive-specialization hook.
+    public static let existingObjectRevalidationVTableOffset: UInt32 = 0xF8
+    public static let existingObjectRevalidationCallbackAddress: UInt32 = 0x00416A90
+    public static let existingObjectRevalidationStateWordOffset: Int = 0x1C
+    public static let existingObjectRevalidationRequiresPositiveStateWord = true
+
+    public struct ExistingObjectRevalidationVTableDescriptor: Sendable, Hashable, Codable {
+        public let label: String
+        public let vtableAddress: UInt32
+        public let callbackAddress: UInt32
+
+        public init(label: String, vtableAddress: UInt32, callbackAddress: UInt32) {
+            self.label = label
+            self.vtableAddress = vtableAddress
+            self.callbackAddress = callbackAddress
+        }
+    }
+
+    /// Vtable words read directly from both canonical PE images.  The list is
+    /// intentionally limited to classes which participate in the Qin map,
+    /// placement, or provider/venue catalogs already recorded here.
+    public static let existingObjectRevalidationVTableDescriptors: [ExistingObjectRevalidationVTableDescriptor] = [
+        .init(label: "Building", vtableAddress: 0x007AB59C, callbackAddress: existingObjectRevalidationCallbackAddress),
+        .init(label: "HouseBldg", vtableAddress: 0x007ABA38, callbackAddress: existingObjectRevalidationCallbackAddress),
+        .init(label: "Well", vtableAddress: 0x007B5EB4, callbackAddress: existingObjectRevalidationCallbackAddress),
+        .init(label: "Herbalist", vtableAddress: 0x007B6114, callbackAddress: existingObjectRevalidationCallbackAddress),
+        .init(label: "Acupuncture", vtableAddress: 0x007B6374, callbackAddress: existingObjectRevalidationCallbackAddress),
+        .init(label: "Common/Grand Market", vtableAddress: 0x007B6F3C, callbackAddress: existingObjectRevalidationCallbackAddress),
+        .init(label: "Entertainment Area", vtableAddress: 0x007AD878, callbackAddress: existingObjectRevalidationCallbackAddress),
+        .init(label: "Music School", vtableAddress: 0x007ACEDC, callbackAddress: existingObjectRevalidationCallbackAddress),
+        .init(label: "Acrobat School", vtableAddress: 0x007AD140, callbackAddress: existingObjectRevalidationCallbackAddress),
+        .init(label: "Drama School", vtableAddress: 0x007AD3A4, callbackAddress: existingObjectRevalidationCallbackAddress),
+        .init(label: "Laborers' Camp", vtableAddress: 0x007B4FF8, callbackAddress: existingObjectRevalidationCallbackAddress),
+        .init(label: "Residential Wall", vtableAddress: 0x007AAAB8, callbackAddress: existingObjectRevalidationCallbackAddress),
+        .init(label: "Residential Gate", vtableAddress: 0x007AAFB0, callbackAddress: existingObjectRevalidationCallbackAddress),
+    ]
+
+    public static func existingObjectRevalidationDescriptor(
+        forVTableAddress vtableAddress: UInt32
+    ) -> ExistingObjectRevalidationVTableDescriptor? {
+        existingObjectRevalidationVTableDescriptors.first {
+            $0.vtableAddress == vtableAddress
+        }
+    }
+
     public static func invokesLoadCallback(eligibilityByte: UInt8) -> Bool {
         eligibilityByte != 0
     }
