@@ -7218,6 +7218,60 @@ field offsets/lengths, reset behavior, fallback version, and EN/CH parity;
 **unknown** for record semantics, archive-side specialization, provider
 registry assignment, routing, and settlement.
 
+## 2026-09-05 Entertainment-school shared state callbacks remain raw
+
+The three school vtables expose one shared state pair that was not previously
+represented in the Native research catalog.  Direct little-endian reads from
+the canonical EN image resolve `+0x90` to `FUN_0048ADC0 @ 0x48ADC0` and
+`+0x9C` to `FUN_0048AE30 @ 0x48AE30` for Music School (vtable
+`0x007ACEDC`), Acrobat School (`0x007AD140`), and Drama School
+(`0x007AD3A4`).  The EN/CH function slices are byte-identical: `0x48ADC0`
+(`112` bytes, SHA-256
+`bdd8564fd78b56e8975f94d47c550ff77bbdd3800e414b121735e6b0d247801f`),
+`0x48AE30` (`160` bytes, SHA-256
+`376097a620cd0bf08f3c46f2d6f14c7b99702d1cc7313aee9b3e46febf7e5c26`), and
+`0x48AED0` (`80` bytes, SHA-256
+`23299b37fc57b84052619e9a0bd89b8ba0b7ee3d896bdb7dcecba636d75f2538`).
+The corresponding `compare-report.tsv` rows are `identical`.
+
+`FUN_0048ADC0` obtains a state object through the school's virtual `+0x1E8`
+accessor and writes zero to raw word offsets `+0x4E`, `+0x50`, `+0x52`,
+`+0x54`, then zeroes byte offsets `+0x5D`, `+0x5E`, and `+0x5F`.
+`FUN_0048AE30` reads those three bytes, decrements each non-zero byte once,
+counts how many were non-zero before decrement, stores that count at byte
+`+0x5C`, and calls `FUN_0051CCA0 @ 0x51CCA0`.  The latter updates global
+model-indexed counters or appends the provider's raw `+0x2D` index to a
+bounded ten-entry list depending on `FUN_005E1720`, then validates and clears
+an invalid parent link at `+0x32`; these are raw registration side effects,
+not a recovered school-to-house settlement rule.  The school save callback
+`FUN_0048AED0` delegates to the common serializer and normalizes stream
+version `1` on the non-load branch; its EN/CH slice is included above to keep
+the shared callback family explicit.
+
+`EntertainmentSchoolStateDescriptor` and
+`testEntertainmentSchoolStateCallbacksShareRawResetAndDecayLayout` record
+the three authored model IDs (`211…213`), vtables, callback slots, accessor
+offset, raw reset layout, total-byte offset, and global update address.  No
+runtime school state is synthesized from Qin generic archive rows.
+
+This is **confirmed** for the shared vtable slots, reset/decrement order,
+raw offsets, global update call, and EN/CH parity.  The field meanings,
+scheduler cadence, archive specialization, provider registry ownership,
+route/collision, and school/house settlement remain **unknown**; Qin
+entertainment stays fail-closed.
+
+**Sources:** direct canonical EN/CH vtable words at
+`0x007ACEDC/+0x90,+0x9C`, `0x007AD140/+0x90,+0x9C`, and
+`0x007AD3A4/+0x90,+0x9C`; `local/source/split-merged/code/0x040000/`
+`FUN_0048adc0.c`, `FUN_0048ae30.c`, `FUN_0048aed0.c`,
+`FUN_0048a8e0.c`, `FUN_0048a900.c`, `FUN_0048a920.c`; `FUN_0051cca0.c`;
+`local/source/compare-report.tsv`; `Sources/EmperorCore/HousingEvolution.swift`;
+and `testEntertainmentSchoolStateCallbacksShareRawResetAndDecayLayout`.
+
+**Evidence class:** **confirmed** for vtable dispatch, callback bodies,
+offsets, and parity; **unknown** for semantics and every Qin archive/live
+projection edge.
+
 ## 2026-09-05 Entertainment runtime-class registration thunks are separate from map loading
 
 The executable also exposes one accessor and one registration thunk for each

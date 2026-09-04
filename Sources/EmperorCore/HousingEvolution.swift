@@ -2538,6 +2538,56 @@ public enum OriginalResidentialServiceCatalog {
         ),
     ]
 
+    /// Shared state callbacks installed by the three entertainment-school
+    /// vtables.  The offsets are intentionally raw: the executable's field
+    /// meanings are not recovered, so this descriptor must not be treated as
+    /// a school staffing or household-settlement implementation.
+    public struct EntertainmentSchoolStateDescriptor: Sendable, Hashable, Codable {
+        public let schoolModelIDs: [Int]
+        public let vtableAddresses: [UInt32]
+        public let resetCallbackAddress: UInt32
+        public let decayCallbackAddress: UInt32
+        public let stateAccessorMethodOffset: Int
+        public let resetWordOffsets: [Int]
+        public let resetByteOffsets: [Int]
+        public let totalByteOffset: Int
+        public let globalUpdateAddress: UInt32
+
+        public init(
+            schoolModelIDs: [Int],
+            vtableAddresses: [UInt32],
+            resetCallbackAddress: UInt32,
+            decayCallbackAddress: UInt32,
+            stateAccessorMethodOffset: Int,
+            resetWordOffsets: [Int],
+            resetByteOffsets: [Int],
+            totalByteOffset: Int,
+            globalUpdateAddress: UInt32
+        ) {
+            self.schoolModelIDs = schoolModelIDs
+            self.vtableAddresses = vtableAddresses
+            self.resetCallbackAddress = resetCallbackAddress
+            self.decayCallbackAddress = decayCallbackAddress
+            self.stateAccessorMethodOffset = stateAccessorMethodOffset
+            self.resetWordOffsets = resetWordOffsets
+            self.resetByteOffsets = resetByteOffsets
+            self.totalByteOffset = totalByteOffset
+            self.globalUpdateAddress = globalUpdateAddress
+        }
+    }
+
+    public static let entertainmentSchoolStateDescriptor = EntertainmentSchoolStateDescriptor(
+        schoolModelIDs: [211, 212, 213],
+        vtableAddresses: [0x007ACEDC, 0x007AD140, 0x007AD3A4],
+        resetCallbackAddress: 0x0048ADC0,
+        decayCallbackAddress: 0x0048AE30,
+        stateAccessorMethodOffset: 0x1E8,
+        resetWordOffsets: [0x4E, 0x50, 0x52, 0x54],
+        resetByteOffsets: [0x5D, 0x5E, 0x5F],
+        totalByteOffset: 0x5C,
+        globalUpdateAddress: 0x0051CCA0
+    )
+
     public static func entertainmentVenueLifecycleDescriptor(
         forVenueModelID venueModelID: Int
     ) -> EntertainmentVenueLifecycleDescriptor? {

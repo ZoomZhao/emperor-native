@@ -6741,6 +6741,23 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(descriptor.unsupportedVersionFallback, 5)
     }
 
+    func testEntertainmentSchoolStateCallbacksShareRawResetAndDecayLayout() {
+        let descriptor = OriginalResidentialServiceCatalog
+            .entertainmentSchoolStateDescriptor
+        XCTAssertEqual(descriptor.schoolModelIDs, [211, 212, 213])
+        XCTAssertEqual(
+            descriptor.vtableAddresses,
+            [0x007ACEDC, 0x007AD140, 0x007AD3A4]
+        )
+        XCTAssertEqual(descriptor.resetCallbackAddress, 0x0048ADC0)
+        XCTAssertEqual(descriptor.decayCallbackAddress, 0x0048AE30)
+        XCTAssertEqual(descriptor.stateAccessorMethodOffset, 0x1E8)
+        XCTAssertEqual(descriptor.resetWordOffsets, [0x4E, 0x50, 0x52, 0x54])
+        XCTAssertEqual(descriptor.resetByteOffsets, [0x5D, 0x5E, 0x5F])
+        XCTAssertEqual(descriptor.totalByteOffset, 0x5C)
+        XCTAssertEqual(descriptor.globalUpdateAddress, 0x0051CCA0)
+    }
+
     func testEntertainmentAreaSelectionPreservesRotatingVectorOrderAndGates() {
         let providers = [
             OriginalResidentialServiceCatalog.EntertainmentAreaSelectionInput(
