@@ -1960,6 +1960,73 @@ public enum OriginalMarketProviderSelectionScore {
     }
 }
 
+/// One raw provider candidate collected by `FUN_00541220 @ 0x541220` for a
+/// non-primary resource group. The executable keeps the candidate's source
+/// identity (`p[0x2D]`, object offset `+0xB4`) beside the map-cell index used
+/// to read `DAT_01391FE0`; neither field is assigned a Native commodity or
+/// warehouse meaning here.
+public struct OriginalMarketProviderCandidate: Sendable, Hashable, Codable {
+    public let sourceIdentity: Int
+    public let mapCellIndex: Int
+    public let floodValue: Int
+
+    public init(sourceIdentity: Int, mapCellIndex: Int, floodValue: Int) {
+        self.sourceIdentity = sourceIdentity
+        self.mapCellIndex = mapCellIndex
+        self.floodValue = floodValue
+    }
+}
+
+/// Result of the source's per-resource candidate reduction. The raw loop
+/// starts with a `9999` distance sentinel, admits only positive flood values
+/// strictly below that sentinel, and updates only on a strict improvement;
+/// therefore equal distances retain the first collected candidate. This
+/// helper intentionally covers the `i > 0` groups only: primary group `i == 0`
+/// dispatches to the unresolved `FUN_00544480` helper and has a distinct
+/// selection contract.
+public struct OriginalMarketProviderCandidateSelection: Sendable, Hashable, Codable {
+    public let candidateOrdinal: Int
+    public let sourceIdentity: Int
+    public let floodValue: Int
+
+    public init(candidateOrdinal: Int, sourceIdentity: Int, floodValue: Int) {
+        self.candidateOrdinal = candidateOrdinal
+        self.sourceIdentity = sourceIdentity
+        self.floodValue = floodValue
+    }
+}
+
+public enum OriginalMarketProviderCandidateReduction {
+    public static let sourceAddress: UInt32 = 0x00541220
+    public static let floodTableAddress: UInt32 = 0x01391FE0
+    public static let sourceIdentityOffset: UInt32 = 0xB4
+    public static let distanceSentinel = 9_999
+
+    /// Selects the source candidate using the exact strict-minimum loop from
+    /// `FUN_00541220`. `candidateOrdinal` is zero-based in the supplied
+    /// collection, while the executable's scratch index is one-based.
+    public static func select(
+        _ candidates: [OriginalMarketProviderCandidate]
+    ) -> OriginalMarketProviderCandidateSelection? {
+        var selected: OriginalMarketProviderCandidateSelection?
+        var bestFloodValue = distanceSentinel
+
+        for (ordinal, candidate) in candidates.enumerated() {
+            guard candidate.floodValue > 0,
+                  candidate.floodValue < bestFloodValue else {
+                continue
+            }
+            bestFloodValue = candidate.floodValue
+            selected = .init(
+                candidateOrdinal: ordinal,
+                sourceIdentity: candidate.sourceIdentity,
+                floodValue: candidate.floodValue
+            )
+        }
+        return selected
+    }
+}
+
 /// The cMarket `+0x25C` readiness predicate (`FUN_005D4900`). The caller
 /// supplies values read from the selected provider container: the slot count,
 /// the number of records for which `FUN_004B04F0` returned false, the matching

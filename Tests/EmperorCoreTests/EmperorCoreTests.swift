@@ -10961,6 +10961,35 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testOriginalMarketProviderCandidateReductionPreservesStrictMinimumAndTies() {
+        let selected = OriginalMarketProviderCandidateReduction.select([
+            .init(sourceIdentity: 101, mapCellIndex: 10, floodValue: 0),
+            .init(sourceIdentity: 102, mapCellIndex: 11, floodValue: 12),
+            .init(sourceIdentity: 103, mapCellIndex: 12, floodValue: 12),
+            .init(sourceIdentity: 104, mapCellIndex: 13, floodValue: 9_999),
+            .init(sourceIdentity: 105, mapCellIndex: 14, floodValue: -1),
+            .init(sourceIdentity: 106, mapCellIndex: 15, floodValue: 4)
+        ])
+
+        XCTAssertEqual(selected?.candidateOrdinal, 5)
+        XCTAssertEqual(selected?.sourceIdentity, 106)
+        XCTAssertEqual(selected?.floodValue, 4)
+
+        let firstTie = OriginalMarketProviderCandidateReduction.select([
+            .init(sourceIdentity: 201, mapCellIndex: 20, floodValue: 7),
+            .init(sourceIdentity: 202, mapCellIndex: 21, floodValue: 7)
+        ])
+        XCTAssertEqual(firstTie?.sourceIdentity, 201)
+
+        XCTAssertNil(
+            OriginalMarketProviderCandidateReduction.select([
+                .init(sourceIdentity: 301, mapCellIndex: 30, floodValue: 0),
+                .init(sourceIdentity: 302, mapCellIndex: 31, floodValue: 9_999),
+                .init(sourceIdentity: 303, mapCellIndex: 32, floodValue: -4)
+            ])
+        )
+    }
+
     func testOriginalMarketProviderKeyAvailabilityPreservesDivisibilityAndCapacityGates() {
         XCTAssertFalse(
             OriginalMarketProviderKeyAvailability.isAvailable(

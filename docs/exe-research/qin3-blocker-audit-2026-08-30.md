@@ -6961,3 +6961,37 @@ executable SHA-256
 signed-short writes, zero-heading return, and EN/CH parity; **unknown** for
 the vtable cache-address producer and every downstream road, provider,
 coverage, and settlement interpretation.
+
+## 2026-09-05 cMarket provider reduction keeps positive flood minima and first ties
+
+The per-resource reduction in `FUN_00541220 @ 0x541220` is now isolated as a
+pure raw contract for resource groups `i > 0`. After candidate collection,
+the source initializes a distance sentinel of `9999` and scans the group's
+candidate map-cell indices in collection order. It reads
+`DAT_01391FE0[mapCell]`, admits only values strictly greater than zero and
+strictly below the current sentinel, and stores the corresponding source
+identity from the candidate's `+0xB4` field. Equal flood values do not replace
+the prior candidate. If no value passes, that group's count is cleared and no
+source is returned. The primary group `i == 0` dispatches to
+`FUN_00544480` and remains a distinct unresolved reduction.
+
+`OriginalMarketProviderCandidateReduction.select(...)` preserves this
+strict-minimum/first-tie rule with explicit raw source identity, map-cell, and
+flood-value inputs. It is research-only: the candidate object's vtable
+admission, map-cache producer, provider registry, route construction, and
+household settlement are still unresolved, so Qin campaign market behavior
+remains fail-closed.
+
+**Sources:** canonical English executable SHA-256
+`8a6d2df1015cb75d797546d117da5f82b86fd08726090c2a13d853b9009d6753`, Chinese
+executable SHA-256
+`dbdeca1ec2720f2387e1673bfbb901e9bad832179355ea897cfa7536e17ac15a`,
+`local/source/split-merged/code/0x050000/FUN_00541220.c`,
+`local/source/compare-report.tsv` row `0x541220`, and
+`Sources/EmperorCore/MarketSimulation.swift` with
+`testOriginalMarketProviderCandidateReductionPreservesStrictMinimumAndTies`.
+
+**Evidence class:** **confirmed** for the per-group sentinel, positive/strict
+comparison, collection-order ties, source-identity field, and primary-group
+split; **unknown** for the primary helper, candidate admission producers,
+cache projection, provider registration, routing, and settlement.
