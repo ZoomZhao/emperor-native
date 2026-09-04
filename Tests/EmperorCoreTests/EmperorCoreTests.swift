@@ -6444,6 +6444,7 @@ final class EmperorCoreTests: XCTestCase {
             XCTAssertEqual(descriptor.providerVTableAddress, expected.1)
             XCTAssertEqual(descriptor.slotOffset, 0x200)
             XCTAssertEqual(descriptor.targetAddress, expected.2)
+            XCTAssertEqual(descriptor.callbackReturnValue, 1)
             XCTAssertEqual(descriptor.outputEnvelopes.count, expected.3.count)
             for (envelope, expectedEnvelope) in zip(descriptor.outputEnvelopes, expected.3) {
                 XCTAssertEqual(envelope.objectWord2EIsNonZero, expectedEnvelope.0)

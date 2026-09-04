@@ -1220,6 +1220,9 @@ public enum OriginalResidentialServiceCatalog {
         public let slotOffset: Int
         public let targetAddress: UInt32
         public let targetIndexedInCorpus: Bool
+        /// Direct PE callbacks return `1` after writing an envelope.  This is
+        /// a raw return value, not a Native success/coverage decision.
+        public let callbackReturnValue: UInt8
         /// Raw direct-PE output envelopes.  These are not semantic mappings
         /// and must not be consumed as capacity, quality, figure, radius, or
         /// coverage values until an indexed caller proves that interpretation.
@@ -1231,6 +1234,7 @@ public enum OriginalResidentialServiceCatalog {
             slotOffset: Int = 0x200,
             targetAddress: UInt32,
             targetIndexedInCorpus: Bool,
+            callbackReturnValue: UInt8 = 1,
             outputEnvelopes: [ProviderVTableSlot200OutputEnvelope] = []
         ) {
             self.providerModelIDs = providerModelIDs
@@ -1238,6 +1242,7 @@ public enum OriginalResidentialServiceCatalog {
             self.slotOffset = slotOffset
             self.targetAddress = targetAddress
             self.targetIndexedInCorpus = targetIndexedInCorpus
+            self.callbackReturnValue = callbackReturnValue
             self.outputEnvelopes = outputEnvelopes
         }
     }
