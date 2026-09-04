@@ -495,6 +495,64 @@ public enum OriginalMarketCStallCategoryCatalog {
     }
 }
 
+/// Explicit inputs to the generic object-admission callback used by
+/// `FUN_004AE220` (`FUN_004271D0 @ 0x4271D0`).  These names intentionally
+/// retain source offsets and callback positions rather than assigning a
+/// provider or inventory meaning to the words.
+public struct OriginalMarketPoolAdmissionInput: Sendable, Hashable, Codable {
+    public let tableCategory: Int
+    public let globalActive: Bool
+    public let objectWord4E: Int
+    public let emptyShopConflict: Bool
+    public let objectWord3C: Int
+    public let specialCategoryConflict: Bool
+    public let callback198Accepted: Bool
+    public let callback78Accepted: Bool
+
+    public init(
+        tableCategory: Int,
+        globalActive: Bool,
+        objectWord4E: Int,
+        emptyShopConflict: Bool,
+        objectWord3C: Int,
+        specialCategoryConflict: Bool,
+        callback198Accepted: Bool,
+        callback78Accepted: Bool
+    ) {
+        self.tableCategory = tableCategory
+        self.globalActive = globalActive
+        self.objectWord4E = objectWord4E
+        self.emptyShopConflict = emptyShopConflict
+        self.objectWord3C = objectWord3C
+        self.specialCategoryConflict = specialCategoryConflict
+        self.callback198Accepted = callback198Accepted
+        self.callback78Accepted = callback78Accepted
+    }
+}
+
+public enum OriginalMarketPoolAdmissionCatalog {
+    public static let sourceAddress: UInt32 = 0x004271D0
+    public static let tableAddress: UInt32 = 0x008235A8
+    public static let tableRowStride = 0x18
+    public static let emptyShopPredicateArgument = 0x3E
+    public static let specialCategoryValues: Set<Int> = [0, 1, 7]
+
+    /// Mirrors the boolean gate order in `FUN_004271D0` without performing
+    /// its source-side writes to object `+0x46` or the out-parameter.
+    public static func accepts(_ input: OriginalMarketPoolAdmissionInput) -> Bool {
+        guard input.tableCategory >= 0, input.tableCategory != 9 else { return false }
+        guard input.globalActive else { return false }
+        guard input.objectWord4E == 0 else { return false }
+        guard !input.emptyShopConflict else { return false }
+        guard input.objectWord3C == 0 else { return false }
+        if specialCategoryValues.contains(input.tableCategory) {
+            guard !input.specialCategoryConflict else { return false }
+        }
+        guard input.callback198Accepted else { return false }
+        return input.callback78Accepted
+    }
+}
+
 /// One raw five-dword row consumed by `FUN_004F19A0 @ 0x4F19A0`.
 /// The executable's table labels are not recovered; keeping the words
 /// positional prevents a guessed inventory/worker interpretation from

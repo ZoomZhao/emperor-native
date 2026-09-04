@@ -10484,6 +10484,86 @@ final class EmperorCoreTests: XCTestCase {
         }
     }
 
+    func testOriginalMarketPoolAdmissionPreservesCStallGateOrder() {
+        let accepted = OriginalMarketPoolAdmissionInput(
+            tableCategory: 2,
+            globalActive: true,
+            objectWord4E: 0,
+            emptyShopConflict: false,
+            objectWord3C: 0,
+            specialCategoryConflict: false,
+            callback198Accepted: true,
+            callback78Accepted: true
+        )
+        XCTAssertTrue(OriginalMarketPoolAdmissionCatalog.accepts(accepted))
+
+        let rejectors: [(String, (OriginalMarketPoolAdmissionInput) -> OriginalMarketPoolAdmissionInput)] = [
+            ("global active", { .init(tableCategory: $0.tableCategory, globalActive: false, objectWord4E: $0.objectWord4E, emptyShopConflict: $0.emptyShopConflict, objectWord3C: $0.objectWord3C, specialCategoryConflict: $0.specialCategoryConflict, callback198Accepted: $0.callback198Accepted, callback78Accepted: $0.callback78Accepted) }),
+            ("object +0x4e", { .init(tableCategory: $0.tableCategory, globalActive: $0.globalActive, objectWord4E: 1, emptyShopConflict: $0.emptyShopConflict, objectWord3C: $0.objectWord3C, specialCategoryConflict: $0.specialCategoryConflict, callback198Accepted: $0.callback198Accepted, callback78Accepted: $0.callback78Accepted) }),
+            ("empty-shop conflict", { .init(tableCategory: $0.tableCategory, globalActive: $0.globalActive, objectWord4E: $0.objectWord4E, emptyShopConflict: true, objectWord3C: $0.objectWord3C, specialCategoryConflict: $0.specialCategoryConflict, callback198Accepted: $0.callback198Accepted, callback78Accepted: $0.callback78Accepted) }),
+            ("object +0x3c", { .init(tableCategory: $0.tableCategory, globalActive: $0.globalActive, objectWord4E: $0.objectWord4E, emptyShopConflict: $0.emptyShopConflict, objectWord3C: 1, specialCategoryConflict: $0.specialCategoryConflict, callback198Accepted: $0.callback198Accepted, callback78Accepted: $0.callback78Accepted) }),
+            ("vtable +0x198", { .init(tableCategory: $0.tableCategory, globalActive: $0.globalActive, objectWord4E: $0.objectWord4E, emptyShopConflict: $0.emptyShopConflict, objectWord3C: $0.objectWord3C, specialCategoryConflict: $0.specialCategoryConflict, callback198Accepted: false, callback78Accepted: $0.callback78Accepted) }),
+            ("vtable +0x78", { .init(tableCategory: $0.tableCategory, globalActive: $0.globalActive, objectWord4E: $0.objectWord4E, emptyShopConflict: $0.emptyShopConflict, objectWord3C: $0.objectWord3C, specialCategoryConflict: $0.specialCategoryConflict, callback198Accepted: $0.callback198Accepted, callback78Accepted: false) }),
+        ]
+        for (label, mutate) in rejectors {
+            let input = mutate(accepted)
+            XCTAssertFalse(
+                OriginalMarketPoolAdmissionCatalog.accepts(input),
+                "source gate \(label) must reject"
+            )
+        }
+    }
+
+    func testOriginalMarketPoolAdmissionAppliesSpecialCategoryConflictOnlyToZeroOneSeven() {
+        for category in [0, 1, 7] {
+            let input = OriginalMarketPoolAdmissionInput(
+                tableCategory: category,
+                globalActive: true,
+                objectWord4E: 0,
+                emptyShopConflict: false,
+                objectWord3C: 0,
+                specialCategoryConflict: true,
+                callback198Accepted: true,
+                callback78Accepted: true
+            )
+            XCTAssertFalse(
+                OriginalMarketPoolAdmissionCatalog.accepts(input),
+                "category \(category) must apply FUN_004AE560 conflict gate"
+            )
+        }
+
+        let categoryEight = OriginalMarketPoolAdmissionInput(
+            tableCategory: 8,
+            globalActive: true,
+            objectWord4E: 0,
+            emptyShopConflict: false,
+            objectWord3C: 0,
+            specialCategoryConflict: true,
+            callback198Accepted: true,
+            callback78Accepted: true
+        )
+        XCTAssertTrue(
+            OriginalMarketPoolAdmissionCatalog.accepts(categoryEight),
+            "category 8 must not call the special-category gate"
+        )
+    }
+
+    func testOriginalMarketPoolAdmissionRejectsNegativeAndNineTableCategories() {
+        for category in [-1, 9] {
+            let input = OriginalMarketPoolAdmissionInput(
+                tableCategory: category,
+                globalActive: true,
+                objectWord4E: 0,
+                emptyShopConflict: false,
+                objectWord3C: 0,
+                specialCategoryConflict: false,
+                callback198Accepted: true,
+                callback78Accepted: true
+            )
+            XCTAssertFalse(OriginalMarketPoolAdmissionCatalog.accepts(input))
+        }
+    }
+
     func testOriginalMarketCStallPoolProjectionPreservesNineRowsAndUntouchedTenthSlot() {
         let records = (0..<9).map { index in
             OriginalMarketCStallPoolRecord(

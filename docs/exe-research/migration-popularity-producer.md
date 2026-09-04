@@ -10499,3 +10499,33 @@ clear workspace, `0x14` stride, callback/flag/amount ordering, primary and
 secondary accumulation, cStall category-2 input, and EN/CH parity; **unknown**
 for callback/amount semantics, word-4 provenance, the 9-versus-10 workspace
 consumer boundary, and all provider/route/house settlement effects.
+
+### 10.120 `FUN_004271D0` admission gates the pool accumulator before any amount is added (confirmed, 2026-09-05)
+
+The `+0x188` callback used by §10.119 is now preserved as an explicit raw
+boolean gate.  `FUN_004271D0 @ 0x004271D0` first reads the table dword at
+`DAT_008235A8 + modelID * 0x18`, writes it to its out-parameter and mirrors
+the low byte to object `+0x46`.  It rejects a negative category or category
+`9`, then requires the global `FUN_00426D10(0)` gate, object word `+0x4E == 0`,
+the virtual `+0xC8(0x3E)` empty-shop conflict to be false, and object word
+`+0x3C == 0`.  For categories `0`, `1`, and `7` only, it additionally rejects
+when `FUN_004AE560(object+0xB4)` reports a conflict.  Finally, both vtable
+`+0x198` and `+0x78` callbacks must accept.
+
+Native mirrors this order in
+`OriginalMarketPoolAdmissionCatalog.accepts(_:)`, with all callback results
+and source-offset words supplied explicitly.  The helper has no object-side
+write and does not claim that any gate is a provider, inventory, or service
+state.  The cStall table evidence in §§10.62/10.119 still gives category `2`
+for Empty Shop and shop models `62` and `64…70`; this gate only establishes
+whether an object may contribute its raw `+0x1B0` amount.
+
+**Sources:** `local/source/split-merged/code/0x040000/FUN_004271D0.c`,
+`FUN_004AE220.c`, `local/source/compare-report.tsv` row `0x4271D0`, and the
+focused `testOriginalMarketPoolAdmission*` regressions in
+`Tests/EmperorCoreTests/EmperorCoreTests.swift`.
+
+**Evidence class:** **confirmed** for table lookup/output, category rejection,
+gate order, category-specific `FUN_004AE560` branch, final callback order, and
+EN/CH parity; **unknown** for the semantic names of every field/callback and
+all provider/route/house settlement effects.
