@@ -6773,6 +6773,10 @@ final class EmperorCoreTests: XCTestCase {
         )
         XCTAssertEqual(descriptor.phase24ThresholdLookupAddress, 0x0044CC50)
         XCTAssertEqual(descriptor.phase24ThresholdFieldIndex, 10)
+        XCTAssertEqual(
+            descriptor.phase24ThresholdValuesByModelID,
+            [211: 0, 212: 0, 213: 0]
+        )
     }
 
     func testEntertainmentAreaSelectionPreservesRotatingVectorOrderAndGates() {

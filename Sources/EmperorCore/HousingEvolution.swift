@@ -2557,6 +2557,7 @@ public enum OriginalResidentialServiceCatalog {
         public let phase24ActionCallbackAddresses: [UInt32]
         public let phase24ThresholdLookupAddress: UInt32
         public let phase24ThresholdFieldIndex: Int
+        public let phase24ThresholdValuesByModelID: [Int: Int]
 
         public init(
             schoolModelIDs: [Int],
@@ -2572,7 +2573,8 @@ public enum OriginalResidentialServiceCatalog {
             phase24GuardCallbackAddress: UInt32,
             phase24ActionCallbackAddresses: [UInt32],
             phase24ThresholdLookupAddress: UInt32,
-            phase24ThresholdFieldIndex: Int
+            phase24ThresholdFieldIndex: Int,
+            phase24ThresholdValuesByModelID: [Int: Int]
         ) {
             self.schoolModelIDs = schoolModelIDs
             self.vtableAddresses = vtableAddresses
@@ -2588,6 +2590,7 @@ public enum OriginalResidentialServiceCatalog {
             self.phase24ActionCallbackAddresses = phase24ActionCallbackAddresses
             self.phase24ThresholdLookupAddress = phase24ThresholdLookupAddress
             self.phase24ThresholdFieldIndex = phase24ThresholdFieldIndex
+            self.phase24ThresholdValuesByModelID = phase24ThresholdValuesByModelID
         }
     }
 
@@ -2605,7 +2608,8 @@ public enum OriginalResidentialServiceCatalog {
         phase24GuardCallbackAddress: 0x0051CE70,
         phase24ActionCallbackAddresses: [0x004E1C20, 0x004E1C20],
         phase24ThresholdLookupAddress: 0x0044CC50,
-        phase24ThresholdFieldIndex: 10
+        phase24ThresholdFieldIndex: 10,
+        phase24ThresholdValuesByModelID: [211: 0, 212: 0, 213: 0]
     )
 
     public static func entertainmentVenueLifecycleDescriptor(

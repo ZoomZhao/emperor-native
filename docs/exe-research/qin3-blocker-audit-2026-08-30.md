@@ -7406,3 +7406,29 @@ and `testEntertainmentSchoolsSharePhase24ProviderUpdateCallback`.
 dispatch order, threshold lookup call, shared guard/no-op bodies, and EN/CH
 parity; **unknown** for provider-vector ownership, appeal-buffer production,
 archive specialization, registry projection, route/collision, and settlement.
+
+### Phase-0x24 school threshold is zero in authored model data
+
+The shared callback does not by itself imply a school-state mutation. Its
+first branch is `if (FUN_0044CC50(modelID, 10) > 0)`. The authored
+`GameData/Model/EmperorBuildingModels.txt` rows give field 10 (`Evolve
+Desirability`) as `0` for all three school models:
+
+| model | authored row | field 10 |
+| ---: | --- | ---: |
+| 211 Music School | `EmperorBuildingModels.txt:295` | `0` |
+| 212 Acrobat School | `EmperorBuildingModels.txt:296` | `0` |
+| 213 Drama School | `EmperorBuildingModels.txt:297` | `0` |
+
+Consequently, for these authored school rows `FUN_0051CEC0` returns before
+calling `+0x21C`, `+0x220`, or the trailing `+0x100` callback. This is a
+confirmed data-gated no-op for the phase-0x24 school path, not a recovered
+music-coverage writer. `EntertainmentSchoolStateDescriptor` records the
+three zero thresholds and its regression locks them. The Qin music bridge
+must therefore continue to rely only on separately recovered figure/coverage
+paths; provider registry, archive specialization, and school-to-house
+settlement remain unknown.
+
+**Evidence class:** **confirmed** for the threshold branch and authored field
+values; **unknown** for any later mutation of the appeal input or indirect
+school coverage projection.
