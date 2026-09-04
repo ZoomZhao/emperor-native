@@ -2675,12 +2675,12 @@ The enclosing explicit-object factory is also now closed. `Creating @
 0x42D540` calls `FUN_0042D360`, whose class dispatch reaches
 `FUN_0051C660 @ 0x51C660`; its `FUN_005D36E0 @ 0x5D36E0` predicate recognizes
 the shared trade/market model set `{0x35,0x36,0x38,0x3A,0x3B,0x3C}`. The
-market-family branch enters `FUN_005D3580 @ 0x5D3580`, which constructs
-through `FUN_00543450 @ 0x543450` and installs the same vtable `0x007B6F3C`;
-inside that constructor, model `0x3C` selects the Grand-specific five-slot
-layout branch while the other five IDs use the alternate branch. This proves
-that an explicit `Creating(59/60, ...)` action can reach the cMarket-family
-construction path; it does not change the map-load result because
+market-family branch enters `FUN_005D3580 @ 0x5D3580`, which first applies
+`FUN_00543D90 @ 0x543D90`; only `0x3B`/`0x3C` then construct through
+`FUN_00543450 @ 0x543450` and install vtable `0x007B6F3C`. Inside that
+constructor, model `0x3C` selects the Grand-specific five-slot/layout branch.
+This proves that an explicit `Creating(59/60, ...)` action can reach the
+cMarket construction path; it does not change the map-load result because
 `FUN_0052F030` never calls `Creating` for those model IDs under its recovered
 whitelist.
 
