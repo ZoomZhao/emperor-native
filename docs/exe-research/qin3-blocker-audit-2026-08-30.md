@@ -7694,11 +7694,13 @@ callback.  The separate accessor used by the venue manager is now also
 bounded: `FUN_0048A340` returns the global object at `DAT_00C702C0`,
 `FUN_0048F140` passes that pointer as `this` to `FUN_0048A420`, and
 `FUN_00490230` reads that object's vector begin/end (`+0x4/+0x8`) while
-scanning Entertainment Area objects (`+0x14 == 0x47`).  The provider cleanup
+scanning Entertainment Area objects (`+0x14 == 0x47`).  The registration
 edge is equally direct: `FUN_0048B6D0` gets the same `DAT_00C702C0` object and
-calls `FUN_00490300`, whose `FUN_005F01F0` erase path removes the provider
-pointer from that vector.  These consumers read or remove existing objects;
-none contains insertion of a provider from a generic archive row.  The
+calls `FUN_00490300`, whose `FUN_005F01F0 → FUN_005C1670` path appends the
+provider pointer to that vector.  The matching cleanup method is
+`FUN_0048B6B0 → FUN_005F4F20`, which searches and erases the provider pointer.
+These callbacks register or remove already-created objects; none contains
+insertion of a provider from a generic archive row.  The
 EN/CH compare rows for `0x42D360`, `0x42D540`, `0x51C660`,
 `0x51C620`, `0x52F030`, `0x48A800`, `0x48B560`, and the provider constructors
 are `identical`.
@@ -7707,12 +7709,12 @@ This closes the direct factory/vector boundary (**confirmed**): a serialized
 Qin `Building` reaches a specialized entertainment provider only if an
 explicit caller supplies a school or venue model ID to `FUN_0042D360`; the
 ordinary post-load vector pass supplies no such ID.  The `FUN_00490230`
-container owner and its erase-on-provider-cleanup edge are now identified, but
-the vector's insertion/population path is still not recovered and an
-unindexed table-driven replacement elsewhere is not excluded.  Provider
-registry assignment, route/collision, coverage, and house settlement therefore
-remain **unknown**, and Native keeps Qin music/acrobat/drama construction and
-live figures fail-closed.
+container owner and its append/erase lifecycle are now identified, but the
+archive-to-venue construction trigger and any unindexed table-driven
+replacement elsewhere are not recovered.  Provider registry assignment from
+Qin archives, route/collision, coverage, and house settlement therefore remain
+**unknown**, and Native keeps Qin music/acrobat/drama construction and live
+figures fail-closed.
 
 **Sources:**
 `local/source/split-merged/code/0x040000/FUN_0042d360.c`,
@@ -7727,10 +7729,10 @@ live figures fail-closed.
 
 **Evidence class:** **confirmed** for the explicit factory call chain,
 specialized ID gates, object-vector slot write, post-load whitelist boundary,
-`DAT_00C702C0` vector owner and cleanup edge, consumer scans, and EN/CH
-parity; **unknown** for vector insertion/population, indirect
-replacement/table consumers, provider registration timing, route/collision,
-and settlement.
+`DAT_00C702C0` vector owner, append/erase lifecycle, consumer scans, and EN/CH
+parity; **unknown** for Qin archive-to-venue construction, indirect
+replacement/table consumers, provider registration timing relative to map
+load, route/collision, and settlement.
 
 ## 2026-09-05 Complete direct-call census for the entertainment manager getter
 
@@ -7750,18 +7752,19 @@ The call-site contexts classify as follows:
 | `0x406AD6`, `0x406B6A`, `0x48E93F`, `0x48F183` | pass as `this` to manager scans (`0x48A6B0`, `0x48A420`) | direct PE call-site bytes and split bodies |
 | `0x42D330`, `0x42D8AD` | pass as `this` to vector reset/clear (`0x42DCA0`/`0x42DC80`) | direct PE call-site bytes; map reset/load callers |
 | `0x48AB05` | pass as `this` to venue provider selection `0x48A520` | direct PE venue-FSM body |
-| `0x48B68B`, `0x48B6B9`, `0x48B6D9` | pass as `this` to provider/object erase paths (`0x490300` or `0x5F4F20`) | direct PE destructor/cleanup bodies |
+| `0x48B68B` (`FUN_0048B670`) and `0x48B6D9` (`FUN_0048B6D0`) | pass as `this` to manager append `0x490300 → 0x490310 → 0x5F01F0` | direct PE registration/load/placement bodies |
+| `0x48B6B9` (`FUN_0048B6B0`) | pass as `this` to manager erase `0x5F4F20 → 0x51B820` | direct PE cleanup body |
 | `0x4D1BC9` | pass as `this` to Theatre Pavilion chooser `0x48A350` | direct PE venue-manager body |
 
-No direct getter call is followed by a vector insertion helper or a
-provider-specific `Creating(...)` call.  This is a **confirmed negative** for
-a direct `FUN_0048A340`-mediated provider-vector population edge, stronger than
-the split-corpus-only caller list.  It does not rule out a caller that obtains
-the same vector through another alias, a data-table dispatch, or an indirect
-constructor hook; those indirect consumers remain **unknown**.  The raw scan
-therefore narrows, but does not remove, the provider registry/population
-blocker.  Native keeps Qin entertainment provider projection and venue figures
-fail-closed.
+Two getter call sites are therefore confirmed append paths, and one is the
+matching erase path.  The direct-call census closes the manager vector's
+registration lifecycle; it is a **confirmed negative** only for a direct
+getter-mediated archive-specific `Creating(...)` call.  It does not identify
+which caller first constructs a venue for a Qin archive row, nor does it rule
+out a caller that obtains the same vector through another alias, a data-table
+dispatch, or an indirect constructor hook.  Qin archive projection, route,
+coverage, and settlement remain blocked, so Native keeps Qin entertainment
+provider projection and venue figures fail-closed.
 
 **Sources:** canonical EN/CH PE `.text` direct-call scans; call-site slices at
 the eleven addresses above; `FUN_0048A340.c`, `FUN_0048A420.c`,
@@ -7769,7 +7772,8 @@ the eleven addresses above; `FUN_0048A340.c`, `FUN_0048A420.c`,
 `FUN_0048F140.c`, `FUN_0042D250.c`, `FUN_0042D790.c`, and the direct PE body
 at `0x48A9A0`.
 
-**Evidence class:** **confirmed negative** for direct getter-mediated
-population, for the complete EN/CH call-site set and operation classes;
-**unknown** for alternate aliases/table consumers, insertion timing,
-route/collision, coverage, and settlement.
+**Evidence class:** **confirmed** for the complete EN/CH call-site set and the
+append/erase operation classes; **confirmed negative** for a direct
+getter-mediated archive-specific `Creating(...)` path; **unknown** for
+alternate aliases/table consumers, Qin archive construction trigger, load
+ordering, route/collision, coverage, and settlement.
