@@ -12177,6 +12177,74 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testOriginalMarketCreationBoundaryKeepsMapLoadFailClosed() {
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.initializerAddress,
+            0x005428B0
+        )
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.wrapperAddress,
+            0x00544220
+        )
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.eventMethodAddress,
+            0x005451A0
+        )
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.initializerDirectCallerAddresses,
+            [0x00544220]
+        )
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.wrapperDirectCallerAddresses,
+            [0x005451A0]
+        )
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.commonMarketBuildingID,
+            59
+        )
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.grandMarketBuildingID,
+            60
+        )
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.emptyShopBuildingID,
+            62
+        )
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.generatedMarketAreaBuildingID,
+            71
+        )
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.parentChildRegistrySlotsOffset,
+            0x15C
+        )
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.childParentRegistryOffset,
+            0x154
+        )
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.childBayOrdinalOffset,
+            0x150
+        )
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.childPlacementValueOffset,
+            0xA0
+        )
+        XCTAssertTrue(
+            OriginalMarketCreationBoundaryCatalog.createsPlaceholderChildren(
+                explicitCreation: true
+            )
+        )
+        XCTAssertFalse(
+            OriginalMarketCreationBoundaryCatalog.createsPlaceholderChildren(
+                explicitCreation: false
+            )
+        )
+        XCTAssertFalse(
+            OriginalMarketCreationBoundaryCatalog.postLoadSequenceContainsInitializer
+        )
+    }
+
     func testOriginalResidentialRequirementTableMatchesRecoveredPEData() {
         XCTAssertEqual(
             (1...5).compactMap(OriginalResidentialRequirementTable.commodityID),

@@ -2643,6 +2643,47 @@ order and the cache refresh boundary; **unknown** for any indirect/table-driven
 calls, the object-vtable predicates that feed `FUN_005AD440`, and the missing
 Qin provider/house/market settlement projection.
 
+## 2026-09-05 cMarket child registration is an explicit-creation boundary
+
+The market helper's child registration path is now separated from map-load
+rehydration. `FUN_005428B0 @ 0x5428B0` is reached directly through the thin
+wrapper `FUN_00544220 @ 0x544220`, whose only indexed direct caller is
+`FUN_005451A0 @ 0x5451A0`. In `FUN_005428B0`, the third formal is tested as a
+creation-mode byte. When it is non-zero, the function runs the layout
+allocator, creates Empty Shop model `0x3E` (GameData building ID `62`) for
+active helper bays, writes each generated child's parent market registry ID at
+child `+0x154`, its compact bay ordinal at `+0x150`, writes the child registry
+ID into the parent `market + 0x15C[ordinal]`, and finally creates model `0x47`
+(GameData building ID `71`) for the generated market-area object. The child
+placement-time value is copied to `+0xA0`. The zero branch instead obtains
+coordinates from the receiver's virtual helper and does not enter the
+placeholder-creation block.
+
+`FUN_005451A0` confirms the wrapper edge: when its final byte is non-zero it
+resolves the receiver's registry object through `FUN_004AFE60 @ 0x4AFE60`,
+writes the returned short to receiver `+0x62`, then forwards the creation-mode
+byte and coordinates to `FUN_00544220`. This is an object/event creation edge,
+not a generic archive conversion. The direct post-rehydration sequence in
+`FUN_0053D100` contains neither `0x5428B0` nor `0x544220` nor `0x5451A0`; the
+`FUN_0052F030` whitelist also excludes market model IDs `0x3B`/`0x3C`.
+Therefore a Qin generic archive record cannot be promoted to a live cMarket
+with registered Empty Shop/provider children from the recovered map-load path.
+Native records this boundary in `OriginalMarketCreationBoundaryCatalog` and
+keeps Qin provider/settlement fail-closed.
+
+**Sources:** `local/source/split-merged/code/0x050000/FUN_005428B0.c`,
+`FUN_00544220.c`, `FUN_005451A0.c`,
+`local/source/split-merged/code/0x040000/FUN_004AFE60.c`,
+`FUN_0052F030.c`, `FUN_0052F1D0.c`, `FUN_0053D100.c`,
+`GameData/Model/EmperorBuildingModels.txt` rows 59–71, and the identical
+EN/CH rows in `local/source/compare-report.tsv` for `0x5428B0` and `0x5451A0`.
+
+**Evidence class:** **confirmed** for the explicit-mode branch, child model
+IDs, offsets, direct caller chain, and absence from the direct map-load
+sequence; **unknown** for indirect vtable dispatch, the exact event that
+supplies the source layout/coordinates, provider registry population after
+creation, route endpoints, and Qin house/market settlement.
+
 ## 2026-09-03 phase-0x21 entertainment decay keeps provider eligibility explicit (confirmed boundary)
 
 The venue scheduler boundary is now represented alongside the water seam.  In

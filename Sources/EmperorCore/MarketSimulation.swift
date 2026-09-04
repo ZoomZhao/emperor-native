@@ -1388,6 +1388,50 @@ public enum OriginalMarketRuntimeShopBinding {
     }
 }
 
+/// The explicit cMarket creation boundary recovered from
+/// `FUN_005428B0 @ 0x5428B0` and its wrapper
+/// `FUN_00544220 @ 0x544220`.
+///
+/// The executable creates Empty Shop children and writes their registry IDs
+/// into the parent market only when the creation-mode byte is non-zero.  The
+/// post-load sequence (`FUN_0053D100`) does not call this boundary; keeping
+/// that fact explicit prevents a generic Qin archive row from being promoted
+/// into a live market/provider graph by Native.
+public enum OriginalMarketCreationBoundaryCatalog {
+    public static let initializerAddress: UInt32 = 0x005428B0
+    public static let wrapperAddress: UInt32 = 0x00544220
+    public static let eventMethodAddress: UInt32 = 0x005451A0
+
+    public static let commonMarketBuildingID = 59
+    public static let grandMarketBuildingID = 60
+    public static let emptyShopBuildingID = 62
+    public static let generatedMarketAreaBuildingID = 71
+
+    /// Parent `cMarket` registry slots are written at `+0x15C[ordinal]`.
+    public static let parentChildRegistrySlotsOffset = 0x15C
+    /// Generated child objects receive the parent market registry ID at
+    /// `+0x154` and their compact active-bay ordinal at `+0x150`.
+    public static let childParentRegistryOffset = 0x154
+    public static let childBayOrdinalOffset = 0x150
+    /// The generated Empty Shop receives the placement-time value at `+0xA0`.
+    public static let childPlacementValueOffset = 0xA0
+
+    /// `FUN_005428B0` branches on its third formal (`param_3`), represented
+    /// here as the explicit-creation mode byte.
+    public static func createsPlaceholderChildren(explicitCreation: Bool) -> Bool {
+        explicitCreation
+    }
+
+    /// The ordered direct callers recovered from the split corpus.  This is a
+    /// call-site census, not a claim that indirect vtable edges are absent.
+    public static let initializerDirectCallerAddresses: [UInt32] = [wrapperAddress]
+    public static let wrapperDirectCallerAddresses: [UInt32] = [eventMethodAddress]
+
+    /// `FUN_0053D100`'s direct post-rehydration sequence contains no call to
+    /// this market-initialization boundary.
+    public static let postLoadSequenceContainsInitializer = false
+}
+
 /// The requirement-index and threshold tables read by the original
 /// residential commodity predicate (`FUN_00588CB0 @ 0x588CB0`). These are
 /// copied from the hash-matched English/Chinese PE data at
