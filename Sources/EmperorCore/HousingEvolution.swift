@@ -3459,6 +3459,14 @@ public enum OriginalMapArchiveRepairCatalog {
     /// a negative map-load boundary, not a claim that an unindexed indirect
     /// or table-driven dispatch cannot exist.
     public static let dynamicFactoryAddress: UInt32 = 0x0042D360
+    /// Exact direct E8 call instructions found in both canonical PE images;
+    /// the first is the generic `+0x18` conversion caller and the second is
+    /// the explicit create/replace path.  This is a confirmed negative for a
+    /// direct map-loader factory edge, not a claim that an indirect dispatch
+    /// cannot exist.
+    public static let dynamicFactoryDirectCallSiteAddresses: [UInt32] = [
+        0x0042715E, 0x0042D714
+    ]
     public static let dynamicFactoryDirectCallerAddresses: [UInt32] = [
         0x00427150,
         0x0042D540,

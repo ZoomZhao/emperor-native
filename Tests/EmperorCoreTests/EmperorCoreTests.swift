@@ -6660,6 +6660,10 @@ final class EmperorCoreTests: XCTestCase {
             0x0042D360
         )
         XCTAssertEqual(
+            OriginalMapArchiveRepairCatalog.dynamicFactoryDirectCallSiteAddresses,
+            [0x0042715E, 0x0042D714]
+        )
+        XCTAssertEqual(
             OriginalMapArchiveRepairCatalog.dynamicFactoryDirectCallerAddresses,
             [0x00427150, 0x0042D540]
         )
