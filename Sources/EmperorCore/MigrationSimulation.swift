@@ -36,6 +36,22 @@ public enum OriginalMigrationRequestProducerCatalog {
     public static let arrivalAssignmentAddress: UInt32 = 0x004ADA10
     public static let departureAssignmentAddress: UInt32 = 0x004ADC90
 
+    /// Complete direct relative-call sites recovered in both canonical PE
+    /// images.  These are callsite addresses, not an assertion that an
+    /// indirect/table-driven edge does not exist.
+    public static let pressureProducerDirectCallSites: [UInt32] = [
+        0x004AD4C0,
+    ]
+    public static let dailyConsumerDirectCallSites: [UInt32] = [
+        0x004AC3E2,
+    ]
+    public static let arrivalAssignmentDirectCallSites: [UInt32] = [
+        0x004AD4EB, 0x004AD508,
+    ]
+    public static let departureAssignmentDirectCallSites: [UInt32] = [
+        0x004AD52C, 0x004AD544,
+    ]
+
     /// Exact figure/house write edges reached after a request crosses the
     /// source's six-person pending threshold.  These are metadata only: the
     /// popularity producer, object-registry projection, and route/arrival

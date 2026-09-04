@@ -5482,6 +5482,22 @@ final class EmperorCoreTests: XCTestCase {
             0x004ADC90
         )
         XCTAssertEqual(
+            OriginalMigrationRequestProducerCatalog.pressureProducerDirectCallSites,
+            [0x004AD4C0]
+        )
+        XCTAssertEqual(
+            OriginalMigrationRequestProducerCatalog.dailyConsumerDirectCallSites,
+            [0x004AC3E2]
+        )
+        XCTAssertEqual(
+            OriginalMigrationRequestProducerCatalog.arrivalAssignmentDirectCallSites,
+            [0x004AD4EB, 0x004AD508]
+        )
+        XCTAssertEqual(
+            OriginalMigrationRequestProducerCatalog.departureAssignmentDirectCallSites,
+            [0x004AD52C, 0x004AD544]
+        )
+        XCTAssertEqual(
             OriginalMigrationRequestProducerCatalog.arrivalFigureWriterAddress,
             0x004ADE10
         )

@@ -10006,3 +10006,46 @@ registry provenance, route, coverage, and household settlement remain
 **Evidence class:** **confirmed** for vector-slot lookup and the explicit
 `+0xB4` write; **unknown** for archive-to-vector population and all provider/
 house settlement projections.
+
+## 2026-09-04 Direct migration callsite census closes the known producer boundary
+
+Both canonical PE `.text` sections were scanned for every relative `E8` whose
+resolved target is one of the known Qin migration handoff functions.  The EN
+and CH sets are identical:
+
+| target | direct callsites | indexed caller |
+| --- | --- | --- |
+| `FUN_005917E0 @ 0x5917E0` | `0x4AD4C0` | `FUN_004AD4A0 @ 0x4AD4A0` |
+| `FUN_004AD4A0 @ 0x4AD4A0` | `0x4AC3E2` | `FUN_004AC2B0 @ 0x4AC2B0` |
+| `FUN_004ADA10 @ 0x4ADA10` | `0x4AD4EB`, `0x4AD508` | `FUN_004AD4A0` (arrival branches) |
+| `FUN_004ADC90 @ 0x4ADC90` | `0x4AD52C`, `0x4AD544` | `FUN_004AD4A0` (departure branches) |
+
+The callsite bytes match between the two hash-identified builds.  The two
+calls to `FUN_004ADA10` and `FUN_004ADC90` are the small-request threshold and
+immediate-request branches already visible in the indexed
+`FUN_004AD4A0.c`; they are not separate monthly producers.  Likewise,
+`FUN_005917E0` has no second direct gameplay caller: the pressure/request pass
+is entered only from the calendar case-`0x17` consumer.  This is a direct-call
+negative only; an indirect table or virtual edge remains outside the census.
+
+Native records these addresses in
+`OriginalMigrationRequestProducerCatalog` and tests them as immutable research
+metadata.  The result tightens the remaining Qin blocker boundary: once the
+unresolved popularity inputs are available, the known direct handoff order is
+fully identified, but the object-vector/HouseBldg projection, figure route and
+arrival settlement are still unknown.  Automatic migration therefore remains
+fail-closed and no new player-visible behavior is enabled by this census.
+
+**Sources:** canonical `Exe/ghidra/input/EmperorEN.exe` and `EmperorCH.exe`
+complete relative-`E8` scans (image base `0x00400000`); indexed
+`local/source/split-merged/code/0x040000/FUN_004AD4A0.c` and
+`FUN_004AC2B0.c`; `local/source/split-merged/code/0x050000/FUN_005917E0.c`;
+`local/source/compare-report.tsv`; and
+`Sources/EmperorCore/MigrationSimulation.swift` with
+`testOriginalMigrationRequestProducerCatalogMatchesSourceHandoff`.
+
+**Evidence class:** **confirmed** for the complete known direct callsite sets,
+caller identity, branch roles, and EN/CH parity; **confirmed negative** for an
+additional direct pressure/assignment caller; **unknown** for indirect/table
+dispatch, unresolved popularity inputs, object specialization, routing, and
+arrival settlement.
