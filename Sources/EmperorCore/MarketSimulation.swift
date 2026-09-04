@@ -495,6 +495,75 @@ public enum OriginalMarketCStallCategoryCatalog {
     }
 }
 
+/// One raw five-dword row consumed by `FUN_004F19A0 @ 0x4F19A0`.
+/// The executable's table labels are not recovered; keeping the words
+/// positional prevents a guessed inventory/worker interpretation from
+/// leaking into the Native market model.
+public struct OriginalMarketCStallPoolRecord: Sendable, Hashable, Codable {
+    public let sourceWord0: Int
+    public let sourceWord1: Int
+    public let sourceWord2: Int
+    public let sourceWord3: Int
+    public let sourceWord4: Int
+
+    public init(
+        sourceWord0: Int,
+        sourceWord1: Int,
+        sourceWord2: Int,
+        sourceWord3: Int,
+        sourceWord4: Int
+    ) {
+        self.sourceWord0 = sourceWord0
+        self.sourceWord1 = sourceWord1
+        self.sourceWord2 = sourceWord2
+        self.sourceWord3 = sourceWord3
+        self.sourceWord4 = sourceWord4
+    }
+}
+
+/// The two ten-slot arrays built by `FUN_004F19A0` before it calls each cStall
+/// `+0x18C` callback.  These are raw source arrays, not Native stock or labor
+/// values; the cStall callback still consumes them with selectors `1` and `2`.
+public struct OriginalMarketCStallPoolProjection: Sendable, Hashable, Codable {
+    public let firstPool: [Int]
+    public let secondPool: [Int]
+
+    public init(firstPool: [Int], secondPool: [Int]) {
+        self.firstPool = firstPool
+        self.secondPool = secondPool
+    }
+}
+
+public enum OriginalMarketCStallPoolProjectionCatalog {
+    public static let sourceAddress: UInt32 = 0x004F19A0
+    public static let sourceTableAddress: UInt32 = 0x01312144
+    public static let sourceRecordCount = 9
+    public static let sourceRecordStride = 0x14
+    public static let callbackPoolSlotCount = 10
+    public static let callbackSelectors = [1, 2]
+
+    /// Reproduces the raw array preparation in `FUN_004F19A0`.
+    /// For each of the nine fixed rows, the source writes `sourceWord3` to
+    /// the first pool and `sourceWord1 - sourceWord3` to the second only when
+    /// `sourceWord1 < sourceWord0`; otherwise both entries remain zero.  The
+    /// tenth local-array slot is never touched and therefore stays zero.
+    /// This helper intentionally stops before the virtual cStall callback and
+    /// assigns no semantic meaning to either pool.
+    public static func project(
+        records: [OriginalMarketCStallPoolRecord]
+    ) -> OriginalMarketCStallPoolProjection? {
+        guard records.count == sourceRecordCount else { return nil }
+
+        var firstPool = Array(repeating: 0, count: callbackPoolSlotCount)
+        var secondPool = Array(repeating: 0, count: callbackPoolSlotCount)
+        for (index, record) in records.enumerated() where record.sourceWord1 < record.sourceWord0 {
+            firstPool[index] = record.sourceWord3
+            secondPool[index] = record.sourceWord1 - record.sourceWord3
+        }
+        return .init(firstPool: firstPool, secondPool: secondPool)
+    }
+}
+
 /// Raw inputs to the cStall `+0x18C` field producer (`FUN_0051E310`).
 /// `statusCode` is the word written by the receiver's `+0x188` callback;
 /// `selector` and the two pool values are the arguments supplied by

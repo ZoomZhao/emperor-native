@@ -10338,3 +10338,36 @@ migration stays fail-closed.
 stride, pointer store order, and EN/CH parity; **confirmed negative** for this
 edge assigning provider fields or proving Qin archive projection; **unknown**
 for provider registry ownership, route construction, and arrival settlement.
+
+### 10.116 cStall pool arrays are a fixed nine-row projection (confirmed, 2026-09-05)
+
+The input immediately before the cStall `+0x18C` writer is now represented
+without assigning player-facing names to its table words.  The only indexed
+caller of that virtual slot is `FUN_004F19A0 @ 0x4F19A0`.  It walks exactly nine
+five-dword rows beginning at `DAT_01312144` with a `0x14`-byte stride.  For
+row `i`, the source compares row word `1` with row word `0`: when
+`word1 < word0`, it writes row word `3` into local array slot `i` of the first
+pool and `word1 - word3` into the same slot of the second pool; otherwise both
+slots remain zero.  The local arrays are ten dwords long, so slot `9` is never
+touched and remains zero.  After preparation, the caller traverses the current
+object vector twice and invokes each object's virtual `+0x18C` with selectors
+`1` and `2`, passing the first and second pool respectively.
+
+Native records this raw boundary in
+`OriginalMarketCStallPoolProjectionCatalog.project(records:)`, including the
+source address, table address, nine-row count, `0x14` stride, ten-slot output
+shape, and selector order.  The helper stops before the cStall callback and
+therefore does not call the unresolved provider/market path or mutate Native
+inventory.  The table's five words, the two pool meanings, and the subsequent
+provider/house settlement remain **unknown**; Qin market behavior remains
+fail-closed.
+
+**Sources:** `local/source/split-merged/code/0x040000/FUN_004F19A0.c`, its
+`identical` EN/CH comparison row, the direct cStall `+0x18C → 0x51E310` edge,
+and `Sources/EmperorCore/MarketSimulation.swift` with the focused projection
+regressions in `Tests/EmperorCoreTests/EmperorCoreTests.swift`.
+
+**Evidence class:** **confirmed** for the fixed row count, source stride,
+word-level comparison/copy arithmetic, untouched tenth slot, selector order,
+and vector traversal; **unknown** for source-word semantics, pool semantics,
+provider registration, and downstream settlement.

@@ -10463,6 +10463,46 @@ final class EmperorCoreTests: XCTestCase {
         }
     }
 
+    func testOriginalMarketCStallPoolProjectionPreservesNineRowsAndUntouchedTenthSlot() {
+        let records = (0..<9).map { index in
+            OriginalMarketCStallPoolRecord(
+                sourceWord0: 100 + index,
+                sourceWord1: index == 1 ? 4 : 110 + index,
+                sourceWord2: 0x200 + index,
+                sourceWord3: index == 1 ? 3 : index,
+                sourceWord4: index
+            )
+        }
+
+        let projection = OriginalMarketCStallPoolProjectionCatalog.project(records: records)
+        XCTAssertEqual(projection?.firstPool.count, 10)
+        XCTAssertEqual(projection?.secondPool.count, 10)
+        XCTAssertEqual(projection?.firstPool[1], 3)
+        XCTAssertEqual(projection?.secondPool[1], 1)
+        XCTAssertEqual(projection?.firstPool[0], 0)
+        XCTAssertEqual(projection?.secondPool[0], 0)
+        XCTAssertEqual(projection?.firstPool[9], 0)
+        XCTAssertEqual(projection?.secondPool[9], 0)
+
+        XCTAssertNil(
+            OriginalMarketCStallPoolProjectionCatalog.project(records: Array(records.dropLast()))
+        )
+        XCTAssertNil(
+            OriginalMarketCStallPoolProjectionCatalog.project(
+                records: records + [records[0]]
+            )
+        )
+    }
+
+    func testOriginalMarketCStallPoolProjectionExposesSourceBoundary() {
+        XCTAssertEqual(OriginalMarketCStallPoolProjectionCatalog.sourceAddress, 0x004F19A0)
+        XCTAssertEqual(OriginalMarketCStallPoolProjectionCatalog.sourceTableAddress, 0x01312144)
+        XCTAssertEqual(OriginalMarketCStallPoolProjectionCatalog.sourceRecordCount, 9)
+        XCTAssertEqual(OriginalMarketCStallPoolProjectionCatalog.sourceRecordStride, 0x14)
+        XCTAssertEqual(OriginalMarketCStallPoolProjectionCatalog.callbackPoolSlotCount, 10)
+        XCTAssertEqual(OriginalMarketCStallPoolProjectionCatalog.callbackSelectors, [1, 2])
+    }
+
     func testOriginalMarketCStallField44ProducerAppliesRatioAndPoolSelection() {
         let result = OriginalMarketCStallField44Producer.apply(.init(
             callbackAccepted: true,
