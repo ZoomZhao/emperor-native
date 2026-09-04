@@ -7690,22 +7690,29 @@ record into a school or venue.
 The provider consumers confirm that this vector is the shared map-object list,
 not a hidden entertainment-only registration table: `FUN_0048F140` scans
 `FUN_00413B40(1)` and counts active school objects by their `+0x1BC` work
-callback; `FUN_0048A420` uses the separate vector accessor
-`FUN_00490230` to scan Entertainment Area objects (`+0x14 == 0x47`) before
-returning one to the manager.  The two consumers therefore read existing
-objects; neither body contains a provider-registry insertion from a generic
-archive row.  The EN/CH compare rows for `0x42D360`, `0x42D540`, `0x51C660`,
+callback.  The separate accessor used by the venue manager is now also
+bounded: `FUN_0048A340` returns the global object at `DAT_00C702C0`,
+`FUN_0048F140` passes that pointer as `this` to `FUN_0048A420`, and
+`FUN_00490230` reads that object's vector begin/end (`+0x4/+0x8`) while
+scanning Entertainment Area objects (`+0x14 == 0x47`).  The provider cleanup
+edge is equally direct: `FUN_0048B6D0` gets the same `DAT_00C702C0` object and
+calls `FUN_00490300`, whose `FUN_005F01F0` erase path removes the provider
+pointer from that vector.  These consumers read or remove existing objects;
+none contains insertion of a provider from a generic archive row.  The
+EN/CH compare rows for `0x42D360`, `0x42D540`, `0x51C660`,
 `0x51C620`, `0x52F030`, `0x48A800`, `0x48B560`, and the provider constructors
 are `identical`.
 
 This closes the direct factory/vector boundary (**confirmed**): a serialized
 Qin `Building` reaches a specialized entertainment provider only if an
 explicit caller supplies a school or venue model ID to `FUN_0042D360`; the
-ordinary post-load vector pass supplies no such ID.  It does not identify the
-separate `FUN_00490230` container's owner or exclude an unindexed table-driven
-replacement elsewhere.  Provider registry assignment, route/collision,
-coverage, and house settlement therefore remain **unknown**, and Native keeps
-Qin music/acrobat/drama construction and live figures fail-closed.
+ordinary post-load vector pass supplies no such ID.  The `FUN_00490230`
+container owner and its erase-on-provider-cleanup edge are now identified, but
+the vector's insertion/population path is still not recovered and an
+unindexed table-driven replacement elsewhere is not excluded.  Provider
+registry assignment, route/collision, coverage, and house settlement therefore
+remain **unknown**, and Native keeps Qin music/acrobat/drama construction and
+live figures fail-closed.
 
 **Sources:**
 `local/source/split-merged/code/0x040000/FUN_0042d360.c`,
@@ -7720,6 +7727,7 @@ Qin music/acrobat/drama construction and live figures fail-closed.
 
 **Evidence class:** **confirmed** for the explicit factory call chain,
 specialized ID gates, object-vector slot write, post-load whitelist boundary,
-consumer scans, and EN/CH parity; **unknown** for the separate vector-owner
-identity, indirect replacement/table consumers, provider registration timing,
-route/collision, and settlement.
+`DAT_00C702C0` vector owner and cleanup edge, consumer scans, and EN/CH
+parity; **unknown** for vector insertion/population, indirect
+replacement/table consumers, provider registration timing, route/collision,
+and settlement.
