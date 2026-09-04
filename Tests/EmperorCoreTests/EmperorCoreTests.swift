@@ -11392,6 +11392,69 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testOriginalMarketPeddlerValidatorsPreserveEmptyAndClearBranches() {
+        let storage = OriginalMarketPeddlerLinkStorage.self
+        let valid = storage.validateLink(
+            slot: .primaryMarket,
+            storedLink: 12,
+            figureExists: true,
+            figureIsActive: true,
+            figureModelID: 23,
+            acceptedModelIDs: (23, 24),
+            figureParentMarketID: 9,
+            marketRegistryID: 9
+        )
+        XCTAssertEqual(valid, .init(isValid: true, clearsStoredLink: false))
+
+        let emptyPrimary = storage.validateLink(
+            slot: .primaryMarket,
+            storedLink: 0,
+            figureExists: false,
+            figureIsActive: false,
+            figureModelID: 0,
+            acceptedModelIDs: (23, 24),
+            figureParentMarketID: 0,
+            marketRegistryID: 9
+        )
+        XCTAssertEqual(emptyPrimary, .init(isValid: false, clearsStoredLink: false))
+
+        let emptySecond = storage.validateLink(
+            slot: .attachedInfoSecond,
+            storedLink: -1,
+            figureExists: false,
+            figureIsActive: false,
+            figureModelID: 0,
+            acceptedModelIDs: (23, 24),
+            figureParentMarketID: 0,
+            marketRegistryID: 9
+        )
+        XCTAssertEqual(emptySecond, .init(isValid: false, clearsStoredLink: false))
+
+        let staleSecond = storage.validateLink(
+            slot: .attachedInfoSecond,
+            storedLink: 14,
+            figureExists: true,
+            figureIsActive: false,
+            figureModelID: 23,
+            acceptedModelIDs: (23, 24),
+            figureParentMarketID: 9,
+            marketRegistryID: 9
+        )
+        XCTAssertEqual(staleSecond, .init(isValid: false, clearsStoredLink: true))
+
+        let wrongModelThird = storage.validateLink(
+            slot: .attachedInfoThird,
+            storedLink: 16,
+            figureExists: true,
+            figureIsActive: true,
+            figureModelID: 25,
+            acceptedModelIDs: (23, 24),
+            figureParentMarketID: 9,
+            marketRegistryID: 9
+        )
+        XCTAssertEqual(wrongModelThird, .init(isValid: false, clearsStoredLink: true))
+    }
+
     func testOriginalMarketPeddlerWorkerRatioAndStockGateMatchRecoveredArithmetic() {
         XCTAssertEqual(
             OriginalMarketCatalog.peddlerWorkerPercent(

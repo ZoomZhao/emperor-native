@@ -3416,6 +3416,49 @@ public enum OriginalMarketPeddlerLinkStorage {
         }
         return .attachedInfoSecond
     }
+
+    /// Result of one source peddler-link validator. `clearsStoredLink` is
+    /// true only on the branches that write the corresponding short link to
+    /// zero; an already-empty slot is simply rejected without a write.
+    public struct LinkValidationResult: Sendable, Hashable, Codable {
+        public let isValid: Bool
+        public let clearsStoredLink: Bool
+
+        public init(isValid: Bool, clearsStoredLink: Bool) {
+            self.isValid = isValid
+            self.clearsStoredLink = clearsStoredLink
+        }
+    }
+
+    /// Replays `FUN_00429700`, `FUN_00429780`, and `FUN_00429810`'s shared
+    /// figure checks. The two model arguments are the source's accepted
+    /// alternatives; the parent comparison uses the market's raw registry
+    /// value. Object lookup is explicit so an absent registry entry cannot be
+    /// silently treated as a valid figure.
+    public static func validateLink(
+        slot: RegistrationSlot,
+        storedLink: Int,
+        figureExists: Bool,
+        figureIsActive: Bool,
+        figureModelID: Int,
+        acceptedModelIDs: (Int, Int),
+        figureParentMarketID: Int,
+        marketRegistryID: Int
+    ) -> LinkValidationResult {
+        let empty = slot == .primaryMarket || slot == .attachedInfoThird
+            ? storedLink < 1
+            : storedLink <= 0
+        guard !empty else {
+            return .init(isValid: false, clearsStoredLink: false)
+        }
+
+        let valid = figureExists
+            && figureIsActive
+            && (figureModelID == acceptedModelIDs.0
+                || figureModelID == acceptedModelIDs.1)
+            && figureParentMarketID == marketRegistryID
+        return .init(isValid: valid, clearsStoredLink: !valid)
+    }
 }
 
 public struct MarketSquare: Identifiable, Sendable, Hashable, Codable {

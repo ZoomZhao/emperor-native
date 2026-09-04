@@ -6656,3 +6656,31 @@ and `testOriginalMarketPeddlerRegistrationPreservesSourceSlotOrder`.
 **Evidence class:** **confirmed** for branch order, slot offsets, signed link
 tests, and EN/CH parity; **unknown** for provider registration,
 commodity/route projection, and household settlement.
+
+## 2026-09-05 cMarket peddler-link validators preserve slot-specific clearing
+
+The three validators following registration are now represented separately
+from the writer. `FUN_00429700` (market `+0x2E`) rejects a link below `1`, and
+`FUN_00429780` (attached-info `+0x6A`) rejects a link at or below `0`; their
+empty branches return failure without a clear. `FUN_00429810` (attached-info
+`+0x6C`) also rejects below `1` without a clear. For a non-empty link, all
+three require a resolvable figure whose active byte `+0x16` is non-zero, whose
+model byte `+0x12` equals either supplied model argument, and whose parent
+`+0x62` equals the market registry value (`market +0xB4`). Any failed check
+clears that validator's stored short link and returns failure.
+
+`OriginalMarketPeddlerLinkStorage.validateLink` keeps the signed empty-test
+polarity, explicit lookup existence, two-model acceptance, parent comparison,
+and clear-on-stale behavior as a pure result. It does not mutate cMarket,
+resolve a figure registry, or infer commodity/coverage meaning. The Qin
+campaign peddler path therefore remains fail-closed at provider projection,
+route/collision, and house food-quality settlement.
+
+**Sources:** `local/source/split-merged/code/0x040000/FUN_00429700.c`,
+`FUN_00429780.c`, `FUN_00429810.c`, `local/source/compare-report.tsv` rows
+`0x429700`, `0x429780`, and `0x429810`, `Sources/EmperorCore/MarketSimulation.swift`,
+and `testOriginalMarketPeddlerValidatorsPreserveEmptyAndClearBranches`.
+
+**Evidence class:** **confirmed** for slot-specific empty polarity, active/model/
+parent gates, clear-on-stale writes, and EN/CH parity; **unknown** for
+registry population, route, commodity records, and household settlement.
