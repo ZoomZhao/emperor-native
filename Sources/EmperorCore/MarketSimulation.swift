@@ -1398,6 +1398,21 @@ public enum OriginalMarketRuntimeShopBinding {
 /// that fact explicit prevents a generic Qin archive row from being promoted
 /// into a live market/provider graph by Native.
 public enum OriginalMarketCreationBoundaryCatalog {
+    /// `Creating(...)` dispatches through this factory chain before invoking
+    /// the model's `+0x94` initializer.
+    public static let creatingAddress: UInt32 = 0x0042D540
+    public static let factoryAddress: UInt32 = 0x0042D360
+    public static let classDispatchAddress: UInt32 = 0x0051C660
+    public static let marketPredicateAddress: UInt32 = 0x005D36E0
+    public static let marketFactoryAddress: UInt32 = 0x005D3580
+    public static let marketConstructorAddress: UInt32 = 0x00543450
+
+    /// `FUN_005D36E0` recognizes the shared trade/market family; only the
+    /// final two IDs select the cMarket constructor/vtable.
+    public static let tradeAndMarketPredicateModelIDs = [
+        0x35, 0x36, 0x38, 0x3A, 0x3B, 0x3C,
+    ]
+
     public static let initializerAddress: UInt32 = 0x005428B0
     public static let wrapperAddress: UInt32 = 0x00544220
     public static let eventMethodAddress: UInt32 = 0x005451A0

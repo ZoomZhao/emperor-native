@@ -2671,6 +2671,17 @@ with registered Empty Shop/provider children from the recovered map-load path.
 Native records this boundary in `OriginalMarketCreationBoundaryCatalog` and
 keeps Qin provider/settlement fail-closed.
 
+The enclosing explicit-object factory is also now closed. `Creating @
+0x42D540` calls `FUN_0042D360`, whose class dispatch reaches
+`FUN_0051C660 @ 0x51C660`; its `FUN_005D36E0 @ 0x5D36E0` predicate recognizes
+the shared trade/market model set `{0x35,0x36,0x38,0x3A,0x3B,0x3C}`. The
+market branch enters `FUN_005D3580 @ 0x5D3580`, which constructs through
+`FUN_00543450 @ 0x543450` and installs vtable `0x007B6F3C` for model `0x3B`
+(Common Market) or `0x3C` (Grand Market). This proves that an explicit
+`Creating(59/60, ...)` action can reach cMarket construction; it does not
+change the map-load result because `FUN_0052F030` never calls `Creating` for
+those model IDs under its recovered whitelist.
+
 As a class-identity cross-check, a raw little-endian pointer scan of both
 hash-matched PE files finds the `FUN_005451A0` pointer exactly once, at file
 offset `0x003B703C`, corresponding to the first word of the cMarket vtable at
@@ -2684,13 +2695,15 @@ indirect caller or a map-load promotion edge.
 `FUN_0052F030.c`, `FUN_0052F1D0.c`, `FUN_0053D100.c`,
 `GameData/Model/EmperorBuildingModels.txt` rows 59–71, and the identical
 EN/CH rows in `local/source/compare-report.tsv` for `0x5428B0` and `0x5451A0`,
-plus direct PE `.rdata` pointer reads at `0x007B6F3C`.
+`0x42D360`, `0x51C660`, `0x5D3580`, `0x5D36E0`, and `0x543450`, plus direct
+PE `.rdata` pointer reads at `0x007B6F3C`.
 
 **Evidence class:** **confirmed** for the explicit-mode branch, child model
-IDs, offsets, direct caller chain, cMarket vtable placement, and absence from
-the direct map-load sequence; **unknown** for indirect vtable dispatch, the
-exact event that supplies the source layout/coordinates, provider registry
-population after creation, route endpoints, and Qin house/market settlement.
+IDs, offsets, explicit factory chain, direct caller chain, cMarket vtable
+placement, and absence from the direct map-load sequence; **unknown** for
+indirect vtable dispatch, the exact event that supplies the source
+layout/coordinates, provider registry population after creation, route
+endpoints, and Qin house/market settlement.
 
 ## 2026-09-03 phase-0x21 entertainment decay keeps provider eligibility explicit (confirmed boundary)
 

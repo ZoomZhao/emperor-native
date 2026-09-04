@@ -12179,6 +12179,34 @@ final class EmperorCoreTests: XCTestCase {
 
     func testOriginalMarketCreationBoundaryKeepsMapLoadFailClosed() {
         XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.creatingAddress,
+            0x0042D540
+        )
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.factoryAddress,
+            0x0042D360
+        )
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.classDispatchAddress,
+            0x0051C660
+        )
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.marketPredicateAddress,
+            0x005D36E0
+        )
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.marketFactoryAddress,
+            0x005D3580
+        )
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.marketConstructorAddress,
+            0x00543450
+        )
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.tradeAndMarketPredicateModelIDs,
+            [0x35, 0x36, 0x38, 0x3A, 0x3B, 0x3C]
+        )
+        XCTAssertEqual(
             OriginalMarketCreationBoundaryCatalog.initializerAddress,
             0x005428B0
         )
