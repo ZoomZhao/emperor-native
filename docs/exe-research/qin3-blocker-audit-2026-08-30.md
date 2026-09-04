@@ -6402,16 +6402,19 @@ contracts recorded in `FUN_0051BC00.c`, `FUN_00517AD0.c`, and
 terminal trajectory; **unknown** for the original producer, provider
 projection, water/food settlement ordering, and peddler algorithm.
 
-## 2026-09-04 Provider `+0x1FC` callbacks expose fixed output envelopes, not registration
+## 2026-09-04 Provider `+0x200` callbacks expose fixed output envelopes, not registration
 
-The provider vtables carry a `+0x1FC` callback which is reached only after the
-provider load path has allocated its auxiliary object. The vtable targets in
-the canonical English executable are Well `0x51BB60`, Herbalist `0x51BCD0`,
-Acupuncture `0x51BDE0`, Music School `0x48B030`, Acrobat School `0x48B1E0`,
-and Drama School `0x48B3D0`. The corresponding 76-byte (the first three) or
-106-byte (the last three) code slices at the same addresses are byte-for-byte
-identical in the Chinese executable; this was checked directly against
-`Exe/ghidra/input/EmperorEN.exe` and `Exe/ghidra/input/EmperorCH.exe`.
+The previous revision of this section called the slot `+0x1FC`; that was an
+offset error and is corrected here. Direct vtable-word reads show that the
+provider `+0x1FC` slot is `FUN_0051CC10` (the existing auxiliary refresh), while
+the fixed-output callbacks below are in the adjacent `+0x200` slot. The
+`+0x200` targets in the canonical English executable are Well `0x51BB60`,
+Herbalist `0x51BCD0`, Acupuncture `0x51BDE0`, Music School `0x48B030`, Acrobat
+School `0x48B1E0`, and Drama School `0x48B3D0`. The corresponding 76-byte (the
+first three) or 106-byte (the last three) code slices at the same addresses
+are byte-for-byte identical in the Chinese executable; this was checked
+directly against `Exe/ghidra/input/EmperorEN.exe` and
+`Exe/ghidra/input/EmperorCH.exe`.
 
 The first three callbacks unconditionally write three caller-provided output
 words and return `1`:
@@ -6439,27 +6442,35 @@ index without a caller that consumes them. The callbacks also do not write the
 object `+0xB4` provider index, the global object vector, map cells, or
 `cHouseInfo`.
 
-The call ordering is source-backed: `FUN_0051CB80.c` (the provider `+0xC0`
-load override) and `FUN_0051CAD0.c` allocate `0x20` bytes, construct the
-auxiliary object through `FUN_00526830.c`, store it at provider `+0x14C`, and
-then invoke the provider vtable `+0x1FC`; `FUN_00418D90.c` refreshes an
-existing auxiliary object on a later pass. Thus this callback family is a
-fixed auxiliary descriptor/refresh surface, not evidence that the Qin archive
-rows have been projected into live provider objects. The provider projection,
-registry bridge, and downstream migration/coverage/settlement consumers remain
-unknown and Native remains fail-closed.
+The indexed consumers are separate from the load-time `+0x1FC` refresh. `FUN_00519120.c`
+iterates its source object vector and invokes each object's vtable `+0x200`;
+`FUN_0051d560.c` invokes the same slot with three local output addresses and,
+on success, feeds the returned values into subsequent resource/notification
+calculations. The raw callsite at `0x51D73C` confirms the three pointer
+arguments. The provider load overrides `FUN_0051CB80.c` and `FUN_0051CAD0.c`
+still allocate `0x20` bytes, construct the auxiliary object through
+`FUN_00526830.c`, store it at provider `+0x14C`, and invoke `+0x1FC`
+(`FUN_0051CC10`), not `+0x200`; `FUN_00418D90.c` refreshes that existing
+auxiliary object on a later pass. Thus this callback family is a fixed
+descriptor/notification surface, not evidence that the Qin archive rows have
+been projected into live provider objects. The provider projection, registry
+bridge, and downstream migration/coverage/settlement consumers remain unknown
+and Native remains fail-closed.
 
 **Sources:** canonical English executable SHA-256
 `8a6d2df1015cb75d797546d117da5f82b86fd08726090c2a13d853b9009d6753`, Chinese
 executable SHA-256
 `dbdeca1ec2720f2387e1673bfbb901e9bad832179355ea897cfa7536e17ac15a`, direct
 PE slices at the addresses above, `local/source/split-merged/code/0x050000/`
-`FUN_0051cb80.c`, `FUN_0051cad0.c`, `FUN_00526830.c`, and
+`FUN_0051cb80.c`, `FUN_0051cad0.c`, the direct PE body at
+`FUN_0051CC10 @ 0x51CC10`, `FUN_00519120.c`,
+`FUN_0051d560.c`, `FUN_00526830.c`, and
 `local/source/split-merged/code/0x040000/FUN_00418D90.c`; provider vtable words
 and `local/source/compare-report.tsv` (the shared auxiliary constructor at
 `0x526830` is marked `identical`).
 
-**Evidence class:** **confirmed** for callback targets, EN/CH byte parity,
-constants, branch input, return value, and call ordering; **unknown** for the
-three output-word semantics, provider registration/projection, and any Qin
-migration or settlement effect.
+**Evidence class:** **confirmed** for the corrected `+0x200` targets, the
+`+0x1FC → FUN_0051CC10` distinction, EN/CH byte parity, constants, branch
+input, return value, and indexed callsites; **unknown** for the three
+output-word semantics, provider registration/projection, and any Qin migration
+or settlement effect.
