@@ -10094,3 +10094,62 @@ functions, byte parity, and the monthly/advisor call roles visible in indexed
 source; **confirmed negative** for another direct `E8` caller in the two
 canonical `.text` sections; **unknown** for indirect/table dispatch and all
 live registry/projection inputs.
+
+## 2026-09-04 Primary map-routing cache direct callers are fully censused
+
+Both canonical PE `.text` sections were scanned for every relative `E8`
+instruction whose resolved target is `FUN_005AD440 @ 0x5AD440` (image base
+`0x00400000`).  The EN and CH sets are identical, with the same five call
+bytes at every site:
+
+| callsite | indexed caller |
+| --- | --- |
+| `0x00415A9A` | `FUN_004158D0 @ 0x4158D0` |
+| `0x00415F2D` | `FUN_00415E30 @ 0x415E30` |
+| `0x0042A940` | `FUN_0042A5A0 @ 0x42A5A0` |
+| `0x0042BB81` | `FUN_0042BA40 @ 0x42BA40` |
+| `0x0042BCBE` | `FUN_0042BBD0 @ 0x42BBD0` |
+| `0x004AD39B` | `FUN_004AD260 @ 0x4AD260` |
+| `0x004B170C` | `FUN_004B1250 @ 0x4B1250` |
+| `0x004B299F` | `FUN_004B2680 @ 0x4B2680` |
+| `0x004BE1F7` | `FUN_004BDF30 @ 0x4BDF30` |
+| `0x004BE36F` | `FUN_004BE270 @ 0x4BE270` |
+| `0x004EC5D3` | `FUN_004EC4A0 @ 0x4EC4A0` |
+| `0x004EC7E4` | `FUN_004EC4A0 @ 0x4EC4A0` |
+| `0x005432FA` | `FUN_005431C0 @ 0x5431C0` |
+| `0x005AD90A` | `FUN_005AD8F0 @ 0x5AD8F0` |
+| `0x005E22BC` | `FUN_005E20F0 @ 0x5E20F0` |
+
+`FUN_005AD8F0` first clears the shared `DAT_013789C0` backing words and then
+performs the full-map rebuild.  The other direct callers pass bounded regions
+after terrain/object creation, map-load, placement, or object-update paths;
+the indexed source does not show a direct call from the monthly popularity
+producer (`FUN_00591200`) or the migration handoff (`FUN_005917E0`).  The
+cache builder itself reads authored terrain words, the `0xE4`-stride object
+grid, and several live-object vtable predicates before writing the primary and
+secondary per-cell bits.  Those object predicates and the Native map-layer
+projection are not recovered by this census.
+
+This closes the direct invalidation boundary but does not make the cache a
+safe Qin simulation input: no direct tick-time migration edge, provider
+registry projection, or house/figure settlement edge was found.  Native
+therefore records the address, base, stride, and direct callers in
+`OriginalPrimaryMapCacheCatalog` only; it does not synthesize or consume the
+source cache, and automatic Qin migration remains fail-closed.
+
+**Sources:** canonical `Exe/ghidra/input/EmperorEN.exe` and
+`EmperorCH.exe` complete relative-`E8` scans; indexed
+`local/source/split-merged/code/0x050000/FUN_005AD440.c`,
+`FUN_005AD8F0.c`, and all caller files listed above; `compare-report.tsv`
+rows for `0x4158D0`, `0x415E30`, `0x42A5A0`, `0x42BA40`, `0x42BBD0`,
+`0x4AD260`, `0x4B1250`, `0x4B2680`, `0x4BDF30`, `0x4BE270`, `0x4EC4A0`,
+`0x5431C0`, `0x5AD440`, `0x5AD8F0`, and `0x5E20F0`; and
+`Sources/EmperorCore/GenericBuildingArchiveCatalog.swift` with
+`testOriginalPrimaryMapCacheCatalogMatchesCanonicalDirectCallCensus`.
+
+**Evidence class:** **confirmed** for the 15 direct callsites, caller starts,
+EN/CH byte parity, full-rebuild clear-then-write order, and the cache's
+source-address/base/stride; **confirmed negative** for another direct `E8`
+caller and for direct monthly-popularity/migration-handoff callers;
+**unknown** for indirect/table dispatch, object-vtable predicates, Native
+layer projection, and any provider/house/arrival settlement semantics.

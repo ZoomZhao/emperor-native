@@ -266,6 +266,35 @@ public enum OriginalMapLoadRehydrationChain {
     public static let creationRegistryFieldStoresVectorSlot = true
 }
 
+/// Direct-call metadata for the original primary map-routing cache rebuild.
+///
+/// `FUN_005AD440 @ 0x5AD440` derives the 16-bit per-cell words consumed by
+/// walker routing from the authored terrain grid and live object predicates.
+/// The catalog is intentionally metadata only: Native does not synthesize the
+/// source's object-vtable predicates or install this cache as a simulation
+/// truth source until those projections are recovered.
+public enum OriginalPrimaryMapCacheCatalog {
+    public static let rebuildAddress: UInt32 = 0x005AD440
+    public static let fullMapRebuildAddress: UInt32 = 0x005AD8F0
+    public static let cacheBaseAddress: UInt32 = 0x013789C0
+    public static let cacheRowStride: UInt32 = 0xE4
+
+    /// Complete direct relative-call sites found in both canonical PE `.text`
+    /// sections.  Duplicate caller addresses are intentional when one
+    /// function refreshes more than one region or branch.
+    public static let directCallSites: [UInt32] = [
+        0x00415A9A, 0x00415F2D, 0x0042A940, 0x0042BB81, 0x0042BCBE,
+        0x004AD39B, 0x004B170C, 0x004B299F, 0x004BE1F7, 0x004BE36F,
+        0x004EC5D3, 0x004EC7E4, 0x005432FA, 0x005AD90A, 0x005E22BC,
+    ]
+
+    public static let directCallerAddresses: [UInt32] = [
+        0x004158D0, 0x00415E30, 0x0042A5A0, 0x0042BA40, 0x0042BBD0,
+        0x004AD260, 0x004B1250, 0x004B2680, 0x004BDF30, 0x004BE270,
+        0x004EC4A0, 0x004EC4A0, 0x005431C0, 0x005AD8F0, 0x005E20F0,
+    ]
+}
+
 /// Model predicate used by the explicit object factory for `HouseBldg`.
 /// `FUN_0042D360` dispatches model IDs `2...17` through
 /// `FUN_0042D480`/vtable `0x7ABA38`; this is a factory boundary, not proof

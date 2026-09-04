@@ -2842,6 +2842,29 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(OriginalHouseBldgFactoryCatalog.eligibilityInitializerVTableSlot, 0x90)
     }
 
+    func testOriginalPrimaryMapCacheCatalogMatchesCanonicalDirectCallCensus() {
+        XCTAssertEqual(OriginalPrimaryMapCacheCatalog.rebuildAddress, 0x005AD440)
+        XCTAssertEqual(OriginalPrimaryMapCacheCatalog.fullMapRebuildAddress, 0x005AD8F0)
+        XCTAssertEqual(OriginalPrimaryMapCacheCatalog.cacheBaseAddress, 0x013789C0)
+        XCTAssertEqual(OriginalPrimaryMapCacheCatalog.cacheRowStride, 0xE4)
+        XCTAssertEqual(
+            OriginalPrimaryMapCacheCatalog.directCallSites,
+            [
+                0x00415A9A, 0x00415F2D, 0x0042A940, 0x0042BB81, 0x0042BCBE,
+                0x004AD39B, 0x004B170C, 0x004B299F, 0x004BE1F7, 0x004BE36F,
+                0x004EC5D3, 0x004EC7E4, 0x005432FA, 0x005AD90A, 0x005E22BC,
+            ]
+        )
+        XCTAssertEqual(
+            OriginalPrimaryMapCacheCatalog.directCallerAddresses,
+            [
+                0x004158D0, 0x00415E30, 0x0042A5A0, 0x0042BA40, 0x0042BBD0,
+                0x004AD260, 0x004B1250, 0x004B2680, 0x004BDF30, 0x004BE270,
+                0x004EC4A0, 0x004EC4A0, 0x005431C0, 0x005AD8F0, 0x005E20F0,
+            ]
+        )
+    }
+
     func testGenericBuildingArchivePackedFieldOffsetsFollowSerializerOrder() {
         func put16(_ value: Int16, into data: inout Data, at offset: Int) {
             let bits = UInt16(bitPattern: value)
