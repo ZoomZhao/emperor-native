@@ -6572,3 +6572,55 @@ PE SHA-256
 slice parity, threshold rows, and the Well `+0x224` call/doubling branch;
 **unknown** for the callback's semantic state, provider registration and
 archive projection, routing, coverage, and settlement.
+
+## 2026-09-05 `FUN_005B4BD0` `+0xB4` writes are population-statistics state, not provider registry
+
+The remaining broad `+0xB4` store scan contains a misleading candidate at
+`FUN_005B4BD0 @ 0x5B4BD0`. The canonical English and Chinese bodies are
+`identical` in `local/source/compare-report.tsv`, but the function is a
+`__thiscall`: its object arrives in `ECX`, while the stack argument is the
+mode byte. The direct PE body first copies a 64-dword scratch record into
+`this + 0x30`, clears twelve dwords at `this + 0xB4`, and, for an object-vector
+entry whose category word is zero, calls `FUN_00517CC0` and stores its return
+value at `this + 0xB4`.
+
+All four direct relative calls in both hash-matched PEs load the same object
+address `0x013F7F50` into `ECX` immediately before the call:
+
+| call site | caller | stack mode | `ECX` before call |
+| ---: | --- | ---: | ---: |
+| `0x44B3BA` | `FUN_0044B2A0` | `0` | `0x013F7F50` |
+| `0x4FF0A6` | `FUN_004FF020` | `0` | `0x013F7F50` |
+| `0x55B7F6` | `FUN_0055B6A0` | `0` | `0x013F7F50` |
+| `0x55D081` | `FUN_0055CEE0` | caller-held `EBX` | `0x013F7F50` |
+
+The call-site bytes and addresses are the same in EN and CH. `FUN_00517CC0`
+is not a provider constructor: it refreshes the object-vector population
+aggregate through `FUN_00517DE0`, whose confirmed filters invoke existing
+objects' `+0xB8` and `+0x204` callbacks and write totals to the aggregate
+object. The surrounding `FUN_005B4BD0` fields (`+0xC0/+0xC4/+0xC8/+0xCC/…`)
+are likewise category/population statistics, and its callers are campaign
+summary, game-state, and goal/result paths. No call edge from this method
+reaches `FUN_0051C660`, `FUN_0051BEF0`, a provider vtable, or an object-list
+insertion routine.
+
+Therefore the `FUN_005B4BD0` `+0xB4` store is a **confirmed negative** for
+the Well/Herbalist/Acupuncture/entertainment provider registry index. It must
+not be used to derive provider `+0x2D`/`+0xB4` from a statistics-object field.
+The actual provider-index producer and map/archive projection remain
+**unknown**; Qin service projection and automatic migration stay fail-closed.
+
+**Sources:** canonical English PE SHA-256
+`8a6d2df1015cb75d797546d117da5f82b86fd08726090c2a13d853b9009d6753`, Chinese
+PE SHA-256
+`dbdeca1ec2720f2387e1673bfbb901e9bad832179355ea897cfa7536e17ac15a`, direct
+PE body/call-site disassembly for `0x5B4BD0`, `0x44B3BA`, `0x4FF0A6`,
+`0x55B7F6`, and `0x55D081`, `local/source/split-merged/code/0x050000/`
+`FUN_005b4bd0.c`, `FUN_00517cc0.c`, `FUN_00517de0.c`, callers
+`FUN_0044b2a0.c`, `FUN_004ff020.c`, `FUN_0055b6a0.c`, `FUN_0055cee0.c`, and
+`local/source/compare-report.tsv` row `0x5b4bd0`.
+
+**Evidence class:** **confirmed** for the calling convention, shared
+`0x013F7F50` object, four direct call sites, population-aggregate callee,
+and negative provider-factory edge; **unknown** for the real provider-index
+producer, archive projection, and final registry insertion order.
