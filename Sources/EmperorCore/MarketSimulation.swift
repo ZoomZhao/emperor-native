@@ -1455,6 +1455,41 @@ public enum OriginalMarketShopRemovalBoundary {
     }
 }
 
+/// The raw peddler-availability gate recovered at
+/// `FUN_00540970 @ 0x540970`. The source first requires the cStall's parent
+/// link (`child+0x158`); after the market vtable has selected the bay's
+/// provider record, it admits another peddler while the active-figure count
+/// remains below `400` when `FUN_00540710(resource)` is true, or below `200`
+/// otherwise. The callback's resource semantics and the vtable's bay-index
+/// lookup are intentionally represented as explicit inputs: this helper does
+/// not invent a provider/settlement mapping for Native.
+public enum OriginalMarketPeddlerAvailabilityBoundary {
+    public static let sourceAddress: UInt32 = 0x00540970
+    public static let parentLinkOffset: UInt32 = 0x158
+    public static let childBayOrdinalOffset: UInt32 = 0x150
+    public static let marketProviderLookupVTableByteOffset: UInt32 = 0x2D8
+    public static let resourcePredicateAddress: UInt32 = 0x00540710
+    public static let dinnersCommodityID = 0x1C
+    public static let availableFigureThreshold = 400
+    public static let unavailableFigureThreshold = 200
+
+    /// Mirrors the source's two threshold branches after its callback
+    /// results have been supplied. `FUN_00540710` is exact and returns true
+    /// only for commodity `0x1C` (Dinners). `nil` is not used for an empty
+    /// parent: the executable returns `false` directly when `child+0x158 == 0`.
+    public static func admitsNextPeddler(
+        parentLinkPresent: Bool,
+        commodityID: Int,
+        activeFigureCount: Int
+    ) -> Bool {
+        guard parentLinkPresent else { return false }
+        let threshold = commodityID == dinnersCommodityID
+            ? availableFigureThreshold
+            : unavailableFigureThreshold
+        return activeFigureCount < threshold
+    }
+}
+
 /// The explicit cMarket creation boundary recovered from
 /// `FUN_005428B0 @ 0x5428B0` and its wrapper
 /// `FUN_00544220 @ 0x544220`.

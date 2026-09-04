@@ -12239,6 +12239,44 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testOriginalMarketPeddlerAvailabilityBoundaryPreservesSourceThresholds() {
+        XCTAssertFalse(
+            OriginalMarketPeddlerAvailabilityBoundary.admitsNextPeddler(
+                parentLinkPresent: false,
+                commodityID: OriginalMarketPeddlerAvailabilityBoundary.dinnersCommodityID,
+                activeFigureCount: 0
+            )
+        )
+        XCTAssertTrue(
+            OriginalMarketPeddlerAvailabilityBoundary.admitsNextPeddler(
+                parentLinkPresent: true,
+                commodityID: OriginalMarketPeddlerAvailabilityBoundary.dinnersCommodityID,
+                activeFigureCount: 399
+            )
+        )
+        XCTAssertFalse(
+            OriginalMarketPeddlerAvailabilityBoundary.admitsNextPeddler(
+                parentLinkPresent: true,
+                commodityID: OriginalMarketPeddlerAvailabilityBoundary.dinnersCommodityID,
+                activeFigureCount: 400
+            )
+        )
+        XCTAssertTrue(
+            OriginalMarketPeddlerAvailabilityBoundary.admitsNextPeddler(
+                parentLinkPresent: true,
+                commodityID: 0x13,
+                activeFigureCount: 199
+            )
+        )
+        XCTAssertFalse(
+            OriginalMarketPeddlerAvailabilityBoundary.admitsNextPeddler(
+                parentLinkPresent: true,
+                commodityID: 0x13,
+                activeFigureCount: 200
+            )
+        )
+    }
+
     func testOriginalMarketCreationBoundaryKeepsMapLoadFailClosed() {
         XCTAssertEqual(
             OriginalMarketCreationBoundaryCatalog.creatingAddress,

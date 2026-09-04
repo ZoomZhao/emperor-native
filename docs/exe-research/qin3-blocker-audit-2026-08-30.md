@@ -6899,3 +6899,35 @@ and `Sources/EmperorCore/MarketSimulation.swift` with
 link/ordinal offsets, 400/800 subtraction and clamp, Empty Shop model ID, and
 replacement-field writes; **unknown** for indirect callback effects, provider
 registry ownership, route/coverage, and household settlement.
+
+## 2026-09-05 cMarket peddler availability keeps the Dinners-only threshold
+
+`FUN_00540970 @ 0x540970` is a separate admission predicate used by the
+cMarket peddler path. It returns false immediately when the child has no
+parent link at `child+0x158`. Otherwise it asks the market vtable at byte
+offset `+0x2D8` for the child bay ordinal (`child+0x150`), reads the selected
+record's commodity word at `record+0x0C`, and calls
+`FUN_00540710 @ 0x540710`. That predicate is exact: it returns true only for
+commodity ID `0x1C` (Dinners). The active-figure count from `FUN_004F8200` is
+then compared strictly against `400` for Dinners and `200` for every other
+commodity; equality is rejected.
+
+`OriginalMarketPeddlerAvailabilityBoundary.admitsNextPeddler(...)` preserves
+that source gate with the commodity ID and parent-link state as explicit
+inputs. It is intentionally not connected to Native figure allocation: the
+vtable's provider-record lookup, active-vector ownership, peddler endpoint and
+route, coverage, and settlement effects remain unresolved.
+
+**Sources:** canonical English executable SHA-256
+`8a6d2df1015cb75d797546d117da5f82b86fd08726090c2a13d853b9009d6753`, Chinese
+executable SHA-256
+`dbdeca1ec2720f2387e1673bfbb901e9bad832179355ea897cfa7536e17ac15a`,
+`local/source/split-merged/code/0x050000/FUN_00540970.c`,
+`FUN_00540710.c`, `local/source/compare-report.tsv` rows `0x540970` and
+`0x540710`, and `Sources/EmperorCore/MarketSimulation.swift` with
+`testOriginalMarketPeddlerAvailabilityBoundaryPreservesSourceThresholds`.
+
+**Evidence class:** **confirmed** for the parent-link early return, Dinners
+commodity predicate, strict `400`/`200` thresholds, and EN/CH parity;
+**unknown** for the selected provider record's runtime meaning and all
+downstream allocation, route, coverage, and settlement behavior.
