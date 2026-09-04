@@ -40,6 +40,20 @@ final class GrandCanalSimulationTests: XCTestCase {
         XCTAssertNil(Catalog.ordinaryObjectPathDecision(forBuildingID: 130))
     }
 
+    func testTerrainPreservesSerializedRoadDirectionLayerForWayCallbacks() throws {
+        let terrain = try DeterministicTerrainState(
+            width: 2,
+            height: 2,
+            terrainRawValues: [0, 0, 0, 0],
+            roadDirectionRawValues: [1, 8, 0x40, 0x39]
+        )
+        XCTAssertEqual(terrain.roadDirection(at: GridPoint(x: 0, y: 0)), 1)
+        XCTAssertEqual(terrain.roadDirection(at: GridPoint(x: 1, y: 0)), 8)
+        XCTAssertEqual(terrain.roadDirection(at: GridPoint(x: 0, y: 1)), 0x40)
+        XCTAssertEqual(terrain.roadDirection(at: GridPoint(x: 1, y: 1)), 0x39)
+        XCTAssertNil(terrain.roadDirection(at: GridPoint(x: 2, y: 0)))
+    }
+
     func testRoutingBuildersUseRecoveredFootprintCatalogWhenCellOmitsPredicate() throws {
         // Warehouse 54 is one of the classes whose live-object `+0xCC`
         // callback is directly recovered as constant false.  A caller that

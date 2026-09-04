@@ -1805,6 +1805,8 @@ public enum OriginalGrandCanalLayoutCatalog {
         public static let ordinaryNoAdjustmentBuildingIDs: Set<Int> =
             Set(3...17).union([39, 40, 41, 54, 72, 124, 161])
 
+        public static let wayBuildingIDs: Set<Int> = [111, 113]
+
         public static func ordinaryObjectPathDecision(forBuildingID buildingID: Int)
             -> Bool?
         {

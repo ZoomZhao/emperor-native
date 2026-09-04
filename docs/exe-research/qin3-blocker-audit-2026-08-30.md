@@ -6190,3 +6190,42 @@ migration producer.
 and fail-closed decisions; **diagnostic** for replay completion; **unknown** for
 the runtime object-registry owner, unlisted class/model mapping, Way auxiliary
 layer, and arrival writer.
+
+## 2026-09-04 Serialized `DAT_00FDCD70` is preserved for Way offset replay
+
+The serializer order in `FUN_0052E7C0 @ 0x52E7C0` places the byte grid
+`DAT_00FDCD70` immediately after the image-word grid and before terrain
+`DAT_00F6A9E0`, with extent `0xCB10 = 228×228`. `EmperorMap.edgeValues` is
+already parsed from exactly that physical position (`edgeGridOffset`), so this
+is a direct identity rather than a name-based inference. The mission-sized
+Native terrain projection now preserves that layer as optional
+`roadDirectionRawValues` and exposes `roadDirection(at:)`; old saves and
+synthetic terrains without the layer remain decodable and return `nil`.
+
+For an occupied Grand/Imperial Way perimeter cell (`111`/`113`), Native now
+mirrors `FUN_00426D50`/`FUN_00420EB0`: when the cell lacks road bit `0x40`, a
+non-zero low direction (`1` moves one column forward; any other non-zero low
+value moves one column backward) wins first; otherwise direction group `0x08`
+moves one row forward and all other groups one row backward. The adjusted cell
+must remain in bounds and pass the source road-bit `0x40` / blocked-bit `0x04`
+test. If the serialized direction layer is absent, the Way candidate is still
+rejected. Ordinary objects keep the previously recovered no-adjustment path;
+dynamic writes to `DAT_00FDCD70` and the complete object registry remain outside
+this contract.
+
+The focused regression verifies mission-array validation and exact byte access.
+This closes the authored direction-layer input and Way adjustment arithmetic,
+but does not claim that all Qin map objects are registered or that automatic
+migration is ready to enable.
+
+**Sources:** `local/source/split-merged/code/0x050000/FUN_0052E7C0.c`,
+`local/source/split-merged/code/0x040000/FUN_00420EB0.c`,
+`FUN_00426D50.c`, `local/source/compare-report.tsv`,
+`Sources/EmperorCore/EmperorMap.swift`,
+`Sources/EmperorCore/DeterministicTerrainState.swift`, and the focused
+`GrandCanalSimulationTests` regression.
+
+**Evidence class:** **confirmed** for serialized layer identity, extent/order,
+byte-access behavior, callback arithmetic, and fail-closed absence handling;
+**unknown** for dynamic layer mutation, object-registry ownership, and the
+remaining migration arrival writer.

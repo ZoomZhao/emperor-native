@@ -26,6 +26,10 @@ public struct DeterministicTerrainState: Sendable, Equatable, Codable {
     /// saves written before this source-layer recovery decodable.
     public let primaryElevationClassRawValues: [UInt8]?
     public let roadWaterAuxiliaryValues: [UInt8]?
+    /// Mission-sized projection of serialized `DAT_00FDCD70`. The original
+    /// Way-object callback (`FUN_00420EB0`) reads this byte when a Way cell
+    /// lacks road bit `0x40`; optional keeps older Native saves decodable.
+    public let roadDirectionRawValues: [UInt8]?
     /// Optional keeps native saves from releases before authored map points
     /// were decoded backwards compatible.
     public let authoredPoints: EmperorMapAuthoredPoints?
@@ -56,6 +60,9 @@ public struct DeterministicTerrainState: Sendable, Equatable, Codable {
                 (0..<map.width).map { x in map.roadWaterAuxiliaryValue(x: x, y: y) ?? 0 }
             }
         }
+        roadDirectionRawValues = (0..<map.height).flatMap { y in
+            (0..<map.width).map { x in map.edgeValue(x: x, y: y) ?? 0 }
+        }
         authoredPoints = map.authoredPoints
         greatWallPlacement = OriginalGreatWallLayoutCatalog.campaignPlacement(in: map)
         grandCanalPlacement = OriginalGrandCanalLayoutCatalog.campaignPlacement(in: map)
@@ -68,6 +75,7 @@ public struct DeterministicTerrainState: Sendable, Equatable, Codable {
         appealFlagsRawValues: [UInt32]? = nil,
         primaryElevationClassRawValues: [UInt8]? = nil,
         roadWaterAuxiliaryValues: [UInt8]? = nil,
+        roadDirectionRawValues: [UInt8]? = nil,
         authoredPoints: EmperorMapAuthoredPoints? = nil,
         greatWallPlacement: OriginalGreatWallLayoutCatalog.MapPlacement? = nil,
         grandCanalPlacement: OriginalGrandCanalLayoutCatalog.MapPlacement? = nil
@@ -75,7 +83,8 @@ public struct DeterministicTerrainState: Sendable, Equatable, Codable {
         guard width > 0, height > 0, terrainRawValues.count == width * height,
               appealFlagsRawValues.map({ $0.count == width * height }) ?? true,
               primaryElevationClassRawValues.map({ $0.count == width * height }) ?? true,
-              roadWaterAuxiliaryValues.map({ $0.count == width * height }) ?? true else {
+              roadWaterAuxiliaryValues.map({ $0.count == width * height }) ?? true,
+              roadDirectionRawValues.map({ $0.count == width * height }) ?? true else {
             throw GameDataError.malformedFile("native terrain dimensions")
         }
         self.width = width
@@ -84,6 +93,7 @@ public struct DeterministicTerrainState: Sendable, Equatable, Codable {
         self.appealFlagsRawValues = appealFlagsRawValues
         self.primaryElevationClassRawValues = primaryElevationClassRawValues
         self.roadWaterAuxiliaryValues = roadWaterAuxiliaryValues
+        self.roadDirectionRawValues = roadDirectionRawValues
         self.authoredPoints = authoredPoints
         self.greatWallPlacement = greatWallPlacement
         self.grandCanalPlacement = grandCanalPlacement
@@ -111,6 +121,11 @@ public struct DeterministicTerrainState: Sendable, Equatable, Codable {
     public func roadWaterAuxiliary(at point: GridPoint) -> UInt8? {
         guard contains(point), let roadWaterAuxiliaryValues else { return nil }
         return roadWaterAuxiliaryValues[point.y * width + point.x]
+    }
+
+    public func roadDirection(at point: GridPoint) -> UInt8? {
+        guard contains(point), let roadDirectionRawValues else { return nil }
+        return roadDirectionRawValues[point.y * width + point.x]
     }
 
     /// Returns the authored terrain layer in the original executable's

@@ -2183,16 +2183,39 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
                 )
                 guard inBounds(point) else { return false }
                 let raw = rawTerrain[point.y * width + point.x]
+                var testedX = point.x
+                var testedY = point.y
                 if raw & 0x8 != 0 {
                     guard let objectIDs = occupiedBuildingIDsByPoint[point],
                           objectIDs.count == 1,
-                          let objectID = objectIDs.first,
-                          OriginalGrandCanalLayoutCatalog
-                              .HouseAccessPerimeterObjectCatalog
-                              .ordinaryObjectPathDecision(forBuildingID: objectID) == true
+                          let objectID = objectIDs.first
                     else { return false }
+                    if OriginalGrandCanalLayoutCatalog
+                        .HouseAccessPerimeterObjectCatalog
+                        .wayBuildingIDs.contains(objectID) {
+                        if raw & 0x40 == 0 {
+                            guard let direction = terrain.roadDirection(at: point) else {
+                                return false
+                            }
+                            if direction & 0x07 != 0 {
+                                testedX += direction & 0x07 == 1 ? 1 : -1
+                            } else if direction & 0x38 == 0x08 {
+                                testedY += 1
+                            } else {
+                                testedY -= 1
+                            }
+                            let testedPoint = GridPoint(x: testedX, y: testedY)
+                            guard inBounds(testedPoint) else { return false }
+                        }
+                    } else {
+                        guard OriginalGrandCanalLayoutCatalog
+                            .HouseAccessPerimeterObjectCatalog
+                            .ordinaryObjectPathDecision(forBuildingID: objectID) == true
+                        else { return false }
+                    }
                 }
-                return true
+                let testedRaw = rawTerrain[testedY * width + testedX]
+                return testedRaw & 0x40 != 0 && testedRaw & 0x04 == 0
             }
             guard perimeterIsResolved else { continue }
 
