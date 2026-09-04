@@ -11514,6 +11514,19 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(wrongModelThird, .init(isValid: false, clearsStoredLink: true))
     }
 
+    func testOriginalMarketPeddlerMembershipMatcherPreservesRawTypeBranches() {
+        let matcher = OriginalMarketPeddlerLinkStorage.registeredFigureMatchRaw
+
+        XCTAssertEqual(matcher(1, 12, 12, 14, 16), 1)
+        XCTAssertEqual(matcher(1, 13, 12, 13, 16), 0)
+        XCTAssertEqual(matcher(2, 14, 12, 14, 16), 1)
+        XCTAssertEqual(matcher(2, 16, 12, 14, 16), 0)
+        XCTAssertEqual(matcher(3, 16, 12, 14, 16), 1)
+        XCTAssertEqual(matcher(3, 18, 12, 14, 16), 0)
+        XCTAssertEqual(matcher(99, 12, 12, 14, 16), 0)
+        XCTAssertEqual(matcher(0x100, 12, 12, 14, 16), 0x100)
+    }
+
     func testOriginalMarketPeddlerWorkerRatioAndStockGateMatchRecoveredArithmetic() {
         XCTAssertEqual(
             OriginalMarketCatalog.peddlerWorkerPercent(

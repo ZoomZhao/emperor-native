@@ -6711,3 +6711,28 @@ validator rows `0x429700`, `0x429780`, and `0x429810`, and
 **Evidence class:** **confirmed** for branch/cardinality/order and EN/CH parity;
 **unknown** for provider registry population, route/coverage, commodity
 projection, and household settlement.
+
+## 2026-09-05 cMarket peddler membership matcher preserves raw type branches
+
+`FUN_004295C0 @ 0x4295C0` is the cMarket `+0x48` matcher used by the peddler
+update wrapper. It compares a target figure ID against the primary market
+link (`+0x2E`) for type `1`; type `2` additionally checks attached-info
+`+0x6A`; and type `3` additionally checks attached-info `+0x6C`. A matching
+slot returns `1`, otherwise `0`. Its source `else` branch re-reads the type
+and returns `type & 0xFFFFFF00` for any value other than `3`; that raw result
+is preserved rather than silently converting unknown market types to false.
+The indexed EN/CH rows are `identical`.
+
+`OriginalMarketPeddlerLinkStorage.registeredFigureMatchRaw` records this
+membership boundary as an integer result. It remains separate from validator
+activity/model/parent checks and is not wired to Native peddler IDs, provider
+registration, route construction, or household settlement; Qin remains
+fail-closed at those unresolved boundaries.
+
+**Sources:** `local/source/split-merged/code/0x040000/FUN_004295C0.c`,
+`local/source/compare-report.tsv` row `0x4295C0`, the cMarket getter at
+`FUN_00416B50.c`, and `testOriginalMarketPeddlerMembershipMatcherPreservesRawTypeBranches`.
+
+**Evidence class:** **confirmed** for slot comparison order, raw unknown-type
+return, and EN/CH parity; **unknown** for provider registry population,
+route/coverage, commodity projection, and household settlement.

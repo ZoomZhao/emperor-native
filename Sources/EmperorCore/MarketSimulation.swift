@@ -3396,6 +3396,35 @@ public enum OriginalMarketPeddlerLinkStorage {
         }
     }
 
+    /// Replays the cMarket `+0x48` figure-membership matcher
+    /// (`FUN_004295C0`). The executable returns an integer rather than a
+    /// normalized Boolean: type 1 checks the primary link, type 2 checks the
+    /// primary and attached-info second links, and type 3 checks all three.
+    /// For any other type the source returns the type word masked by
+    /// `0xFFFFFF00`; keeping that raw value preserves the unknown branch.
+    public static func registeredFigureMatchRaw(
+        marketType: Int,
+        targetFigureID: Int,
+        primaryLink: Int,
+        attachedInfoSecondLink: Int,
+        attachedInfoThirdLink: Int
+    ) -> UInt32 {
+        switch marketType {
+        case 1:
+            return primaryLink == targetFigureID ? 1 : 0
+        case 2:
+            return primaryLink == targetFigureID
+                || attachedInfoSecondLink == targetFigureID ? 1 : 0
+        case 3:
+            return primaryLink == targetFigureID
+                || attachedInfoSecondLink == targetFigureID
+                || attachedInfoThirdLink == targetFigureID ? 1 : 0
+        default:
+            return UInt32(bitPattern: Int32(truncatingIfNeeded: marketType))
+                & 0xFFFF_FF00
+        }
+    }
+
     /// The destination selected by `FUN_004272A0 @ 0x4272A0` when a peddler
     /// figure ID is registered with a market. These are storage slots, not
     /// commodity records or Native peddler IDs.
