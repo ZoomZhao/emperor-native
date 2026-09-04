@@ -10196,3 +10196,38 @@ sets, caller identity, branch batching visible in indexed source, and EN/CH
 parity; **confirmed negative** for another direct writer edge;
 **unknown** for indirect dispatch, registry projection, route construction,
 and arrival/departure settlement.
+
+## 2026-09-04 Immigrant figure allocation has one direct type-`0xB` callsite
+
+The complete canonical EN/CH PE `.text` scan finds 97 direct relative-`E8`
+calls to the generic figure allocator `FUN_004EA050 @ 0x4EA050`, with
+identical callsite sets and bytes in both images.  Reading the callsite input
+setup in the indexed corpus identifies one call that passes the immediate
+immigrant type `0xB`: `0x004ADE2B` inside `FUN_004ADE10 @ 0x4ADE10`, where the
+preceding arguments are `(1, 0xB, DAT_00C5CDFC, DAT_00C5CDFE, 0, 1,
+0xFFFFFFFF)`.  No second literal type-`0xB` call appears in the indexed
+corpus; unindexed/data-driven allocator arguments remain outside this
+literal search.
+
+This closes the direct allocation boundary after the assignment walk: a
+successful result is then consumed by the already recovered field writes in
+`FUN_004ADE10` and later type-`0xB` state/arrival logic.  It does not recover
+the allocator's candidate-ring population, the house `+0xB4` registry/object
+projection supplied to the caller, figure route construction, or arrival
+settlement.  The callsite is therefore recorded in
+`OriginalMigrationRequestProducerCatalog` as metadata only; Native continues
+to leave Qin automatic migration fail-closed.
+
+**Sources:** canonical `EmperorEN.exe` / `EmperorCH.exe` complete
+relative-`E8` scans to `0x4EA050`; indexed
+`local/source/split-merged/code/0x040000/FUN_004ade10.c`,
+`FUN_004ea050.c`, and `local/source/compare-report.tsv` rows for
+`0x4ADE10`/`0x4EA050`; `Sources/EmperorCore/MigrationSimulation.swift`; and
+`testOriginalMigrationRequestProducerCatalogMatchesSourceHandoff`.
+
+**Evidence class:** **confirmed** for the 97-call census, EN/CH parity, the
+indexed literal type-`0xB` callsite, and its seven allocator arguments;
+**confirmed negative** for another indexed literal type-`0xB` call;
+**unknown** for unindexed/data-driven or indirect allocator dispatch,
+candidate-ring population, registry projection, routing, and arrival
+settlement.

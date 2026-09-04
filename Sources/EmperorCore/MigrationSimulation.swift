@@ -58,6 +58,18 @@ public enum OriginalMigrationRequestProducerCatalog {
     /// lifecycle remain unresolved, so Qin does not invoke these addresses.
     public static let arrivalFigureWriterAddress: UInt32 = 0x004ADE10
     public static let departureFigureWriterAddress: UInt32 = 0x004ADED0
+    /// The canonical PE-wide direct-call census finds 97 calls to the generic
+    /// figure allocator, but only `FUN_004ADE10` passes the immediate
+    /// type-`0xB` immigrant model.  Keep the exact callsite separate from the
+    /// writer census so indirect/table dispatch is not mistaken for absent.
+    public static let arrivalFigureAllocatorAddress: UInt32 = 0x004EA050
+    public static let arrivalFigureAllocatorDirectCallSites: [UInt32] = [
+        0x004ADE2B,
+    ]
+    public static let arrivalFigureAllocatorDirectCallerAddresses: [UInt32] = [
+        0x004ADE10,
+    ]
+    public static let arrivalFigureAllocatorFlags = 1
     /// Complete direct relative-call sites to the figure/house assignment
     /// helpers in both canonical PE `.text` sections.  These are metadata
     /// only; constructor inputs and arrival settlement remain unresolved.
