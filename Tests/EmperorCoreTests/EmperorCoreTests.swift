@@ -6701,6 +6701,46 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testTheatrePavilionSerializerPreservesVersionedFieldSpansAndLoadReset() {
+        let descriptor = OriginalResidentialServiceCatalog
+            .entertainmentPavilionSerializationDescriptor
+        XCTAssertEqual(descriptor.venueModelID, 75)
+        XCTAssertEqual(descriptor.callbackAddress, 0x0048CC80)
+        XCTAssertEqual(descriptor.streamDispatchMethodOffset, 0x284)
+        XCTAssertEqual(descriptor.streamDispatchFirstArgument, 0)
+        XCTAssertEqual(descriptor.streamDispatchSecondArgument, 3)
+        XCTAssertEqual(
+            descriptor.loadResetFieldSpans,
+            [
+                .init(objectOffset: 0x57, byteCount: 4),
+                .init(objectOffset: 0x56, byteCount: 4),
+                .init(objectOffset: 0x55, byteCount: 4),
+                .init(objectOffset: 0x58, byteCount: 100),
+                .init(objectOffset: 0x71, byteCount: 100),
+                .init(objectOffset: 0x54, byteCount: 4),
+            ]
+        )
+        XCTAssertEqual(
+            descriptor.fieldSpans(forArchiveVersion: 2),
+            descriptor.fieldSpans(forArchiveVersion: 3)
+        )
+        XCTAssertEqual(
+            descriptor.fieldSpans(forArchiveVersion: 2)?.map(\.byteCount),
+            [4, 4, 0x50, 0x50]
+        )
+        XCTAssertEqual(
+            descriptor.fieldSpans(forArchiveVersion: 4)?.map(\.byteCount),
+            [4, 4, 100, 100]
+        )
+        XCTAssertEqual(
+            descriptor.fieldSpans(forArchiveVersion: 5)?.map(\.objectOffset),
+            [0x54, 0x55, 0x56, 0x57, 0x58, 0x71]
+        )
+        XCTAssertNil(descriptor.fieldSpans(forArchiveVersion: 0))
+        XCTAssertNil(descriptor.fieldSpans(forArchiveVersion: 6))
+        XCTAssertEqual(descriptor.unsupportedVersionFallback, 5)
+    }
+
     func testEntertainmentAreaSelectionPreservesRotatingVectorOrderAndGates() {
         let providers = [
             OriginalResidentialServiceCatalog.EntertainmentAreaSelectionInput(

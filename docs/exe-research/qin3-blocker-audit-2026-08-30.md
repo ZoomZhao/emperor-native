@@ -7172,6 +7172,52 @@ create callbacks, base-class pointers, EN/CH byte parity, and authored model
 crosswalk; **unknown** for archive-side specialization, provider registry
 assignment, route/collision, and venue/house settlement.
 
+## 2026-09-05 Theatre Pavilion serializer keeps versioned array spans explicit
+
+`FUN_0048CC80 @ 0x48CC80` is now recorded as a data-only archive contract,
+separate from the Entertainment Area figure callback at the same vtable slot.
+The canonical EN and CH instruction slices from `0x48CC80` up to the next
+callback at `0x48CE90` are byte-identical (528 bytes; SHA-256
+`96aca93d394c229db587a8997b9ca41e33bd998a9c474219135817a6e14dceb9`).
+After common stream setup, the callback dispatches virtual method `+0x284`
+with arguments `(0, 3)`.  On the archive-load branch it clears four-byte
+fields at object offsets `+0x57`, `+0x56`, `+0x55`, and `+0x54`, then clears
+100-byte spans at `+0x58` and `+0x71`.
+
+On the write/read branch, the stream version is the 16-bit value returned by
+`FUN_0041FBF0` (`*(short *)(stream + 4)`).  The exact fall-through order is:
+
+| stream version | serialized object spans (offset, byte count) |
+| ---: | --- |
+| `1` | `(+0x54, 4)` |
+| `2` or `3` | `(+0x54, 4)`, `(+0x55, 4)`, `(+0x58, 0x50)`, `(+0x71, 0x50)` |
+| `4` | `(+0x54, 4)`, `(+0x55, 4)`, `(+0x58, 100)`, `(+0x71, 100)` |
+| `5` | `(+0x54, 4)`, `(+0x55, 4)`, `(+0x56, 4)`, `(+0x57, 4)`, `(+0x58, 100)`, `(+0x71, 100)` |
+
+Other versions take the callback's default and reset the stream version to
+`5`; Native therefore exposes them as an unsupported-version fallback rather
+than silently choosing a span.  `EntertainmentPavilionSerializationDescriptor`
+and `testTheatrePavilionSerializerPreservesVersionedFieldSpansAndLoadReset`
+lock these raw offsets, lengths, fall-through duplication of versions `2/3`,
+and the default sentinel.
+
+This is confirmed evidence for the Pavilion callback's version gate, reset
+spans, serialized byte ranges, and EN/CH parity.  It does not recover the
+meaning of the ten-entry records, provider registry ownership, Qin archive
+specialization, route/collision, or venue/house settlement; Qin remains
+fail-closed for those paths.
+
+**Sources:** `local/source/split-merged/code/0x040000/FUN_0048cc80.c`,
+`FUN_0041fbf0.c`, `FUN_0041fc10.c`, `FUN_0041fc00.c`,
+`local/source/compare-report.tsv` row `0x48CC80`, direct canonical EN/CH
+bytes at `0x48CC80…0x48CE8F`, `Sources/EmperorCore/HousingEvolution.swift`,
+and `testTheatrePavilionSerializerPreservesVersionedFieldSpansAndLoadReset`.
+
+**Evidence class:** **confirmed** for callback order, stream-version branches,
+field offsets/lengths, reset behavior, fallback version, and EN/CH parity;
+**unknown** for record semantics, archive-side specialization, provider
+registry assignment, routing, and settlement.
+
 ## 2026-09-05 Entertainment runtime-class registration thunks are separate from map loading
 
 The executable also exposes one accessor and one registration thunk for each

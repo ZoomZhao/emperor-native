@@ -2599,6 +2599,101 @@ public enum OriginalResidentialServiceCatalog {
         }
     }
 
+    /// Versioned field spans emitted by the Theatre Pavilion serializer
+    /// `FUN_0048CC80 @ 0x48CC80`.  These are raw object offsets and byte
+    /// lengths; they are intentionally not interpreted as provider semantics.
+    public struct EntertainmentPavilionSerializationFieldSpan: Sendable, Hashable, Codable {
+        public let objectOffset: Int
+        public let byteCount: Int
+
+        public init(objectOffset: Int, byteCount: Int) {
+            self.objectOffset = objectOffset
+            self.byteCount = byteCount
+        }
+    }
+
+    public struct EntertainmentPavilionSerializationDescriptor: Sendable, Hashable, Codable {
+        public let venueModelID: Int
+        public let callbackAddress: UInt32
+        public let streamDispatchMethodOffset: Int
+        public let streamDispatchFirstArgument: Int
+        public let streamDispatchSecondArgument: Int
+        public let loadResetFieldSpans: [EntertainmentPavilionSerializationFieldSpan]
+        public let versionedFieldSpans: [Int: [EntertainmentPavilionSerializationFieldSpan]]
+        public let unsupportedVersionFallback: Int
+
+        public init(
+            venueModelID: Int,
+            callbackAddress: UInt32,
+            streamDispatchMethodOffset: Int,
+            streamDispatchFirstArgument: Int,
+            streamDispatchSecondArgument: Int,
+            loadResetFieldSpans: [EntertainmentPavilionSerializationFieldSpan],
+            versionedFieldSpans: [Int: [EntertainmentPavilionSerializationFieldSpan]],
+            unsupportedVersionFallback: Int
+        ) {
+            self.venueModelID = venueModelID
+            self.callbackAddress = callbackAddress
+            self.streamDispatchMethodOffset = streamDispatchMethodOffset
+            self.streamDispatchFirstArgument = streamDispatchFirstArgument
+            self.streamDispatchSecondArgument = streamDispatchSecondArgument
+            self.loadResetFieldSpans = loadResetFieldSpans
+            self.versionedFieldSpans = versionedFieldSpans
+            self.unsupportedVersionFallback = unsupportedVersionFallback
+        }
+
+        public func fieldSpans(forArchiveVersion version: Int) -> [EntertainmentPavilionSerializationFieldSpan]? {
+            versionedFieldSpans[version]
+        }
+    }
+
+    public static let entertainmentPavilionSerializationDescriptor =
+        EntertainmentPavilionSerializationDescriptor(
+            venueModelID: 75,
+            callbackAddress: 0x0048CC80,
+            streamDispatchMethodOffset: 0x284,
+            streamDispatchFirstArgument: 0,
+            streamDispatchSecondArgument: 3,
+            loadResetFieldSpans: [
+                .init(objectOffset: 0x57, byteCount: 4),
+                .init(objectOffset: 0x56, byteCount: 4),
+                .init(objectOffset: 0x55, byteCount: 4),
+                .init(objectOffset: 0x58, byteCount: 100),
+                .init(objectOffset: 0x71, byteCount: 100),
+                .init(objectOffset: 0x54, byteCount: 4),
+            ],
+            versionedFieldSpans: [
+                1: [.init(objectOffset: 0x54, byteCount: 4)],
+                2: [
+                    .init(objectOffset: 0x54, byteCount: 4),
+                    .init(objectOffset: 0x55, byteCount: 4),
+                    .init(objectOffset: 0x58, byteCount: 0x50),
+                    .init(objectOffset: 0x71, byteCount: 0x50),
+                ],
+                3: [
+                    .init(objectOffset: 0x54, byteCount: 4),
+                    .init(objectOffset: 0x55, byteCount: 4),
+                    .init(objectOffset: 0x58, byteCount: 0x50),
+                    .init(objectOffset: 0x71, byteCount: 0x50),
+                ],
+                4: [
+                    .init(objectOffset: 0x54, byteCount: 4),
+                    .init(objectOffset: 0x55, byteCount: 4),
+                    .init(objectOffset: 0x58, byteCount: 100),
+                    .init(objectOffset: 0x71, byteCount: 100),
+                ],
+                5: [
+                    .init(objectOffset: 0x54, byteCount: 4),
+                    .init(objectOffset: 0x55, byteCount: 4),
+                    .init(objectOffset: 0x56, byteCount: 4),
+                    .init(objectOffset: 0x57, byteCount: 4),
+                    .init(objectOffset: 0x58, byteCount: 100),
+                    .init(objectOffset: 0x71, byteCount: 100),
+                ],
+            ],
+            unsupportedVersionFallback: 5
+        )
+
     /// Raw transition emitted by the Entertainment Area callback
     /// `FUN_0048CE90 @ 0x48CE90`.  This callback is reached only after a
     /// concrete model-71 provider already exists; it is not an archive-row
