@@ -7731,3 +7731,45 @@ specialized ID gates, object-vector slot write, post-load whitelist boundary,
 parity; **unknown** for vector insertion/population, indirect
 replacement/table consumers, provider registration timing, route/collision,
 and settlement.
+
+## 2026-09-05 Complete direct-call census for the entertainment manager getter
+
+To check whether the remaining `DAT_00C702C0` population could be hidden behind
+an omitted split-corpus caller, the raw `.text` of both hash-identified PEs was
+scanned for direct `CALL 0x0048A340` references.  EN and CH each contain the
+same eleven call sites:
+`0x00406AD6`, `0x00406B6A`, `0x0042D330`, `0x0042D8AD`, `0x0048AB05`,
+`0x0048B68B`, `0x0048B6B9`, `0x0048B6D9`, `0x0048E93F`, `0x0048F183`, and
+`0x004D1BC9`.  The surrounding call-site bytes are identical in EN and CH;
+the direct-call target list is byte-for-byte equal.
+
+The call-site contexts classify as follows:
+
+| call sites | next operation on the returned `DAT_00C702C0` pointer | evidence |
+| --- | --- | --- |
+| `0x406AD6`, `0x406B6A`, `0x48E93F`, `0x48F183` | pass as `this` to manager scans (`0x48A6B0`, `0x48A420`) | direct PE call-site bytes and split bodies |
+| `0x42D330`, `0x42D8AD` | pass as `this` to vector reset/clear (`0x42DCA0`/`0x42DC80`) | direct PE call-site bytes; map reset/load callers |
+| `0x48AB05` | pass as `this` to venue provider selection `0x48A520` | direct PE venue-FSM body |
+| `0x48B68B`, `0x48B6B9`, `0x48B6D9` | pass as `this` to provider/object erase paths (`0x490300` or `0x5F4F20`) | direct PE destructor/cleanup bodies |
+| `0x4D1BC9` | pass as `this` to Theatre Pavilion chooser `0x48A350` | direct PE venue-manager body |
+
+No direct getter call is followed by a vector insertion helper or a
+provider-specific `Creating(...)` call.  This is a **confirmed negative** for
+a direct `FUN_0048A340`-mediated provider-vector population edge, stronger than
+the split-corpus-only caller list.  It does not rule out a caller that obtains
+the same vector through another alias, a data-table dispatch, or an indirect
+constructor hook; those indirect consumers remain **unknown**.  The raw scan
+therefore narrows, but does not remove, the provider registry/population
+blocker.  Native keeps Qin entertainment provider projection and venue figures
+fail-closed.
+
+**Sources:** canonical EN/CH PE `.text` direct-call scans; call-site slices at
+the eleven addresses above; `FUN_0048A340.c`, `FUN_0048A420.c`,
+`FUN_0048A350.c`, `FUN_0048A6B0.c`, `FUN_0048B6B0.c`, `FUN_0048B6D0.c`,
+`FUN_0048F140.c`, `FUN_0042D250.c`, `FUN_0042D790.c`, and the direct PE body
+at `0x48A9A0`.
+
+**Evidence class:** **confirmed negative** for direct getter-mediated
+population, for the complete EN/CH call-site set and operation classes;
+**unknown** for alternate aliases/table consumers, insertion timing,
+route/collision, coverage, and settlement.
