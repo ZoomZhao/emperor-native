@@ -1409,9 +1409,10 @@ registration and callback/house settlement effects.
 The already recovered `FUN_0051CF90 @ 0x51CF90` strict spawn comparison is now
 represented by one centralized Native research primitive,
 `OriginalResidentialServiceCatalog.residentialSpawnThreshold`. Its rows are
-the tax override `1/3/5/10/15`, the Well/Herbalist/Acupuncture common row
-`1/3/7/15/29`, and the Religion selector `3/6/12/24/32`, each ordered by the
-source worker bands `100+`, `75…99`, `50…74`, `25…49`, and `1…24` (the zero
+the tax/Herbalist override `1/3/5/10/15`, the Well override with the same
+non-zero bands plus its explicit `+0x224` input-doubling gate, the Acupuncture
+row `1/3/7/15/29`, and the Religion selector `3/6/12/24/32`, each ordered by
+the source worker bands `100+`, `75…99`, `50…74`, `25…49`, and `1…24` (the zero
 worker input returns the last selector value but remains blocked by the
 separate `worker > 0` gate). A regression test covers every boundary and
 rejects unsupported figure `34`.
