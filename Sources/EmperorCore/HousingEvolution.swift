@@ -1192,25 +1192,53 @@ public enum OriginalResidentialServiceCatalog {
     /// These are research metadata only.  The callback's three output words
     /// and any provider/house settlement semantics remain unresolved, so this
     /// catalog must not be used to synthesize a live provider or coverage.
+    public struct ProviderVTableSlot200OutputEnvelope: Sendable, Hashable, Codable {
+        /// `nil` means the callback writes this envelope unconditionally.  A
+        /// value records the raw branch on the provider object's word at
+        /// `+0x2E`; it is deliberately not given a gameplay-facing meaning.
+        public let objectWord2EIsNonZero: Bool?
+        public let outputWord0: UInt32
+        public let outputWord1: UInt32
+        public let outputWord2: UInt32
+
+        public init(
+            objectWord2EIsNonZero: Bool? = nil,
+            outputWord0: UInt32,
+            outputWord1: UInt32,
+            outputWord2: UInt32
+        ) {
+            self.objectWord2EIsNonZero = objectWord2EIsNonZero
+            self.outputWord0 = outputWord0
+            self.outputWord1 = outputWord1
+            self.outputWord2 = outputWord2
+        }
+    }
+
     public struct ProviderVTableSlot200Descriptor: Sendable, Hashable, Codable {
         public let providerModelIDs: [Int]
         public let providerVTableAddress: UInt32
         public let slotOffset: Int
         public let targetAddress: UInt32
         public let targetIndexedInCorpus: Bool
+        /// Raw direct-PE output envelopes.  These are not semantic mappings
+        /// and must not be consumed as capacity, quality, figure, radius, or
+        /// coverage values until an indexed caller proves that interpretation.
+        public let outputEnvelopes: [ProviderVTableSlot200OutputEnvelope]
 
         public init(
             providerModelIDs: [Int],
             providerVTableAddress: UInt32,
             slotOffset: Int = 0x200,
             targetAddress: UInt32,
-            targetIndexedInCorpus: Bool
+            targetIndexedInCorpus: Bool,
+            outputEnvelopes: [ProviderVTableSlot200OutputEnvelope] = []
         ) {
             self.providerModelIDs = providerModelIDs
             self.providerVTableAddress = providerVTableAddress
             self.slotOffset = slotOffset
             self.targetAddress = targetAddress
             self.targetIndexedInCorpus = targetIndexedInCorpus
+            self.outputEnvelopes = outputEnvelopes
         }
     }
 
@@ -1219,37 +1247,88 @@ public enum OriginalResidentialServiceCatalog {
             providerModelIDs: [72, 73],
             providerVTableAddress: 0x007B5EB4,
             targetAddress: 0x0051BB60,
-            targetIndexedInCorpus: false
+            targetIndexedInCorpus: false,
+            outputEnvelopes: [
+                .init(outputWord0: 0x4C55, outputWord1: 4, outputWord2: 100),
+            ]
         ),
         .init(
             providerModelIDs: [207],
             providerVTableAddress: 0x007B6114,
             targetAddress: 0x0051BCD0,
-            targetIndexedInCorpus: false
+            targetIndexedInCorpus: false,
+            outputEnvelopes: [
+                .init(outputWord0: 0x4C1E, outputWord1: 4, outputWord2: 88),
+            ]
         ),
         .init(
             providerModelIDs: [208],
             providerVTableAddress: 0x007B6374,
             targetAddress: 0x0051BDE0,
-            targetIndexedInCorpus: false
+            targetIndexedInCorpus: false,
+            outputEnvelopes: [
+                .init(outputWord0: 0x4C03, outputWord1: 4, outputWord2: 80),
+            ]
         ),
         .init(
             providerModelIDs: [211],
             providerVTableAddress: 0x007ACEDC,
             targetAddress: 0x0048B030,
-            targetIndexedInCorpus: false
+            targetIndexedInCorpus: false,
+            outputEnvelopes: [
+                .init(
+                    objectWord2EIsNonZero: true,
+                    outputWord0: 0x4C67,
+                    outputWord1: 4,
+                    outputWord2: 100
+                ),
+                .init(
+                    objectWord2EIsNonZero: false,
+                    outputWord0: 0x4C69,
+                    outputWord1: 0,
+                    outputWord2: 100
+                ),
+            ]
         ),
         .init(
             providerModelIDs: [212],
             providerVTableAddress: 0x007AD140,
             targetAddress: 0x0048B1E0,
-            targetIndexedInCorpus: false
+            targetIndexedInCorpus: false,
+            outputEnvelopes: [
+                .init(
+                    objectWord2EIsNonZero: true,
+                    outputWord0: 0x4C94,
+                    outputWord1: 4,
+                    outputWord2: 80
+                ),
+                .init(
+                    objectWord2EIsNonZero: false,
+                    outputWord0: 0x4C96,
+                    outputWord1: 0,
+                    outputWord2: 80
+                ),
+            ]
         ),
         .init(
             providerModelIDs: [213],
             providerVTableAddress: 0x007AD3A4,
             targetAddress: 0x0048B3D0,
-            targetIndexedInCorpus: false
+            targetIndexedInCorpus: false,
+            outputEnvelopes: [
+                .init(
+                    objectWord2EIsNonZero: true,
+                    outputWord0: 0x4C6B,
+                    outputWord1: 4,
+                    outputWord2: 100
+                ),
+                .init(
+                    objectWord2EIsNonZero: false,
+                    outputWord0: 0x4C6D,
+                    outputWord1: 0,
+                    outputWord2: 100
+                ),
+            ]
         ),
     ]
 

@@ -6425,19 +6425,32 @@ final class EmperorCoreTests: XCTestCase {
     func testProviderVTableSlot200DescriptorsMatchCanonicalTargets() {
         let descriptors = OriginalResidentialServiceCatalog.providerVTableSlot200Descriptors
         XCTAssertEqual(descriptors.count, 6)
-        let expected: [([Int], UInt32, UInt32)] = [
-            ([72, 73], 0x007B5EB4, 0x0051BB60),
-            ([207], 0x007B6114, 0x0051BCD0),
-            ([208], 0x007B6374, 0x0051BDE0),
-            ([211], 0x007ACEDC, 0x0048B030),
-            ([212], 0x007AD140, 0x0048B1E0),
-            ([213], 0x007AD3A4, 0x0048B3D0),
+        let expected: [([Int], UInt32, UInt32, [(Bool?, UInt32, UInt32, UInt32)])] = [
+            ([72, 73], 0x007B5EB4, 0x0051BB60, [(nil, 0x4C55, 4, 100)]),
+            ([207], 0x007B6114, 0x0051BCD0, [(nil, 0x4C1E, 4, 88)]),
+            ([208], 0x007B6374, 0x0051BDE0, [(nil, 0x4C03, 4, 80)]),
+            ([211], 0x007ACEDC, 0x0048B030, [
+                (true, 0x4C67, 4, 100), (false, 0x4C69, 0, 100),
+            ]),
+            ([212], 0x007AD140, 0x0048B1E0, [
+                (true, 0x4C94, 4, 80), (false, 0x4C96, 0, 80),
+            ]),
+            ([213], 0x007AD3A4, 0x0048B3D0, [
+                (true, 0x4C6B, 4, 100), (false, 0x4C6D, 0, 100),
+            ]),
         ]
         for (descriptor, expected) in zip(descriptors, expected) {
             XCTAssertEqual(descriptor.providerModelIDs, expected.0)
             XCTAssertEqual(descriptor.providerVTableAddress, expected.1)
             XCTAssertEqual(descriptor.slotOffset, 0x200)
             XCTAssertEqual(descriptor.targetAddress, expected.2)
+            XCTAssertEqual(descriptor.outputEnvelopes.count, expected.3.count)
+            for (envelope, expectedEnvelope) in zip(descriptor.outputEnvelopes, expected.3) {
+                XCTAssertEqual(envelope.objectWord2EIsNonZero, expectedEnvelope.0)
+                XCTAssertEqual(envelope.outputWord0, expectedEnvelope.1)
+                XCTAssertEqual(envelope.outputWord1, expectedEnvelope.2)
+                XCTAssertEqual(envelope.outputWord2, expectedEnvelope.3)
+            }
         }
         XCTAssertTrue(
             descriptors.allSatisfy { !$0.targetIndexedInCorpus },
