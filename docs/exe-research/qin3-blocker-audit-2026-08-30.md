@@ -7517,3 +7517,42 @@ model-zero rejection, Qin archive model/provider values, map-loader call
 chain, and EN/CH parity; **confirmed negative** for a direct model-zero
 specialized-factory path; **unknown** for indirect replacement,
 archive-side specialization, provider registration, routing, and settlement.
+
+## 2026-09-05 Entertainment registration thunks are only static table entries in the PE
+
+The eight entertainment registration thunks are present as function-pointer
+entries in the canonical PE `.data` table at `0x00814340…0x00814378`:
+`0x48A7C0`, `0x48AFD0`, `0x48B180`, `0x48B330`, `0x48B520`, `0x48BA80`,
+`0x48BB60`, and `0x48CAF0`, in the same order as the registered records
+`0x82BC70…0x82BD18`.  Direct little-endian reads show the table bytes and the
+corresponding thunk bodies are identical in the hash-identified EN and CH
+images.  The surrounding range `0x814000…0x815788` is a larger contiguous
+function-pointer region; the table has no serialized map/object payload.
+
+A complete raw `.text` scan finds no direct call to any of those thunk
+addresses, and the recovered Qin load chain
+`FUN_0052E7C0 → FUN_0042D790 → FUN_0042D0E0 → FUN_0053D100/FUN_0052F030`
+does not read this table or dispatch through it.  The table therefore confirms
+that the thunks are linked into a static function-pointer region, but it does
+not establish who consumes the region, when registration runs, or that map
+deserialization invokes a registration thunk.  It is not evidence for
+converting a generic Qin `Building` row into a school/provider object.
+
+This narrows the remaining question to the table consumer or another indirect
+runtime hook: archive-side specialization, provider-index assignment,
+provider-vector insertion, route/collision, and house settlement remain
+**unknown**.  Native keeps Qin entertainment and automatic migration
+fail-closed.
+
+**Sources:** canonical EN/CH PE `.data` pointer table at
+`0x00814340…0x00814378`, thunk bodies at `0x48A7C0`, `0x48AFD0`,
+`0x48B180`, `0x48B330`, `0x48B520`, `0x48BA80`, `0x48BB60`, and `0x48CAF0`,
+the full raw `.text` direct-call scan, and the map-load bodies cited in the
+preceding section; PE hashes EN
+`8a6d2df1015cb75d797546d117da5f82b86fd08726090c2a13d853b9009d6753` and CH
+`dbdeca1ec2720f2387e1673bfbb901e9bad832179355ea897cfa7536e17ac15a`.
+
+**Evidence class:** **confirmed** for table membership, pointer order, thunk
+addresses, EN/CH byte identity, and the absence of a direct map-load call;
+**unknown** for the table consumer/startup timing, indirect runtime hooks,
+archive specialization, registry projection, routing, and settlement.
