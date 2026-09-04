@@ -10458,3 +10458,44 @@ sanitization, category order, integer arithmetic, top-up order, output
 addresses, and the raw `FUN_004AD850` writer of `DAT_01312134`; **unknown**
 for row-word labels, the target's cross-phase market meaning/lifecycle,
 provider registration, route, and household settlement.
+
+### 10.119 `FUN_004AE220` is the sole indexed writer of the cStall pool input rows (confirmed, 2026-09-05)
+
+A corpus-wide literal search for `DAT_01312138` finds only three functions:
+`FUN_004AE220 @ 0x004AE220` writes the table, while `FUN_004F1590` reads and
+balances it at its own entry and finalizes its output.  The indexed source row
+for `FUN_004AE220` is `identical` in `local/source/compare-report.tsv` for the
+canonical English and Chinese executables.
+
+`FUN_004AE220` first clears words `0…3` of a ten-row, `0x14`-stride workspace
+whose primary base is `DAT_01312138` and whose secondary base is
+`DAT_01312140`; it leaves each row's word 4 untouched.  It then walks the
+live object vector in container order.  For each object whose vtable
+`+0x188` callback accepts, the callback supplies the row index through an
+out-parameter.  The pass calls the same object's `+0xF4` flag and `+0x1B0`
+amount: it adds the amount to primary row word 0 unconditionally, and to
+secondary row word 2 only when `+0xF4` is nonzero.  No key, provider-record
+slot, cHouseInfo byte, or Native inventory is written by this pass.
+
+The separate cStall admission evidence records `+0x188` returning category
+index `2` for Empty Shop and shop models `62` and `64…70`; this connects those
+objects to the raw row index without assigning a resource meaning.  The
+balancer in §10.118 consumes only the first nine rows, while the accumulator's
+clear loop covers the ten-row workspace; the ninth/extra workspace distinction
+is preserved as an observed layout fact rather than normalized by Native.
+
+This closes the raw producer and its write order, but not the callback result
+semantics, the untouched word-4 source, the cross-phase target meaning, or
+provider/route/house settlement.  Native therefore keeps the accumulator
+outside the live Qin market path.
+
+**Sources:** `local/source/split-merged/code/0x040000/FUN_004ae220.c`,
+`FUN_004f1590.c`, `FUN_004271d0.c`, `local/source/split-merged/code/0x050000/
+FUN_005418d0.c`, the complete `DAT_01312138` literal search in the split
+corpus, and `local/source/compare-report.tsv` row `0x4ae220`.
+
+**Evidence class:** **confirmed** for the sole writer search result, ten-row
+clear workspace, `0x14` stride, callback/flag/amount ordering, primary and
+secondary accumulation, cStall category-2 input, and EN/CH parity; **unknown**
+for callback/amount semantics, word-4 provenance, the 9-versus-10 workspace
+consumer boundary, and all provider/route/house settlement effects.
