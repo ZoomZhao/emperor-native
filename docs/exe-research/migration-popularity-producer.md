@@ -10049,3 +10049,48 @@ caller identity, branch roles, and EN/CH parity; **confirmed negative** for an
 additional direct pressure/assignment caller; **unknown** for indirect/table
 dispatch, unresolved popularity inputs, object specialization, routing, and
 arrival settlement.
+
+## 2026-09-04 Monument-walk direct callers are fully censused
+
+Both canonical PE `.text` sections were scanned for every relative `E8`
+instruction whose resolved target is `FUN_0055AE30 @ 0x55AE30` (image base
+`0x00400000`).  The EN and CH results, including the five instruction bytes at
+each callsite, are identical:
+
+| callsite | enclosing function | indexed source role |
+| --- | --- | --- |
+| `0x0055B6AB` | `FUN_0055B6A0 @ 0x55B6A0` | the function's first action is the monument walk, before its remaining state/goal passes |
+| `0x0055E498` | `FUN_0055E490 @ 0x55E490` | wrapper calls the walk, then an indirect vtable `+0x10` callback |
+| `0x00591281` | `FUN_00591200 @ 0x591200` | monthly popularity producer adds the returned count × 2 |
+| `0x005B8C4B` | `Popularity_pctd @ 0x5B8740` | Popularity advisor renders `mon effect` from the returned count × 2 |
+
+The indexed bodies at `FUN_0055B6A0.c`, `FUN_0055E490.c`,
+`FUN_00591200.c`, and `Popularity_pctd.c` account for all four direct edges.
+`FUN_0055E490`'s own downstream callback is indirect, so this census does not
+claim that its vtable target set is complete.  Likewise, a table-driven or
+virtual edge into `FUN_0055AE30` remains outside a relative-`E8` scan.
+
+This is a useful negative boundary for Qin: no additional direct archive-load,
+map-rehydration, or migration-request caller of the monument walk was found in
+either canonical build.  It does **not** supply the missing live object vector,
+`cMonumentGoal` registry, `building+0xB4` percent producer, or save/arrival
+projection.  Native therefore keeps the monument factor as an explicit
+research-input boundary and automatic Qin migration remains
+`unsupportedOriginalProducer`.
+
+The callsite and caller-start addresses are recorded as immutable metadata in
+`OriginalMonumentMatchingCatalog` and asserted by
+`testOriginalMonumentMatchingCatalogMatchesCanonicalDirectCallCensus`.
+
+**Sources:** canonical `Exe/ghidra/input/EmperorEN.exe` and `EmperorCH.exe`
+complete relative-`E8` scans; indexed
+`local/source/split-merged/code/0x050000/FUN_0055B6A0.c`,
+`FUN_0055E490.c`, `FUN_00591200.c`, and `Popularity_pctd.c`; and the
+`identical` comparison rows for `0x55AE30`, `0x55B6A0`, `0x55E460`, and
+`0x591200` in `local/source/compare-report.tsv`.
+
+**Evidence class:** **confirmed** for the four direct callsites, enclosing
+functions, byte parity, and the monthly/advisor call roles visible in indexed
+source; **confirmed negative** for another direct `E8` caller in the two
+canonical `.text` sections; **unknown** for indirect/table dispatch and all
+live registry/projection inputs.

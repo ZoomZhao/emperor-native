@@ -93,6 +93,32 @@ public enum OriginalMigrationRequestProducerCatalog {
     }
 }
 
+/// Direct-call metadata for the source monument matching walk.
+///
+/// The canonical EN/CH `.text` scans contain exactly these four relative-call
+/// sites to `FUN_0055AE30 @ 0x55AE30`.  This is a direct-call census only:
+/// vtable/table dispatch and the unresolved live object-vector projection are
+/// deliberately not treated as absent.
+public enum OriginalMonumentMatchingCatalog {
+    public static let address: UInt32 = 0x0055AE30
+
+    public static let directCallSites: [UInt32] = [
+        0x0055B6AB,
+        0x0055E498,
+        0x00591281,
+        0x005B8C4B,
+    ]
+
+    /// Function starts enclosing the direct callsites, in the same order as
+    /// `directCallSites`.
+    public static let directCallerAddresses: [UInt32] = [
+        0x0055B6A0,
+        0x0055E490,
+        0x00591200,
+        0x005B8740,
+    ]
+}
+
 public struct MigrationAssessment: Sendable, Hashable, Codable {
     public let eligibleHouseIDs: [Int]
     public let availableCapacity: Int

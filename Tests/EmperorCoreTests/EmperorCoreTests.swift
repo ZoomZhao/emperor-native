@@ -5556,6 +5556,18 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testOriginalMonumentMatchingCatalogMatchesCanonicalDirectCallCensus() {
+        XCTAssertEqual(OriginalMonumentMatchingCatalog.address, 0x0055AE30)
+        XCTAssertEqual(
+            OriginalMonumentMatchingCatalog.directCallSites,
+            [0x0055B6AB, 0x0055E498, 0x00591281, 0x005B8C4B]
+        )
+        XCTAssertEqual(
+            OriginalMonumentMatchingCatalog.directCallerAddresses,
+            [0x0055B6A0, 0x0055E490, 0x00591200, 0x005B8740]
+        )
+    }
+
     func testOriginalPressurePassHonorsCooldownAndPopulationDepartureGate() {
         let cooldown = DeterministicMigration.originalPressurePass(.init(
             popularity: 10,
