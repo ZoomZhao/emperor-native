@@ -6371,9 +6371,9 @@ temporarily set the existing availability enum to
 two campaign-rejected Music School placements, and then restored the test and
 removed the temporary controller hook.  No diagnostic switch is committed.
 
-The 120-month player-command run reached an initial population of `343` with
-`40` houses and `231` water; the early housing reach was `27/40`.  Population
-then plateaued and declined, ending at `203` with `24` houses, `119` water, and
+The 120-month player-command run reached `343` population early in the trace,
+with `40` houses and `231` water; the early housing reach was `27/40`.
+Population then plateaued and declined, ending at `203` with `24` houses, `119` water, and
 housing reach `14/24`.  Buyers and peddlers stayed at `0`, food quality stayed
 at `0`, and no level-6 house was reached.  The terminal goal snapshot was
 population `203/1800`, level-6 housing `0/1000`, lacquer `1200/1600`, and jade
