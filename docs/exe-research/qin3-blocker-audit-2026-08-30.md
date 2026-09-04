@@ -6361,3 +6361,43 @@ inputs; until then the skip is the faithful result.
 diagnostic output; **source-backed/confirmed** for the entertainment provider
 factory dispatch; **unknown** for the original archive-to-provider projection,
 migration input producer, route, and settlement.
+
+## 2026-09-04 Supported-producer diagnostic isolates downstream Qin-3 blockers
+
+To separate the unrecovered original migration producer from downstream
+settlement, a second reversible Native-only diagnostic was run.  The test
+temporarily set the existing availability enum to
+`.supportedOriginalProducer`, set migration popularity to `60`, omitted the
+two campaign-rejected Music School placements, and then restored the test and
+removed the temporary controller hook.  No diagnostic switch is committed.
+
+The 120-month player-command run reached an initial population of `343` with
+`40` houses and `231` water; the early housing reach was `27/40`.  Population
+then plateaued and declined, ending at `203` with `24` houses, `119` water, and
+housing reach `14/24`.  Buyers and peddlers stayed at `0`, food quality stayed
+at `0`, and no level-6 house was reached.  The terminal goal snapshot was
+population `203/1800`, level-6 housing `0/1000`, lacquer `1200/1600`, and jade
+`1200/1200`; the remaining unmet checks were food quality (`0` versus `20`)
+and water service (`12` houses).  This is a controlled Native diagnostic, not
+an original-executable value claim, but it demonstrates that the current
+supported-producer path can enter the Qin map and that the next observable
+failure is downstream water/food-market settlement rather than the migration
+availability enum itself.
+
+The result does not authorize a layout change, forced provider placement, fake
+residents, or a guessed peddler rule.  Source-first work is still required for
+the provider/object-vector projection, Well predicate inputs and coverage
+writer, food-quality inputs, and market/peddler settlement before Qin-3 can be
+unskipped.
+
+**Sources:** `Tests/EmperorGameplayTests/Qin3PlayerPlaythroughTests.swift`
+(temporary diagnostic run, restored afterward), the temporary
+`GameSessionController` diagnostic hook (removed afterward), the captured
+120-month stderr trajectory, `Sources/EmperorCore/CitySimulation.swift`,
+`Sources/EmperorCore/HousingEvolution.swift`, and the original-source
+contracts recorded in `FUN_0051BC00.c`, `FUN_00517AD0.c`, and
+`migration-popularity-producer.md`.
+
+**Evidence class:** **confirmed** for the Native diagnostic setup and recorded
+terminal trajectory; **unknown** for the original producer, provider
+projection, water/food settlement ordering, and peddler algorithm.
