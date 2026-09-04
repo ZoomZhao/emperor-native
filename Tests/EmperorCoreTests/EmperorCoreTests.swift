@@ -10524,6 +10524,70 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(OriginalMarketCStallPoolProjectionCatalog.callbackSelectors, [1, 2])
     }
 
+    func testOriginalMarketCStallPoolBalanceCopiesRowsWhenTargetCoversSource() {
+        let records = [
+            OriginalMarketCStallPoolRecord(sourceWord0: 10, sourceWord1: 99, sourceWord2: 4, sourceWord3: 3, sourceWord4: 6),
+            OriginalMarketCStallPoolRecord(sourceWord0: 5, sourceWord1: 0, sourceWord2: 2, sourceWord3: 1, sourceWord4: 4),
+        ] + Array(repeating: OriginalMarketCStallPoolRecord(sourceWord0: 0, sourceWord1: 0, sourceWord2: 0, sourceWord3: 0, sourceWord4: 0), count: 7)
+
+        let result = OriginalMarketCStallPoolBalanceCatalog.balance(
+            records: records,
+            targetTotal: 20
+        )
+        XCTAssertEqual(result?.sourceTotal, 15)
+        XCTAssertEqual(result?.normalizedTotal, 15)
+        XCTAssertEqual(result?.unallocatedTotal, 0)
+        XCTAssertEqual(result?.normalizedShortfall, 5)
+        XCTAssertEqual(result?.normalizedShortfallPercent, 25)
+        XCTAssertEqual(result?.rows[0].sourceWord1, 10)
+        XCTAssertEqual(result?.rows[0].sourceWord3, 4)
+        XCTAssertEqual(result?.rows[0].sourceWord4, 3, "source only clamps word4 when it exceeds 5")
+    }
+
+    func testOriginalMarketCStallPoolBalancePreservesCategoryZeroTopUpOrder() {
+        let records = [
+            OriginalMarketCStallPoolRecord(sourceWord0: 100, sourceWord1: 0, sourceWord2: 20, sourceWord3: 7, sourceWord4: 0),
+        ] + Array(repeating: OriginalMarketCStallPoolRecord(sourceWord0: 0, sourceWord1: 0, sourceWord2: 0, sourceWord3: 0, sourceWord4: 1), count: 8)
+
+        let result = OriginalMarketCStallPoolBalanceCatalog.balance(
+            records: records,
+            targetTotal: 50
+        )
+        XCTAssertEqual(result?.rows[0].sourceWord0, 100)
+        XCTAssertEqual(result?.rows[0].sourceWord1, 50)
+        XCTAssertEqual(result?.rows[0].sourceWord2, 20)
+        XCTAssertEqual(result?.rows[0].sourceWord3, 20)
+        XCTAssertEqual(result?.unallocatedTotal, 50)
+        XCTAssertEqual(result?.normalizedTotal, 50)
+    }
+
+    func testOriginalMarketCStallPoolBalanceTopUpFillsWordTwoBeforeWordZero() {
+        let records = [
+            OriginalMarketCStallPoolRecord(sourceWord0: 3, sourceWord1: 0, sourceWord2: 3, sourceWord3: 0, sourceWord4: 0),
+            OriginalMarketCStallPoolRecord(sourceWord0: 3, sourceWord1: 0, sourceWord2: 3, sourceWord3: 0, sourceWord4: 0),
+        ] + Array(repeating: OriginalMarketCStallPoolRecord(sourceWord0: 0, sourceWord1: 0, sourceWord2: 0, sourceWord3: 0, sourceWord4: 1), count: 7)
+
+        let result = OriginalMarketCStallPoolBalanceCatalog.balance(
+            records: records,
+            targetTotal: 5
+        )
+        XCTAssertEqual(result?.rows[0].sourceWord0, 3)
+        XCTAssertEqual(result?.rows[0].sourceWord1, 3)
+        XCTAssertEqual(result?.rows[0].sourceWord2, 3)
+        XCTAssertEqual(result?.rows[0].sourceWord3, 3)
+        XCTAssertEqual(result?.rows[1].sourceWord1, 2)
+        XCTAssertEqual(result?.rows[1].sourceWord3, 2)
+    }
+
+    func testOriginalMarketCStallPoolBalanceRequiresFixedNineRows() {
+        XCTAssertNil(
+            OriginalMarketCStallPoolBalanceCatalog.balance(
+                records: [],
+                targetTotal: 0
+            )
+        )
+    }
+
     func testOriginalMarketCStallField44ProducerAppliesRatioAndPoolSelection() {
         let result = OriginalMarketCStallField44Producer.apply(.init(
             callbackAccepted: true,

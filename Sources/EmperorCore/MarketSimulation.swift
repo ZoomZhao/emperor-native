@@ -564,6 +564,240 @@ public enum OriginalMarketCStallPoolProjectionCatalog {
     }
 }
 
+/// Result of the fixed nine-row balancing pass at `FUN_004F1590`.
+/// Every field remains positional/raw: the executable's row words and global
+/// totals have not acquired a verified player-facing inventory meaning.
+public struct OriginalMarketCStallPoolBalanceResult: Sendable, Hashable, Codable {
+    public let rows: [OriginalMarketCStallPoolRecord]
+    public let sourceTotal: Int
+    public let normalizedTotal: Int
+    public let unallocatedTotal: Int
+    public let normalizedShortfall: Int
+    public let normalizedShortfallPercent: Int
+
+    public init(
+        rows: [OriginalMarketCStallPoolRecord],
+        sourceTotal: Int,
+        normalizedTotal: Int,
+        unallocatedTotal: Int,
+        normalizedShortfall: Int,
+        normalizedShortfallPercent: Int
+    ) {
+        self.rows = rows
+        self.sourceTotal = sourceTotal
+        self.normalizedTotal = normalizedTotal
+        self.unallocatedTotal = unallocatedTotal
+        self.normalizedShortfall = normalizedShortfall
+        self.normalizedShortfallPercent = normalizedShortfallPercent
+    }
+}
+
+public enum OriginalMarketCStallPoolBalanceCatalog {
+    public static let sourceAddress: UInt32 = 0x004F1590
+    public static let sourceTableAddress: UInt32 = 0x01312138
+    public static let targetAddress: UInt32 = 0x01312134
+    public static let normalizedTotalAddress: UInt32 = 0x01312200
+    public static let unallocatedTotalAddress: UInt32 = 0x01312210
+    public static let normalizedShortfallAddress: UInt32 = 0x01312204
+    public static let normalizedShortfallPercentAddress: UInt32 = 0x01312208
+    public static let recordCount = 9
+    public static let recordStride = 0x14
+    public static let categoryCount = 6
+
+    /// Reproduces the raw row balancing in `FUN_004F1590`.
+    ///
+    /// The source first clears row word 1 and changes row word 4 to `3` only
+    /// when it is greater than `5`.  When the row-word-0 sum exceeds the
+    /// supplied target, it allocates by category `5...0`, using the source's
+    /// integer percentage/scaling helpers and ordered one-unit top-ups.  The
+    /// returned rows are exactly the inputs consumed by `FUN_004F19A0`; no
+    /// semantic stock, labor, or provider interpretation is introduced.
+    public static func balance(
+        records: [OriginalMarketCStallPoolRecord],
+        targetTotal: Int
+    ) -> OriginalMarketCStallPoolBalanceResult? {
+        guard records.count == recordCount else { return nil }
+
+        // [word0, word1, word2, word3, word4]
+        var rows = records.map {
+            var words = [
+                $0.sourceWord0, $0.sourceWord1, $0.sourceWord2,
+                $0.sourceWord3, $0.sourceWord4,
+            ]
+            words[1] = 0
+            if words[4] > 5 { words[4] = 3 }
+            return words
+        }
+        let sourceTotal = rows.reduce(0) { $0 + $1[0] }
+        var remaining = targetTotal < sourceTotal ? targetTotal : sourceTotal
+
+        @inline(__always) func percent(_ numerator: Int, _ denominator: Int) -> Int {
+            denominator == 0 ? 0 : (numerator * 100) / denominator
+        }
+
+        @inline(__always) func scale(_ value: Int, _ percentage: Int) -> Int {
+            (value * percentage) / 100
+        }
+
+        func categorySums(_ category: Int) -> (deficit: Int, base: Int) {
+            rows.reduce(into: (0, 0)) { sums, row in
+                guard row[4] == category else { return }
+                sums.deficit += row[0] - row[2]
+                sums.base += row[2]
+            }
+        }
+
+        func distributeCategory(_ category: Int, remaining: inout Int) {
+            let sums = categorySums(category)
+            let shareBase: Int
+            let shareDeficit: Int
+            if category == 0 {
+                shareBase = 0
+                shareDeficit = 0
+            } else if remaining <= sums.base {
+                shareBase = percent(remaining, sums.base)
+                shareDeficit = 0
+            } else {
+                shareBase = 100
+                shareDeficit = min(100, percent(remaining - sums.base, sums.deficit))
+            }
+
+            var residualBase = sums.base
+            var residualDeficit = sums.deficit
+            for index in rows.indices where rows[index][4] == category {
+                let base = rows[index][2]
+                let total = rows[index][0]
+                let allocatedBase = scale(base, shareBase)
+                let allocatedDeficit = scale(total - base, shareDeficit)
+                rows[index][3] = allocatedBase
+                rows[index][1] = allocatedBase + allocatedDeficit
+                remaining -= allocatedBase + allocatedDeficit
+                residualBase -= allocatedBase
+                residualDeficit -= allocatedDeficit
+                if remaining < 1 { break }
+            }
+
+            guard category != 0 else { return }
+            while residualBase > 0 && remaining > 0 {
+                var progressed = false
+                for index in rows.indices where rows[index][4] == category {
+                    guard remaining > 0, residualBase > 0 else { break }
+                    if rows[index][3] < rows[index][2] {
+                        rows[index][3] += 1
+                        rows[index][1] += 1
+                        remaining -= 1
+                        residualBase -= 1
+                        progressed = true
+                    }
+                }
+                guard progressed else { break }
+            }
+            while residualDeficit > 0 && remaining > 0 {
+                var progressed = false
+                for index in rows.indices where rows[index][4] == category {
+                    guard remaining > 0, residualDeficit > 0 else { break }
+                    if rows[index][1] < rows[index][0] {
+                        rows[index][1] += 1
+                        remaining -= 1
+                        residualDeficit -= 1
+                        progressed = true
+                    }
+                }
+                guard progressed else { break }
+            }
+        }
+
+        if targetTotal < sourceTotal {
+            var category = 5
+            while category > 0 && remaining > 0 {
+                distributeCategory(category, remaining: &remaining)
+                category -= 1
+            }
+
+            // `LAB_004F179C` repeats the same arithmetic for category zero,
+            // then performs the two ordered one-unit top-up loops.
+            if remaining > 0 {
+                let sums = categorySums(0)
+                let shareBase: Int
+                let shareDeficit: Int
+                if sums.base < remaining {
+                    shareBase = 100
+                    shareDeficit = min(100, percent(remaining - sums.base, sums.deficit))
+                } else {
+                    shareBase = percent(remaining, 0)
+                    shareDeficit = 0
+                }
+                var residualBase = sums.base
+                var residualDeficit = sums.deficit
+                for index in rows.indices where rows[index][4] == 0 {
+                    let base = rows[index][2]
+                    let total = rows[index][0]
+                    let allocatedBase = scale(base, shareBase)
+                    let allocatedDeficit = scale(total - base, shareDeficit)
+                    rows[index][3] = allocatedBase
+                    rows[index][1] = allocatedBase + allocatedDeficit
+                    remaining -= allocatedBase + allocatedDeficit
+                    residualBase -= allocatedBase
+                    residualDeficit -= allocatedDeficit
+                    if remaining < 1 { break }
+                }
+                while residualBase > 0 && remaining > 0 {
+                    var progressed = false
+                    for index in rows.indices where rows[index][4] == 0 {
+                        guard remaining > 0, residualBase > 0 else { break }
+                        if rows[index][3] < rows[index][2] {
+                            rows[index][3] += 1
+                            rows[index][1] += 1
+                            remaining -= 1
+                            residualBase -= 1
+                            progressed = true
+                        }
+                    }
+                    guard progressed else { break }
+                }
+                while residualDeficit > 0 && remaining > 0 {
+                    var progressed = false
+                    for index in rows.indices where rows[index][4] == 0 {
+                        guard remaining > 0, residualDeficit > 0 else { break }
+                        if rows[index][1] < rows[index][0] {
+                            rows[index][1] += 1
+                            remaining -= 1
+                            residualDeficit -= 1
+                            progressed = true
+                        }
+                    }
+                    guard progressed else { break }
+                }
+            }
+        } else {
+            for index in rows.indices {
+                rows[index][1] = rows[index][0]
+                rows[index][3] = rows[index][2]
+            }
+            remaining = sourceTotal
+        }
+
+        let normalizedTotal = targetTotal < sourceTotal ? targetTotal : sourceTotal
+        let unallocatedTotal = rows.reduce(0) { $0 + ($1[0] - $1[1]) }
+        let normalizedShortfall = targetTotal - normalizedTotal
+        let normalizedShortfallPercent = percent(normalizedShortfall, targetTotal)
+        let resultRows = rows.map {
+            OriginalMarketCStallPoolRecord(
+                sourceWord0: $0[0], sourceWord1: $0[1], sourceWord2: $0[2],
+                sourceWord3: $0[3], sourceWord4: $0[4]
+            )
+        }
+        return .init(
+            rows: resultRows,
+            sourceTotal: sourceTotal,
+            normalizedTotal: normalizedTotal,
+            unallocatedTotal: unallocatedTotal,
+            normalizedShortfall: normalizedShortfall,
+            normalizedShortfallPercent: normalizedShortfallPercent
+        )
+    }
+}
+
 /// Raw inputs to the cStall `+0x18C` field producer (`FUN_0051E310`).
 /// `statusCode` is the word written by the receiver's `+0x188` callback;
 /// `selector` and the two pool values are the arguments supplied by

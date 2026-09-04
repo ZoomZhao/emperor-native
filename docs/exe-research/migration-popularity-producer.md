@@ -10410,3 +10410,44 @@ registration therefore remains fail-closed.
 pre-refresh field/counter updates, EN/CH parity, and absence of a direct
 generic-loader edge; **unknown** for indirect/table dispatch, registry
 provenance, archive specialization, and all downstream settlement.
+
+### 10.118 `FUN_004F1590` is a fixed nine-row category balancing pass before cStall pools (confirmed, 2026-09-05)
+
+The preceding market phase is now represented as a raw balancing boundary.
+`FUN_004F1590 @ 0x004F1590` operates on nine five-dword rows beginning at
+`DAT_01312138` with a `0x14`-byte stride.  Before any allocation it clears
+each row's word 1 and changes word 4 to `3` only when that word is greater
+than `5`.  It sums word 0 across all nine rows, then compares that sum with
+the target word at `DAT_01312134`.
+
+When the source sum is not above the target, it copies word 0 to word 1 and
+word 2 to word 3 for every row.  When the source sum exceeds the target, it
+starts with the target as remaining work, visits category words `5` through
+`1`, then runs the dedicated category-`0` branch.  Each branch computes the
+same source integer percentages (`FUN_00408BA0`) and scaled values
+(`FUN_00408B80`), writes words 1 and 3, and performs ordered one-unit top-ups
+while the category's residual capacity remains.  The pass then exposes the
+raw totals written at `DAT_01312200`, `DAT_01312210`, `DAT_01312204`, and
+`DAT_01312208` (normalized total, unallocated difference, shortfall, and
+shortfall percentage); no gameplay label is assigned to those words.
+
+Native mirrors this arithmetic in
+`OriginalMarketCStallPoolBalanceCatalog.balance(records:targetTotal:)` and
+keeps the result separate from `OriginalMarketCStallPoolProjectionCatalog`:
+the former prepares the nine source rows, while the latter performs the later
+ten-slot `FUN_004F19A0` projection.  The helper is research-only and is not
+wired to Native inventory, workforce, provider registration, or household
+settlement.  The row-word semantics and the producer of the target word
+remain unknown, so Qin market behavior remains fail-closed.
+
+**Sources:** `local/source/split-merged/code/0x040000/FUN_004F1590.c`,
+`FUN_00408BA0.c`, `FUN_00408B80.c`, the adjacent
+`FUN_004F19A0.c` projection, and the EN/CH-identical comparison rows for
+these functions; `Sources/EmperorCore/MarketSimulation.swift`; and the
+focused `testOriginalMarketCStallPoolBalance*` regressions in
+`Tests/EmperorCoreTests/EmperorCoreTests.swift`.
+
+**Evidence class:** **confirmed** for the nine-row count, stride, initial
+sanitization, category order, integer arithmetic, top-up order, and output
+addresses; **unknown** for row-word labels, target-word provenance, provider
+registration, route, and household settlement.
