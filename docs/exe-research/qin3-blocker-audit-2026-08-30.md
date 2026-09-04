@@ -7627,3 +7627,35 @@ fail-closed for Qin entertainment and automatic migration.
 matches, mission source/player-city table, and continuation links;
 **unknown** for any post-load indirect specialization or provider
 registration outside the serialized map streams.
+
+## 2026-09-05 Qin post-load rebuild sequence has no provider projection edge
+
+The canonical map/post-load entry `FUN_0053D100 @ 0x53D100` was read in the
+indexed EN/CH corpus, including every direct callee in order:
+`FUN_0052F030` (the recovered model whitelist), `FUN_0053D630`,
+`FUN_0053CAE0`, `FUN_0053CBD0`, `FUN_005ADDD0`, `FUN_005ADD10`,
+`FUN_005AD8F0`, `FUN_00522810`, `FUN_005ADD40`, and `FUN_00468B80`.
+The callers/callees only clear or rebuild object, terrain, routing, viewport,
+and presentation caches after the whitelist pass.  They do not call the MFC
+runtime-class resolver, the entertainment registration thunks, a provider
+vector insertion routine, or a provider-specific `Creating(...)` projection.
+
+`compare-report.tsv` marks `0x53D100`, `0x53D630`, `0x53CAE0`, `0x53CBD0`,
+and `0x522810` `identical` across the canonical EN/CH hashes.  This is a
+stronger negative boundary than merely observing that the four Qin maps have
+generic records: the complete direct post-load sequence itself contains no
+provider projection edge.  It does **not** rule out an indirect/table-driven
+consumer elsewhere, so the provider registry consumer, route/collision
+projection, and house settlement remain **unknown**; no Qin provider is
+enabled from this sequence.
+
+**Sources:** `local/source/split-merged/code/0x050000/FUN_0053d100.c`,
+`FUN_0052f030.c`, `FUN_0053d630.c`, `FUN_0053cae0.c`, `FUN_0053cbd0.c`,
+`FUN_005addd0.c`, `FUN_005add10.c`, `FUN_005ad8f0.c`,
+`FUN_00522810.c`, `FUN_005add40.c`, `local/source/compare-report.tsv`,
+and `Sources/EmperorCore/OriginalMapObjectGridProjection.swift` / map-load
+catalog comments that keep these cache passes separate from live providers.
+
+**Evidence class:** **confirmed negative** for a direct provider projection
+edge in the complete `FUN_0053D100` sequence and for EN/CH parity;
+**unknown** for indirect consumers outside that sequence.
