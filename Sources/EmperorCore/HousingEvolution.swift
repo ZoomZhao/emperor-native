@@ -1188,6 +1188,79 @@ public enum OriginalResidentialServiceCatalog {
         }
     }
 
+    /// Fixed-output callback targets in provider vtable slot `+0x200`.
+    /// These are research metadata only.  The callback's three output words
+    /// and any provider/house settlement semantics remain unresolved, so this
+    /// catalog must not be used to synthesize a live provider or coverage.
+    public struct ProviderVTableSlot200Descriptor: Sendable, Hashable, Codable {
+        public let providerModelIDs: [Int]
+        public let providerVTableAddress: UInt32
+        public let slotOffset: Int
+        public let targetAddress: UInt32
+        public let targetIndexedInCorpus: Bool
+
+        public init(
+            providerModelIDs: [Int],
+            providerVTableAddress: UInt32,
+            slotOffset: Int = 0x200,
+            targetAddress: UInt32,
+            targetIndexedInCorpus: Bool
+        ) {
+            self.providerModelIDs = providerModelIDs
+            self.providerVTableAddress = providerVTableAddress
+            self.slotOffset = slotOffset
+            self.targetAddress = targetAddress
+            self.targetIndexedInCorpus = targetIndexedInCorpus
+        }
+    }
+
+    public static let providerVTableSlot200Descriptors: [ProviderVTableSlot200Descriptor] = [
+        .init(
+            providerModelIDs: [72, 73],
+            providerVTableAddress: 0x007B5EB4,
+            targetAddress: 0x0051BB60,
+            targetIndexedInCorpus: false
+        ),
+        .init(
+            providerModelIDs: [207],
+            providerVTableAddress: 0x007B6114,
+            targetAddress: 0x0051BCD0,
+            targetIndexedInCorpus: false
+        ),
+        .init(
+            providerModelIDs: [208],
+            providerVTableAddress: 0x007B6374,
+            targetAddress: 0x0051BDE0,
+            targetIndexedInCorpus: false
+        ),
+        .init(
+            providerModelIDs: [211],
+            providerVTableAddress: 0x007ACEDC,
+            targetAddress: 0x0048B030,
+            targetIndexedInCorpus: false
+        ),
+        .init(
+            providerModelIDs: [212],
+            providerVTableAddress: 0x007AD140,
+            targetAddress: 0x0048B1E0,
+            targetIndexedInCorpus: false
+        ),
+        .init(
+            providerModelIDs: [213],
+            providerVTableAddress: 0x007AD3A4,
+            targetAddress: 0x0048B3D0,
+            targetIndexedInCorpus: false
+        ),
+    ]
+
+    public static func providerVTableSlot200Descriptor(
+        forProviderModelID providerModelID: Int
+    ) -> ProviderVTableSlot200Descriptor? {
+        providerVTableSlot200Descriptors.first {
+            $0.providerModelIDs.contains(providerModelID)
+        }
+    }
+
     /// MFC runtime-class records recovered from the canonical provider
     /// executables.  These are registration metadata only: the generic Qin
     /// map loader still requests `Building`, and these descriptors must not

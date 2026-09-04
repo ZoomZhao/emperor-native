@@ -6422,6 +6422,39 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testProviderVTableSlot200DescriptorsMatchCanonicalTargets() {
+        let descriptors = OriginalResidentialServiceCatalog.providerVTableSlot200Descriptors
+        XCTAssertEqual(descriptors.count, 6)
+        let expected: [([Int], UInt32, UInt32)] = [
+            ([72, 73], 0x007B5EB4, 0x0051BB60),
+            ([207], 0x007B6114, 0x0051BCD0),
+            ([208], 0x007B6374, 0x0051BDE0),
+            ([211], 0x007ACEDC, 0x0048B030),
+            ([212], 0x007AD140, 0x0048B1E0),
+            ([213], 0x007AD3A4, 0x0048B3D0),
+        ]
+        for (descriptor, expected) in zip(descriptors, expected) {
+            XCTAssertEqual(descriptor.providerModelIDs, expected.0)
+            XCTAssertEqual(descriptor.providerVTableAddress, expected.1)
+            XCTAssertEqual(descriptor.slotOffset, 0x200)
+            XCTAssertEqual(descriptor.targetAddress, expected.2)
+        }
+        XCTAssertTrue(
+            descriptors.allSatisfy { !$0.targetIndexedInCorpus },
+            "the six callback bodies are direct PE evidence, not split-corpus semantic contracts"
+        )
+        XCTAssertEqual(
+            OriginalResidentialServiceCatalog
+                .providerVTableSlot200Descriptor(forProviderModelID: 211)?.targetAddress,
+            0x0048B030
+        )
+        XCTAssertNil(
+            OriginalResidentialServiceCatalog.providerVTableSlot200Descriptor(
+                forProviderModelID: 214
+            )
+        )
+    }
+
     func testProviderLoadAuxiliaryOutcomePreservesGateAndCallbackOrder() {
         let closed = OriginalResidentialServiceCatalog
             .providerLoadAuxiliaryOutcome(
