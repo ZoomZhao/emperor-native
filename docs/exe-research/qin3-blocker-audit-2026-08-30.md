@@ -7556,3 +7556,40 @@ preceding section; PE hashes EN
 addresses, EN/CH byte identity, and the absence of a direct map-load call;
 **unknown** for the table consumer/startup timing, indirect runtime hooks,
 archive specialization, registry projection, routing, and settlement.
+
+## 2026-09-05 Full authored city-map corpus has no serialized Qin service/provider class
+
+The bounded archive scanner was run against every `GameData/Cities/*.map`
+asset, not only the four Qin baseline maps.  All `167` files decode through
+the authored Sierra chunk format and declare `Building` in the variable
+archive range (`EmperorMap.buildingArchiveTransitionOffset ..< decoded.count
+- EmperorMap.gridCellCount`).  The only other serialized class names found
+are `cFerryBldg`, `cFillBldg`, `cGateHouse`, `cIndustrialBldg`,
+`cMonumentBldg`, `cResGate`, `cResWall`, and `cTower` (with the expected
+map-specific subsets).  No file declares any residential/market or
+entertainment provider class: `cWellBldg`, `cHerbalistBldg`,
+`cAcupuncturistBldg`, `cMarket`, `cEntertainmentBldg`, `cMusicSchool`,
+`cAcrobatSchool`, `cDramaSchool`, `cEntertainmentVenue`, `cTheatre`,
+`cTheatreSpectator`, and `cEntertainmentSquare` are all absent, as are the
+legacy aliases `Well`, `Herbalist`, and `Acupuncturist`.
+
+The new regression `testCityArchivesContainNoSerializedResidentialOrEntertainmentProviderClasses`
+locks the `167`-map inventory, the `Building` declaration requirement, the
+bounded archive range, and the forbidden provider-class set.  This is
+authored-data evidence, not a claim that generic `Building` model words are
+already specialized at runtime.  Combined with the PE runtime-class and
+factory negatives above, it rules out a direct serialized provider-class
+source for the current city corpus.  The remaining archive-to-provider
+specialization can only be an indirect replacement/table hook or a later
+runtime projection, so provider registry assignment, route/collision, and
+house settlement remain **unknown** and Qin stays fail-closed.
+
+**Sources:** all `GameData/Cities/*.map` files; `Sources/EmperorCore/
+SierraChunkedFile.swift`, `EmperorMap.swift`, and
+`MapArchiveClassCatalog.swift`; and the focused regression in
+`Tests/EmperorCoreTests/EmperorCoreTests.swift`.
+
+**Evidence class:** **confirmed** for the `167` decoded-map inventory,
+bounded class scan, complete forbidden-class absence, and regression result;
+**unknown** for generic-model specialization, indirect runtime hooks,
+provider registry projection, routing, and settlement.

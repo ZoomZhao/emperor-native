@@ -2400,6 +2400,47 @@ final class EmperorCoreTests: XCTestCase {
         }
     }
 
+    func testCityArchivesContainNoSerializedResidentialOrEntertainmentProviderClasses() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let source = try GameDataSource.openDefault()
+        let forbiddenProviderClasses = Set([
+            "Well", "cWell", "cWellBldg",
+            "Herbalist", "cHerbalist", "cHerbalistBldg",
+            "Acupuncturist", "cAcupuncturist", "cAcupuncturistBldg",
+            "cMarket",
+            "cEntertainmentBldg", "cMusicSchool", "cAcrobatSchool",
+            "cDramaSchool", "cEntertainmentVenue", "cTheatre",
+            "cTheatreSpectator", "cEntertainmentSquare"
+        ])
+        let mapURLs = try FileManager.default.contentsOfDirectory(
+            at: source.citiesDirectory,
+            includingPropertiesForKeys: nil,
+            options: [.skipsHiddenFiles]
+        )
+        .filter { $0.pathExtension.lowercased() == "map" }
+        .sorted { $0.lastPathComponent < $1.lastPathComponent }
+        XCTAssertEqual(mapURLs.count, 167, "authored city-map inventory")
+
+        for mapURL in mapURLs {
+            let decoded = try SierraChunkedFile(contentsOf: mapURL).decodedData
+            let archiveEnd = decoded.count - EmperorMap.gridCellCount
+            let declarations = OriginalMapArchiveClassCatalog.declarations(
+                in: decoded,
+                archiveRange: EmperorMap.buildingArchiveTransitionOffset..<archiveEnd
+            )
+            XCTAssertTrue(
+                declarations.contains(where: { $0.className == "Building" }),
+                "\(mapURL.lastPathComponent) must declare Building"
+            )
+            XCTAssertTrue(
+                declarations.allSatisfy { !forbiddenProviderClasses.contains($0.className) },
+                "\(mapURL.lastPathComponent) must not serialize a residential/entertainment provider class"
+            )
+        }
+    }
+
     func testQinEmperorMapRetainsArchiveClassDeclarationsWithoutSpecializingObjects() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")
