@@ -10429,7 +10429,12 @@ same source integer percentages (`FUN_00408BA0`) and scaled values
 while the category's residual capacity remains.  The pass then exposes the
 raw totals written at `DAT_01312200`, `DAT_01312210`, `DAT_01312204`, and
 `DAT_01312208` (normalized total, unallocated difference, shortfall, and
-shortfall percentage); no gameplay label is assigned to those words.
+shortfall percentage); no gameplay label is assigned to those words.  A
+separate indexed-write census confirms that the raw writer of the shared
+target word `DAT_01312134` is phase-0x17 `FUN_004AD850`, the City Gate/Tower
+labor allocator documented in §§10.114–10.115.  That does not prove that the
+cross-phase value is semantically a market target, nor recover its lifecycle
+or ownership at the balancing boundary.
 
 Native mirrors this arithmetic in
 `OriginalMarketCStallPoolBalanceCatalog.balance(records:targetTotal:)` and
@@ -10437,8 +10442,9 @@ keeps the result separate from `OriginalMarketCStallPoolProjectionCatalog`:
 the former prepares the nine source rows, while the latter performs the later
 ten-slot `FUN_004F19A0` projection.  The helper is research-only and is not
 wired to Native inventory, workforce, provider registration, or household
-settlement.  The row-word semantics and the producer of the target word
-remain unknown, so Qin market behavior remains fail-closed.
+settlement.  The row-word semantics and the target's cross-phase market
+meaning/lifecycle remain unknown, so Qin market behavior remains fail-closed;
+the raw writer itself is confirmed above.
 
 **Sources:** `local/source/split-merged/code/0x040000/FUN_004F1590.c`,
 `FUN_00408BA0.c`, `FUN_00408B80.c`, the adjacent
@@ -10448,6 +10454,7 @@ focused `testOriginalMarketCStallPoolBalance*` regressions in
 `Tests/EmperorCoreTests/EmperorCoreTests.swift`.
 
 **Evidence class:** **confirmed** for the nine-row count, stride, initial
-sanitization, category order, integer arithmetic, top-up order, and output
-addresses; **unknown** for row-word labels, target-word provenance, provider
-registration, route, and household settlement.
+sanitization, category order, integer arithmetic, top-up order, output
+addresses, and the raw `FUN_004AD850` writer of `DAT_01312134`; **unknown**
+for row-word labels, the target's cross-phase market meaning/lifecycle,
+provider registration, route, and household settlement.
