@@ -10231,3 +10231,40 @@ indexed literal type-`0xB` callsite, and its seven allocator arguments;
 **unknown** for unindexed/data-driven or indirect allocator dispatch,
 candidate-ring population, registry projection, routing, and arrival
 settlement.
+
+## 2026-09-04 Figure allocator ring layout and rebuild entry are explicit
+
+The allocator's candidate ring is backed by the source object at
+`DAT_01032678` (`0x01032678`). Raw EN/CH instructions and the indexed
+`FUN_004E23A0` / `FUN_004E23D0` bodies agree on the layout: cursor at `+0x00`,
+write cursor at `+0x04`, available count at `+0x08`, and 1999 ring values at
+`+0x0C` through the slot index bound `0x7CE`. `FUN_004EBBF0` clears the three
+control words. `FUN_004EBC00` then seeds values `1…1999` in order, with the
+exclusive loop bound `2000`; its two direct callers are the reset wrapper
+`FUN_004EBBE0` and `FUN_004E9FE0`.
+
+The live-registry rebuild `FUN_004E9FE0` is called directly once in each
+canonical PE, at `0x00534D08` in `FUN_00534BF0`. It resets the same ring and
+walks registry IDs `1999…1`, re-enqueuing only entries whose figure state
+byte `+0x16` is zero; nonzero states are handled through the separate
+`FUN_004EBB40` counter path. This gives a source-backed candidate-ring
+population/rebuild boundary that was previously only represented as a pure
+cursor helper.
+
+The boundary still does not identify Qin's map-loaded provider/house object
+projection: the ring stores figure-registry IDs, while the arrival writer's
+house argument comes from a separate unresolved `+0xB4` object link. Native
+therefore records the raw layout and rebuild edge only and does not seed its
+figure collection from these executable addresses.
+
+**Sources:** canonical EN/CH raw `.text` slices at `0x4E1420`, `0x4E1FA0`,
+`0x4E23A0`, `0x4E23D0`, `0x4EBBF0`, `0x4EBC00`, and `0x4E9FE0`;
+`local/source/split-merged/code/0x040000/FUN_004e1420.c`,
+`FUN_004e23a0.c`, `FUN_004e23d0.c`, `FUN_004ebbf0.c`,
+`FUN_004ebbe0.c`, `FUN_004ebc00.c`, `FUN_004e9fe0.c`;
+`FUN_00534bf0.c`; and `testOriginalFigureAllocatorStateMatchesCanonicalRingLayout`.
+
+**Evidence class:** **confirmed** for the state address/offsets, ring bound,
+reset/seed arithmetic, rebuild loop order, sole direct rebuild callsite, and
+EN/CH parity; **unknown** for allocator state ownership, indirect rebuild
+entries, map-loaded object projection, and arrival settlement.

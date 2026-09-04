@@ -722,6 +722,22 @@ public struct OriginalFigureAllocationResult: Sendable, Hashable, Codable {
 public struct OriginalFigureAllocatorState: Sendable, Hashable, Codable {
     public static let lastRingIndex = 0x7CE
     public static let ringSlotCount = lastRingIndex + 1
+    /// Raw source object used as ECX by the allocator ring helpers. These
+    /// offsets describe executable state only, not a Native figure-registry
+    /// projection.
+    public static let sourceStateAddress: UInt32 = 0x01032678
+    public static let cursorOffset: UInt32 = 0x00
+    public static let writeCursorOffset: UInt32 = 0x04
+    public static let availableCountOffset: UInt32 = 0x08
+    public static let ringValuesOffset: UInt32 = 0x0C
+    public static let ringResetAddress: UInt32 = 0x004EBBF0
+    public static let ringSeedAddress: UInt32 = 0x004EBC00
+    public static let ringSeedFirstID = 1
+    public static let ringSeedExclusiveUpperBound = 2000
+    public static let liveRegistryRebuildAddress: UInt32 = 0x004E9FE0
+    public static let liveRegistryRebuildDirectCallSites: [UInt32] = [
+        0x00534D08,
+    ]
 
     public private(set) var cursor: Int
     public private(set) var writeCursor: Int

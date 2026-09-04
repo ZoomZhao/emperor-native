@@ -1186,6 +1186,23 @@ final class MigrationSimulationTests: XCTestCase {
         XCTAssertEqual(state.cursor, 4)
     }
 
+    func testOriginalFigureAllocatorStateMatchesCanonicalRingLayout() {
+        XCTAssertEqual(OriginalFigureAllocatorState.sourceStateAddress, 0x01032678)
+        XCTAssertEqual(OriginalFigureAllocatorState.cursorOffset, 0x00)
+        XCTAssertEqual(OriginalFigureAllocatorState.writeCursorOffset, 0x04)
+        XCTAssertEqual(OriginalFigureAllocatorState.availableCountOffset, 0x08)
+        XCTAssertEqual(OriginalFigureAllocatorState.ringValuesOffset, 0x0C)
+        XCTAssertEqual(OriginalFigureAllocatorState.ringResetAddress, 0x004EBBF0)
+        XCTAssertEqual(OriginalFigureAllocatorState.ringSeedAddress, 0x004EBC00)
+        XCTAssertEqual(OriginalFigureAllocatorState.ringSeedFirstID, 1)
+        XCTAssertEqual(OriginalFigureAllocatorState.ringSeedExclusiveUpperBound, 2000)
+        XCTAssertEqual(OriginalFigureAllocatorState.liveRegistryRebuildAddress, 0x004E9FE0)
+        XCTAssertEqual(
+            OriginalFigureAllocatorState.liveRegistryRebuildDirectCallSites,
+            [0x00534D08]
+        )
+    }
+
     func testOriginalFigureAllocatorQueueRebuildsFreeIDsDescendingAndReportsSideEffectInputs() {
         let objects = (1...OriginalFigureAllocatorQueue.lastObjectID).map { objectID in
             switch objectID {
