@@ -6442,12 +6442,14 @@ index without a caller that consumes them. The callbacks also do not write the
 object `+0xB4` provider index, the global object vector, map cells, or
 `cHouseInfo`.
 
-The indexed consumers are separate from the load-time `+0x1FC` refresh. `FUN_00519120.c`
-iterates its source object vector and invokes each object's vtable `+0x200`;
-`FUN_0051d560.c` invokes the same slot with three local output addresses and,
-on success, feeds the returned values into subsequent resource/notification
-calculations. The raw callsite at `0x51D73C` confirms the three pointer
-arguments. The provider load overrides `FUN_0051CB80.c` and `FUN_0051CAD0.c`
+The indexed consumers are separate from the load-time `+0x1FC` refresh.
+Calendar dispatcher case `0x27` calls `FUN_00519120.c`, which iterates its
+source object vector and invokes each object's vtable `+0x200`. The generic
+object update path `FUN_0051d4a0.c` delegates to `FUN_0051d560.c`; the latter
+invokes the same slot with three local output addresses and, on success, feeds
+the returned values into subsequent resource/notification calculations. The
+raw callsite at `0x51D73C` confirms the three pointer arguments. The provider
+load overrides `FUN_0051CB80.c` and `FUN_0051CAD0.c`
 still allocate `0x20` bytes, construct the auxiliary object through
 `FUN_00526830.c`, store it at provider `+0x14C`, and invoke `+0x1FC`
 (`FUN_0051CC10`), not `+0x200`; `FUN_00418D90.c` refreshes that existing
@@ -6463,8 +6465,8 @@ executable SHA-256
 `dbdeca1ec2720f2387e1673bfbb901e9bad832179355ea897cfa7536e17ac15a`, direct
 PE slices at the addresses above, `local/source/split-merged/code/0x050000/`
 `FUN_0051cb80.c`, `FUN_0051cad0.c`, the direct PE body at
-`FUN_0051CC10 @ 0x51CC10`, `FUN_00519120.c`,
-`FUN_0051d560.c`, `FUN_00526830.c`, and
+`FUN_0051CC10 @ 0x51CC10`, `FUN_004AC2B0.c`, `FUN_00519120.c`,
+`FUN_0051d4a0.c`, `FUN_0051d560.c`, `FUN_00526830.c`, and
 `local/source/split-merged/code/0x040000/FUN_00418D90.c`; provider vtable words
 and `local/source/compare-report.tsv` (the shared auxiliary constructor at
 `0x526830` is marked `identical`).
