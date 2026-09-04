@@ -2691,10 +2691,10 @@ offset `0x003B703C`, corresponding to the first word of the cMarket vtable at
 confirms the method's cMarket vtable placement, but does not recover an
 indirect caller or a map-load promotion edge.
 
-**Sources:** `local/source/split-merged/code/0x050000/FUN_005428B0.c`,
-`FUN_00544220.c`, `FUN_005451A0.c`,
-`local/source/split-merged/code/0x040000/FUN_004AFE60.c`,
-`FUN_0052F030.c`, `FUN_0052F1D0.c`, `FUN_0053D100.c`,
+**Sources:** `local/source/split-merged/code/0x050000/FUN_005428b0.c`,
+`FUN_00544220.c`, `FUN_005451a0.c`,
+`local/source/split-merged/code/0x040000/FUN_004afe60.c`,
+`FUN_0052f030.c`, `FUN_0052f1d0.c`, `FUN_0053d100.c`,
 `GameData/Model/EmperorBuildingModels.txt` rows 59–71, and the identical
 EN/CH rows in `local/source/compare-report.tsv` for `0x5428B0` and `0x5451A0`,
 `0x42D360`, `0x51C660`, `0x5D3580`, `0x5D36E0`, and `0x543450`, plus direct
