@@ -2622,6 +2622,27 @@ four output views, admission mask, signed offsets, and bounded queue; **unknown*
 for the `FUN_005AD440` object/terrain callback inputs, market-origin producer,
 runtime object-grid ownership, and all provider/house settlement effects.
 
+## 2026-09-05 map-load rebuild has a fixed post-rehydration call order
+
+The map-load sequence is now recorded as an ordered source boundary rather
+than only a set of individual calls.  `FUN_0053D100 @ 0x53D100` invokes the
+generic-object whitelist pass `FUN_0052F030` first.  It then calls, in order,
+`FUN_0053D630`, `FUN_0053CAE0`, `FUN_0053CBD0`, `FUN_005ADDD0`,
+`FUN_005ADD10`, `FUN_005AD8F0`, `thunk_FUN_00522810`, `FUN_005ADD40`, and
+`FUN_00468B80`.  In particular, `FUN_005AD8F0` clears the directional cache
+(`FUN_005AD920`) and rebuilds it through `FUN_005AD440` only after the
+whitelisted live-object pass.  This ordering rules out treating the cache
+rebuild as an archive-row-to-provider conversion step.
+
+The direct sequence is taken from
+`local/source/split-merged/code/0x050000/FUN_0053d100.c`; the canonical EN/CH
+comparison row for `0x53D100` is identical.  Native records it as
+`OriginalMapLoadRehydrationChain.postRehydrationCallSequence` and tests the
+addresses independently.  **Evidence class:** **confirmed** for the direct
+order and the cache refresh boundary; **unknown** for any indirect/table-driven
+calls, the object-vtable predicates that feed `FUN_005AD440`, and the missing
+Qin provider/house/market settlement projection.
+
 ## 2026-09-03 phase-0x21 entertainment decay keeps provider eligibility explicit (confirmed boundary)
 
 The venue scheduler boundary is now represented alongside the water seam.  In

@@ -6933,6 +6933,14 @@ final class EmperorCoreTests: XCTestCase {
             OriginalMapLoadRehydrationChain.genericBuildingDefaultPredicateReturnsFalse
         )
         XCTAssertEqual(OriginalMapLoadRehydrationChain.rebuildSequenceAddress, 0x0053D100)
+        XCTAssertEqual(
+            OriginalMapLoadRehydrationChain.postRehydrationCallSequence,
+            [
+                0x0053D630, 0x0053CAE0, 0x0053CBD0,
+                0x005ADDD0, 0x005ADD10, 0x005AD8F0,
+                0x00522810, 0x005ADD40, 0x00468B80,
+            ]
+        )
         XCTAssertEqual(OriginalMapLoadRehydrationChain.rehydrationPassAddress, 0x0052F030)
         XCTAssertEqual(
             OriginalMapLoadRehydrationChain.rehydrationPredicateAddress,

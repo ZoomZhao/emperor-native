@@ -234,6 +234,22 @@ public enum OriginalMapLoadRehydrationChain {
     public static let genericBuildingDefaultPredicateReturnsFalse = true
     /// Post-deserialization rebuild sequence (`FUN_0053D100`).
     public static let rebuildSequenceAddress: UInt32 = 0x0053D100
+    /// Direct calls in `FUN_0053D100` after the whitelist pass.  The order is
+    /// significant: the source rebuilds its object-derived caches only after
+    /// `FUN_0052F030` has had a chance to create whitelisted objects, then
+    /// refreshes the map presentation.  These are addresses only; no service
+    /// provider or market projection is inferred from the cache calls.
+    public static let postRehydrationCallSequence: [UInt32] = [
+        0x0053D630, // FUN_0053D630
+        0x0053CAE0, // FUN_0053CAE0
+        0x0053CBD0, // FUN_0053CBD0
+        0x005ADDD0, // FUN_005ADDD0
+        0x005ADD10, // FUN_005ADD10
+        0x005AD8F0, // FUN_005AD8F0
+        0x00522810, // thunk_FUN_00522810
+        0x005ADD40, // FUN_005ADD40
+        0x00468B80, // FUN_00468B80
+    ]
     /// Generic-object whitelist pass called by the rebuild sequence.
     public static let rehydrationPassAddress: UInt32 = 0x0052F030
     public static let rehydrationPredicateAddress: UInt32 = 0x0052F1D0
