@@ -7471,3 +7471,49 @@ SHA-256 `dbdeca1ec2720f2387e1673bfbb901e9bad832179355ea897cfa7536e17ac15a`),
 **Evidence class:** **confirmed** for the admission order and bucket update;
 **unknown** for raw staffing-field production and every Qin live projection
 edge.
+
+## 2026-09-05 Explicit factory admission rejects Qin archive model zero
+
+The model-dispatch predicate used by the executable's explicit creation path
+is now separated from the post-load whitelist.  `FUN_0042D360 @ 0x42D360`
+first checks `FUN_005188B0 @ 0x5188B0`, which accepts only model IDs `2…17`
+for the HouseBldg constructor.  For all other IDs it calls
+`FUN_0051C620 @ 0x51C620`; that predicate rejects model `0`, model `1`, and
+the special `FUN_00562F70`/`FUN_00562E90` families before allowing the
+specialized factory `FUN_0051C660 @ 0x51C660`.  `FUN_0051C660` then reaches
+the entertainment factory only for schools `0xD3…0xD5` (211…213), or the
+separate venue set `0x47/0x4B` (71/75).
+
+The four Qin generic `Building` streams scanned from `Haunxian.map`,
+`Xianyang.map`, `Xiangjun.map`, and `Badaling.map` carry base model word `0`
+and provider slot `-1`.  Consequently, even if a caller were to route one of
+those records through the explicit `FUN_0042D360` creation entry, the
+source's own `FUN_0051C620` guard would not enter the specialized factory; the
+record would fall through to the generic base constructor.  The actual map
+loader is narrower still: `FUN_0042D790 → FUN_005F01F0 → FUN_005C1670` reads
+the `Building` stream and does not call `FUN_0042D360`; the only recovered
+post-load `Creating(...)` pass is the separate `FUN_0052F030` whitelist,
+which also excludes 211…213.
+
+This is confirmed negative evidence against promoting a Qin archive row to a
+music/acrobat/drama provider solely from its map position, runtime-class
+table, or authored building label.  It does not exclude an unindexed indirect
+replacement or a later provider-registration pass, so archive-side
+specialization, provider registry assignment, route/collision, and
+house-quality settlement remain **unknown**.  Native therefore keeps Qin
+entertainment and automatic migration fail-closed.
+
+**Sources:** `local/source/split-merged/code/0x040000/FUN_0042D360.c`,
+`FUN_0042D050.c`, `FUN_0042D790.c`, `FUN_0042D0E0.c`,
+`local/source/split-merged/code/0x050000/FUN_0051C620.c`,
+`FUN_0051C660.c`, `FUN_005188B0.c`, `FUN_00562F70.c`, `FUN_00562E90.c`,
+`FUN_005F01F0.c`, `FUN_005C1670.c`, `FUN_0052F030.c`, `FUN_0052F1D0.c`,
+the four-map generic archive scan, and `local/source/compare-report.tsv`
+rows `0x42D050`, `0x42D360`, `0x42D790`, `0x51C620`, `0x52F030`,
+`0x5C1670`, and `0x5F01F0` (all EN/CH `identical`).
+
+**Evidence class:** **confirmed** for the explicit factory predicate order,
+model-zero rejection, Qin archive model/provider values, map-loader call
+chain, and EN/CH parity; **confirmed negative** for a direct model-zero
+specialized-factory path; **unknown** for indirect replacement,
+archive-side specialization, provider registration, routing, and settlement.
