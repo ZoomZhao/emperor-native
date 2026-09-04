@@ -6370,6 +6370,47 @@ final class EmperorCoreTests: XCTestCase {
         }
     }
 
+    func testEntertainmentVenueVTable280KeepsDistinctAreaAndPavilionCallbacks() {
+        XCTAssertEqual(
+            OriginalResidentialServiceCatalog.entertainmentVenueVTable280Offset,
+            0x280
+        )
+        XCTAssertEqual(
+            OriginalResidentialServiceCatalog.entertainmentVenueVTable280Descriptors,
+            [
+                .init(
+                    venueModelID: 71,
+                    vtableAddress: 0x007AD878,
+                    callbackAddress: 0x0048CE90,
+                    role: .figureBootstrap
+                ),
+                .init(
+                    venueModelID: 75,
+                    vtableAddress: 0x007AD608,
+                    callbackAddress: 0x0048CC80,
+                    role: .serialization
+                ),
+            ]
+        )
+        XCTAssertEqual(
+            OriginalResidentialServiceCatalog.entertainmentVenueVTable280Descriptor(
+                forVenueModelID: 71
+            )?.callbackAddress,
+            0x0048CE90
+        )
+        XCTAssertEqual(
+            OriginalResidentialServiceCatalog.entertainmentVenueVTable280Descriptor(
+                forVenueModelID: 75
+            )?.callbackAddress,
+            0x0048CC80
+        )
+        XCTAssertNil(
+            OriginalResidentialServiceCatalog.entertainmentVenueVTable280Descriptor(
+                forVenueModelID: 211
+            )
+        )
+    }
+
     func testEntertainmentManagerRegistrationDescriptorSeparatesPlacementFromLoad() {
         let descriptor = OriginalResidentialServiceCatalog
             .entertainmentManagerRegistrationDescriptor

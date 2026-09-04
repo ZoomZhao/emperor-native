@@ -7076,3 +7076,45 @@ remain unknown and Qin entertainment stays fail-closed.
 delegation, allocation sizes, constructor split, and EN/CH parity;
 **unknown** for archive-side specialization, provider registry assignment,
 route/collision, and venue/house settlement.
+
+## 2026-09-05 Venue vtable `+0x280` separates Pavilion serialization from Area figure bootstrap
+
+The two venue classes do not share one implementation at virtual slot
+`+0x280`. Direct little-endian reads of the canonical EN and CH vtables show
+`0x007AD608 + 0x280 = 0x0048CC80` for Theatre Pavilion (GameData building ID
+`75`) and `0x007AD878 + 0x280 = 0x0048CE90` for Entertainment Area (GameData
+building ID `71`). The pointer words are identical in both hash-matched PE
+images. The split corpus marks `FUN_0048CC80 @ 0x48CC80` and
+`FUN_0048CE90 @ 0x48CE90` as EN/CH `identical`.
+
+The callback bodies confirm different responsibilities. `FUN_0048CC80` is
+the Theatre Pavilion state serializer: after the common stream setup it
+clears the venue's count/ID arrays on the load branch, and on the write/read
+branch consumes the versioned fields at `+0x54`, `+0x55`, `+0x56`, `+0x57`,
+`+0x58`, and `+0x71` (the `+0x58`/`+0x71` byte span is `0x50` for schema `<4`
+and `0x64` otherwise). `FUN_0048CE90` is the Entertainment Area runtime
+figure-bootstrap path: it admits the global/provider gates, requests figure
+model `0x25` (GameData row `37`, Festival Performer), stores the provider
+registry link at figure `+0x62`, and chooses its first/middle/last or rotated
+manager slot before the downstream bootstrap. The route, source-object
+meaning, and provider/house settlement are not inferred from these callbacks.
+
+Native records the exact slot and class split in
+`OriginalResidentialServiceCatalog.entertainmentVenueVTable280Descriptors`.
+The focused regression `testEntertainmentVenueVTable280KeepsDistinctAreaAndPavilionCallbacks`
+locks both vtable addresses, callback addresses, roles, and the absence of a
+model-211 mapping. This metadata does not specialize a generic Qin
+`Building` archive row: the recovered Qin class declarations remain generic
+and the map-load repair whitelist still excludes venue models `71` and `75`.
+
+**Sources:** canonical EN/CH PE vtable words at `0x007AD608 + 0x280` and
+`0x007AD878 + 0x280`; `local/source/split-merged/code/0x040000/
+FUN_0048CC80.c` and `FUN_0048CE90.c`; `local/source/compare-report.tsv`
+rows `0x48CC80` and `0x48CE90`; `GameData/Model/EmperorBuildingModels.txt`
+row `75` and `GameData/Model/EmperorFigureModels.txt` row `37`;
+`Sources/EmperorCore/HousingEvolution.swift`; and the focused test above.
+
+**Evidence class:** **confirmed** for the slot offset, class-to-callback
+mapping, EN/CH parity, serializer field spans, figure model request, and
+registry-link write; **unknown** for archive-side class specialization,
+provider registry ownership, route/collision, and venue/house settlement.

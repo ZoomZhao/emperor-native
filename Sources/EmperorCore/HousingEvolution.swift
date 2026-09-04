@@ -2403,6 +2403,59 @@ public enum OriginalResidentialServiceCatalog {
         }
     }
 
+    /// The venue-class virtual slot at `+0x280` is not a shared callback.
+    /// Direct EN/CH vtable reads resolve Theatre Pavilion to its
+    /// serialization callback and Entertainment Area to its runtime figure
+    /// bootstrap callback. This is dispatch metadata only: it does not
+    /// specialize a generic Qin archive row or invoke either callback.
+    public enum EntertainmentVenueVTable280Role: String, Sendable, Hashable, Codable {
+        case serialization
+        case figureBootstrap
+    }
+
+    public struct EntertainmentVenueVTable280Descriptor: Sendable, Hashable, Codable {
+        public let venueModelID: Int
+        public let vtableAddress: UInt32
+        public let callbackAddress: UInt32
+        public let role: EntertainmentVenueVTable280Role
+
+        public init(
+            venueModelID: Int,
+            vtableAddress: UInt32,
+            callbackAddress: UInt32,
+            role: EntertainmentVenueVTable280Role
+        ) {
+            self.venueModelID = venueModelID
+            self.vtableAddress = vtableAddress
+            self.callbackAddress = callbackAddress
+            self.role = role
+        }
+    }
+
+    public static let entertainmentVenueVTable280Offset: UInt32 = 0x00000280
+    public static let entertainmentVenueVTable280Descriptors: [EntertainmentVenueVTable280Descriptor] = [
+        .init(
+            venueModelID: 71,
+            vtableAddress: 0x007AD878,
+            callbackAddress: 0x0048CE90,
+            role: .figureBootstrap
+        ),
+        .init(
+            venueModelID: 75,
+            vtableAddress: 0x007AD608,
+            callbackAddress: 0x0048CC80,
+            role: .serialization
+        ),
+    ]
+
+    public static func entertainmentVenueVTable280Descriptor(
+        forVenueModelID venueModelID: Int
+    ) -> EntertainmentVenueVTable280Descriptor? {
+        entertainmentVenueVTable280Descriptors.first {
+            $0.venueModelID == venueModelID
+        }
+    }
+
     /// The three rotating entertainment figure buckets maintained by
     /// `FUN_0048F140 @ 0x48F140` and consumed by `FUN_0048F420 @ 0x48F420`.
     ///
