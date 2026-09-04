@@ -3248,6 +3248,30 @@ public enum OriginalMarketCatalog {
         }
     }
 
+    /// Replays the cMarket `+0x4C` capacity-gate predicate
+    /// (`FUN_00429670`). A `true` result means every slot checked by the
+    /// source is occupied/valid, so the caller has no free peddler slot. The
+    /// source's `else` branch checks all three slots; this intentionally
+    /// preserves that raw behavior for non-1/non-2 type values instead of
+    /// normalizing unknown market types to `nil`.
+    public static func peddlerSlotsFullyOccupied(
+        marketType: Int,
+        primarySlotValid: Bool,
+        attachedInfoSecondSlotValid: Bool,
+        attachedInfoThirdSlotValid: Bool
+    ) -> Bool {
+        switch marketType {
+        case 1:
+            return primarySlotValid
+        case 2:
+            return primarySlotValid && attachedInfoSecondSlotValid
+        default:
+            return primarySlotValid
+                && attachedInfoSecondSlotValid
+                && attachedInfoThirdSlotValid
+        }
+    }
+
     /// Threshold used by the peddler-specific market wrapper
     /// (`FUN_00543ED0`). It increments the per-market byte first and spawns
     /// only when the incremented value is strictly greater than this

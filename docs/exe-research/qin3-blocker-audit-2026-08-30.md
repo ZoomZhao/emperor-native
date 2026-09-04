@@ -6684,3 +6684,30 @@ and `testOriginalMarketPeddlerValidatorsPreserveEmptyAndClearBranches`.
 **Evidence class:** **confirmed** for slot-specific empty polarity, active/model/
 parent gates, clear-on-stale writes, and EN/CH parity; **unknown** for
 registry population, route, commodity records, and household settlement.
+
+## 2026-09-05 cMarket peddler capacity gate preserves checked-slot cardinality
+
+`FUN_00429670 @ 0x429670` is the cMarket `+0x4C` predicate consumed before a
+model-`0x17` peddler allocation. It calls the market type accessor (`+0x54`)
+and then treats validator results as an all-occupied test: type `1` checks
+only the primary `+0x3C` slot; type `2` checks primary then attached-info
+`+0x40`; every other type takes the source's `else` branch and checks all
+three (`+0x3C`, `+0x40`, `+0x44`). The result is true only when every checked
+validator returns non-zero, so the caller interprets false as at least one
+free slot. The EN/CH indexed bodies are `identical`; no semantic name is
+assigned to the market-type byte beyond the separate type-2/type-3 evidence.
+
+`OriginalMarketCatalog.peddlerSlotsFullyOccupied` records this pure checked-
+slot cardinality, including the source's raw default branch for unknown type
+values. It is not wired to Native peddler counts, route construction, provider
+registration, or household settlement; the Qin market bridge remains
+fail-closed at those unresolved boundaries.
+
+**Sources:** `local/source/split-merged/code/0x040000/FUN_00429670.c`,
+`local/source/compare-report.tsv` row `0x429670`, the adjacent cMarket
+validator rows `0x429700`, `0x429780`, and `0x429810`, and
+`testOriginalMarketPeddlerCapacityGateChecksSourceSlotSet`.
+
+**Evidence class:** **confirmed** for branch/cardinality/order and EN/CH parity;
+**unknown** for provider registry population, route/coverage, commodity
+projection, and household settlement.

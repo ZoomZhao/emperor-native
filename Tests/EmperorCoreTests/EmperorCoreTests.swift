@@ -10110,6 +10110,65 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testOriginalMarketPeddlerCapacityGateChecksSourceSlotSet() {
+        func gate(
+            marketType: Int,
+            primarySlotValid: Bool,
+            attachedInfoSecondSlotValid: Bool,
+            attachedInfoThirdSlotValid: Bool
+        ) -> Bool {
+            OriginalMarketCatalog.peddlerSlotsFullyOccupied(
+                marketType: marketType,
+                primarySlotValid: primarySlotValid,
+                attachedInfoSecondSlotValid: attachedInfoSecondSlotValid,
+                attachedInfoThirdSlotValid: attachedInfoThirdSlotValid
+            )
+        }
+
+        XCTAssertTrue(gate(
+            marketType: 1,
+            primarySlotValid: true,
+            attachedInfoSecondSlotValid: false,
+            attachedInfoThirdSlotValid: false
+        ))
+        XCTAssertFalse(gate(
+            marketType: 1,
+            primarySlotValid: false,
+            attachedInfoSecondSlotValid: true,
+            attachedInfoThirdSlotValid: true
+        ))
+        XCTAssertTrue(gate(
+            marketType: 2,
+            primarySlotValid: true,
+            attachedInfoSecondSlotValid: true,
+            attachedInfoThirdSlotValid: false
+        ))
+        XCTAssertFalse(gate(
+            marketType: 2,
+            primarySlotValid: true,
+            attachedInfoSecondSlotValid: false,
+            attachedInfoThirdSlotValid: true
+        ))
+        XCTAssertTrue(gate(
+            marketType: 3,
+            primarySlotValid: true,
+            attachedInfoSecondSlotValid: true,
+            attachedInfoThirdSlotValid: true
+        ))
+        XCTAssertFalse(gate(
+            marketType: 3,
+            primarySlotValid: true,
+            attachedInfoSecondSlotValid: true,
+            attachedInfoThirdSlotValid: false
+        ))
+        XCTAssertTrue(gate(
+            marketType: 99,
+            primarySlotValid: true,
+            attachedInfoSecondSlotValid: true,
+            attachedInfoThirdSlotValid: true
+        ))
+    }
+
     func testOriginalMarketFactoryIdentityAdmitsOnlyTwoBuildingModels() {
         XCTAssertEqual(OriginalMarketCatalog.marketFactoryAddress, 0x005D3580)
         XCTAssertEqual(OriginalMarketCatalog.marketModelRecognizerAddress, 0x00543D90)
