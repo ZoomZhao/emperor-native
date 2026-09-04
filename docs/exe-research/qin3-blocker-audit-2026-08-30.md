@@ -6624,3 +6624,35 @@ PE body/call-site disassembly for `0x5B4BD0`, `0x44B3BA`, `0x4FF0A6`,
 `0x013F7F50` object, four direct call sites, population-aggregate callee,
 and negative provider-factory edge; **unknown** for the real provider-index
 producer, archive projection, and final registry insertion order.
+
+## 2026-09-05 cMarket peddler registration slot order is explicit
+
+The peddler-link writer `FUN_004272A0 @ 0x4272A0` is now represented as a
+side-effect-free slot selector. Its source order is exact: market type `1`
+always targets market `+0x2E`; otherwise a primary link below `1` also targets
+`+0x2E`. With a non-empty attached-info second link (`+0x6A`), a Grand Market
+(type `3`) whose third link (`+0x6C`) is below `1` targets `+0x6C` before any
+primary-figure activity check. If that check finds the primary figure
+inactive, the writer targets `+0x2E`; a Grand Market with an inactive third
+figure then targets `+0x6C`. Every remaining branch falls back to attached
+info `+0x6A`. The writer's lookup of the second attached figure is not used
+for a branch decision; its active/model/parent validation is a separate
+`FUN_00429780` path.
+
+`OriginalMarketPeddlerLinkStorage.registrationSlot` preserves this order and
+the signed-short `< 1`/`> 0` polarity without resolving figures or mutating a
+market. Focused regression coverage exercises type-1, empty-primary,
+empty-third, inactive-primary, inactive-third, and final-fallback branches.
+This closes only peddler-link storage selection. It does not populate the six
+commodity records, create a route, project a provider registry, or write house
+food quality; Qin campaign peddlers therefore remain fail-closed.
+
+**Sources:** `local/source/split-merged/code/0x040000/FUN_004272a0.c`,
+`FUN_00429670.c`, `FUN_00429700.c`, `FUN_00429780.c`, `FUN_00429810.c`,
+`local/source/compare-report.tsv` rows `0x4272a0`, `0x429670`, `0x429700`,
+`0x429780`, and `0x429810`, `Sources/EmperorCore/MarketSimulation.swift`,
+and `testOriginalMarketPeddlerRegistrationPreservesSourceSlotOrder`.
+
+**Evidence class:** **confirmed** for branch order, slot offsets, signed link
+tests, and EN/CH parity; **unknown** for provider registration,
+commodity/route projection, and household settlement.

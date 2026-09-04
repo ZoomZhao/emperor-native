@@ -3371,6 +3371,51 @@ public enum OriginalMarketPeddlerLinkStorage {
         default: return nil
         }
     }
+
+    /// The destination selected by `FUN_004272A0 @ 0x4272A0` when a peddler
+    /// figure ID is registered with a market. These are storage slots, not
+    /// commodity records or Native peddler IDs.
+    public enum RegistrationSlot: String, Sendable, Hashable, Codable {
+        case primaryMarket
+        case attachedInfoSecond
+        case attachedInfoThird
+    }
+
+    /// Replays the source's slot-selection order without resolving figures
+    /// or mutating a market. The source treats market type `1` specially,
+    /// uses `< 1` for empty signed-short link tests, checks the Grand Market's
+    /// third slot before validating the primary figure, and finally falls
+    /// back to the attached-info second slot. The second attached figure is
+    /// intentionally not tested here: the recovered writer only resolves it
+    /// as an unused lookup; its validator performs the later active/model/
+    /// parent checks.
+    public static func registrationSlot(
+        marketType: Int,
+        primaryLink: Int,
+        attachedInfoSecondLink: Int,
+        attachedInfoThirdLink: Int,
+        primaryFigureIsActive: Bool,
+        thirdFigureIsActive: Bool
+    ) -> RegistrationSlot {
+        if marketType == 1 {
+            return .primaryMarket
+        }
+        if primaryLink < 1 {
+            return .primaryMarket
+        }
+        if attachedInfoSecondLink > 0 {
+            if marketType == 3, attachedInfoThirdLink < 1 {
+                return .attachedInfoThird
+            }
+            if !primaryFigureIsActive {
+                return .primaryMarket
+            }
+            if marketType == 3, !thirdFigureIsActive {
+                return .attachedInfoThird
+            }
+        }
+        return .attachedInfoSecond
+    }
 }
 
 public struct MarketSquare: Identifiable, Sendable, Hashable, Codable {

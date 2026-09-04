@@ -11311,6 +11311,87 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(OriginalMarketPeddlerLinkStorage.registrationAddress, 0x004272A0)
     }
 
+    func testOriginalMarketPeddlerRegistrationPreservesSourceSlotOrder() {
+        let storage = OriginalMarketPeddlerLinkStorage.self
+        XCTAssertEqual(
+            storage.registrationSlot(
+                marketType: 1,
+                primaryLink: 12,
+                attachedInfoSecondLink: 14,
+                attachedInfoThirdLink: 16,
+                primaryFigureIsActive: true,
+                thirdFigureIsActive: true
+            ),
+            .primaryMarket
+        )
+        XCTAssertEqual(
+            storage.registrationSlot(
+                marketType: 2,
+                primaryLink: 0,
+                attachedInfoSecondLink: 14,
+                attachedInfoThirdLink: 16,
+                primaryFigureIsActive: true,
+                thirdFigureIsActive: true
+            ),
+            .primaryMarket
+        )
+        XCTAssertEqual(
+            storage.registrationSlot(
+                marketType: 2,
+                primaryLink: 12,
+                attachedInfoSecondLink: 0,
+                attachedInfoThirdLink: 16,
+                primaryFigureIsActive: true,
+                thirdFigureIsActive: true
+            ),
+            .attachedInfoSecond
+        )
+        XCTAssertEqual(
+            storage.registrationSlot(
+                marketType: 3,
+                primaryLink: 12,
+                attachedInfoSecondLink: 14,
+                attachedInfoThirdLink: 0,
+                primaryFigureIsActive: true,
+                thirdFigureIsActive: true
+            ),
+            .attachedInfoThird
+        )
+        XCTAssertEqual(
+            storage.registrationSlot(
+                marketType: 3,
+                primaryLink: 12,
+                attachedInfoSecondLink: 14,
+                attachedInfoThirdLink: 16,
+                primaryFigureIsActive: false,
+                thirdFigureIsActive: true
+            ),
+            .primaryMarket
+        )
+        XCTAssertEqual(
+            storage.registrationSlot(
+                marketType: 3,
+                primaryLink: 12,
+                attachedInfoSecondLink: 14,
+                attachedInfoThirdLink: 16,
+                primaryFigureIsActive: true,
+                thirdFigureIsActive: false
+            ),
+            .attachedInfoThird
+        )
+        XCTAssertEqual(
+            storage.registrationSlot(
+                marketType: 3,
+                primaryLink: 12,
+                attachedInfoSecondLink: 14,
+                attachedInfoThirdLink: 16,
+                primaryFigureIsActive: true,
+                thirdFigureIsActive: true
+            ),
+            .attachedInfoSecond
+        )
+    }
+
     func testOriginalMarketPeddlerWorkerRatioAndStockGateMatchRecoveredArithmetic() {
         XCTAssertEqual(
             OriginalMarketCatalog.peddlerWorkerPercent(
