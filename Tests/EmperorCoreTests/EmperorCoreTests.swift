@@ -4721,6 +4721,25 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(state.cursor, 5)
     }
 
+    func testEntertainmentProviderRotationAppliesPositiveStaffingGateBeforeBuckets() {
+        let state = OriginalResidentialServiceCatalog.EntertainmentProviderRotationState.rebuilt(
+            fromActiveProviders: [
+                .init(buildingID: 211, staffingRatioIsPositive: false),
+                .init(buildingID: 211, staffingRatioIsPositive: true),
+                .init(buildingID: 212, staffingRatioIsPositive: false),
+                .init(buildingID: 213, staffingRatioIsPositive: true),
+                .init(buildingID: 999, staffingRatioIsPositive: true)
+            ]
+        )
+
+        // FUN_0048F140 tests virtual +0x1BC > 0 before applying its
+        // first-provider +3 / later-provider +1 bucket arithmetic.
+        XCTAssertEqual(state.musicSlots, 3)
+        XCTAssertEqual(state.acrobatSlots, 0)
+        XCTAssertEqual(state.dramaSlots, 3)
+        XCTAssertEqual(state.totalSlots, 6)
+    }
+
     func testEntertainmentProviderRotationConsumesStrictBucketsAndRotatesCursor() {
         var musicBoundary =
             OriginalResidentialServiceCatalog.EntertainmentProviderRotationState(

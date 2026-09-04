@@ -3011,6 +3011,22 @@ public enum OriginalResidentialServiceCatalog {
     /// spawning, or coverage side effects, so it remains safe to use as a
     /// source-backed primitive while Qin's venue FSM is fail-closed.
     public struct EntertainmentProviderRotationState: Sendable, Hashable, Codable {
+        /// Raw manager input for one active entertainment-school object. The
+        /// executable's `FUN_0048F140` admits a school to the rotation buckets
+        /// only when its virtual `+0x1BC` staffing-ratio result is strictly
+        /// positive. Keep that result as an explicit boolean supplied by the
+        /// caller; Native cannot derive it from assigned workers while the
+        /// provider object/registry projection remains unresolved.
+        public struct ProviderInput: Sendable, Hashable, Codable {
+            public let buildingID: Int
+            public let staffingRatioIsPositive: Bool
+
+            public init(buildingID: Int, staffingRatioIsPositive: Bool) {
+                self.buildingID = buildingID
+                self.staffingRatioIsPositive = staffingRatioIsPositive
+            }
+        }
+
         public private(set) var musicSlots: Int
         public private(set) var acrobatSlots: Int
         public private(set) var dramaSlots: Int
@@ -3059,6 +3075,22 @@ public enum OriginalResidentialServiceCatalog {
                 acrobatSlots: acrobat,
                 dramaSlots: drama,
                 cursor: initialCursor
+            )
+        }
+
+        /// Rebuilds the source buckets after applying the manager's positive
+        /// `+0x1BC` staffing-ratio gate. This is the complete input boundary
+        /// of `FUN_0048F140`; it still does not identify the producer of that
+        /// ratio, register a Qin provider, spawn a figure, or settle coverage.
+        public static func rebuilt(
+            fromActiveProviders providers: [ProviderInput],
+            initialCursor: Int = 0
+        ) -> Self {
+            rebuilt(
+                fromActiveProviderBuildingIDs: providers
+                    .filter { $0.staffingRatioIsPositive }
+                    .map(\.buildingID),
+                initialCursor: initialCursor
             )
         }
 

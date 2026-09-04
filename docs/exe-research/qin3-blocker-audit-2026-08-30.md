@@ -7432,3 +7432,42 @@ settlement remain unknown.
 **Evidence class:** **confirmed** for the threshold branch and authored field
 values; **unknown** for any later mutation of the appeal input or indirect
 school coverage projection.
+
+## 2026-09-05 Entertainment rotation buckets apply the raw positive-staffing gate
+
+The existing rotation-bucket helper now records the final admission input of
+`FUN_0048F140 @ 0x48F140` instead of treating every model-matched object as a
+rotating provider.  The canonical EN/CH body first requires the global
+`FUN_00426D10(0)` gate, then `FUN_0048A7E0(modelID)`, then a strictly positive
+virtual `+0x1BC` result before updating manager words `+0x2C` (Music,
+model 211), `+0x34` (Acrobat, model 212), or `+0x3C` (Drama, model 213).
+The first admitted object in a bucket contributes `3`; each later admitted
+object contributes `1`.  The `+0x1BC` arithmetic itself is already closed in
+§10.6a, but its raw field producer and provider projection remain unknown.
+
+`EntertainmentProviderRotationState.ProviderInput` and the
+`rebuilt(fromActiveProviders:)` overload now require callers to supply that
+positive-result bit explicitly, filter rejected schools before applying the
+`3/1` increments, and ignore unrelated models.  The older model-ID-only
+overload remains a low-level bucket arithmetic primitive for callers that have
+already performed the source gate.  The focused regression proves that a
+zero-ratio school contributes no slot while positive Music/Drama schools
+produce `3` each.
+
+This is **confirmed** for gate order, strict positivity, model buckets, and
+`3/1` increments from the byte-identical EN/CH function; it does not recover
+the producer of the ratio, object/archive specialization, provider registry,
+route/collision, figure allocation, or house settlement.  Qin entertainment
+therefore remains fail-closed.
+
+**Sources:** canonical EN/CH PE body at `0x48F140` (EN SHA-256
+`8a6d2df1015cb75d797546d117da5f82b86fd08726090c2a13d853b9009d6753`, CH
+SHA-256 `dbdeca1ec2720f2387e1673bfbb901e9bad832179355ea897cfa7536e17ac15a`),
+`local/source/split-merged/code/0x040000/FUN_0048F140.c`,
+`FUN_00426D10.c`, `FUN_0048A7E0.c`, `FUN_00428ED0.c`,
+`Sources/EmperorCore/HousingEvolution.swift`, and
+`testEntertainmentProviderRotationAppliesPositiveStaffingGateBeforeBuckets`.
+
+**Evidence class:** **confirmed** for the admission order and bucket update;
+**unknown** for raw staffing-field production and every Qin live projection
+edge.
