@@ -6754,9 +6754,11 @@ does not rotate the market or initialize a figure.
 `OriginalMarketPeddlerAllocationTail.resolve` records the raw success/failure
 boundary, signed-short parent-ID truncation, signed-byte direction arithmetic,
 and the final roam-initialization edge as a pure result. It is intentionally
-not wired to Native peddler allocation: the allocator registry handle, market
-`+0x50` registration side effect, selected endpoint, route buffer, and
-household settlement remain unresolved. The focused regression
+not wired to Native peddler allocation: the allocator registry handle and
+resolved figure object, the resulting live registry population, selected
+endpoint, route buffer, and household settlement remain unresolved. The
+market `+0x50` writer's slot order is independently confirmed in the
+registration section above. The focused regression
 `testOriginalMarketPeddlerAllocationTailWritesOnlyAfterLiveFigure` covers both
 the no-write failure path and the success/write path, including raw `0xFF`
 direction and `0xFFFF` parent values.
@@ -6766,11 +6768,12 @@ direction and `0xFFFF` parent values.
 executable SHA-256
 `dbdeca1ec2720f2387e1673bfbb901e9bad832179355ea897cfa7536e17ac15a`,
 `local/source/split-merged/code/0x050000/FUN_00543ed0.c`,
-`FUN_00544910.c`, `FUN_004e6a70.c`, `local/source/compare-report.tsv` rows
+`FUN_00544910.c`, `local/source/split-merged/code/0x040000/FUN_004e6a70.c`,
+`local/source/compare-report.tsv` rows
 `0x543ED0`, `0x544910`, and `0x4E6A70`, and
 `Sources/EmperorCore/MarketSimulation.swift`.
 
 **Evidence class:** **confirmed** for allocator-success ordering, offsets,
 signed truncation, direction update, and EN/CH parity; **unknown** for
-allocator-handle registry ownership, market registration contents, endpoint /
-route consumption, coverage, and settlement.
+allocator-handle registry ownership and resolved object, live registry
+population, endpoint / route consumption, coverage, and settlement.
