@@ -16,6 +16,11 @@ public struct DeterministicTerrainState: Sendable, Equatable, Codable {
     public let width: Int
     public let height: Int
     public private(set) var terrainRawValues: [UInt32]
+    /// Exact mission-sized projection of serialized `DAT_00F37DA0` map words.
+    /// Bit 0x04 is consumed by the original negative-appeal arbitration, but
+    /// dynamic writers are not yet reproduced; retaining the authored layer
+    /// must not be mistaken for enabling that live contract.
+    public let appealFlagsRawValues: [UInt32]?
     /// Exact mission-sized projections of the two serialized auxiliary layers
     /// consumed by the recovered worker routing builders. Optional fields keep
     /// saves written before this source-layer recovery decodable.
@@ -38,6 +43,9 @@ public struct DeterministicTerrainState: Sendable, Equatable, Codable {
         terrainRawValues = (0..<map.height).flatMap { y in
             (0..<map.width).map { x in map.terrainFlags(x: x, y: y) ?? 0 }
         }
+        appealFlagsRawValues = (0..<map.height).flatMap { y in
+            (0..<map.width).map { x in map.appealFlagsValue(x: x, y: y) ?? 0 }
+        }
         primaryElevationClassRawValues = (0..<map.height).flatMap { y in
             (0..<map.width).map { x in
                 UInt8(bitPattern: map.primaryElevationClassValue(x: x, y: y) ?? -1)
@@ -57,6 +65,7 @@ public struct DeterministicTerrainState: Sendable, Equatable, Codable {
         width: Int,
         height: Int,
         terrainRawValues: [UInt32],
+        appealFlagsRawValues: [UInt32]? = nil,
         primaryElevationClassRawValues: [UInt8]? = nil,
         roadWaterAuxiliaryValues: [UInt8]? = nil,
         authoredPoints: EmperorMapAuthoredPoints? = nil,
@@ -64,6 +73,7 @@ public struct DeterministicTerrainState: Sendable, Equatable, Codable {
         grandCanalPlacement: OriginalGrandCanalLayoutCatalog.MapPlacement? = nil
     ) throws {
         guard width > 0, height > 0, terrainRawValues.count == width * height,
+              appealFlagsRawValues.map({ $0.count == width * height }) ?? true,
               primaryElevationClassRawValues.map({ $0.count == width * height }) ?? true,
               roadWaterAuxiliaryValues.map({ $0.count == width * height }) ?? true else {
             throw GameDataError.malformedFile("native terrain dimensions")
@@ -71,6 +81,7 @@ public struct DeterministicTerrainState: Sendable, Equatable, Codable {
         self.width = width
         self.height = height
         self.terrainRawValues = terrainRawValues
+        self.appealFlagsRawValues = appealFlagsRawValues
         self.primaryElevationClassRawValues = primaryElevationClassRawValues
         self.roadWaterAuxiliaryValues = roadWaterAuxiliaryValues
         self.authoredPoints = authoredPoints
@@ -87,6 +98,11 @@ public struct DeterministicTerrainState: Sendable, Equatable, Codable {
         return TerrainFlags(rawValue: terrainRawValues[point.y * width + point.x])
     }
 
+    public func appealFlags(at point: GridPoint) -> UInt32? {
+        guard contains(point), let appealFlagsRawValues else { return nil }
+        return appealFlagsRawValues[point.y * width + point.x]
+    }
+
     public func primaryElevationClass(at point: GridPoint) -> Int8? {
         guard contains(point), let primaryElevationClassRawValues else { return nil }
         return Int8(bitPattern: primaryElevationClassRawValues[point.y * width + point.x])
@@ -95,6 +111,33 @@ public struct DeterministicTerrainState: Sendable, Equatable, Codable {
     public func roadWaterAuxiliary(at point: GridPoint) -> UInt8? {
         guard contains(point), let roadWaterAuxiliaryValues else { return nil }
         return roadWaterAuxiliaryValues[point.y * width + point.x]
+    }
+
+    /// Returns the authored terrain layer in the original executable's
+    /// linear backing-grid coordinates. The map loader stores the active
+    /// rectangle at the descriptor's centered `baseLinearOffset` with the
+    /// canonical 228-cell row stride; this projection preserves that address
+    /// arithmetic without adding any dynamic object or registry overlays.
+    ///
+    /// `nil` is returned for dimensions outside the recovered descriptor
+    /// table. Dynamic writes from `FUN_004B72B0` are intentionally absent and
+    /// must not be inferred from Native occupancy.
+    public func originalAuthoredTerrainWords() -> [Int: UInt32]? {
+        guard let descriptor = OriginalMapRuntimeDescriptorCatalog.descriptor(
+            width: width,
+            height: height
+        ) else { return nil }
+        var words: [Int: UInt32] = [:]
+        words.reserveCapacity(terrainRawValues.count)
+        for y in 0..<height {
+            for x in 0..<width {
+                let localIndex = y * width + x
+                let backingIndex = descriptor.baseLinearOffset
+                    + y * descriptor.effectiveRowStride + x
+                words[backingIndex] = terrainRawValues[localIndex]
+            }
+        }
+        return words
     }
 
     /// Original roadblock terrain guard (recovered from `0x46D110`, roadblock

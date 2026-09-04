@@ -20,7 +20,7 @@ if [ ! -d "$DATA_ROOT/DATA" ] || [ ! -d "$DATA_ROOT/Cities" ] || [ ! -d "$DATA_R
 fi
 
 BANNED_PATTERN='admitResidents|addHouse|receiveCampaignCommodityGift|CampaignGoalProgressSnapshot|assignedWorkers[[:space:]]*:[[:space:]]*[1-9]|houseLevelID[[:space:]]*=[^=]|serviceCoverage[[:space:]]*=[^=]|housingEvolutionEnabled|publicSafetyEnabled|\.outcome[[:space:]]*=[^=]'
-if rg -n "$BANNED_PATTERN" "$XIA1_PLAYTHROUGH" "$XIA2_PLAYTHROUGH" "$UI_HARNESS"; then
+if grep -En "$BANNED_PATTERN" "$XIA1_PLAYTHROUGH" "$XIA2_PLAYTHROUGH" "$UI_HARNESS"; then
     echo 'release-gate: forbidden state injection found in player replay' >&2
     exit 65
 fi
@@ -42,7 +42,7 @@ if ! DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" swift test \
     exit 1
 fi
 cat "$DIRECTED_LOG"
-if rg -i 'skipped|XCTSkip' "$DIRECTED_LOG"; then
+if grep -Ei 'skipped|XCTSkip' "$DIRECTED_LOG"; then
     echo 'release-gate: directed gameplay gate contained a skipped test' >&2
     exit 65
 fi

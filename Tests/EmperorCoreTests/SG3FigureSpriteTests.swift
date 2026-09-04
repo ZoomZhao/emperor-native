@@ -47,6 +47,11 @@ final class SG3FigureSpriteTests: XCTestCase {
             Set(OriginalFigureSpriteCatalog.animations.map(\.role)),
             Set(TutorialFigureRole.allCases).subtracting([
                 .xiongnuInfantry,
+                .enemyInfantry,
+                .enemyCrossbow,
+                .enemyCavalry,
+                .enemyChariot,
+                .enemyCatapult,
                 .grandCanalLaborerTraveling,
                 .grandCanalLaborerWorking,
                 .grandCanalLaborerReturning,
@@ -350,6 +355,26 @@ final class SG3FigureSpriteTests: XCTestCase {
                 XCTAssertGreaterThan(decoded.height, 0)
                 XCTAssertNotNil(decoded.makeCGImage())
             }
+        }
+    }
+
+    func testGenericEnemyInvasionFamiliesUseChinaChineseSheets() throws {
+        let expected: [(Int, String, Int, Int)] = [
+            (58, "NonPlayer_InfantryMan", 12, 1_289),
+            (59, "NonPlayer_CrossbowMan", 6, 629),
+            (60, "NonPlayer_Cavalry", 0, 1),
+            (61, "NonPlayer_Chariot", 21, 2_209),
+            (62, "NonPlayer_Catapult", 16, 1_793),
+        ]
+        for (figureID, bitmap, logical, firstImageID) in expected {
+            let animation = try XCTUnwrap(
+                OriginalFigureSpriteCatalog.animation(forEnemyTypeID: figureID)
+            )
+            XCTAssertEqual(animation.archiveBaseName, "China_Chinese")
+            XCTAssertEqual(animation.sourceBitmapName, bitmap)
+            XCTAssertEqual(animation.logicalGroupID, logical)
+            XCTAssertEqual(animation.framesByDirection[1].first, firstImageID)
+            XCTAssertEqual(animation.framesByDirection[0].count, 12)
         }
     }
 }

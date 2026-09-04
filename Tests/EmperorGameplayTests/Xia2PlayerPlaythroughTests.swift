@@ -104,14 +104,13 @@ final class Xia2PlayerPlaythroughTests: XCTestCase {
     }
 
     private func requireAutomaticMigrationProducer() throws {
-        // The recovered producer is implemented and integration-verified
-        // (Xia1/Qin1/Qin2 playthroughs pass). This continuation test is
-        // blocked on a separate item: on the Xia-2 map some inherited houses
-        // fall outside the new markets' peddler coverage and devolve, so the
-        // population does not grow. Tune the continuation layout/coverage
-        // (more markets or gardens) before re-enabling.
+        // The migration producer remains fail-closed pending its unresolved
+        // map/object inputs and arrival writer. Xia-2 also has a separate
+        // continuation-map food-coverage issue, so this replay must not be
+        // re-enabled by tuning the layout around either unknown contract.
         throw XCTSkip(
-            "BLOCKED: Xia-2 continuation map food coverage for inherited houses"
+            "BLOCKED: automatic migration producer and Xia-2 continuation "
+                + "food coverage remain unrecovered"
         )
     }
 

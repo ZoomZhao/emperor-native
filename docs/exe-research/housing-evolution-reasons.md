@@ -73,9 +73,8 @@ devolve reason path it selects the reason row by a byte on the house object:
   - `reasonCode` `18` → row `57` (generic appeal must increase);
   - `reasonCode` `19` → row `58` (water);
   - `reasonCode` `20` → row `59` (food quality).
-  Rows `60…72` follow the same `reasonCode + 0x27` scheme; the exact reason-code
-  ordinals for each service/commodity were not individually enumerated, but the
-  constant offset `+0x27` makes the authored rows `57…72` the same family.
+  Rows `60…72` follow the same `reasonCode + 0x27` scheme; the exact
+  target-model ordinals are enumerated in section 6 below.
 
 The food-quality messages are the only placeholder-bearing rows in the group.
 The formatter branch is gated directly on the same reason byte used for row
@@ -108,10 +107,10 @@ while substituting its `[food_quality]` token with the resolved flavor item
   cannot attribute the deficit to specific negative nearby buildings. Row 57 is
   the generic appeal line ("appeal of the neighborhood must increase"), which is
   exact for that state; row 56's attributed cause would be overclaiming.
-- **Inferred (authored semantics):** rows 60…72 map to the service and commodity
-  requirements named by their English and Chinese text. The Native model emits
-  exactly those requirement shapes, but the original writers that assign every
-  corresponding reason-code ordinal have not yet been recovered.
+- **Confirmed (static, 2026-09-02):** the target-model pass assigns the
+  service/commodity ordinals 19…33 in the exact order listed in section 6.
+  The upstream writers that populate the corresponding `cHouseInfo` bytes
+  remain unrecovered, so this does not enable those services in simulation.
 - **Unknown:**
   - **row 56 triggering cause** — the original reason-code selection feeding
     desirability into rows 56 vs 57 (i.e. the code that detects "nearby
@@ -139,3 +138,94 @@ while substituting its `[food_quality]` token with the resolved flavor item
   `[food_quality]` **only** for the food requirement and falls back to the exact
   authored group-127 Chinese rows when GameData is absent. It appends no
   current/required diagnostics.
+
+## 5. Direct PE recovery of the reason classifier — `0x51A660`
+
+The generated split corpus does not contain a file for `0x51A660`; the
+function is present in both shipped PE images. Direct disassembly establishes
+the producer of the `cHouseInfo +0x3A` byte consumed above:
+
+- `EmperorEN.exe` and `EmperorCH.exe` use the same `0x51A660…0x51AEC0`
+  instruction range. A byte-for-byte comparison of the 0x4260-byte range gives
+  SHA-256 `65e81e5a6501606e01191fa6ef0d6436b2deb7461ea0d6c457c7789b70b4bd1e`
+  for each image. This is static PE evidence; the original runtime was not
+  launched.
+- The method receives the house object in `ecx`, reads its model id from
+  `house +0x16`, and repeatedly calls `FUN_0044CC80 @ 0x44CC80`. That helper
+  indexes `DAT_00A63BFC` by `(houseModelID, fieldIndex)`; the requested indices
+  are the HOUSES columns documented in `EmperorBuildingModels.txt` (desirability
+  low/high, herbalist, water, acupuncture, music, acrobat, drama, food quality,
+  hemp, ceramics, tea, silk, wares, crime/disease, capacity, and the three
+  religious-access fields). The authored HOUSES header therefore corroborates
+  the field family, while the compiler's stack-slot reuse is not treated as a
+  source-level layout.
+- The first pass compares the current HouseBldg object's desirability byte
+  (`house +0x5E`) against model fields 0/1, then tests the current `cHouseInfo`
+  service/commodity bytes and writes reason ordinals `0…18` to `cHouseInfo
+  +0x3A`. It returns `-1` for a blocked state and `0` for the no-blocker path
+  (with the terminal special cases returning `1` for the completed/terminal
+  housing classes).
+- For non-terminal levels (`house +0x14 != 10,17`), the method calls the house
+  vtable at `+0x22C` to obtain the next model and repeats the same field checks,
+  writing the corresponding upgrade reason ordinals through `34`. The second
+  pass is the direct static reason producer for the upgrade rows; `0x51AEC0`
+  invokes this method through the house vtable slot `+0x208` after the
+  inspector-side `FUN_005A5F60` scan.
+- This method contains no scan over neighboring buildings, no accumulation of
+  desirability contributions, and no write to the native house desirability
+  value. `FUN_005A5F60` remains an inspector-side negative-building scan, not a
+  recovered housing-appeal aggregator. Consequently the direct PE evidence
+  closes the reason-byte producer boundary but leaves the original desirability
+  aggregation/control-flow unknown.
+
+Evidence classification for this section: **confirmed** for the address,
+caller/vtable edges, EN/CH identity, model-table field reads, and `+0x3A`
+reason-byte writes; **unknown** only for the separate neighborhood appeal
+aggregation path and the upstream service/commodity byte writers. No
+simulation/provider behavior is enabled from this classifier; the section-6
+metadata only preserves the original inspector ordering.
+
+## 6. Exact target-model reason priority — `0x51A660` (confirmed, 2026-09-02)
+
+The target-model pass was disassembled directly from the canonical English PE
+(`Exe/ghidra/input/EmperorEN.exe`, SHA-256
+`8a6d2df1015cb75d797546d117da5f82b86fd08726090c2a13d853b9009d6753`) and
+cross-checked against the Chinese PE
+(`dbdeca1ec2720f2387e1673bfbb901e9bad832179355ea897cfa7536e17ac15a`). The
+`0x51A660…0x51AEC0` range is byte-identical in both images. The classifier
+reads the target model through `FUN_0044CC80 @ 0x44CC80`, then writes the first
+failing ordinal to `cHouseInfo +0x3A`; the inspector adds `0x27` when selecting
+the group-127 row. The recovered upgrade order is:
+
+| reason code | target HOUSES field / state | group-127 row |
+| ---: | --- | ---: |
+| 17 | attributed negative nearby appeal (separate classifier) | 56 |
+| 18 | generic appeal below evolve threshold | 57 |
+| 19 | water (`HOUSES d`, field 3) | 58 |
+| 20 | food quality (`HOUSES i`, field 8) | 59 |
+| 21 | music (`HOUSES f`, field 5) | 60 |
+| 22 | acrobat (`HOUSES g`, field 6) | 61 |
+| 23 | drama (`HOUSES h`, field 7) | 62 |
+| 24 | acupuncture (`HOUSES e`, field 4) | 63 |
+| 25 | herbalist (`HOUSES c`, field 2) | 64 |
+| 26 | ancestor access (`HOUSES v`, field 21) | 65 |
+| 27 | Confucian access (`HOUSES w`, field 22) | 66 |
+| 28 | Daoist/Buddhist access (`HOUSES x`, field 23) | 67 |
+| 29 | ceramics (`HOUSES k`, field 10) | 68 |
+| 30 | hemp (`HOUSES j`, field 9) | 69 |
+| 31 | tea (`HOUSES l`, field 11) | 70 |
+| 32 | bronzeware or lacquerware (`HOUSES n`, field 13) | 71 |
+| 33 | silk (`HOUSES m`, field 12) | 72 |
+
+Codes `17` and `18` are distinct in the PE: the former is selected only by a
+separate nearby-building appeal condition that Native cannot currently
+attribute, while the latter is the safe generic desirability blocker. Codes
+`19…33` are now represented by `HouseEvolutionRequirement.originalUpgradeReasonCode`
+and the Native blocker list is sorted by that ordinal. This changes no
+simulation truth and does not imply that the unresolved water, entertainment,
+market-peddler, or appeal-provider writers have been recovered.
+
+**Evidence class:** **confirmed** for the machine-code order, field-index
+loads, reason ordinals, and EN/CH identity; **unknown** remains for the
+upstream writers that populate each `cHouseInfo` service/commodity byte and
+for the separate appeal aggregation path.

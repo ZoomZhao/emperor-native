@@ -103,6 +103,25 @@ public enum ConstructionDragPlanner {
 /// Original non-monument footprints used by the native construction layer.
 /// Rectangular buildings can be rotated by swapping these authored dimensions.
 public enum OriginalBuildingFootprintCatalog {
+    /// Object-side footprint used by the original multi-cell service/appeal
+    /// callbacks for residential map objects. This is deliberately separate
+    /// from `footprint(forBuildingID:)`: the latter is the Native construction
+    /// occupancy projection, while the executable's `object +0x07` side byte
+    /// is independently confirmed as 2×2 for common houses and 4×4 for elite
+    /// houses. The map-slot/arbitration projection is still unresolved.
+    public static func residentialObjectFootprint(
+        forBuildingID buildingID: Int
+    ) -> BuildingFootprint? {
+        switch buildingID {
+        case 2...10:
+            BuildingFootprint(width: 2, height: 2)
+        case 11...17:
+            BuildingFootprint(width: 4, height: 4)
+        default:
+            nil
+        }
+    }
+
     public static func footprint(forBuildingID buildingID: Int) -> BuildingFootprint? {
         switch buildingID {
         // Every residential plot in the original game occupies a 2×2 block.
@@ -164,6 +183,11 @@ public enum OriginalBuildingFootprintCatalog {
         // City walls are painted one tile at a time. The original executable
         // reserves a 5x3 rectangle for a gatehouse and a 2x2 square for a
         // staffed tower; rotation swaps the gatehouse axes.
+        // Residential walls and gates are also painted one cell at a time.
+        // Their model-table footprint dword is 1 for every authored variant
+        // (89/90/91, 104/105/106, 231, and 232).
+        case 89...91, 104...106, 231, 232:
+            BuildingFootprint(width: 1, height: 1)
         case 129:
             BuildingFootprint(width: 1, height: 1)
         case 130:

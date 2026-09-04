@@ -45,6 +45,10 @@ public struct CampaignEmpireCity: Identifiable, Sendable, Hashable {
     /// Prices converted from the original half-unit storage representation.
     public let priceByCommodityID: [Int: Int]
     public let relationships: [CampaignCityRelationship]
+    /// The serialized city-runtime enemy-set selector consumed by the
+    /// original invasion builder (`+0x3AAC`). The source clamps this input to
+    /// `0...6` at `FUN_00522B30`; this property preserves the authored dword.
+    public let serializedEnemySetIndex: Int
     public let rawPrefix: Data
     public let rawPostlude: Data
 
@@ -101,6 +105,9 @@ public struct CampaignEmpireMap: Sendable, Hashable {
     public static let cityCount = 22
     public static let cityByteCount = 15_366
     public static let cityPrefixByteCount = 1_194
+    /// Offset in the post-schema city-runtime record for the invasion enemy
+    /// set selector passed by `FUN_004A5340` to `FUN_00522D00`.
+    public static let cityRuntimeEnemySetIndexOffset = 0x3AAC
     public static let relationshipCount = 22
     public static let relationshipByteCount = 629
 
@@ -202,6 +209,12 @@ public struct CampaignEmpireMap: Sendable, Hashable {
         for cityIndex in 0..<cityCount {
             let cityOffset = cityBase + cityIndex * cityByteCount
             let schema = try requiredUInt16LE(in: data, at: cityOffset, field: "city schema")
+            let runtimeRecordOffset = cityOffset + 2
+            let serializedEnemySetIndex = Int(try requiredUInt32LE(
+                in: data,
+                at: runtimeRecordOffset + cityRuntimeEnemySetIndexOffset,
+                field: "city runtime enemy-set selector"
+            ))
             let prefix = data.subdata(in: (cityOffset + 2)..<(cityOffset + cityPrefixByteCount))
             let relationshipBase = cityOffset + cityPrefixByteCount
             var relationships: [CampaignCityRelationship] = []
@@ -250,6 +263,7 @@ public struct CampaignEmpireMap: Sendable, Hashable {
                 annualLoadsByCommodityID: annualLoads,
                 priceByCommodityID: prices,
                 relationships: relationships,
+                serializedEnemySetIndex: serializedEnemySetIndex,
                 rawPrefix: prefix,
                 rawPostlude: postlude
             ))

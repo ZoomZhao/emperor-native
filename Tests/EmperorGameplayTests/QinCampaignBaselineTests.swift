@@ -64,6 +64,33 @@ final class QinCampaignBaselineTests: XCTestCase {
         )
     }
 
+    func testQinMissionOneDoesNotPromoteGenericMapRowsIntoLiveObjects() throws {
+        let controller = try startedQinMissionOne()
+        let city = try XCTUnwrap(controller.city)
+        let mapURL = try XCTUnwrap(
+            controller.activeWorld?.mapAssignment.embeddedMap.mapURL
+        )
+        let map = try EmperorMap(url: mapURL)
+
+        // The canonical Haunxian archive contains a large generic Building
+        // stream, but every scanned row has base model 0 and is outside the
+        // recovered FUN_0052F030 whitelist. Keep the Native startup boundary
+        // explicit: archive evidence is retained by EmperorMap, while no
+        // house, service provider, or placed-building state is synthesized.
+        XCTAssertFalse(map.genericBuildingArchiveRecords.isEmpty)
+        XCTAssertTrue(
+            map.genericBuildingArchiveRecords.allSatisfy {
+                $0.baseTypeWord == 0
+                    && !OriginalMapLoaderRehydrationCatalog.rehydrates(
+                        genericRecord: $0
+                    )
+            }
+        )
+        XCTAssertTrue(city.houses.isEmpty)
+        XCTAssertTrue(city.placedBuildings.isEmpty)
+        XCTAssertTrue(city.residentialServiceBuildings.isEmpty)
+    }
+
     func testEarthenGreatWallDoesNotUseTheLegacyGuessedProgressConfiguration() {
         XCTAssertNil(OriginalMonumentConfiguration.configuration(buildingID: 85))
     }

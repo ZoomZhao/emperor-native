@@ -690,7 +690,23 @@ public struct CampaignMissionRuntimeState: Sendable, Hashable, Codable {
             disposition = (cityChanged || empireChanged) ? .applied : .recorded
 
         case .invasion, .earthquake, .drought, .flood, .message:
-            let application = city.applyCampaignCityEvent(occurrence)
+            let sourceFormationPlan: OriginalInvasionFormationPlan?
+            if kind == .invasion,
+               let enemySetIndex = city.campaignEnemySetIndex,
+               let amount = occurrence.amount {
+                sourceFormationPlan = OriginalInvasionFormationCatalog.plan(
+                    enemySetIndex: enemySetIndex,
+                    year: startYear + occurrence.relativeYear,
+                    amount: amount,
+                    enemies: rules.models.figures.enemies
+                )
+            } else {
+                sourceFormationPlan = nil
+            }
+            let application = city.applyCampaignCityEvent(
+                occurrence,
+                sourceFormationPlan: sourceFormationPlan
+            )
             if kind == .invasion, application.invasionAlertID != nil {
                 disposition = .pending
             } else {

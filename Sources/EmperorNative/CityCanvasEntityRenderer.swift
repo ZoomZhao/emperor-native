@@ -85,8 +85,12 @@ extension CityCanvas {
     ) {
         var renderItems: [BuildingRenderItem] = []
         for (index, house) in city.houses.enumerated() {
-            let fallback = GridPoint(x: 1 + (index % 4) * 3, y: 1 + (index / 4) * 3)
-            let location = house.location ?? fallback
+            // Generic Building archive records do not expose a safe inverse
+            // mapping to a residential world coordinate. Never paint a
+            // fabricated position into the player canvas; the source-backed
+            // archive projection remains fail-closed until that mapping is
+            // recovered.
+            guard let location = house.location else { continue }
             guard let reference = OriginalBuildingSpriteCatalog.housingSprite(
                 forHouseLevelID: house.houseLevelID,
                 orientation: house.orientation
@@ -102,6 +106,54 @@ extension CityCanvas {
                 isFigure: false,
                 stableOrder: index
             ))
+        }
+        // Xiangjun's cResWall/cResGate records are serialized separately from
+        // the generic Building vector. They are safe to draw from authored
+        // map evidence without registering them as live simulation objects.
+        // Native supplies the classic-canvas default map rotation 0 here;
+        // dynamic runtime rotation is not exposed by this renderer. Its gate
+        // variation is replaced by stable sequence parity, preserving the
+        // recovered two-way distribution without inventing gameplay state.
+        if let authoredMap = originalMap?.map {
+            let barrierPoints = Set(authoredMap.residentialBarrierStates.map(\.worldOrigin))
+            let neighborPoints: [(dx: Int, dy: Int)] = [
+                (0, -1), (1, 0), (0, 1), (-1, 0),
+            ]
+            for state in authoredMap.residentialBarrierStates {
+                var neighborMask = 0
+                var opaqueMask = 0
+                for (bit, delta) in neighborPoints.enumerated() {
+                    let point = GridPoint(
+                        x: state.worldOrigin.x + delta.dx,
+                        y: state.worldOrigin.y + delta.dy
+                    )
+                    if barrierPoints.contains(point) {
+                        neighborMask |= 1 << bit
+                    }
+                    if authoredMap.terrain(at: point)?.contains(.road) == true {
+                        opaqueMask |= 1 << bit
+                    }
+                }
+                guard let reference = OriginalBuildingSpriteCatalog
+                    .residentialBarrierConnectedSprite(
+                        forBuildingID: state.buildingID,
+                        neighborMask: neighborMask,
+                        opaqueMask: opaqueMask,
+                        mapRotation: 0,
+                        variation: state.sequenceIndex & 1
+                    ), buildingSprites[reference] != nil,
+                    viewport.contains(state.worldOrigin) else { continue }
+                renderItems.append(BuildingRenderItem(
+                    buildingReference: reference,
+                    figureReference: nil,
+                    mapOrigin: state.worldOrigin,
+                    previousMapOrigin: nil,
+                    footprint: BuildingFootprint(width: 1, height: 1),
+                    usesLegacyHouseAnchor: false,
+                    isFigure: false,
+                    stableOrder: 5_000 + state.sequenceIndex
+                ))
+            }
         }
         for (placementIndex, placement) in city.placedBuildings.enumerated() {
             let renderOrientation = placement.buildingID == 129
@@ -444,6 +496,23 @@ extension CityCanvas {
                 stableID: 100_000 + walker.id,
                 point: walker.currentPoint,
                 previous: previous,
+                interpolatesMovement: interpolatesMovement
+            )
+        }
+        // Model 11 immigrants are live figures in the original object
+        // vector, not RoadServiceWalker records. Their frame byte is advanced
+        // by FUN_004C9FD0 and consumed by FUN_004D6D30; use that persisted
+        // source frame instead of the generic renderer tick when available.
+        for walker in city.migration.immigrantWalkers {
+            let interpolatesMovement = walker.movedOnLastSimulationStep == true
+            let previous = interpolatesMovement && walker.route.indices.contains(walker.routeIndex - 1)
+                ? walker.route[walker.routeIndex - 1] : nil
+            append(
+                figureID: ImmigrantWalker.figureID,
+                stableID: 400_000 + walker.id,
+                point: walker.currentPoint,
+                previous: previous,
+                animationFrame: walker.sourceAnimationFrame,
                 interpolatesMovement: interpolatesMovement
             )
         }

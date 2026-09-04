@@ -62,6 +62,11 @@ public struct RoadServiceWalker: Identifiable, Sendable, Equatable, Codable {
         switch figureID {
         case 27: return 6
         case 28, 30, 31: return 0
+        // The venue FSM's shared crossing callback uses selector 3 for the
+        // authored acrobat/actor/musician models. These figures remain
+        // outside `supportsRecoveredResidentialRoam` until their provider
+        // selection and collision/coverage side effects are recovered.
+        case 32, 33, 34: return 3
         case 35: return 5
         default: return nil
         }
@@ -131,7 +136,10 @@ public struct RoadServiceWalker: Identifiable, Sendable, Equatable, Codable {
         guard supportsRecoveredResidentialRoam, originalPhase == .dormant, workerPercent > 0 else {
             return
         }
-        let threshold = originalSpawnThreshold(workerPercent: workerPercent)
+        guard let threshold = OriginalResidentialServiceCatalog.residentialSpawnThreshold(
+            figureID: figureID,
+            workerPercent: workerPercent
+        ) else { return }
         let next = originalSpawnCounter + 1
         originalSpawnCounterState = next
         guard next > threshold else { return }
@@ -156,34 +164,6 @@ public struct RoadServiceWalker: Identifiable, Sendable, Equatable, Codable {
         originalReturnIndexState = nil
         route = [origin]
         routeIndex = 0
-    }
-
-    private func originalSpawnThreshold(workerPercent: Int) -> Int {
-        if figureID == 35 {
-            switch workerPercent {
-            case 100...: return 3
-            case 75...: return 6
-            case 50...: return 12
-            case 25...: return 24
-            default: return 32
-            }
-        }
-        if figureID == 27 {
-            switch workerPercent {
-            case 100...: return 1
-            case 75...: return 3
-            case 50...: return 5
-            case 25...: return 10
-            default: return 15
-            }
-        }
-        switch workerPercent {
-        case 100...: return 1
-        case 75...: return 3
-        case 50...: return 7
-        case 25...: return 15
-        default: return 29
-        }
     }
 
     mutating func advanceOriginalFigureStep(
@@ -286,16 +266,13 @@ public struct RoadServiceWalker: Identifiable, Sendable, Equatable, Codable {
         // Recovered residential paths call `FUN_004E6B70` with codes 6 or 8.
         // Code 6 executes one `FUN_004E6D80` substep. Code 8 uses `+0x170`
         // to execute the exact repeating 1/1/2 substep cadence.
-        if movementCode == 8 {
-            let phase = originalSpeedPhaseState ?? 0
-            if phase < 2 {
-                originalSpeedPhaseState = phase + 1
-                return 1
-            }
-            originalSpeedPhaseState = 0
-            return 2
-        }
-        return 1
+        guard movementCode == 8 else { return 1 }
+        let plan = OriginalResidentialServiceCatalog.entertainmentVenueMovementUpdatePlan(
+            selector: movementCode,
+            phase: UInt8(truncatingIfNeeded: originalSpeedPhaseState ?? 0)
+        )
+        originalSpeedPhaseState = Int(plan.nextPhase)
+        return plan.movementUpdates
     }
 
     private mutating func advanceOriginalReturnSubstep() -> Int {
@@ -605,10 +582,15 @@ public struct WalkerMovementSummary: Sendable, Equatable, Codable {
     )
 }
 
-/// Exact radius-two object scan used by `FUN_00429E10`. The original keeps
-/// sixteen angular occlusion sectors. Native exposes the confirmed residential
-/// wall/gate objects here; the separate tree/wall-terrain branch remains
-/// unavailable until its auxiliary bit-4 object state is represented.
+/// Compatibility projection of the confirmed radius-two map-object callback
+/// used by `FUN_00429E10`: `0x4EACD0` resolves the figure's home object,
+/// Well `+0x28` reaches `0x429DF0 → 0x429E10`, and each visible map object is
+/// dispatched through provider `+0x2C` before its `cHouseInfo +0x1E4` write.
+/// The original keeps sixteen angular occlusion sectors. Native exposes the
+/// confirmed residential wall/gate objects here; the separate tree/wall-
+/// terrain branch and the serialized provider registry mapping remain
+/// unavailable, so this house-index projection must not be treated as the
+/// original object-slot layout.
 enum OriginalResidentialServiceCoverage {
     private static let wallAndGateBuildingIDs: Set<Int> = [
         89, 90, 91, 104, 105, 106, 231, 232,
@@ -646,11 +628,23 @@ enum OriginalResidentialServiceCoverage {
         houses: [ResidentialUnit],
         blockerPoints: Set<GridPoint>
     ) -> Set<Int> {
-        let footprint = OriginalBuildingFootprintCatalog.footprint(forBuildingID: 2)
-            ?? BuildingFootprint(width: 2, height: 2)
         var houseIndexByPoint: [GridPoint: Int] = [:]
         for index in houses.indices {
             guard let location = houses[index].location else { continue }
+            // The compatibility projection enumerates the authored object
+            // side. Common houses are 2×2, while elite houses are 4×4; using
+            // one fixed footprint silently drops the outer cells of elite
+            // homes from water/entertainment/market coverage. The executable's
+            // object-slot arbitration is still intentionally unresolved.
+            let buildingID = houses[index].residents == 0
+                ? (houses[index].vacantTypeID ?? houses[index].houseLevelID + 3)
+                : houses[index].houseLevelID + 3
+            guard let footprint = OriginalBuildingFootprintCatalog
+                .residentialObjectFootprint(forBuildingID: buildingID) else {
+                // Do not reinterpret an unclassified object as a common
+                // house; the missing model-side mapping is a research gap.
+                continue
+            }
             for point in footprint.points(at: location) where houseIndexByPoint[point] == nil {
                 houseIndexByPoint[point] = index
             }
@@ -708,8 +702,10 @@ enum OriginalResidentialServiceCoverage {
         for service: WalkerServiceKind,
         providerBuildingID: Int?
     ) -> Bool {
+        // `FUN_0048AD20` applies the same populated-house gate to entertainment
+        // figures; only their movement FSM remains intentionally unsupported.
         switch service {
-        case .tax, .water, .herbalist, .acupuncture:
+        case .tax, .water, .herbalist, .acupuncture, .music, .acrobat, .drama:
             return house.residents > 0
         case .ancestor, .daoistOrBuddhist, .confucian:
             let buildingID = house.residents == 0
@@ -719,7 +715,7 @@ enum OriginalResidentialServiceCoverage {
             let isEliteHouse = (11..<18).contains(buildingID)
             if providerBuildingID == 219 || service == .confucian { return isEliteHouse }
             return house.residents > 0 || isEliteHouse
-        case .inspection, .constable, .music, .acrobat, .drama:
+        case .inspection, .constable:
             return false
         }
     }
@@ -816,6 +812,8 @@ public struct DeterministicWalkerState: Sendable, Equatable, Codable {
         return id
     }
 
+    /// Advances the recovered scheduler without a provider registry.  The
+    /// empty local projection preserves the historical fail-closed default.
     @discardableResult
     public mutating func advanceRecoveredOriginalSteps(
         _ originalSteps: Int,
@@ -824,7 +822,39 @@ public struct DeterministicWalkerState: Sendable, Equatable, Codable {
         workerPercentByWalkerID: [Int: Int],
         primaryReturnPassability: [UInt16]? = nil,
         coverageBlockerPoints: Set<GridPoint> = [],
-        barrierPoints: Set<GridPoint> = []
+        barrierPoints: Set<GridPoint> = [],
+        waterDecayEligibleHouseIDs: Set<Int> = []
+    ) -> WalkerMovementSummary {
+        var noEligibleEntertainmentProviders: [
+            Int: OriginalResidentialServiceCatalog.EntertainmentVenueProviderProjection
+        ] = [:]
+        return advanceRecoveredOriginalSteps(
+            originalSteps,
+            houses: &houses,
+            roadNetwork: roadNetwork,
+            workerPercentByWalkerID: workerPercentByWalkerID,
+            primaryReturnPassability: primaryReturnPassability,
+            coverageBlockerPoints: coverageBlockerPoints,
+            barrierPoints: barrierPoints,
+            waterDecayEligibleHouseIDs: waterDecayEligibleHouseIDs,
+            entertainmentVenueCapacityByProviderID: &noEligibleEntertainmentProviders
+        )
+    }
+
+    /// Variant that accepts an explicit source-backed entertainment-provider
+    /// projection.  The provider/state dictionaries are deliberately required
+    /// at the call site so an unresolved registry cannot be synthesized.
+    public mutating func advanceRecoveredOriginalSteps(
+        _ originalSteps: Int,
+        houses: inout [ResidentialUnit],
+        roadNetwork: RoadNetwork,
+        workerPercentByWalkerID: [Int: Int],
+        primaryReturnPassability: [UInt16]? = nil,
+        coverageBlockerPoints: Set<GridPoint> = [],
+        barrierPoints: Set<GridPoint> = [],
+        waterDecayEligibleHouseIDs: Set<Int> = [],
+        entertainmentVenueCapacityByProviderID:
+            inout [Int: OriginalResidentialServiceCatalog.EntertainmentVenueProviderProjection]
     ) -> WalkerMovementSummary {
         var moved = 0
         var completed = 0
@@ -842,8 +872,28 @@ public struct DeterministicWalkerState: Sendable, Equatable, Codable {
                     )
                 }
             }
+            if phase == OriginalResidentialServiceCatalog.entertainmentVenueDecaySchedulerPhase {
+                // FUN_004AC2B0 dispatches the shared +0x9C slot only for
+                // active venue objects (state 1 or 3).  Native does not yet
+                // recover that object registry, so callers must provide an
+                // explicit provider/state projection before these raw
+                // opportunity bytes can decay.
+                for providerID in entertainmentVenueCapacityByProviderID.keys.sorted() {
+                    entertainmentVenueCapacityByProviderID[providerID]?.decayIfActive()
+                }
+            }
             if phase == 0x23 {
-                for index in houses.indices { houses[index].advanceOriginalOrdinaryServiceSlice() }
+                for index in houses.indices {
+                    houses[index].advanceOriginalOrdinaryServiceSlice()
+                    // The executable's 0x517B40 walk applies 0x517280 to
+                    // active building objects only.  Native does not yet
+                    // recover the provider/object registry that establishes
+                    // that eligibility, so the dual cHouseInfo water bytes
+                    // are decayed only for an explicit source-backed set.
+                    if waterDecayEligibleHouseIDs.contains(houses[index].id) {
+                        houses[index].advanceOriginalWaterServiceSlice()
+                    }
+                }
             }
             if phase == 0x2d {
                 advanceOriginalVisitFieldDecaySlice()

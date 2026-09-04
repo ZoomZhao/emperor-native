@@ -45,12 +45,143 @@ public struct BuildingSpriteComponent: Sendable, Equatable, Hashable {
     }
 }
 
+/// Neighbor-connected sprite family selected by the original cResWall /
+/// cResGate callback.  `firstImageID` is the first image of the logical SG3
+/// group; the callback adds a mask-dependent frame offset at draw time.
+/// Keeping the family separate from `buildingSprite` prevents the generic
+/// Building-table image from being mistaken for a connected barrier frame.
+public struct ResidentialBarrierSpriteFamily: Sendable, Equatable, Hashable {
+    public let key: Int
+    public let firstImageID: Int
+    public let modelIDs: [Int]
+
+    public init(key: Int, firstImageID: Int, modelIDs: [Int]) {
+        self.key = key
+        self.firstImageID = firstImageID
+        self.modelIDs = modelIDs
+    }
+}
+
+public enum ResidentialBarrierConnectionKind: Sendable, Equatable, Hashable {
+    case wall
+    case gate
+}
+
 public enum OriginalBuildingSpriteCatalog {
     public static let generalArchiveBaseName = "China_General"
     public static let grandCanalArchiveBaseName = "China_Mon_Grand_Canal"
     public static let tumulusArchiveBaseName = "China_Mon_Tumulus"
     public static let vacantCommonHouseImageID = 1_508
     public static let vacantEliteHouseImageID = 1_525
+
+    /// Specialized cResWall/cResGate families selected by
+    /// `FUN_004152D0 @ 0x4152D0` from the callback at `0x4153B0`.
+    /// `firstImageID` is confirmed from `China_General.sg3`; exact
+    /// neighbor-mask offsets are resolved by the table-backed helper below.
+    public static func residentialBarrierSpriteFamily(
+        forBuildingID buildingID: Int
+    ) -> ResidentialBarrierSpriteFamily? {
+        switch buildingID {
+        case 89, 104:
+            ResidentialBarrierSpriteFamily(key: 0x427, firstImageID: 421, modelIDs: [89, 104])
+        case 90, 105:
+            ResidentialBarrierSpriteFamily(key: 0x428, firstImageID: 404, modelIDs: [90, 105])
+        case 91, 106:
+            ResidentialBarrierSpriteFamily(key: 0x429, firstImageID: 387, modelIDs: [91, 106])
+        case 231, 232:
+            ResidentialBarrierSpriteFamily(key: 0x4B5, firstImageID: 370, modelIDs: [231, 232])
+        default:
+            nil
+        }
+    }
+
+    /// Exact frame-offset selector recovered from `FUN_004153B0 @ 0x4153B0`.
+    /// `neighborMask` uses the callback's four cardinal bits (0...15), and
+    /// `mapRotation` is the executable's raw map rotation (0, 2, 4, or 6).
+    /// Gate entries use `mapRotation >> 1` to select one of the four active
+    /// table columns; when the
+    /// table value is 0 or 2, `variation` is the original two-way random
+    /// variation (`FUN_0041FAA0(2)`). The helper returns nil for an unknown
+    /// model or out-of-range caller input rather than inventing a frame.
+    public static func residentialBarrierConnectedFrameOffset(
+        forBuildingID buildingID: Int,
+        neighborMask: Int,
+        opaqueMask: Int = 0,
+        mapRotation: Int,
+        variation: Int = 0
+    ) -> Int? {
+        guard (0...15).contains(neighborMask), (0...15).contains(opaqueMask) else {
+            return nil
+        }
+        let kind: ResidentialBarrierConnectionKind
+        switch buildingID {
+        case 89...91, 231:
+            kind = .wall
+        case 104...106, 232:
+            kind = .gate
+        default:
+            return nil
+        }
+        switch kind {
+        case .wall:
+            var offset: Int
+            if opaqueMask == 0 {
+                offset = (neighborMask & 0x0A) == 0 ? 0x0E : 0x0D
+            } else {
+                offset = (opaqueMask & 0x05) != 0 ? 0x0D : 0x0E
+            }
+            if mapRotation == 2 || mapRotation == 6 {
+                offset = offset == 0x0D ? 0x0E : 0x0D
+            }
+            return offset
+        case .gate:
+            guard [0, 2, 4, 6].contains(mapRotation), (0...1).contains(variation) else {
+                return nil
+            }
+            let base = residentialBarrierGateFrameTable[neighborMask][mapRotation >> 1]
+            return base + ((base == 0 || base == 2) ? variation : 0)
+        }
+    }
+
+    /// Resolves a connected barrier frame into the corresponding
+    /// `China_General` image. The caller owns the deterministic replacement
+    /// for the executable's two-way random gate variation.
+    public static func residentialBarrierConnectedSprite(
+        forBuildingID buildingID: Int,
+        neighborMask: Int,
+        opaqueMask: Int = 0,
+        mapRotation: Int,
+        variation: Int = 0
+    ) -> BuildingSpriteReference? {
+        guard let family = residentialBarrierSpriteFamily(forBuildingID: buildingID),
+              let offset = residentialBarrierConnectedFrameOffset(
+                forBuildingID: buildingID,
+                neighborMask: neighborMask,
+                opaqueMask: opaqueMask,
+                mapRotation: mapRotation,
+                variation: variation
+              ) else {
+            return nil
+        }
+        return BuildingSpriteReference(
+            archiveBaseName: generalArchiveBaseName,
+            imageID: family.firstImageID + offset
+        )
+    }
+
+    // DAT_00815D40: 16 rows keyed by neighborMask, followed by five stored
+    // offsets. The first four are map-rotation bands; the EN and CH canonical
+    // PEs are byte-identical.
+    private static let residentialBarrierGateFrameTable: [[Int]] = [
+        [0, 2, 0, 2, 13], [2, 0, 2, 0, 14],
+        [0, 2, 0, 2, 13], [7, 6, 5, 4, 14],
+        [2, 0, 2, 0, 14], [2, 0, 2, 0, 14],
+        [4, 7, 6, 5, 14], [9, 8, 11, 10, 14],
+        [0, 2, 0, 2, 13], [6, 5, 4, 7, 14],
+        [0, 2, 0, 2, 13], [8, 11, 10, 9, 13],
+        [5, 4, 7, 6, 14], [11, 10, 9, 8, 14],
+        [10, 9, 8, 11, 13], [12, 12, 12, 12, 14],
+    ]
 
     public static let emptyWarehouseBayImageID = 1_317
     public static let foodWarehouseBayImageID = 1_101
@@ -358,15 +489,18 @@ public enum OriginalBuildingSpriteCatalog {
         )
     }
 
-    /// Building IDs currently constructible on the native isometric canvas.
+    /// Building IDs with a verified placed-building sprite/geometry mapping.
     /// Keeping this list in the core makes the asynchronous sprite loader and
-    /// archive validation tests consume exactly the same catalog.
+    /// archive validation tests consume exactly the same catalog.  Membership
+    /// does not by itself enable a construction command; unsupported command
+    /// semantics remain fail-closed in `CitySimulation`.
     public static let supportedPlacedBuildingIDs = [
         26, 27, 28,
         31, 33, 35, 36, 38, 39, 40, 42, 43, 46, 52, 53, 54, 56, 58, 59, 60, 72,
         77, 82, 84,
         110, 124, 125,
         115, 116, 117, 118, 119, 126, 127, 129, 130, 131,
+        89, 90, 91, 104, 105, 106, 231, 232,
         192, 193, 194, 195, 196, 197, 198, 199, 203,
         207, 208, 209, 211, 212, 213, 214, 215, 216, 217, 218, 219,
         220, 221, 223, 224,
@@ -489,6 +623,14 @@ public enum OriginalBuildingSpriteCatalog {
         case 124: imageID = 1_618 // Inspector's tower, China_Safety group 134 (not #1704)
         case 126: imageID = 2_046 // One-tile roadblock sign, China_Government2 logical group 146
         case 127: imageID = 1_680 // Watchtower, China_Safety group 136
+        // The model table gives every residential wall/gate variant key
+        // 0x451 and image offset 0x0F; FUN_00408170(0x451) therefore resolves
+        // the generic Building primary image #936. This is only the
+        // primary-table entry. cResWall/cResGate install a specialized
+        // vtable (+0x270 -> FUN_004153B0) that replaces the connected draw
+        // with neighbor-dependent frames from keys 0x427/0x428/0x429/0x4B5;
+        // those frames are not represented by this single-image API.
+        case 89...91, 104...106, 231, 232: imageID = 936
         case 129: imageID = orientation == .northSouth ? 892 : 917 // City wall
         case 131: imageID = 879 // Staffed city-wall tower
         case 125: imageID = 1_908 // Tax office
@@ -687,6 +829,20 @@ public enum OriginalBuildingSpriteCatalog {
                     )
                 }
             }
+        }
+        // Connected cResWall/cResGate callbacks select up to +0x0E from
+        // their family first image. Keep every possible frame resident; the
+        // callback's two-way gate variation is deterministic in Native.
+        for buildingID in [89, 90, 91, 104, 105, 106, 231, 232] {
+            guard let family = residentialBarrierSpriteFamily(forBuildingID: buildingID) else {
+                continue
+            }
+            references.formUnion((0...14).map {
+                BuildingSpriteReference(
+                    archiveBaseName: generalArchiveBaseName,
+                    imageID: family.firstImageID + $0
+                )
+            })
         }
         references.formUnion(quayHouseImageIDs.values.map {
             BuildingSpriteReference(archiveBaseName: generalArchiveBaseName, imageID: $0)

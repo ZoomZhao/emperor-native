@@ -232,6 +232,46 @@ private func accessibilityIdentifierSnapshot(in application: AXUIElement) -> Str
     return values.joined(separator: " | ")
 }
 
+/// Captures a bounded role/title/value tree when identifier lookup fails.
+/// SwiftUI's accessibility bridge can expose a valid window while omitting
+/// `kAXIdentifierAttribute`; the diagnostic keeps that distinction visible
+/// without changing the player-facing accessibility surface.
+private func accessibilityTreeSnapshot(in application: AXUIElement) -> String {
+    let windows = copyAttribute(
+        application,
+        kAXWindowsAttribute as CFString
+    ) as? [AXUIElement] ?? []
+    let focusedWindow = elementAttribute(application, kAXFocusedWindowAttribute as CFString)
+    let mainWindow = elementAttribute(application, kAXMainWindowAttribute as CFString)
+    var queue = [focusedWindow, mainWindow].compactMap { $0 }
+        + windows + children(of: application)
+    var index = 0
+    var values: [String] = []
+    var visited: Set<CFHashCode> = []
+    while index < queue.count, index < 30_000, values.count < 160 {
+        let element = queue[index]
+        index += 1
+        guard visited.insert(CFHash(element)).inserted else { continue }
+        let role = stringAttribute(element, kAXRoleAttribute as CFString) ?? "?"
+        let identifier = stringAttribute(element, kAXIdentifierAttribute as CFString) ?? "-"
+        let title = stringAttribute(element, kAXTitleAttribute as CFString)
+            ?? stringAttribute(element, kAXDescriptionAttribute as CFString)
+            ?? ""
+        let value = stringAttribute(element, kAXValueAttribute as CFString) ?? ""
+        let compactTitle = title.replacingOccurrences(of: "|", with: " ")
+        let compactValue = value.replacingOccurrences(of: "|", with: " ")
+        let summary = [compactTitle, compactValue]
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+        let clipped = String(summary.prefix(120))
+        values.append(
+            "\(role):\(identifier):children=\(children(of: element).count):\(clipped)"
+        )
+        queue.append(contentsOf: children(of: element))
+    }
+    return values.joined(separator: " | ")
+}
+
 private func waitForElement(
     in application: AXUIElement,
     identifier: String,
@@ -1390,6 +1430,7 @@ private func runSmoke(arguments: Arguments) throws {
         throw SmokeFailure("victory UI did not appear within \(Int(arguments.timeout)) seconds", code: SmokeExit.timeout)
     } catch {
         log.record("AX identifiers=\(accessibilityIdentifierSnapshot(in: application))")
+        log.record("AX tree=\(accessibilityTreeSnapshot(in: application))")
         captureFailure(application: application, log: log)
         throw error
     }

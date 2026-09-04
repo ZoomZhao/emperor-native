@@ -3,6 +3,117 @@ import XCTest
 @testable import EmperorCore
 
 final class GrandCanalSimulationTests: XCTestCase {
+    func testRecoveredBuildingFootprintPredicatesAreExplicitAndFailClosed() {
+        typealias Catalog = OriginalGrandCanalLayoutCatalog.BuildingFootprintPredicateCatalog
+        XCTAssertEqual(
+            Catalog.constantFalseBuildingIDs,
+            Set(3...17).union([
+                27, 28, 29, 31, 33, 35, 36, 37, 43, 46, 48, 53, 54, 56, 58,
+                59, 60, 71, 72, 73, 116, 117, 124, 125, 126, 192, 193, 207, 208,
+                194, 195, 196, 197, 198, 199, 211, 214, 215, 216, 217, 218, 219,
+                233, 237, 238, 239, 243,
+                244, 245, 246, 247, 248
+            ])
+        )
+        for buildingID in Catalog.constantFalseBuildingIDs {
+            XCTAssertEqual(
+                Catalog.genericFootprintPredicate(forBuildingID: buildingID),
+                false,
+                "confirmed +0xCC predicate should be false for building \(buildingID)"
+            )
+        }
+        XCTAssertNil(Catalog.genericFootprintPredicate(forBuildingID: 203))
+        XCTAssertEqual(Catalog.genericFootprintPredicate(forBuildingID: 126), false)
+    }
+
+    func testRoutingBuildersUseRecoveredFootprintCatalogWhenCellOmitsPredicate() throws {
+        // Warehouse 54 is one of the classes whose live-object `+0xCC`
+        // callback is directly recovered as constant false.  A caller that
+        // has only the authored building ID must therefore get the same
+        // source-backed result as a caller that supplied `false` explicitly.
+        let omitted = try OriginalGrandCanalLayoutCatalog.workerRoutingCellValues(
+            from: .init(
+                point: GridPoint(x: 2, y: 3),
+                terrainRawValue: 0x8008,
+                occupancy: .init(buildingID: 54)
+            )
+        )
+        let explicit = try OriginalGrandCanalLayoutCatalog.workerRoutingCellValues(
+            from: .init(
+                point: GridPoint(x: 2, y: 3),
+                terrainRawValue: 0x8008,
+                occupancy: .init(buildingID: 54, genericFootprintPredicate: false)
+            )
+        )
+        XCTAssertEqual(omitted, explicit)
+        XCTAssertEqual(omitted.primaryPassability, 0x2)
+        XCTAssertEqual(omitted.fallbackCellClass, 0x4)
+
+        XCTAssertThrowsError(
+            try OriginalGrandCanalLayoutCatalog.workerRoutingCellValues(
+                from: .init(
+                    point: GridPoint(x: 2, y: 3),
+                    terrainRawValue: 0x8008,
+                    occupancy: .init(buildingID: 130)
+                )
+            )
+        ) { error in
+            guard case OriginalGrandCanalLayoutCatalog.WorkerRoutingCacheDerivationError
+                .missingGenericFootprintPredicate = error else {
+                XCTFail("expected unknown +0xCC predicate to remain fail-closed, got \(error)")
+                return
+            }
+        }
+    }
+
+    func testRecoveredRoutingModelPredicatesKeepModelAndBuildingDomainsSeparate() {
+        let primary = OriginalGrandCanalLayoutCatalog.RoutingModelPredicateCatalog
+            .primaryOccupiedModelIDs
+        XCTAssertEqual(primary, Set([0xDC, 0xDD, 0xDF, 0xE0, 0xE1]))
+        XCTAssertTrue(primary.allSatisfy {
+            OriginalGrandCanalLayoutCatalog.RoutingModelPredicateCatalog
+                .isPrimaryOccupiedModel($0)
+        })
+        XCTAssertFalse(
+            OriginalGrandCanalLayoutCatalog.RoutingModelPredicateCatalog
+                .isPrimaryOccupiedModel(0xDE)
+        )
+
+        let secondary = OriginalGrandCanalLayoutCatalog.RoutingModelPredicateCatalog
+            .secondaryModelFamilyIDs
+        XCTAssertEqual(
+            secondary,
+            Set([0x1A, 0x1B, 0x1C, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7])
+        )
+        XCTAssertTrue(
+            OriginalGrandCanalLayoutCatalog.RoutingModelPredicateCatalog
+                .isSecondaryModelFamily(0xC7)
+        )
+        XCTAssertFalse(
+            OriginalGrandCanalLayoutCatalog.RoutingModelPredicateCatalog
+                .isSecondaryModelFamily(0xC1)
+        )
+
+        let special = OriginalGrandCanalLayoutCatalog.RoutingModelPredicateCatalog
+            .postSecondaryModelIDs
+        XCTAssertEqual(
+            special,
+            Set(0x4C...0x56).union([0x5C, 0x5D]).union(0xFD...0x10C)
+        )
+        XCTAssertTrue(
+            OriginalGrandCanalLayoutCatalog.RoutingModelPredicateCatalog
+                .isPostSecondaryModel(0xFD)
+        )
+        XCTAssertTrue(
+            OriginalGrandCanalLayoutCatalog.RoutingModelPredicateCatalog
+                .isPostSecondaryModel(0x10C)
+        )
+        XCTAssertFalse(
+            OriginalGrandCanalLayoutCatalog.RoutingModelPredicateCatalog
+                .isPostSecondaryModel(0x57)
+        )
+    }
+
     func testOriginalSubsFileParsesAllIndependentSegmentsAndFivePhases() throws {
         let sourceURL = GameDataSource.defaultRoot
             .appendingPathComponent("Model/Mon_Grand_Canal_subs.txt")
@@ -352,6 +463,520 @@ final class GrandCanalSimulationTests: XCTestCase {
                 return
             }
         }
+    }
+
+    func testFerryWaterEdgeLayerReplaysTerrainSupportAndBoundaryBytes() throws {
+        let width = 3
+        let height = 3
+        let supported = UInt32(0x04 | 0x0408_0000)
+        var terrain = Array(repeating: supported, count: width * height)
+        // The center must be water (`0x4`) without the source's own
+        // `0x80000` exclusion bit; that bit is still present on every
+        // neighbouring support word.
+        terrain[4] = 0x0400_0004
+        let occupancy = Array(
+            repeating: OriginalGrandCanalLayoutCatalog.FerryEdgeOccupancy.none,
+            count: width * height
+        )
+
+        let result = try XCTUnwrap(
+            OriginalGrandCanalLayoutCatalog.deriveFerryWaterEdgeLayer(
+                width: width,
+                height: height,
+                terrainRawValues: terrain,
+                roadWaterAuxiliaryValues: Array(repeating: 0, count: terrain.count),
+                occupancy: occupancy
+            )
+        )
+
+        // The center has all eight supported neighbours and follows the
+        // source's `(x <= width-2 ? -1 : 0) & 0xFE` result. Without the PE's
+        // padded border, an out-of-bounds neighbour fails the all-neighbour
+        // test, leaving the outer ring at the reset sentinel.
+        XCTAssertEqual(result[4], -2)
+        XCTAssertEqual(result[0], -1)
+        XCTAssertEqual(result[1], -1)
+    }
+
+    func testFerryWaterEdgeLayerHonorsExistingSentinelAndModelBlockers() throws {
+        let width = 3
+        let height = 3
+        let supported = UInt32(0x04 | 0x0408_0000)
+        var terrain = Array(repeating: supported, count: width * height)
+        terrain[4] = 0x0400_0004
+        let baseOccupancy = Array(
+            repeating: OriginalGrandCanalLayoutCatalog.FerryEdgeOccupancy.none,
+            count: terrain.count
+        )
+
+        var blockedByModel = baseOccupancy
+        blockedByModel[4] = .model(id: 0x38)
+        let modelBlocked = try XCTUnwrap(
+            OriginalGrandCanalLayoutCatalog.deriveFerryWaterEdgeLayer(
+                width: width,
+                height: height,
+                terrainRawValues: terrain,
+                roadWaterAuxiliaryValues: Array(repeating: 0, count: terrain.count),
+                occupancy: blockedByModel
+            )
+        )
+        XCTAssertEqual(modelBlocked[4], -1)
+
+        var secondBlockedByModel = baseOccupancy
+        secondBlockedByModel[4] = .model(id: 0xD2)
+        let secondModelBlocked = try XCTUnwrap(
+            OriginalGrandCanalLayoutCatalog.deriveFerryWaterEdgeLayer(
+                width: width,
+                height: height,
+                terrainRawValues: terrain,
+                roadWaterAuxiliaryValues: Array(repeating: 0, count: terrain.count),
+                occupancy: secondBlockedByModel
+            )
+        )
+        XCTAssertEqual(secondModelBlocked[4], -1)
+
+        var retainedByModel = baseOccupancy
+        retainedByModel[4] = .model(id: 0x1F)
+        let modelRetained = try XCTUnwrap(
+            OriginalGrandCanalLayoutCatalog.deriveFerryWaterEdgeLayer(
+                width: width,
+                height: height,
+                terrainRawValues: terrain,
+                roadWaterAuxiliaryValues: Array(repeating: 0, count: terrain.count),
+                occupancy: retainedByModel
+            )
+        )
+        XCTAssertEqual(modelRetained[4], -2)
+
+        var previous = Array(repeating: Int8(-1), count: terrain.count)
+        previous[4] = -6
+        let preservedSentinel = try XCTUnwrap(
+            OriginalGrandCanalLayoutCatalog.deriveFerryWaterEdgeLayer(
+                width: width,
+                height: height,
+                terrainRawValues: terrain,
+                roadWaterAuxiliaryValues: Array(repeating: 0, count: terrain.count),
+                existingEdgeValues: previous,
+                occupancy: baseOccupancy
+            )
+        )
+        XCTAssertEqual(preservedSentinel[4], -1)
+
+        var unknown = baseOccupancy
+        unknown[4] = .occupiedModelUnknown
+        XCTAssertNil(
+            OriginalGrandCanalLayoutCatalog.deriveFerryWaterEdgeLayer(
+                width: width,
+                height: height,
+                terrainRawValues: terrain,
+                roadWaterAuxiliaryValues: Array(repeating: 0, count: terrain.count),
+                occupancy: unknown
+            )
+        )
+    }
+
+    func testFerryWaterEdgeLayerRejectsUnmappedInputShapes() {
+        let occupancy = Array(
+            repeating: OriginalGrandCanalLayoutCatalog.FerryEdgeOccupancy.none,
+            count: 9
+        )
+        XCTAssertNil(
+            OriginalGrandCanalLayoutCatalog.deriveFerryWaterEdgeLayer(
+                width: 3,
+                height: 3,
+                terrainRawValues: Array(repeating: 4, count: 8),
+                roadWaterAuxiliaryValues: Array(repeating: 0, count: 9),
+                occupancy: occupancy
+            )
+        )
+        XCTAssertNil(
+            OriginalGrandCanalLayoutCatalog.deriveFerryWaterEdgeLayer(
+                width: 3,
+                height: 3,
+                terrainRawValues: Array(repeating: 4, count: 9),
+                roadWaterAuxiliaryValues: Array(repeating: 0, count: 9),
+                occupancy: Array(occupancy.dropLast())
+            )
+        )
+    }
+
+    /// The recovered Ferry post-pass is exposed as a pure primitive while
+    /// connector discovery remains unresolved. It must preserve the base
+    /// cache, OR `0x800` over the supplied footprint, and then OR `0x200` over
+    /// the supplied connector chain (including overlap with the footprint).
+    func testFerryPrimaryPostpassAddsFootprintAndExplicitConnectorMasks() throws {
+        let base: [UInt16] = [
+            0x000, 0x004, 0x100,
+            0x002, 0x010, 0x020,
+            0x000, 0x080, 0x400
+        ]
+        let footprint = [
+            GridPoint(x: 0, y: 0),
+            GridPoint(x: 1, y: 0),
+            GridPoint(x: 1, y: 1)
+        ]
+        let connectors = [
+            GridPoint(x: 2, y: 2),
+            GridPoint(x: 1, y: 1)
+        ]
+
+        let result = try XCTUnwrap(
+            OriginalGrandCanalLayoutCatalog.applyFerryPrimaryPostpass(
+                primaryValues: base,
+                width: 3,
+                height: 3,
+                footprintPoints: footprint,
+                connectorPoints: connectors
+            )
+        )
+
+        XCTAssertEqual(result[0], 0x800)
+        XCTAssertEqual(result[1], 0x804)
+        XCTAssertEqual(result[4], 0x810 | 0x800 | 0x200)
+        XCTAssertEqual(result[8], 0x400 | 0x200)
+        XCTAssertEqual(result, [
+            0x800, 0x804, 0x100,
+            0x002, 0xA10, 0x020,
+            0x000, 0x080, 0x600
+        ])
+        XCTAssertEqual(base[4], 0x010, "post-pass must not mutate the base cache")
+    }
+
+    func testFerryPrimaryPostpassRejectsOutOfBoundsWithoutProducingCache() {
+        let base: [UInt16] = [0, 1, 2, 3]
+
+        XCTAssertNil(
+            OriginalGrandCanalLayoutCatalog.applyFerryPrimaryPostpass(
+                primaryValues: base,
+                width: 2,
+                height: 2,
+                footprintPoints: [GridPoint(x: -1, y: 0)],
+                connectorPoints: []
+            )
+        )
+        XCTAssertNil(
+            OriginalGrandCanalLayoutCatalog.applyFerryPrimaryPostpass(
+                primaryValues: base,
+                width: 2,
+                height: 2,
+                footprintPoints: [],
+                connectorPoints: [GridPoint(x: 2, y: 1)]
+            )
+        )
+        XCTAssertNil(
+            OriginalGrandCanalLayoutCatalog.applyFerryPrimaryPostpass(
+                primaryValues: [0, 1, 2],
+                width: 2,
+                height: 2,
+                footprintPoints: [],
+                connectorPoints: []
+            )
+        )
+    }
+
+    func testFerryStoredStateMatchesOriginalConstructorReset() {
+        var state = OriginalGrandCanalLayoutCatalog.FerryStoredState()
+        XCTAssertEqual(state.connectorCount, 0)
+        XCTAssertEqual(
+            state.connectorSlots.count,
+            OriginalGrandCanalLayoutCatalog.FerryStoredState.connectorSlotCount
+        )
+        XCTAssertTrue(state.connectorSlots.allSatisfy { $0 == -1 })
+
+        // Simulate stale runtime contents before the object is reconstructed.
+        XCTAssertTrue(state.writeConnectorSlot(index: 0, value: 6))
+        XCTAssertTrue(state.writeConnectorSlot(index: 499, value: 2))
+        XCTAssertFalse(state.writeConnectorSlot(index: 500, value: 4))
+        state.reset()
+
+        XCTAssertEqual(state.connectorCount, 0)
+        XCTAssertTrue(state.connectorSlots.allSatisfy { $0 == -1 })
+    }
+
+    func testFerryPlacementCallerChainMatchesIndexedSource() {
+        let catalog = OriginalGrandCanalLayoutCatalog.FerryPlacementCallerCatalog.self
+        XCTAssertEqual(catalog.selectedBuildingDispatchAddress, 0x0046CB40)
+        XCTAssertEqual(catalog.ferryBuildingID, 0xD2)
+        XCTAssertEqual(catalog.placementOrchestrationAddress, 0x004C5E10)
+        XCTAssertEqual(catalog.connectorComputationAddress, 0x004C62C0)
+        XCTAssertEqual(catalog.placementFloodAddress, 0x005B33C0)
+        XCTAssertEqual(catalog.gradientWalkAddress, 0x005B3670)
+        XCTAssertTrue(catalog.dispatchesFerry(buildingID: 210))
+        XCTAssertFalse(catalog.dispatchesFerry(buildingID: 83))
+    }
+
+    func testFerryStoredStateRoundTripsItsRawSentinelBuffer() throws {
+        let state = OriginalGrandCanalLayoutCatalog.FerryStoredState()
+        let data = try JSONEncoder().encode(state)
+        let decoded = try JSONDecoder().decode(
+            OriginalGrandCanalLayoutCatalog.FerryStoredState.self,
+            from: data
+        )
+        XCTAssertEqual(decoded, state)
+    }
+
+    func testFerryConnectorComputationGateStopsAtTheFirstFailedLookup() {
+        let localFailure = OriginalGrandCanalLayoutCatalog
+            .evaluateFerryConnectorComputationGate(
+                localCoordinatesAvailable: false,
+                pairedEndpointHandle: 1,
+                partnerCoordinatesAvailable: true,
+                computedDirectionCount: 4
+            )
+        XCTAssertEqual(localFailure.rejection, .localCoordinatesUnavailable)
+        XCTAssertFalse(localFailure.placementFloodInvoked)
+        XCTAssertFalse(localFailure.gradientWalkInvoked)
+        XCTAssertNil(localFailure.storedConnectorCount)
+        XCTAssertFalse(localFailure.succeeded)
+
+        let endpointFailure = OriginalGrandCanalLayoutCatalog
+            .evaluateFerryConnectorComputationGate(
+                localCoordinatesAvailable: true,
+                pairedEndpointHandle: 0,
+                partnerCoordinatesAvailable: true,
+                computedDirectionCount: 4
+            )
+        XCTAssertEqual(endpointFailure.rejection, .pairedEndpointUnavailable)
+        XCTAssertFalse(endpointFailure.placementFloodInvoked)
+        XCTAssertFalse(endpointFailure.gradientWalkInvoked)
+        XCTAssertNil(endpointFailure.storedConnectorCount)
+
+        let partnerFailure = OriginalGrandCanalLayoutCatalog
+            .evaluateFerryConnectorComputationGate(
+                localCoordinatesAvailable: true,
+                pairedEndpointHandle: 1,
+                partnerCoordinatesAvailable: false,
+                computedDirectionCount: 4
+            )
+        XCTAssertEqual(partnerFailure.rejection, .partnerCoordinatesUnavailable)
+        XCTAssertFalse(partnerFailure.placementFloodInvoked)
+        XCTAssertFalse(partnerFailure.gradientWalkInvoked)
+        XCTAssertNil(partnerFailure.storedConnectorCount)
+    }
+
+    func testFerryConnectorComputationGateStoresGradientCountOnlyAfterBothPairs() {
+        let computed = OriginalGrandCanalLayoutCatalog
+            .evaluateFerryConnectorComputationGate(
+                localCoordinatesAvailable: true,
+                pairedEndpointHandle: 7,
+                partnerCoordinatesAvailable: true,
+                computedDirectionCount: 4
+            )
+        XCTAssertNil(computed.rejection)
+        XCTAssertTrue(computed.placementFloodInvoked)
+        XCTAssertTrue(computed.gradientWalkInvoked)
+        XCTAssertEqual(computed.storedConnectorCount, 4)
+        XCTAssertTrue(computed.succeeded)
+
+        let zero = OriginalGrandCanalLayoutCatalog
+            .evaluateFerryConnectorComputationGate(
+                localCoordinatesAvailable: true,
+                pairedEndpointHandle: 7,
+                partnerCoordinatesAvailable: true,
+                computedDirectionCount: 0
+            )
+        XCTAssertEqual(zero.storedConnectorCount, 0)
+        XCTAssertFalse(zero.succeeded)
+    }
+
+    func testFerryConnectorGradientWalkStoresOppositeCardinalDirections() throws {
+        let directions = try XCTUnwrap(
+            OriginalGrandCanalLayoutCatalog.deriveFerryConnectorDirections(
+                floodValues: [1, 2, 3, 4],
+                width: 4,
+                height: 1,
+                start: GridPoint(x: 3, y: 0),
+                globalOrientation: 0,
+                useCellOrientationTieBreak: false
+            )
+        )
+
+        // The walk moves west three times (selection code 6); the executable
+        // stores the opposite connector code 2 for each step.
+        XCTAssertEqual(directions, [2, 2, 2])
+    }
+
+    func testFerryConnectorGradientWalkAppliesRecoveredOrientationTieGate() throws {
+        let flood: [UInt16] = [
+            0, 2, 2,
+            0, 0, 1
+        ]
+        let terrainOrientation: [UInt8] = [
+            0, 1, 0,
+            0, 0, 0
+        ]
+
+        let globalTieWalk = try XCTUnwrap(
+            OriginalGrandCanalLayoutCatalog.deriveFerryConnectorDirections(
+                floodValues: flood,
+                width: 3,
+                height: 2,
+                start: GridPoint(x: 1, y: 0),
+                globalOrientation: 1,
+                useCellOrientationTieBreak: false
+            )
+        )
+        XCTAssertEqual(globalTieWalk, [6, 0])
+
+        let cellTieWalk = try XCTUnwrap(
+            OriginalGrandCanalLayoutCatalog.deriveFerryConnectorDirections(
+                floodValues: flood,
+                width: 3,
+                height: 2,
+                start: GridPoint(x: 1, y: 0),
+                globalOrientation: 1,
+                useCellOrientationTieBreak: true,
+                terrainOrientationByCell: terrainOrientation
+            )
+        )
+        XCTAssertEqual(cellTieWalk, [6, 0])
+
+        XCTAssertNil(
+            OriginalGrandCanalLayoutCatalog.deriveFerryConnectorDirections(
+                floodValues: flood,
+                width: 3,
+                height: 2,
+                start: GridPoint(x: 1, y: 0),
+                globalOrientation: 1,
+                useCellOrientationTieBreak: true,
+                terrainOrientationByCell: [
+                    0, 0, 0,
+                    0, 0, 0
+                ] as [UInt8]
+            )
+        )
+    }
+
+    func testFerryConnectorGradientWalkExcludesImmediateReverseOnEqualFloodTie() {
+        // Starting at the middle cell, the first equal-flood choice moves east
+        // and stores the opposite connector code 6. At the east cell the only
+        // remaining equal-flood candidate is the immediate reverse (west),
+        // which the executable excludes via `local_4`; it therefore returns
+        // no connector chain instead of bouncing back to the middle cell.
+        XCTAssertNil(
+            OriginalGrandCanalLayoutCatalog.deriveFerryConnectorDirections(
+                floodValues: [2, 2, 2],
+                width: 3,
+                height: 1,
+                start: GridPoint(x: 1, y: 0),
+                globalOrientation: 0,
+                useCellOrientationTieBreak: false
+            )
+        )
+    }
+
+    func testFerryPlacementFloodUsesCardinalLayersAndForcedEndpoint() throws {
+        let width = 5
+        let height = 1
+        let layers = Array(repeating: Array(repeating: Int8(0), count: width), count: 4)
+        let terrain = Array(repeating: Array(repeating: UInt8(0), count: width), count: 4)
+
+        let flood = try XCTUnwrap(
+            OriginalGrandCanalLayoutCatalog.deriveFerryPlacementFlood(
+                width: width,
+                height: height,
+                start: GridPoint(x: 0, y: 0),
+                endpoint: GridPoint(x: 4, y: 0),
+                startLayer: Array(repeating: Int8(0), count: width),
+                passabilityByDirection: layers,
+                terrainBlockByteByDirection: terrain
+            )
+        )
+        XCTAssertEqual(flood, [1, 2, 3, 4, 5])
+
+        let forcedEndpoint = try XCTUnwrap(
+            OriginalGrandCanalLayoutCatalog.deriveFerryPlacementFlood(
+                width: 2,
+                height: 1,
+                start: GridPoint(x: 0, y: 0),
+                endpoint: GridPoint(x: 1, y: 0),
+                startLayer: [0, 0],
+                passabilityByDirection: Array(repeating: [Int8(-1), 0], count: 4),
+                terrainBlockByteByDirection: Array(repeating: [0, 1], count: 4)
+            )
+        )
+        XCTAssertEqual(forcedEndpoint, [1, 2])
+    }
+
+    func testFerryPlacementFloodPreservesAsymmetricTerrainByteIndexing() throws {
+        let width = 3
+        let height = 2
+        let start = GridPoint(x: 1, y: 1)
+        let endpoint = GridPoint(x: 0, y: 0)
+        let passability = Array(repeating: Array(repeating: Int8(-1), count: width * height), count: 4)
+
+        // East passability is indexed at the candidate, but its terrain byte
+        // is read from the current cell. Blocking only the current cell must
+        // therefore reject the east step.
+        var eastPassability = passability[1]
+        eastPassability[start.y * width + start.x + 1] = 0
+        var eastTerrain = Array(repeating: UInt8(0), count: width * height)
+        eastTerrain[start.y * width + start.x] = 1
+        var passabilityByDirection = passability
+        passabilityByDirection[1] = eastPassability
+        var terrainByDirection = Array(repeating: Array(repeating: UInt8(0), count: width * height), count: 4)
+        terrainByDirection[1] = eastTerrain
+
+        let eastBlockedByCurrent = try XCTUnwrap(
+            OriginalGrandCanalLayoutCatalog.deriveFerryPlacementFlood(
+                width: width,
+                height: height,
+                start: start,
+                endpoint: endpoint,
+                startLayer: Array(repeating: Int8(0), count: width * height),
+                passabilityByDirection: passabilityByDirection,
+                terrainBlockByteByDirection: terrainByDirection
+            )
+        )
+        XCTAssertEqual(eastBlockedByCurrent[start.y * width + start.x + 1], 0)
+
+        // North terrain is indexed at the candidate. Blocking only the
+        // candidate must reject that step even though the current cell is
+        // clear.
+        var northPassability = passabilityByDirection[0]
+        northPassability[start.y * width + start.x - width] = 0
+        passabilityByDirection[0] = northPassability
+        var northTerrain = terrainByDirection[0]
+        northTerrain[start.y * width + start.x - width] = 1
+        terrainByDirection[0] = northTerrain
+
+        let northBlockedByCandidate = try XCTUnwrap(
+            OriginalGrandCanalLayoutCatalog.deriveFerryPlacementFlood(
+                width: width,
+                height: height,
+                start: start,
+                endpoint: endpoint,
+                startLayer: Array(repeating: Int8(0), count: width * height),
+                passabilityByDirection: passabilityByDirection,
+                terrainBlockByteByDirection: terrainByDirection
+            )
+        )
+        XCTAssertEqual(northBlockedByCandidate[start.y * width + start.x - width], 0)
+    }
+
+    func testFerryPlacementFloodRejectsInvalidLayerShapesAndStart() {
+        XCTAssertNil(
+            OriginalGrandCanalLayoutCatalog.deriveFerryPlacementFlood(
+                width: 2,
+                height: 1,
+                start: GridPoint(x: 0, y: 0),
+                endpoint: GridPoint(x: 1, y: 0),
+                startLayer: [0],
+                passabilityByDirection: Array(repeating: [0, 0], count: 4),
+                terrainBlockByteByDirection: Array(repeating: [0, 0], count: 4)
+            )
+        )
+        XCTAssertNil(
+            OriginalGrandCanalLayoutCatalog.deriveFerryPlacementFlood(
+                width: 2,
+                height: 1,
+                start: GridPoint(x: -1, y: 0),
+                endpoint: GridPoint(x: 1, y: 0),
+                startLayer: [0, 0],
+                passabilityByDirection: Array(repeating: [0, 0], count: 4),
+                terrainBlockByteByDirection: Array(repeating: [0, 0], count: 4)
+            )
+        )
     }
 
     func testCanalRoutingCacheChangesAtRecoveredPhaseBoundary() throws {
@@ -1466,6 +2091,26 @@ final class GrandCanalSimulationTests: XCTestCase {
                 requestedUnits: request
             )
         )
+    }
+
+    func testPhaseTwoTradeCommodityStateTransitionMatchesOriginalWriter() {
+        let expected: [Int: Int] = [
+            5: 6,
+            6: 5,
+            7: 8,
+            8: 7,
+            0: 9,
+            9: 9,
+            255: 9,
+        ]
+
+        for (currentState, nextState) in expected {
+            XCTAssertEqual(
+                OriginalGrandCanalLayoutCatalog.phaseTwoTradeCommodityStateTransition(currentState),
+                nextState,
+                "unexpected raw trade state transition for \(currentState)"
+            )
+        }
     }
 
     func testPhaseTwoWithdrawalReturnValueBecomesActualCarrierCargo() {
@@ -2781,6 +3426,280 @@ final class GrandCanalSimulationTests: XCTestCase {
                 )
             )
         }
+    }
+
+    func testEntertainmentVenueRouteUsesRecoveredMode12PrimaryMask() throws {
+        let route = try XCTUnwrap(
+            OriginalGrandCanalLayoutCatalog.entertainmentVenueRoute(
+                primaryValues: [0x4, 0x100, 0x4],
+                width: 3,
+                height: 1,
+                from: .init(x: 0, y: 0),
+                to: .init(x: 2, y: 0)
+            )
+        )
+        XCTAssertEqual(route.grid, .primaryPassability)
+        XCTAssertEqual(route.points, [
+            .init(x: 0, y: 0), .init(x: 1, y: 0), .init(x: 2, y: 0),
+        ])
+        XCTAssertEqual(route.directionCodes, [2, 2])
+
+        for value: UInt16 in [0x1, 0x2, 0x10, 0x20, 0x40, 0x80, 0x200, 0x400] {
+            XCTAssertNil(
+                OriginalGrandCanalLayoutCatalog.entertainmentVenueRoute(
+                    primaryValues: [0x4, value, 0x4],
+                    width: 3,
+                    height: 1,
+                    from: .init(x: 0, y: 0),
+                    to: .init(x: 2, y: 0)
+                )
+            )
+        }
+    }
+
+    func testMarketPeddlerRouteUsesSharedMode12PrimaryMask() throws {
+        let route = try XCTUnwrap(
+            OriginalGrandCanalLayoutCatalog.marketPeddlerRoute(
+                primaryValues: [0x4, 0x100, 0x4],
+                width: 3,
+                height: 1,
+                from: .init(x: 0, y: 0),
+                to: .init(x: 2, y: 0)
+            )
+        )
+        XCTAssertEqual(route.grid, .primaryPassability)
+        XCTAssertEqual(route.points, [
+            .init(x: 0, y: 0), .init(x: 1, y: 0), .init(x: 2, y: 0),
+        ])
+        XCTAssertEqual(route.directionCodes, [2, 2])
+
+        for value: UInt16 in [0x1, 0x2, 0x10, 0x20, 0x40, 0x80, 0x200, 0x400] {
+            XCTAssertNil(
+                OriginalGrandCanalLayoutCatalog.marketPeddlerRoute(
+                    primaryValues: [0x4, value, 0x4],
+                    width: 3,
+                    height: 1,
+                    from: .init(x: 0, y: 0),
+                    to: .init(x: 2, y: 0)
+                )
+            )
+        }
+    }
+
+    func testEntertainmentDirectionalRouteUsesCurrentCellForEastAdmission() throws {
+        XCTAssertNil(
+            OriginalGrandCanalLayoutCatalog.entertainmentVenueDirectionalRoute(
+                width: 3,
+                height: 1,
+                from: .init(x: 0, y: 0),
+                to: .init(x: 2, y: 0),
+                northLayer: [0, 0, 0],
+                eastLayer: [0x100, 0, 0],
+                southLayer: [0, 0, 0],
+                westLayer: [0, 0, 0]
+            )
+        )
+
+        let route = try XCTUnwrap(
+            OriginalGrandCanalLayoutCatalog.entertainmentVenueDirectionalRoute(
+                width: 3,
+                height: 1,
+                from: .init(x: 0, y: 0),
+                to: .init(x: 2, y: 0),
+                northLayer: [0, 0, 0],
+                eastLayer: [0x100, 0x100, 0],
+                southLayer: [0, 0, 0],
+                westLayer: [0, 0, 0]
+            )
+        )
+        XCTAssertEqual(route.points, [
+            .init(x: 0, y: 0), .init(x: 1, y: 0), .init(x: 2, y: 0),
+        ])
+
+        let diagonal = try XCTUnwrap(
+            OriginalGrandCanalLayoutCatalog.entertainmentVenueDirectionalRoute(
+                width: 2,
+                height: 2,
+                from: .init(x: 0, y: 0),
+                to: .init(x: 1, y: 1),
+                northLayer: [0x100, 0x100, 0x100, 0x100],
+                eastLayer: [0x100, 0x100, 0x100, 0x100],
+                southLayer: [0x100, 0x100, 0x100, 0x100],
+                westLayer: [0x100, 0x100, 0x100, 0x100]
+            )
+        )
+        XCTAssertEqual(
+            diagonal.points,
+            [
+                .init(x: 0, y: 0), .init(x: 1, y: 0), .init(x: 1, y: 1),
+            ],
+            "FUN_005B18B0 chooses the first cardinal tie when direct direction is diagonal"
+        )
+    }
+
+    func testEntertainmentProviderRouteUsesWeightedModeOnePrimaryMask() throws {
+        let route = try XCTUnwrap(
+            OriginalGrandCanalLayoutCatalog.entertainmentVenueProviderRoute(
+                primaryValues: [0x4, 0x200, 0x4],
+                width: 3,
+                height: 1,
+                from: .init(x: 0, y: 0),
+                to: .init(x: 2, y: 0)
+            )
+        )
+        XCTAssertEqual(route.points, [
+            .init(x: 0, y: 0), .init(x: 1, y: 0), .init(x: 2, y: 0),
+        ])
+        XCTAssertEqual(route.directionCodes, [2, 2])
+
+        for value: UInt16 in [0x1, 0x2, 0x10, 0x20, 0x40, 0x80, 0x400, 0x1000] {
+            XCTAssertNil(
+                OriginalGrandCanalLayoutCatalog.entertainmentVenueProviderRoute(
+                    primaryValues: [0x4, value, 0x4],
+                    width: 3,
+                    height: 1,
+                    from: .init(x: 0, y: 0),
+                    to: .init(x: 2, y: 0)
+                )
+            )
+        }
+    }
+
+    func testEntertainmentProviderChooserPreservesRecoveredWeightedTieOrder() {
+        let candidates = [
+            OriginalGrandCanalLayoutCatalog.EntertainmentVenueRouteCandidate(
+                ordinal: 0,
+                target: .init(x: 1, y: 0),
+                baseWeight: 10
+            ),
+            OriginalGrandCanalLayoutCatalog.EntertainmentVenueRouteCandidate(
+                ordinal: 1,
+                target: .init(x: 3, y: 0),
+                baseWeight: 1
+            ),
+        ]
+        XCTAssertEqual(
+            OriginalGrandCanalLayoutCatalog.selectEntertainmentVenueCandidate(
+                primaryValues: [0x4, 0x4, 0x4, 0x200],
+                width: 4,
+                height: 1,
+                from: .init(x: 0, y: 0),
+                candidates: candidates
+            ),
+            2
+        )
+
+        let tied = candidates.map {
+            OriginalGrandCanalLayoutCatalog.EntertainmentVenueRouteCandidate(
+                ordinal: $0.ordinal,
+                target: $0.target,
+                baseWeight: $0.ordinal == 0 ? 2 : 0
+            )
+        }
+        XCTAssertEqual(
+            OriginalGrandCanalLayoutCatalog.selectEntertainmentVenueCandidate(
+                primaryValues: [0x4, 0x4, 0x4, 0x200],
+                width: 4,
+                height: 1,
+                from: .init(x: 0, y: 0),
+                candidates: tied
+            ),
+            1
+        )
+
+        let nineEqualCandidates = (0..<9).map {
+            OriginalGrandCanalLayoutCatalog.EntertainmentVenueRouteCandidate(
+                ordinal: $0,
+                target: .init(x: 0, y: 0),
+                baseWeight: 0
+            )
+        }
+        // The >8 quicksort path moves its middle pivot to the left before the
+        // reverse scan; with all equal weights this leaves ordinal 8 first.
+        XCTAssertEqual(
+            OriginalGrandCanalLayoutCatalog.selectEntertainmentVenueCandidate(
+                primaryValues: [0x4],
+                width: 1,
+                height: 1,
+                from: .init(x: 0, y: 0),
+                candidates: nineEqualCandidates
+            ),
+            9
+        )
+        XCTAssertNil(
+            OriginalGrandCanalLayoutCatalog.selectEntertainmentVenueCandidate(
+                primaryValues: [0x4, 0x400, 0x4],
+                width: 3,
+                height: 1,
+                from: .init(x: 0, y: 0),
+                candidates: [
+                    .init(ordinal: 0, target: .init(x: 1, y: 0), baseWeight: 0),
+                ]
+            )
+        )
+    }
+
+    func testEntertainmentVenueCandidateFloodPreservesSourceMasksAndOrder() {
+        let candidate = [GridPoint(x: 2, y: 0)]
+        XCTAssertEqual(
+            OriginalGrandCanalLayoutCatalog.selectEntertainmentVenueCandidateIndex(
+                primaryValues: [0x4, 0x1, 0x4], width: 3, height: 1,
+                from: .init(x: 0, y: 0), candidatePoints: candidate,
+                mode: .residentialModeZero
+            ),
+            1
+        )
+        XCTAssertNil(
+            OriginalGrandCanalLayoutCatalog.selectEntertainmentVenueCandidateIndex(
+                primaryValues: [0x4, 0x400, 0x4], width: 3, height: 1,
+                from: .init(x: 0, y: 0), candidatePoints: candidate,
+                mode: .residentialModeZero
+            )
+        )
+
+        XCTAssertNil(
+            OriginalGrandCanalLayoutCatalog.selectEntertainmentVenueCandidateIndex(
+                primaryValues: [0x4, 0x200, 0x4], width: 3, height: 1,
+                from: .init(x: 0, y: 0), candidatePoints: candidate,
+                mode: .venueModeZero
+            )
+        )
+        XCTAssertEqual(
+            OriginalGrandCanalLayoutCatalog.selectEntertainmentVenueCandidateIndex(
+                primaryValues: [0x4, 0x200, 0x4], width: 3, height: 1,
+                from: .init(x: 0, y: 0), candidatePoints: candidate,
+                mode: .venueModeOne
+            ),
+            1
+        )
+
+        let duplicate = [GridPoint(x: 0, y: 0), GridPoint(x: 0, y: 0)]
+        XCTAssertEqual(
+            OriginalGrandCanalLayoutCatalog.selectEntertainmentVenueCandidateIndex(
+                primaryValues: [0x4], width: 1, height: 1,
+                from: .init(x: 0, y: 0), candidatePoints: duplicate,
+                mode: .residentialModeZero
+            ),
+            2
+        )
+        XCTAssertEqual(
+            OriginalGrandCanalLayoutCatalog.selectEntertainmentVenueCandidateIndex(
+                primaryValues: [0x4], width: 1, height: 1,
+                from: .init(x: 0, y: 0), candidatePoints: duplicate,
+                mode: .venueModeZero
+            ),
+            1
+        )
+
+        let northAndEast = [GridPoint(x: 2, y: 1), GridPoint(x: 1, y: 0)]
+        XCTAssertEqual(
+            OriginalGrandCanalLayoutCatalog.selectEntertainmentVenueCandidateIndex(
+                primaryValues: Array(repeating: 0x4, count: 9), width: 3, height: 3,
+                from: .init(x: 1, y: 1), candidatePoints: northAndEast,
+                mode: .venueModeZero
+            ),
+            2
+        )
     }
 
     func testPhaseTwoCarrierMovementUsesOriginalSpeedAndArrivalBoundary() throws {

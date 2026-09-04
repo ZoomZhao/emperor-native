@@ -68,3 +68,41 @@ Classification: the delivery call chain and 20-substep boundary are
 physical route model remain `unknown`. The implementation contract is limited
 to the recovered microstep cadence, route-cell transition, and presentation
 interpolation gate.
+
+## Delivery return-and-redispatch cadence (2026-08-29)
+
+Continuation of the delivery-cart contract above. Resolves the previous
+"exact delivery return-state side effects remain unknown" item for the common
+producer→consumer/warehouse round trip.
+
+- `FUN_0051D0C0` case `6` is the cart's return/looking state: it decrements
+  `+0x3e`, and when that countdown expires it calls `FUN_004ba580` to look for
+  a new delivery target (through `FUN_004ba370`) and, on success, transitions
+  to state `7` and re-launches with `FUN_004e98a0`; only when no target is
+  found does it fall back to state `2` (idle). So a cart that returns while
+  the producer still has an output load is **immediately re-dispatched** for
+  the next load. No monthly reset gate exists in this state machine.
+- The producer contract feeds this directly: a clay pit's authored recipe is
+  `recipe(35, output: 18, amount: 200)` ("feeds about two kilns"), and the
+  single delivery load is `originalDeliveryLoad = 100`. Monthly output 200
+  therefore requires two consecutive 100-unit cart rounds; after
+  `FUN_0051D0C0` case `6` the second round starts on a later Native day as
+  soon as the first cart has returned. Verified by probe: after the first
+  settlement the pit still holds 100, cart 1 delivers 100 clay to the kiln
+  (tick 3), returns (tick 5), and cart 2 is dispatched on tick 6 for the
+  remaining 100 to the warehouse; the same 200-per-month split recurs after
+  the second settlement.
+- `CalendarSimulation`'s monthly settlement runs `production.advanceMonth`,
+  whose physical-logistics blocked rule keeps a producer with
+  `outputInventoryByCommodityID > 0` (still undelivered) from producing the
+  next batch: "The original industry stops when its deliveryman has not
+  returned before the next product is ready." This is what makes the multi-
+  round cadence span months rather than draining everything in one month.
+
+Classification: the return-and-redispatch state edge (`FUN_0051D0C0` case 6 →
+7), the recursive target search (`FUN_004ba580` / `FUN_004ba370`), the
+producer 200/100 output/load split (recipe + `originalDeliveryLoad`), and the
+blocked rule in `advanceMonth` are all `confirmed`. The two previously failing
+EM logist testing assertions were rewritten to express the original cadence
+(20-microstep cells, 27-28 steps/day) instead of the temporary
+one-road-cell-per-Native-day bridge.

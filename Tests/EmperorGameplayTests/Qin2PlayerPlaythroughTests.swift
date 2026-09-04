@@ -399,7 +399,13 @@ final class Qin2PlayerPlaythroughTests: XCTestCase {
     }
 
     private func requireAutomaticMigrationProducer() throws {
-        // The recovered producer is implemented and integration-verified.
+        // The map/object factor inputs and complete writer chain remain
+        // unresolved. Keep this end-to-end replay visibly blocked instead of
+        // relying on the fixture-only supported producer mode.
+        throw XCTSkip(
+            "BLOCKED: automatic migration producer remains fail-closed until "
+                + "its Qin map/object inputs and arrival writer are recovered"
+        )
     }
 
     private func startedController() throws -> GameSessionController {

@@ -45,7 +45,13 @@ public struct CampaignInvasionAlert: Identifiable, Sendable, Hashable, Codable {
     public let secondarySelectionID: Int?
     public let strength: Int
     public let entryPoint: GridPoint?
+    /// Source-side five-category formation plan when the campaign city
+    /// selector and authored enemy table were available at event dispatch.
+    /// `nil` preserves hand-authored/legacy callers that lack that context.
+    public let sourceFormationPlan: OriginalInvasionFormationPlan?
     public private(set) var status: CampaignInvasionStatus
+
+    public var sourceFigureCount: Int? { sourceFormationPlan?.sourceFigureCount }
 
     public init(
         id: String,
@@ -54,6 +60,7 @@ public struct CampaignInvasionAlert: Identifiable, Sendable, Hashable, Codable {
         secondarySelectionID: Int? = nil,
         strength: Int,
         entryPoint: GridPoint?,
+        sourceFormationPlan: OriginalInvasionFormationPlan? = nil,
         status: CampaignInvasionStatus
     ) {
         self.id = id
@@ -62,6 +69,7 @@ public struct CampaignInvasionAlert: Identifiable, Sendable, Hashable, Codable {
         self.secondarySelectionID = secondarySelectionID
         self.strength = strength
         self.entryPoint = entryPoint
+        self.sourceFormationPlan = sourceFormationPlan
         self.status = status
     }
 
@@ -133,7 +141,8 @@ public struct CampaignCityEventState: Sendable, Hashable, Codable {
 public extension DeterministicCityState {
     @discardableResult
     mutating func applyCampaignCityEvent(
-        _ occurrence: CampaignEventOccurrence
+        _ occurrence: CampaignEventOccurrence,
+        sourceFormationPlan: OriginalInvasionFormationPlan? = nil
     ) -> CampaignCityEventApplication {
         var eventState = campaignEventState ?? CampaignCityEventState()
         var destroyed: [OperationalBuildingKey] = []
@@ -155,6 +164,7 @@ public extension DeterministicCityState {
                 secondarySelectionID: occurrence.secondarySelectionID,
                 strength: max(1, occurrence.amount ?? 1),
                 entryPoint: entry,
+                sourceFormationPlan: sourceFormationPlan,
                 status: .awaitingDefense
             )
             eventState.appendInvasion(alert)

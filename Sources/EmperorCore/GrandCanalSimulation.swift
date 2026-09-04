@@ -285,6 +285,169 @@ public struct GrandCanalSchedulerState: Sendable, Hashable, Codable {
 /// are implemented with their live laborer/carrier integrations. See
 /// `docs/exe-research/grand-canal-map-state.md`.
 public enum OriginalGrandCanalLayoutCatalog {
+    /// The selected-building dispatch and connector-computation chain for a
+    /// Ferry placement. `Placing_admin_city_at_pctd` routes building `0xD2`
+    /// (model 210) to `FUN_004C5E10`, which prepares the endpoint pair and
+    /// invokes `FUN_004C62C0`; that wrapper calls the placement flood and
+    /// gradient walk before returning the connector count/buffer. These are
+    /// source addresses only: the Native placement state still has to supply
+    /// the original map-layer inputs and persist the returned directions.
+    public enum FerryPlacementCallerCatalog {
+        public static let selectedBuildingDispatchAddress: UInt32 = 0x0046CB40
+        public static let ferryBuildingID = 0xD2
+        public static let placementOrchestrationAddress: UInt32 = 0x004C5E10
+        public static let connectorComputationAddress: UInt32 = 0x004C62C0
+        public static let placementFloodAddress: UInt32 = 0x005B33C0
+        public static let gradientWalkAddress: UInt32 = 0x005B3670
+
+        public static func dispatchesFerry(buildingID: Int) -> Bool {
+            buildingID == ferryBuildingID
+        }
+    }
+
+    /// Raw Ferry connector storage initialized by `FUN_004C6C50 @ 0x4C6C50`.
+    ///
+    /// The executable keeps the connector count at object offset `+0x924`
+    /// and a 500-dword connector buffer beginning at `+0x154`. Construction
+    /// clears the count and fills every buffer dword with `-1`. This is a
+    /// research-only storage primitive: connector discovery, object registry
+    /// projection, and the live post-pass caller remain unresolved, so Native
+    /// does not create or consume this state for gameplay Ferries.
+    public struct FerryStoredState: Sendable, Hashable, Codable {
+        public static let connectorSlotCount = 500
+
+        public private(set) var connectorCount: Int
+        public private(set) var connectorSlots: [Int32]
+
+        public init() {
+            connectorCount = 0
+            connectorSlots = Array(
+                repeating: -1,
+                count: Self.connectorSlotCount
+            )
+        }
+
+        /// Writes one raw slot without allowing callers to replace the
+        /// fixed-size constructor buffer.
+        @discardableResult
+        public mutating func writeConnectorSlot(
+            index: Int,
+            value: Int32
+        ) -> Bool {
+            guard connectorSlots.indices.contains(index) else { return false }
+            connectorSlots[index] = value
+            return true
+        }
+
+        /// Replays the constructor's complete reset, including stale slots.
+        public mutating func reset() {
+            connectorCount = 0
+            connectorSlots = Array(
+                repeating: -1,
+                count: Self.connectorSlotCount
+            )
+        }
+    }
+
+    /// The early-return stages of Ferry connector computation in
+    /// `FUN_004C6C70 @ 0x4C6C70`.
+    public enum FerryConnectorComputationRejection: String, Sendable, Hashable, Codable {
+        case localCoordinatesUnavailable
+        case pairedEndpointUnavailable
+        case partnerCoordinatesUnavailable
+    }
+
+    /// Side-effect-free result for the recovered Ferry connector call gate.
+    ///
+    /// This records whether the source reached the placement flood and
+    /// gradient walk, plus the exact count returned by the latter. It does
+    /// not fabricate coordinate pairs or connector slots: those values must
+    /// still come from the unresolved object/map registry projection.
+    public struct FerryConnectorComputationGateResult: Sendable, Hashable, Codable {
+        public let rejection: FerryConnectorComputationRejection?
+        public let placementFloodInvoked: Bool
+        public let gradientWalkInvoked: Bool
+        public let storedConnectorCount: Int?
+
+        public var succeeded: Bool {
+            storedConnectorCount.map { $0 != 0 } ?? false
+        }
+
+        fileprivate init(
+            rejection: FerryConnectorComputationRejection?,
+            placementFloodInvoked: Bool,
+            gradientWalkInvoked: Bool,
+            storedConnectorCount: Int?
+        ) {
+            self.rejection = rejection
+            self.placementFloodInvoked = placementFloodInvoked
+            self.gradientWalkInvoked = gradientWalkInvoked
+            self.storedConnectorCount = storedConnectorCount
+        }
+    }
+
+    /// Replays the recovered call ordering around `FUN_004C6C70`.
+    ///
+    /// The executable first asks the Ferry for its local coordinate pair,
+    /// then requires the paired-endpoint handle at `+0x150` to be positive,
+    /// and only then asks the global map object for the partner coordinates.
+    /// Both lookups must succeed before `FUN_005B33C0` and `FUN_005B3670` are
+    /// called. The gradient result is stored at `+0x924`, and the method's
+    /// return value is nonzero exactly when that result is nonzero. The
+    /// supplied count is therefore intentionally preserved without clamping.
+    ///
+    /// This is an explicit-input research boundary, not a live Ferry bridge:
+    /// callers must independently recover the two coordinate providers and
+    /// the gradient result before invoking it.
+    public static func evaluateFerryConnectorComputationGate(
+        localCoordinatesAvailable: Bool,
+        pairedEndpointHandle: Int32,
+        partnerCoordinatesAvailable: Bool,
+        computedDirectionCount: Int
+    ) -> FerryConnectorComputationGateResult {
+        guard localCoordinatesAvailable else {
+            return FerryConnectorComputationGateResult(
+                rejection: .localCoordinatesUnavailable,
+                placementFloodInvoked: false,
+                gradientWalkInvoked: false,
+                storedConnectorCount: nil
+            )
+        }
+        guard pairedEndpointHandle > 0 else {
+            return FerryConnectorComputationGateResult(
+                rejection: .pairedEndpointUnavailable,
+                placementFloodInvoked: false,
+                gradientWalkInvoked: false,
+                storedConnectorCount: nil
+            )
+        }
+        guard partnerCoordinatesAvailable else {
+            return FerryConnectorComputationGateResult(
+                rejection: .partnerCoordinatesUnavailable,
+                placementFloodInvoked: false,
+                gradientWalkInvoked: false,
+                storedConnectorCount: nil
+            )
+        }
+        return FerryConnectorComputationGateResult(
+            rejection: nil,
+            placementFloodInvoked: true,
+            gradientWalkInvoked: true,
+            storedConnectorCount: computedDirectionCount
+        )
+    }
+
+    /// Explicit live-object input for the Ferry water-edge rebuild. The PE
+    /// resolves nonzero object slots through its global registry before it can
+    /// decide whether model `0x38` or `0xD2` blocks an otherwise valid edge;
+    /// keeping the unresolved case distinct prevents callers from treating a
+    /// missing registry record as an empty cell.
+    public enum FerryEdgeOccupancy: Sendable, Hashable, Codable {
+        case none
+        case model(id: Int)
+        case occupiedModelUnknown
+    }
+
     public enum RequirementKind: Sendable, Hashable, Codable {
         case commodity(id: Int)
         case internalWorkTask(id: Int)
@@ -1557,6 +1720,78 @@ public enum OriginalGrandCanalLayoutCatalog {
         public let ferryPostprocessingRunsAfterBaseDerivation: Bool
     }
 
+    /// Exact model-ID predicates called by the object branches of
+    /// `FUN_005AD440` and `FUN_005223B0`. These IDs are deliberately kept
+    /// separate from building IDs: the executable resolves a live object's
+    /// model at `+0x14` before applying these families. The family names are
+    /// structural because the authored model table/vtables that give them
+    /// player-facing meaning are not yet recovered.
+    public enum RoutingModelPredicateCatalog {
+        /// `FUN_004EFF30 @ 0x4EFF30`, used by the primary-grid occupied-cell
+        /// branch. The EN/CH comparison row is `identical`.
+        public static let primaryOccupiedModelIDs: Set<Int> =
+            Set([0xDC, 0xDD, 0xDF, 0xE0, 0xE1])
+
+        /// `FUN_004C11B0 @ 0x4C11B0` through `FUN_004C0600`,
+        /// `FUN_004C0630`, and `FUN_004C0640`, used by both routing builders.
+        /// The EN/CH comparison rows for the leaf predicates are `identical`.
+        public static let secondaryModelFamilyIDs: Set<Int> =
+            Set([0x1A, 0x1B, 0x1C, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7])
+
+        /// `FUN_00562F70 @ 0x562F70`, reached from the primary-grid object
+        /// branch after the secondary family check. The EN/CH row is
+        /// `identical`; no player-facing category is assigned here.
+        public static let postSecondaryModelIDs: Set<Int> =
+            Set(0x4C...0x56).union([0x5C, 0x5D]).union(0xFD...0x10C)
+
+        public static func isPrimaryOccupiedModel(_ modelID: Int) -> Bool {
+            primaryOccupiedModelIDs.contains(modelID)
+        }
+
+        public static func isSecondaryModelFamily(_ modelID: Int) -> Bool {
+            secondaryModelFamilyIDs.contains(modelID)
+        }
+
+        public static func isPostSecondaryModel(_ modelID: Int) -> Bool {
+            postSecondaryModelIDs.contains(modelID)
+        }
+    }
+
+    /// Building classes whose live-object vtable slot `+0xCC` is directly
+    /// confirmed to point at `FUN_00416A50 @ 0x416A50`.  The body is the
+    /// two-argument constant-false predicate (`xor al, al; ret 8`) in both
+    /// hash-matched executables.  This is deliberately a building-ID catalog,
+    /// separate from the model-ID families above; unlisted classes remain
+    /// unresolved and must not be treated as a default.
+    public enum BuildingFootprintPredicateCatalog {
+        /// HouseBldg IDs `3...17`, Stoneworks `36`, Qin production/service
+        /// classes `27...29`, `31`, `33`, `35`, `37`, `43`, `46`, `48`, `53`,
+        /// Decorative Sculpture `116/117` and its expanded variants `243...248`,
+        /// `54/56/58`, Common/Grand Market Squares `59/60`, Road Block `126`,
+        /// Entertainment
+        /// Area `71`, Well `72/73`, Inspector Tower `124`, Tax Office `125`,
+        /// Herbalist `207`, Acupuncturist `208`, Music School `211`,
+        /// agricultural and lacquer classes `192/193/194...199/237...239`, and
+        /// ancestral-shrine classes `214...219`.
+        public static let constantFalseBuildingIDs: Set<Int> =
+            Set(3...17)
+                .union([
+                    27, 28, 29, 31, 33, 35, 36, 37, 43, 46, 48, 53, 54, 56,
+                    58, 59, 60, 71, 72, 73, 116, 117, 124, 125, 126, 192, 193,
+                    194, 195, 196, 197, 198, 199, 207, 208, 211, 214, 215, 216,
+                    217, 218, 219, 233, 237,
+                    238, 239, 243, 244, 245, 246, 247, 248
+                ])
+
+        /// Returns the recovered predicate result when the building class is
+        /// known. `nil` means no direct vtable evidence has been recorded.
+        public static func genericFootprintPredicate(forBuildingID buildingID: Int)
+            -> Bool?
+        {
+            constantFalseBuildingIDs.contains(buildingID) ? false : nil
+        }
+    }
+
     /// Exact output domain and authored building-ID branches recovered from
     /// `FUN_005223B0`. Names remain structural where the original vtable
     /// predicate has not yet been given a player-facing semantic meaning.
@@ -1758,6 +1993,20 @@ public enum OriginalGrandCanalLayoutCatalog {
     public static let phaseTwoMaterialSourceBuildingIDs = [54, 56, 58]
     public static let phaseTwoTradeSourceBuildingIDs = [56, 58]
     public static let phaseTwoRejectedTradeCommodityStates = [7, 9]
+    /// `FUN_005D4200` maps the caller-supplied current trade byte to the
+    /// next raw byte. This is a read-only state-transition catalog: the
+    /// original method also updates two auxiliary per-city arrays and invokes
+    /// the source object's `+0x264`/`+0x288` virtuals, so this mapping is not
+    /// by itself a Native trade-state producer.
+    public static func phaseTwoTradeCommodityStateTransition(_ currentState: Int) -> Int {
+        switch currentState {
+        case 5: return 6
+        case 6: return 5
+        case 7: return 8
+        case 8: return 7
+        default: return 9
+        }
+    }
     /// `SB_CANAL.txt` phase 0/1 animation-record `ticks` columns. The model
     /// loader `FUN_004484C0` stores this column at record `+0x44`; the on-site
     /// handler sums it through `FUN_00448AC0`.
@@ -2450,6 +2699,370 @@ public enum OriginalGrandCanalLayoutCatalog {
         )
     }
 
+    /// Reproduces `FUN_005AD970`'s one-byte Ferry water-edge layer over an
+    /// explicit row-major map rectangle. `FUN_005ADD10` resets the original
+    /// layer to `-1` before invoking this pass for the full map; callers can
+    /// provide a previous layer when replaying a partial rebuild so the
+    /// source's existing `-6` sentinel is preserved. The PE's padded array
+    /// origin and object-registry projection are not assumed here: an
+    /// out-of-bounds neighbour fails the corresponding all-neighbour test,
+    /// and an occupied object without a resolved model returns `nil`.
+    ///
+    /// Terrain words and auxiliary bytes are the values consumed by the
+    /// executable at the same logical cell. The auxiliary array is required
+    /// because the source reads `DAT_00F2B290` even though older Native map
+    /// formats may not serialize that layer. Signed output bytes are exactly
+    /// `-1`, `-5`, `-2`, or `0`.
+    public static func deriveFerryWaterEdgeLayer(
+        width: Int,
+        height: Int,
+        terrainRawValues: [UInt32],
+        roadWaterAuxiliaryValues: [UInt8],
+        existingEdgeValues: [Int8]? = nil,
+        occupancy: [FerryEdgeOccupancy]
+    ) -> [Int8]? {
+        guard width > 0,
+              height > 0,
+              terrainRawValues.count == width * height,
+              roadWaterAuxiliaryValues.count == width * height else {
+            return nil
+        }
+        let cellCount = width * height
+        if let existingEdgeValues, existingEdgeValues.count != cellCount {
+            return nil
+        }
+        guard occupancy.count == cellCount else {
+            return nil
+        }
+
+        var result = existingEdgeValues ?? Array(repeating: Int8(-1), count: cellCount)
+        let allNeighbourOffsets = [
+            (-1, -1), (0, -1), (1, -1),
+            (-1, 0), (1, 0),
+            (-1, 1), (0, 1), (1, 1),
+        ]
+        let cardinalOffsets = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+        func neighbourIndex(
+            x: Int,
+            y: Int,
+            offset: (Int, Int)
+        ) -> Int? {
+            let nx = x + offset.0
+            let ny = y + offset.1
+            guard nx >= 0, nx < width, ny >= 0, ny < height else { return nil }
+            return ny * width + nx
+        }
+
+        for y in 0..<height {
+            for x in 0..<width {
+                let index = y * width + x
+                let terrain = terrainRawValues[index]
+                var edge: Int8 = -1
+
+                // `FUN_005AD970`'s first three terrain gates.
+                if terrain & 0x100 == 0,
+                   terrain & 0x04 != 0,
+                   terrain & 0x80000 == 0,
+                   result[index] != -6 {
+                    let hasWaterNeighbour = allNeighbourOffsets.allSatisfy { offset in
+                        guard let neighbour = neighbourIndex(x: x, y: y, offset: offset)
+                        else { return false }
+                        return terrainRawValues[neighbour] & 0x04 != 0
+                    }
+                    if hasWaterNeighbour {
+                        let cardinalWaterCount = cardinalOffsets.reduce(into: 0) { count, offset in
+                            guard let neighbour = neighbourIndex(x: x, y: y, offset: offset)
+                            else { return }
+                            if terrainRawValues[neighbour] & 0x04 != 0 { count += 1 }
+                        }
+                        let auxiliary = roadWaterAuxiliaryValues[index]
+                        if auxiliary != 0 && cardinalWaterCount == 3 {
+                            edge = boundaryFerryEdgeByte(x: x, y: y, width: width, height: height)
+                        } else {
+                            let hasTerrainSupport = allNeighbourOffsets.allSatisfy { offset in
+                                guard let neighbour = neighbourIndex(x: x, y: y, offset: offset)
+                                else { return false }
+                                return terrainRawValues[neighbour] & 0x04080000 == 0x04080000
+                            }
+                            if hasTerrainSupport {
+                                edge = boundaryFerryEdgeByte(
+                                    x: x,
+                                    y: y,
+                                    width: width,
+                                    height: height
+                                )
+                            }
+                        }
+                    }
+                }
+
+                if edge != -1 {
+                    switch occupancy[index] {
+                    case .none:
+                        break
+                    case let .model(id):
+                        if id == 0x38 || id == 0xD2 {
+                            edge = -1
+                        }
+                    case .occupiedModelUnknown:
+                        return nil
+                    }
+                }
+                result[index] = edge
+            }
+        }
+        return result
+    }
+
+    private static func boundaryFerryEdgeByte(
+        x: Int,
+        y: Int,
+        width: Int,
+        height: Int
+    ) -> Int8 {
+        // The explicit top/bottom/left checks precede the source's final
+        // `(x <= width-2 ? -1 : 0) & 0xFE` expression.
+        guard y >= 1, x >= 1, y <= height - 2 else { return -2 }
+        return x <= width - 2 ? -2 : 0
+    }
+
+    /// Applies the confirmed Ferry post-pass (`FUN_004C6D30`) to an already
+    /// derived primary cache. The executable ORs `0x800` over every Ferry
+    /// footprint cell, then ORs `0x200` over the explicit cardinal connector
+    /// chain. Connector discovery (`FUN_005B33C0`/`FUN_005B3670`) is kept out
+    /// of this primitive because the recovered PE layers and its placement
+    /// caller are not yet mapped to Native state. Callers must provide the
+    /// exact connector cells; no route or nearest-road inference occurs.
+    public static func applyFerryPrimaryPostpass(
+        primaryValues: [UInt16],
+        width: Int,
+        height: Int,
+        footprintPoints: [GridPoint],
+        connectorPoints: [GridPoint]
+    ) -> [UInt16]? {
+        func contains(_ point: GridPoint) -> Bool {
+            point.x >= 0 && point.x < width && point.y >= 0 && point.y < height
+        }
+        guard width > 0,
+              height > 0,
+              primaryValues.count == width * height,
+              footprintPoints.allSatisfy({ contains($0) }),
+              connectorPoints.allSatisfy({ contains($0) }) else {
+            return nil
+        }
+
+        var result = primaryValues
+        for point in footprintPoints {
+            result[point.y * width + point.x] |= 0x800
+        }
+        for point in connectorPoints {
+            result[point.y * width + point.x] |= 0x200
+        }
+        return result
+    }
+
+    /// Replays the recovered cardinal gradient walk in `FUN_005B3670` over
+    /// caller-supplied flood values. The original starts at the Ferry
+    /// perimeter, chooses the first minimum non-zero flood neighbour in
+    /// N/E/S/W order (with the recovered optional orientation tie gate), and
+    /// stores the opposite direction code `0/2/4/6` for each step. The
+    /// placement flood (`FUN_005B33C0`) and Ferry perimeter selection are not
+    /// inferred here; callers must provide the exact start cell and flood
+    /// grid. `nil` means an invalid grid, a zero-flood start, no admissible
+    /// neighbour, or exhaustion of the executable's 500-step buffer.
+    public static func deriveFerryConnectorDirections(
+        floodValues: [UInt16],
+        width: Int,
+        height: Int,
+        start: GridPoint,
+        globalOrientation: UInt8,
+        useCellOrientationTieBreak: Bool,
+        terrainOrientationByCell: [UInt8]? = nil
+    ) -> [UInt8]? {
+        guard width > 0,
+              height > 0,
+              floodValues.count == width * height,
+              start.x >= 0,
+              start.x < width,
+              start.y >= 0,
+              start.y < height else {
+            return nil
+        }
+        if useCellOrientationTieBreak {
+            guard let terrainOrientationByCell,
+                  terrainOrientationByCell.count == width * height else {
+                return nil
+            }
+        }
+
+        let directions: [(code: UInt8, dx: Int, dy: Int)] = [
+            (0, 0, -1),
+            (2, 1, 0),
+            (4, 0, 1),
+            (6, -1, 0),
+        ]
+        let globalTie = globalOrientation & 3
+        var current = start
+        var path: [UInt8] = []
+        path.reserveCapacity(32)
+        // `FUN_005B3670` keeps the opposite of the previously selected
+        // movement code in `local_4` and excludes that direction on the next
+        // scan. This matters when equal flood values would otherwise permit a
+        // two-cell tie walk to bounce back and forth.
+        var excludedDirection: UInt8? = nil
+
+        for _ in 0..<500 {
+            let currentIndex = current.y * width + current.x
+            let currentFlood = floodValues[currentIndex]
+            guard currentFlood > 0 else { return nil }
+            if currentFlood < 2 {
+                return path
+            }
+
+            let tieValue: UInt8
+            if useCellOrientationTieBreak {
+                tieValue = terrainOrientationByCell![currentIndex] & 3
+            } else {
+                tieValue = globalTie
+            }
+
+            var selected: (code: UInt8, point: GridPoint)?
+            for direction in directions {
+                guard excludedDirection != direction.code else { continue }
+                let candidate = GridPoint(
+                    x: current.x + direction.dx,
+                    y: current.y + direction.dy
+                )
+                guard candidate.x >= 0,
+                      candidate.x < width,
+                      candidate.y >= 0,
+                      candidate.y < height else {
+                    continue
+                }
+                let candidateFlood = floodValues[candidate.y * width + candidate.x]
+                guard candidateFlood != 0 else { continue }
+                let lowerFlood = candidateFlood < currentFlood
+                let tiedWithOrientation = candidateFlood == currentFlood
+                    && globalTie == tieValue
+                guard lowerFlood || tiedWithOrientation else { continue }
+
+                // The executable stores the direction back toward the Ferry
+                // side, i.e. the opposite of the selected movement delta.
+                let storedCode = direction.code >= 4
+                    ? direction.code - 4
+                    : direction.code + 4
+                selected = (storedCode, candidate)
+                break
+            }
+            guard let selected else { return nil }
+            path.append(selected.code)
+            excludedDirection = selected.code
+            current = selected.point
+        }
+
+        return nil
+    }
+
+    /// Direction order used by the placement flood's four directional
+    /// byte/terrain layers (`FUN_005B33C0`).
+    public enum FerryFloodDirection: Int, CaseIterable, Sendable, Hashable, Codable {
+        case north = 0
+        case east = 1
+        case south = 2
+        case west = 3
+    }
+
+    /// Replays the bounded placement flood used before the Ferry gradient
+    /// walk. The source resets its `0xCB10`-dword flood buffer before seeding;
+    /// this helper starts from a fresh zeroed buffer for the same reason. All
+    /// serialized byte layers are explicit inputs because their PE
+    /// base-address projection is not yet mapped to Native. Each directional
+    /// passability/terrain array is cell-indexed in N/E/S/W order. The source
+    /// indexes the east passability layer at the east neighbour and the other
+    /// three passability layers at the current cell. Its terrain-byte reads
+    /// use the north candidate cell, but the current cell for east, south,
+    /// and west; the asymmetric indexing is part of the recovered address
+    /// arithmetic and is preserved here. The endpoint and seed are always
+    /// admitted, even when their directional layer is blocked. Unreached
+    /// cells remain zero, matching the executable's flood buffer.
+    public static func deriveFerryPlacementFlood(
+        width: Int,
+        height: Int,
+        start: GridPoint,
+        endpoint: GridPoint,
+        startLayer: [Int8],
+        passabilityByDirection: [[Int8]],
+        terrainBlockByteByDirection: [[UInt8]]
+    ) -> [UInt16]? {
+        guard width > 0, height > 0 else { return nil }
+        let cellCount = width * height
+        func contains(_ point: GridPoint) -> Bool {
+            point.x >= 0 && point.x < width && point.y >= 0 && point.y < height
+        }
+        guard startLayer.count == cellCount,
+              passabilityByDirection.count == FerryFloodDirection.allCases.count,
+              terrainBlockByteByDirection.count == FerryFloodDirection.allCases.count,
+              passabilityByDirection.allSatisfy({ $0.count == cellCount }),
+              terrainBlockByteByDirection.allSatisfy({ $0.count == cellCount }),
+              contains(start),
+              contains(endpoint),
+              startLayer[start.y * width + start.x] != -1 else {
+            return nil
+        }
+
+        let directions: [(dx: Int, dy: Int)] = [
+            (0, -1),
+            (1, 0),
+            (0, 1),
+            (-1, 0),
+        ]
+        var flood = Array(repeating: UInt16(0), count: cellCount)
+        var queue: [GridPoint] = []
+        queue.reserveCapacity(min(cellCount, 50_000))
+        flood[start.y * width + start.x] = 1
+        queue.append(start)
+        var head = 0
+        var iterations = 0
+
+        while head < queue.count {
+            iterations += 1
+            if iterations > 50_000 {
+                return flood
+            }
+            let current = queue[head]
+            head += 1
+            let currentIndex = current.y * width + current.x
+            let nextFlood = flood[currentIndex] &+ 1
+
+            for (directionIndex, delta) in directions.enumerated() {
+                let candidate = GridPoint(
+                    x: current.x + delta.dx,
+                    y: current.y + delta.dy
+                )
+                guard contains(candidate) else { continue }
+                let candidateIndex = candidate.y * width + candidate.x
+                guard flood[candidateIndex] == 0 else { continue }
+
+                let isForcedEndpoint = candidate == start || candidate == endpoint
+                let passabilityIndex = directionIndex == FerryFloodDirection.east.rawValue
+                    ? candidateIndex
+                    : currentIndex
+                let terrainIndex = directionIndex == FerryFloodDirection.north.rawValue
+                    ? candidateIndex
+                    : currentIndex
+                let passable = passabilityByDirection[directionIndex][passabilityIndex] != -1
+                    && (terrainBlockByteByDirection[directionIndex][terrainIndex] & 1) == 0
+                guard isForcedEndpoint || passable else { continue }
+
+                flood[candidateIndex] = nextFlood
+                queue.append(candidate)
+            }
+        }
+
+        return flood
+    }
+
     /// Reproduces the road-component labels and top-ten size ranking consumed
     /// by `FUN_004BA6F0`. Discovery scans rows then columns; equal-sized
     /// components keep that discovery order because insertion uses a strict
@@ -2586,7 +3199,15 @@ public enum OriginalGrandCanalLayoutCatalog {
             guard let occupancy = input.occupancy else {
                 return (0, terrain & ~UInt32(0x8))
             }
-            guard let footprintPredicate = occupancy.genericFootprintPredicate else {
+            // The vtable result is an explicit per-cell input when a caller
+            // has already resolved the live object.  For the building classes
+            // whose `+0xCC` body is directly recovered as constant false, the
+            // centralized catalog is an equivalent source-backed fallback;
+            // unknown IDs must continue to fail closed.
+            guard let footprintPredicate = occupancy.genericFootprintPredicate
+                ?? BuildingFootprintPredicateCatalog
+                    .genericFootprintPredicate(forBuildingID: occupancy.buildingID)
+            else {
                 throw WorkerRoutingCacheDerivationError
                     .missingGenericFootprintPredicate(
                         input.point,
@@ -2728,7 +3349,14 @@ public enum OriginalGrandCanalLayoutCatalog {
             guard phase > 0 else { return 0x2 }
             return hasRoad ? 0x40 : 0x4C001000
         }
-        guard let footprintPredicate = occupancy.genericFootprintPredicate else {
+        // Keep the fallback builder in lockstep with the primary builder: a
+        // directly recovered constant-false `+0xCC` predicate may be supplied
+        // by the catalog when the caller has not duplicated it into the
+        // occupancy record, while every unresolved building remains an error.
+        guard let footprintPredicate = occupancy.genericFootprintPredicate
+            ?? BuildingFootprintPredicateCatalog
+                .genericFootprintPredicate(forBuildingID: buildingID)
+        else {
             throw WorkerRoutingCacheDerivationError
                 .missingGenericFootprintPredicate(point, buildingID: buildingID)
         }
@@ -3062,6 +3690,488 @@ public enum OriginalGrandCanalLayoutCatalog {
         )
     }
 
+    /// Reproduces the venue mode-`0x12` route primitive from
+    /// `FUN_005B00D0`/`FUN_005B18B0`: the flood itself expands only the four
+    /// cardinal neighbours and admits a cell when the derived primary cache
+    /// intersects `0x010C`. Direction reconstruction first uses the
+    /// cardinal stride (`selector 4`) and then retries the same flood with
+    /// the full eight-direction reconstruction (`selector 8`). This helper
+    /// intentionally does not select a venue provider or apply coverage;
+    /// those parts belong to the still-unsupported venue FSM.
+    public static func entertainmentVenueRoute(
+        primaryValues: [UInt16],
+        width: Int,
+        height: Int,
+        from start: GridPoint,
+        to destination: GridPoint
+    ) -> WorkerRoute? {
+        guard width > 0, height > 0,
+              primaryValues.count == width * height else { return nil }
+        let passable: (GridPoint) -> Bool = {
+            primaryValues[$0.y * width + $0.x] & 0x010C != 0
+        }
+        let result = route(
+            width: width,
+            height: height,
+            from: start,
+            to: destination,
+            reconstructionDirections: [0, 2, 4, 6],
+            maximumExpansions: nil,
+            isPassable: passable
+        ) ?? route(
+            width: width,
+            height: height,
+            from: start,
+            to: destination,
+            reconstructionDirections: Array(0..<8),
+            maximumExpansions: nil,
+            isPassable: passable
+        )
+        guard let result else { return nil }
+        return WorkerRoute(
+            grid: .primaryPassability,
+            points: result.points,
+            directionCodes: result.directionCodes
+        )
+    }
+
+    /// Exact directional-layer form of the mode-`0x12` flood used by
+    /// `FUN_005B00D0(..., 0)`. The executable does not consume a single
+    /// passability value here: `FUN_005B0220` reads each directional layer at
+    /// the current queue index before enqueuing the candidate.
+    /// This entry point keeps that directional-layer contract explicit and is still
+    /// research-only; provider selection, collision, and settlement remain
+    /// unresolved.
+    public static func entertainmentVenueDirectionalRoute(
+        width: Int,
+        height: Int,
+        from start: GridPoint,
+        to destination: GridPoint,
+        northLayer: [UInt16],
+        eastLayer: [UInt16],
+        southLayer: [UInt16],
+        westLayer: [UInt16]
+    ) -> WorkerRoute? {
+        guard let distances = OriginalDirectionalAccessFlood.build(
+            width: width,
+            height: height,
+            seed: start,
+            passMask: OriginalDirectionalAccessFlood.unweightedPassMask,
+            northLayer: northLayer,
+            eastLayer: eastLayer,
+            southLayer: southLayer,
+            westLayer: westLayer
+        ) else { return nil }
+        let cardinalResult = routeFromDistances(
+            width: width,
+            height: height,
+            from: start,
+            to: destination,
+            distances: distances,
+            reconstructionDirections: [0, 2, 4, 6]
+        )
+        if let cardinalResult {
+            return WorkerRoute(
+                grid: .primaryPassability,
+                points: cardinalResult.points,
+                directionCodes: cardinalResult.directionCodes
+            )
+        }
+        let result = routeFromDistances(
+            width: width,
+            height: height,
+            from: start,
+            to: destination,
+            distances: distances,
+            reconstructionDirections: Array(0..<8)
+        )
+        guard let result else { return nil }
+        return WorkerRoute(
+            grid: .primaryPassability,
+            points: result.points,
+            directionCodes: result.directionCodes
+        )
+    }
+
+    /// Projected-cache route helper for the shared mode-`0x12` primitive used
+    /// by the model-23 peddler path in `FUN_004E83E0`. The direct executable
+    /// input is four directional layers; callers that have those layers should
+    /// use `marketPeddlerDirectionalRoute`. This single-array form is retained
+    /// only for testing a projected primary-cache mask (`0x010C`). Endpoint
+    /// selection, collision handling, and market coverage remain outside it.
+    public static func marketPeddlerRoute(
+        primaryValues: [UInt16],
+        width: Int,
+        height: Int,
+        from start: GridPoint,
+        to destination: GridPoint
+    ) -> WorkerRoute? {
+        entertainmentVenueRoute(
+            primaryValues: primaryValues,
+            width: width,
+            height: height,
+            from: start,
+            to: destination
+        )
+    }
+
+    /// Shared directional-layer entry point for the model-23 peddler route.
+    /// `FUN_004E83E0` dispatches peddlers and venue figures to the same
+    /// `FUN_005B00D0(..., 0)` primitive; this label keeps that shared identity
+    /// visible without pretending that a projected single cache is the source
+    /// input. It remains research-only pending the peddler endpoint,
+    /// collision, and market-settlement contracts.
+    public static func marketPeddlerDirectionalRoute(
+        width: Int,
+        height: Int,
+        from start: GridPoint,
+        to destination: GridPoint,
+        northLayer: [UInt16],
+        eastLayer: [UInt16],
+        southLayer: [UInt16],
+        westLayer: [UInt16]
+    ) -> WorkerRoute? {
+        entertainmentVenueDirectionalRoute(
+            width: width,
+            height: height,
+            from: start,
+            to: destination,
+            northLayer: northLayer,
+            eastLayer: eastLayer,
+            southLayer: southLayer,
+            westLayer: westLayer
+        )
+    }
+
+    /// Reproduces the provider-selection route's mode-1 expansion mask.
+    /// `FUN_004E7FD0` passes the weighted candidate array to
+    /// `FUN_005B0620(..., mode: 1)`, whose `FUN_005B0360` expansion admits
+    /// primary-cache values intersecting `0x0B0C`. This is distinct from the
+    /// unweighted `FUN_005B00D0(..., mode: 0)` fallback above (`0x010C`).
+    /// Provider ranking and occupancy side effects remain outside this pure
+    /// route primitive.
+    public static func entertainmentVenueProviderRoute(
+        primaryValues: [UInt16],
+        width: Int,
+        height: Int,
+        from start: GridPoint,
+        to destination: GridPoint
+    ) -> WorkerRoute? {
+        guard width > 0, height > 0,
+              primaryValues.count == width * height else { return nil }
+        let passable: (GridPoint) -> Bool = {
+            primaryValues[$0.y * width + $0.x] & 0x0B0C != 0
+        }
+        let result = route(
+            width: width,
+            height: height,
+            from: start,
+            to: destination,
+            reconstructionDirections: [0, 2, 4, 6],
+            maximumExpansions: nil,
+            isPassable: passable
+        ) ?? route(
+            width: width,
+            height: height,
+            from: start,
+            to: destination,
+            reconstructionDirections: Array(0..<8),
+            maximumExpansions: nil,
+            isPassable: passable
+        )
+        guard let result else { return nil }
+        return WorkerRoute(
+            grid: .primaryPassability,
+            points: result.points,
+            directionCodes: result.directionCodes
+        )
+    }
+
+    /// A provider target record consumed by the weighted mode-1 chooser
+    /// (`FUN_005B0620`). `ordinal` is the provider's original list position;
+    /// the executable returns this value plus one after its temporary records
+    /// are sorted by `baseWeight`.
+    public struct EntertainmentVenueRouteCandidate: Sendable, Hashable {
+        public let ordinal: Int
+        public let target: GridPoint
+        public let baseWeight: Int
+
+        public init(ordinal: Int, target: GridPoint, baseWeight: Int) {
+            self.ordinal = ordinal
+            self.target = target
+            self.baseWeight = baseWeight
+        }
+    }
+
+    /// Selects the first candidate cell reached by one of the executable's
+    /// unweighted venue floods. `FUN_005AE970` is the mode-0/0x14 path used
+    /// by generic residential-service figures; it admits `0x0B1D` cells and
+    /// scans the candidate array in reverse. `FUN_005B04A0` is the venue
+    /// path; its final flag chooses `0x010C` (zero) or `0x0B0C` (nonzero), and
+    /// both variants scan candidates in forward order. The return is the
+    /// source's one-based candidate index, or `nil` for its zero result.
+    public enum EntertainmentVenueCandidateSearchMode: Sendable {
+        case residentialModeZero
+        case venueModeZero
+        case venueModeOne
+
+        fileprivate var primaryMask: UInt16 {
+            switch self {
+            case .residentialModeZero: return 0x0B1D
+            case .venueModeZero: return 0x010C
+            case .venueModeOne: return 0x0B0C
+            }
+        }
+
+        fileprivate var scansCandidatesInReverse: Bool {
+            if case .residentialModeZero = self { return true }
+            return false
+        }
+    }
+
+    /// Reproduces `FUN_005AE970`/`FUN_005B04A0` candidate-array arbitration.
+    /// The start cell is checked before any expansion. Each expansion visits
+    /// north, east, south, west in that order, while duplicate candidates on
+    /// one cell resolve according to the source scan direction.
+    public static func selectEntertainmentVenueCandidateIndex(
+        primaryValues: [UInt16],
+        width: Int,
+        height: Int,
+        from start: GridPoint,
+        candidatePoints: [GridPoint],
+        mode: EntertainmentVenueCandidateSearchMode
+    ) -> Int? {
+        guard width > 0, height > 0,
+              primaryValues.count == width * height,
+              !candidatePoints.isEmpty,
+              start.x >= 0, start.x < width,
+              start.y >= 0, start.y < height else { return nil }
+
+        func index(of point: GridPoint) -> Int {
+            point.y * width + point.x
+        }
+        func contains(_ point: GridPoint) -> Bool {
+            point.x >= 0 && point.x < width && point.y >= 0 && point.y < height
+        }
+
+        var visited = [Bool](repeating: false, count: primaryValues.count)
+        var queue = [GridPoint]()
+        queue.reserveCapacity(primaryValues.count)
+        queue.append(start)
+        visited[index(of: start)] = true
+
+        let neighborOffsets = [
+            GridPoint(x: 0, y: -1), GridPoint(x: 1, y: 0),
+            GridPoint(x: 0, y: 1), GridPoint(x: -1, y: 0),
+        ]
+        var readIndex = 0
+        while readIndex < queue.count {
+            let point = queue[readIndex]
+            readIndex += 1
+
+            if mode.scansCandidatesInReverse {
+                for candidateIndex in stride(from: candidatePoints.count - 1, through: 0, by: -1)
+                    where candidatePoints[candidateIndex] == point {
+                    return candidateIndex + 1
+                }
+            } else {
+                for (candidateIndex, candidatePoint) in candidatePoints.enumerated()
+                    where candidatePoint == point {
+                    return candidateIndex + 1
+                }
+            }
+
+            for offset in neighborOffsets {
+                let next = GridPoint(x: point.x + offset.x, y: point.y + offset.y)
+                guard contains(next) else { continue }
+                let nextIndex = index(of: next)
+                guard !visited[nextIndex],
+                      primaryValues[nextIndex] & mode.primaryMask != 0 else { continue }
+                visited[nextIndex] = true
+                queue.append(next)
+            }
+        }
+        return nil
+    }
+
+    /// Selects a weighted venue target using the recovered `FUN_005B0620` map
+    /// walk and its source quicksort tie behavior. The original seeds the
+    /// origin distance at 1, so a target reached after `d > 0` cardinal steps
+    /// costs `baseWeight + d + 1`; a target at the origin costs only its
+    /// weight. Candidates are sorted by the recovered comparator
+    /// (`FUN_005B0600`) before the map walk, then scanned from the highest
+    /// sorted record down; equal costs therefore retain the first record seen
+    /// by that reverse scan rather than being treated as an invalid tie.
+    public static func selectEntertainmentVenueCandidate(
+        primaryValues: [UInt16],
+        width: Int,
+        height: Int,
+        from start: GridPoint,
+        candidates: [EntertainmentVenueRouteCandidate]
+    ) -> Int? {
+        guard width > 0, height > 0,
+              primaryValues.count == width * height,
+              !candidates.isEmpty,
+              candidates.allSatisfy({ $0.baseWeight >= 0 }),
+              start.x >= 0, start.x < width,
+              start.y >= 0, start.y < height else { return nil }
+
+        func contains(_ point: GridPoint) -> Bool {
+            point.x >= 0 && point.x < width && point.y >= 0 && point.y < height
+        }
+        func index(of point: GridPoint) -> Int { point.y * width + point.x }
+
+        // `DAT_01391FE0[origin] = 1`; the queue then stores that value plus
+        // one for each cardinal expansion. Native keeps the queue bounded by
+        // the map itself while preserving the original N/E/S/W order.
+        let originIndex = index(of: start)
+        var distances = [Int](repeating: -1, count: width * height)
+        distances[originIndex] = 0
+        var queue = [Int](repeating: 0, count: width * height)
+        queue[0] = originIndex
+        var head = 0
+        var tail = 1
+        let directions = [
+            GridPoint(x: 0, y: -1), GridPoint(x: 1, y: 0),
+            GridPoint(x: 0, y: 1), GridPoint(x: -1, y: 0),
+        ]
+
+        while head < tail {
+            let currentIndex = queue[head]
+            head += 1
+            let current = GridPoint(x: currentIndex % width, y: currentIndex / width)
+            for direction in directions {
+                let next = GridPoint(x: current.x + direction.x, y: current.y + direction.y)
+                guard contains(next) else { continue }
+                let nextIndex = index(of: next)
+                guard distances[nextIndex] < 0,
+                      primaryValues[nextIndex] & 0x0B0C != 0 else { continue }
+                distances[nextIndex] = distances[currentIndex] + 1
+                queue[tail] = nextIndex
+                tail += 1
+            }
+        }
+
+        var orderedCandidates = candidates
+        sortEntertainmentVenueCandidatesByWeight(&orderedCandidates)
+
+        var bestOrdinal: Int?
+        var bestCost = Int.max
+        for candidate in orderedCandidates.reversed() {
+            guard contains(candidate.target) else { continue }
+            let distance = distances[index(of: candidate.target)]
+            guard distance >= 0 else { continue }
+            let routeCost = distance == 0 ? 0 : distance + 1
+            let cost = candidate.baseWeight + routeCost
+            if cost < bestCost {
+                bestCost = cost
+                bestOrdinal = candidate.ordinal
+            }
+        }
+        return bestOrdinal.map { $0 + 1 }
+    }
+
+    /// Translates the executable's `FUN_00765EE9` non-recursive quicksort for
+    /// the 16-byte candidate records used by `FUN_005B0620`. The small-range
+    /// path is the source's selection sort (`FUN_0076603D`); larger ranges use
+    /// the same median pivot, forward/backward partition, and explicit segment
+    /// stack. The comparator is `FUN_005B0600`: `left.baseWeight -
+    /// right.baseWeight`, so the resulting order is ascending by weight.
+    private static func sortEntertainmentVenueCandidatesByWeight(
+        _ candidates: inout [EntertainmentVenueRouteCandidate]
+    ) {
+        guard candidates.count > 1 else { return }
+
+        func compare(
+            _ lhs: EntertainmentVenueRouteCandidate,
+            _ rhs: EntertainmentVenueRouteCandidate
+        ) -> Int {
+            lhs.baseWeight - rhs.baseWeight
+        }
+
+        func selectionSort(_ left: Int, _ right: Int) {
+            guard left < right else { return }
+            var end = right
+            while left < end {
+                var maximum = left
+                var scan = left
+                while true {
+                    scan += 1
+                    guard scan <= end else { break }
+                    if compare(candidates[scan], candidates[maximum]) > 0 {
+                        maximum = scan
+                    }
+                }
+                candidates.swapAt(maximum, end)
+                end -= 1
+            }
+        }
+
+        var pending: [(left: Int, right: Int)] = []
+        var left = 0
+        var right = candidates.count - 1
+
+        while true {
+            let count = right - left + 1
+            if count <= 8 {
+                selectionSort(left, right)
+            } else {
+                // `FUN_00765EE9` moves the middle record to the left as its
+                // pivot, then advances both scans without restarting the
+                // backward cursor after a swap.
+                let pivotIndex = left + (count >> 1)
+                candidates.swapAt(pivotIndex, left)
+                var forward = left
+                var backward = right + 1
+                while true {
+                    forward += 1
+                    while forward <= right
+                        && compare(candidates[forward], candidates[left]) <= 0 {
+                        forward += 1
+                    }
+
+                    backward -= 1
+                    while backward > left
+                        && compare(candidates[backward], candidates[left]) >= 0 {
+                        backward -= 1
+                    }
+
+                    if forward <= backward {
+                        candidates.swapAt(forward, backward)
+                        continue
+                    }
+                    break
+                }
+
+                candidates.swapAt(left, backward)
+                let nextSegmentStart = forward
+                let leftSegmentIsSmaller = backward - left - 1
+                    < right - nextSegmentStart
+                if leftSegmentIsSmaller {
+                    if nextSegmentStart < right {
+                        pending.append((nextSegmentStart, right))
+                    }
+                    if left + 1 < backward {
+                        right = backward - 1
+                        continue
+                    }
+                } else {
+                    if left + 1 < backward {
+                        pending.append((left, backward - 1))
+                    }
+                    left = nextSegmentStart
+                    if left < right {
+                        continue
+                    }
+                }
+            }
+
+            guard let segment = pending.popLast() else { return }
+            left = segment.left
+            right = segment.right
+        }
+    }
+
     private static let directionDeltas = [
         GridPoint(x: 0, y: -1),
         GridPoint(x: 1, y: -1),
@@ -3119,13 +4229,46 @@ public enum OriginalGrandCanalLayoutCatalog {
             if let maximumExpansions, expansions > maximumExpansions { break }
         }
         guard distances[destinationIndex] > 0 else { return nil }
+        return routeFromDistances(
+            width: width,
+            height: height,
+            from: start,
+            to: destination,
+            distances: distances,
+            reconstructionDirections: reconstructionDirections
+        )
+    }
+
+    private static func routeFromDistances(
+        width: Int,
+        height: Int,
+        from start: GridPoint,
+        to destination: GridPoint,
+        distances: [Int],
+        reconstructionDirections: [Int]
+    ) -> (points: [GridPoint], directionCodes: [Int])? {
+        // `FUN_005B18B0` first accepts a strictly lower flood value. For an
+        // equal-distance candidate it accepts the direction returned by
+        // `FUN_005B2730` (the direct heading toward the origin), then keeps
+        // the first remaining direction-table entry. The next iteration
+        // forbids the opposite direction, matching the PE scratch state.
+        func contains(_ point: GridPoint) -> Bool {
+            point.x >= 0 && point.x < width && point.y >= 0 && point.y < height
+        }
+        guard width > 0, height > 0,
+              distances.count == width * height,
+              contains(start), contains(destination), start != destination else {
+            return nil
+        }
+        let destinationIndex = destination.y * width + destination.x
+        guard distances[destinationIndex] > 0 else { return nil }
 
         var reverseDirections: [Int] = []
         var current = destination
         var forbiddenDirection: Int?
         while current != start {
             let directDirection = directionCode(from: current, toward: start)
-            var best: (direction: Int, distance: Int)?
+            var candidates: [(direction: Int, distance: Int)] = []
             for direction in reconstructionDirections where direction != forbiddenDirection {
                 let delta = directionDeltas[direction]
                 let candidate = GridPoint(x: current.x + delta.x, y: current.y + delta.y)
@@ -3133,12 +4276,12 @@ public enum OriginalGrandCanalLayoutCatalog {
                 let distance = distances[candidate.y * width + candidate.x]
                 let currentDistance = distances[current.y * width + current.x]
                 guard distance > 0, distance <= currentDistance else { continue }
-                if best.map({ distance < $0.distance
-                    || (distance == $0.distance && direction == directDirection)
-                }) ?? true {
-                    best = (direction, distance)
-                }
+                candidates.append((direction, distance))
             }
+            guard let minimumDistance = candidates.map(\.distance).min() else { return nil }
+            let tiedCandidates = candidates.filter { $0.distance == minimumDistance }
+            let best = tiedCandidates.first(where: { $0.direction == directDirection })
+                ?? tiedCandidates.first
             // The original scratch buffer has 500 bytes, but reaching index
             // 500 returns failure before the bytes are copied to the path
             // slot; successful routes therefore contain at most 499 steps.

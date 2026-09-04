@@ -269,6 +269,26 @@ public struct BuildingModelTable: Sendable, Equatable {
     public subscript(houseLevelID id: Int) -> HouseModel? {
         houses.first { $0.id == id }
     }
+
+    /// Returns the source `DAT_00A63BFC[row * 0x18 + 0x11]` capacity after
+    /// the authored house-difficulty adjustment and the loader's inclusive
+    /// `[-99, 100]` clamp (`ERR_No_Building_Model_file` / `FUN_005D16D0`).
+    /// The row is the executable's zero-based `ALL HOUSES` index, not a
+    /// building ID.  Keeping this lookup beside the parser prevents callers
+    /// from silently substituting Native's current unadjusted model field.
+    public func originalHouseCapacity(
+        sourceRow: Int,
+        difficulty: GameDifficulty = .normal
+    ) -> Int? {
+        guard let house = houses.first(where: { $0.id == sourceRow }) else {
+            return nil
+        }
+        let modifier = houseDifficultyModifiers.indices.contains(difficulty.rawValue)
+            && houseDifficultyModifiers[difficulty.rawValue].values.indices.contains(17)
+            ? houseDifficultyModifiers[difficulty.rawValue].values[17]
+            : 0
+        return min(100, max(-99, house.populationCapacity + modifier))
+    }
 }
 
 public struct FigureModel: Identifiable, Sendable, Equatable {

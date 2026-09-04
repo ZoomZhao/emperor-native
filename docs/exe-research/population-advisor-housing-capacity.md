@@ -448,8 +448,9 @@ accounted spawn count displayed by the renderer. The link is direct:
   `unsupportedOriginalProducer` saves was withdrawn. The food walk
   itself is recovered; `cMarket+0x2c` @ `0x5437B0` is the recovered
   normal market-delivery writer/path of `cHouseInfo+0x36` (complete
-  writer set not proven). Current Native food consumption, blending,
-  and cadence are confirmed non-isomorphic; the live `cStall+0x260`
+  writer set not proven). Native's monthly Dinners draw now matches the
+  confirmed 25% arithmetic; market-delivery blending/cadence remain
+  non-isomorphic or unresolved. The live `cStall+0x260`
   blend into `cMarket+0x180` is recovered, and mill-pickup cart
   `figure+0x13` is the mill `+0x2E4` selected recipe type-count
   (not a recovered quality name). Model-24 states 6/7 are confirmed
@@ -503,9 +504,10 @@ accounted spawn count displayed by the renderer. The link is direct:
   writer is not). Remaining unknown is the complete
   `cHouseInfo+0x36` writer set, and the correct Native
   representation/mapping of that raw quality byte.
-  Current Native `ResidentialUnit` food consumption, blending, and
-  cadence are confirmed non-isomorphic, so
-  `lastSuppliedFoodQuality` must not be substituted. Do not name
+  Native's monthly Dinners draw now matches the confirmed 25% arithmetic;
+  market-delivery blending/cadence and raw-quality mapping remain
+  unresolved, so `lastSuppliedFoodQuality` must not be substituted as an
+  original live byte. Do not name
   `house+0x8C` `crimeRisk`.
 - `FUN_0055AE30` monument-object matching walk is recovered
   (`migration-popularity-producer.md` §3). Remaining unknown is Native

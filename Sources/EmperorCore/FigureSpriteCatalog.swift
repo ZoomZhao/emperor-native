@@ -47,6 +47,11 @@ public enum TutorialFigureRole: String, CaseIterable, Sendable, Hashable, Codabl
     case chineseCrossbow
     case chineseCavalry
     case chineseCatapult
+    case enemyInfantry
+    case enemyCrossbow
+    case enemyCavalry
+    case enemyChariot
+    case enemyCatapult
     case xiongnuInfantry
     case ambientPheasant
     case grandCanalLaborerTraveling
@@ -142,6 +147,7 @@ public struct FigureSpriteAnimation: Sendable, Equatable, Hashable {
 public enum OriginalFigureSpriteCatalog {
     public static let mainArchiveBaseName = "SprMain"
     public static let main2ArchiveBaseName = "SprMain2"
+    public static let chineseEnemyArchiveBaseName = "China_Chinese"
     public static let xiongnuArchiveBaseName = "China_Xiongnu"
     public static let meatCommodityID = 4
     public static let clayCommodityID = 18
@@ -171,6 +177,40 @@ public enum OriginalFigureSpriteCatalog {
         logicalGroupID: 0,
         firstImageID: 1,
         framesPerDirection: 12
+    )
+
+    // The invasion force builder creates enemy models 58…62.  Their authored
+    // SG3 families are the five China_Chinese NonPlayer_* sheets (not the
+    // regional Xiongnu sheet used by model 6).
+    public static let enemyInfantryAnimation = FigureSpriteAnimation(
+        role: .enemyInfantry, figureID: 58,
+        archiveBaseName: chineseEnemyArchiveBaseName,
+        sourceBitmapName: "NonPlayer_InfantryMan", logicalGroupID: 12,
+        firstImageID: 1_289, framesPerDirection: 12
+    )
+    public static let enemyCrossbowAnimation = FigureSpriteAnimation(
+        role: .enemyCrossbow, figureID: 59,
+        archiveBaseName: chineseEnemyArchiveBaseName,
+        sourceBitmapName: "NonPlayer_CrossbowMan", logicalGroupID: 6,
+        firstImageID: 629, framesPerDirection: 12
+    )
+    public static let enemyCavalryAnimation = FigureSpriteAnimation(
+        role: .enemyCavalry, figureID: 60,
+        archiveBaseName: chineseEnemyArchiveBaseName,
+        sourceBitmapName: "NonPlayer_Cavalry", logicalGroupID: 0,
+        firstImageID: 1, framesPerDirection: 12
+    )
+    public static let enemyChariotAnimation = FigureSpriteAnimation(
+        role: .enemyChariot, figureID: 61,
+        archiveBaseName: chineseEnemyArchiveBaseName,
+        sourceBitmapName: "NonPlayer_Chariot", logicalGroupID: 21,
+        firstImageID: 2_209, framesPerDirection: 12
+    )
+    public static let enemyCatapultAnimation = FigureSpriteAnimation(
+        role: .enemyCatapult, figureID: 62,
+        archiveBaseName: chineseEnemyArchiveBaseName,
+        sourceBitmapName: "NonPlayer_Catapult", logicalGroupID: 16,
+        firstImageID: 1_793, framesPerDirection: 12
     )
 
     /// Ambient prey use the original Pheasant bitmap rather than a marker.
@@ -431,6 +471,11 @@ public enum OriginalFigureSpriteCatalog {
 
     public static func animation(forEnemyTypeID enemyTypeID: Int) -> FigureSpriteAnimation? {
         switch enemyTypeID {
+        case 58: enemyInfantryAnimation
+        case 59: enemyCrossbowAnimation
+        case 60: enemyCavalryAnimation
+        case 61: enemyChariotAnimation
+        case 62: enemyCatapultAnimation
         case 6: xiongnuInfantryAnimation
         default: nil
         }
@@ -445,6 +490,13 @@ public enum OriginalFigureSpriteCatalog {
             grouping: animations
                 + Array(deliveryAnimationsByCommodityID.values)
                 + [xiongnuInfantryAnimation]
+                + [
+                    enemyInfantryAnimation,
+                    enemyCrossbowAnimation,
+                    enemyCavalryAnimation,
+                    enemyChariotAnimation,
+                    enemyCatapultAnimation,
+                ]
                 + specializedAnimations,
             by: \.archiveBaseName
         ).mapValues { items in

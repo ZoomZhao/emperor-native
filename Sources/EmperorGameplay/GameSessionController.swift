@@ -372,6 +372,7 @@ public final class GameSessionController: @unchecked Sendable {
                 in: &newCity,
                 rules: EconomyRulesEngine(models: models)
             )
+            newCity.setCampaignEnemySetIndex(world.playerCity?.serializedEnemySetIndex)
             city = newCity
             var newRuntime = CampaignMissionRuntimeState(
                 missionID: missionID,
@@ -403,10 +404,12 @@ public final class GameSessionController: @unchecked Sendable {
                 normalAnnualWage: newRuntime.normalAnnualWage,
                 consecutiveDebtMonths: newRuntime.consecutiveDebtMonths
             ))
-            // The recovered producer is implemented and integration-verified;
-            // enabling it here restores natural population growth.
+            // The producer's map/object inputs and complete writer chain are
+            // still unresolved (see docs/exe-research/migration-popularity-
+            // producer.md). Keep mission starts fail-closed; the supported
+            // mode remains an explicit fixture/research switch.
             migrationCity.setAutomaticMigrationAvailability(
-                .supportedOriginalProducer
+                .unsupportedOriginalProducer
             )
             city = migrationCity
             selectedCampaignID = campaignID

@@ -56,6 +56,10 @@ final class GameSessionControllerTests: XCTestCase {
         XCTAssertEqual(snapshot.calendar.year, -2038)
         XCTAssertEqual(snapshot.calendar.month, 6)
         XCTAssertEqual(snapshot.economy.treasury, 2_000)
+        XCTAssertEqual(
+            snapshot.migration.automaticMigrationAvailability,
+            .unsupportedOriginalProducer
+        )
         XCTAssertEqual(controller.snapshot.campaignRuntime?.outcome, .running)
         XCTAssertFalse(controller.perform(.advanceOneTick).wasApplied)
 

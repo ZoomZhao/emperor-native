@@ -446,13 +446,93 @@ point or inventing fixed pixel offsets is not equivalent original behavior.
 
 The three normal stone-source occupancy classes are now closed independently
 of their inventory methods. In the hash-verified English executable,
-Warehouse `#54` construction installs vtable `0x7BE1BC`, Trading Quay `#56`
-installs `0x7BEAB8`, and Trading Station `#58` installs `0x7BEDC4`. Every
-table's `+0xCC` slot contains `0x00416A50`, the same constant-false predicate
-already disassembled for houses and the Laborers' Camp. Their ordinary
-occupied cells therefore take primary class `2` and generic fallback class
-`4`; this conclusion is limited to these three identified classes and is not
-an inference from the shared storage role.
+Warehouse `#54` construction installs vtable `0x7BE1BC`. The trade factory
+`FUN_005DDB10` branches on `FUN_005E1720` (true only for model `0x38`,
+Trading Quay `#56`): that branch allocates the `0x16C` object through
+`FUN_005E1730` and installs `0x7BEDC4`; the other branch allocates the `0x164`
+object through `FUN_005E1420` for Trading Station `#58` and installs
+`0x7BEAB8`. Every table's `+0xCC` slot contains `0x00416A50`, the same
+constant-false predicate already disassembled for houses and the Laborers'
+Camp. Their ordinary occupied cells therefore take primary class `2` and
+generic fallback class `4`; this conclusion is limited to these three
+identified classes and is not an inference from the shared storage role.
+
+This corrects the Quay/Station labels in the earlier version of this note:
+the raw vtable addresses were right but the two trade-class names were
+reversed. The constructor/discriminator chain and `GameData/Model/
+EmperorBuildingModels.txt` rows `56`/`58` are the controlling evidence.
+
+### Trade-byte writer boundary (`FUN_005D4200`, confirmed; producer still open)
+
+The indexed body `FUN_005D4200 @ 0x5D4200` is identical in the EN/CH
+`compare-report.tsv` (`identical`, row 7879). Its stack layout is recoverable
+from the CH comparison PE (`dbdeca1e…15a`, the only checked-in executable
+with this image): after the prologue, `[esp+0x18]` is the commodity index and
+`[esp+0x1C]` is the caller-supplied current state byte. The method resolves
+the object handle passed as its first argument, calls source-object vtable
+`+0x264(commodity)` and `+0x288(commodity, result)`, then writes one byte to
+the city/provider record at `+200+commodity` after this exact mapping:
+
+| caller-supplied byte | written byte |
+| ---: | ---: |
+| 5 | 6 |
+| 6 | 5 |
+| 7 | 8 |
+| 8 | 7 |
+| any other value | 9 |
+
+For the four explicit cases it also calls `FUN_00443C60` (states 5/6) or
+`FUN_00443CE0` (states 7/8), with the corresponding `0/1` flag. The default
+case calls both helpers with flag `0`. Those helpers update separate bounded
+per-city arrays (`+0x714` / `+0x718` after their own lookup) and emit the
+original notification callback when the value changes; they are not the
+`+200+commodity` byte itself.
+
+A direct call is present at PE `0x5D43AF`, in the unindexed byte range that
+precedes the indexed `FUN_005D43D0 @ 0x5D43D0`. That caller first reads the
+current byte from `resolved-city + 200 + commodity`, then passes the exact
+triple `(DAT_01312B1C, commodity, current-byte)` to `FUN_005D4200` and cleans
+12 bytes from the stack. The corpus has no indexed caller file or additional
+direct callsite for `0x5D4200`; this is a confirmed negative result, not proof
+that no indirect path exists.
+
+Native now exposes only the pure raw-byte mapping as
+`OriginalGrandCanalLayoutCatalog.phaseTwoTradeCommodityStateTransition` and
+tests all explicit/default cases. It does not synthesize these bytes, wire the
+two auxiliary arrays, or treat a UI import/export flag as their source. The
+trade source remains fail-closed until the object/provider producer and the
+complete `+0x264`/`+0x288` state/ledger contract are recovered.
+
+The `+0x288` side effect is now bounded at the trade vtable level. Direct
+little-endian reads of both trade tables (`0x7BEAB8` for Station `#58` and
+`0x7BEDC4` for Quay `#56`) give `+0x284 → 0x5DEEC0` and
+`+0x288 → 0x5DEF20`. These two bodies are not separate indexed functions in
+the corpus; the CH PE bytes are the available direct evidence. Both take
+`(commodity, amount)` and return `ret 8`. `0x5DEEC0` adds `amount` to
+`DAT_013123D0[commodity]` when the current `+200+commodity` byte is `7`, or
+to `DAT_0131265C[commodity]` when it is `5`. `0x5DEF20` performs the same
+state tests but subtracts instead. Other state bytes are no-ops in both
+bodies. Because `FUN_005D4200` calls the source object's `+0x288` before it
+writes the new byte, a current state `7` or `5` removes the corresponding
+amount from that auxiliary global table before the transition to `8` or `6`.
+The global tables' authored commodity-key mapping, initialization, consumers,
+and the EN parity of these unindexed bodies remain unknown; no Native ledger
+is synthesized from them.
+
+The surrounding indexed refresh boundary is `FUN_005D3CB0 @ 0x5D3CB0`, marked
+EN/CH-identical in `compare-report.tsv`. It clears 29 entries in each of the
+three contiguous tables at `DAT_013123D0`, `+0x28C` (`DAT_0131265C`), and
+`+0x31C` (`DAT_013126EC`), then enumerates active building records. The
+model-ID gate admits the recovered Warehouse/Quay/Station set (54/56/58) or
+the separate Mill predicate, applies `FUN_00426D10(0)`, classifies the object
+through vtable `+0x0EC`, and invokes its `+0x280` callback only for a nonzero
+classification. The scheduler calls this refresh from `FUN_004AC2B0` case
+`0x10`; initialization also reaches it through `FUN_00591490` and other
+setup paths. For the trade tables, `+0x280 → 0x5D5B10` walks provider records
+and calls `+0x284` with raw `(record+4, record+8)`, rebuilding the `+0x31C`
+aggregate from those records. This separates the record aggregate from the
+state-5/7 auxiliary deltas above, but the table consumers and key-to-authored
+commodity mapping remain unknown.
 
 The Qin mission-one Stoneworks `#36` is closed through its factory rather than
 by generalizing from another industrial building. `FUN_005F0E20` calls the
@@ -838,6 +918,70 @@ values, full/local rebuild order, and live-occupancy dependency are also
 auxiliary-layer and building-state predicate in their two derivation
 functions.
 
+### 2026-08-31 routing model-ID predicates (confirmed, structural)
+
+The occupied-object branches of the two routing-cache builders resolve a
+live object's **model ID**, not its building ID. The exact leaf predicates are
+identical in the English and Chinese executables (`local/source/compare-report.tsv`):
+
+| source function | address | exact accepted model IDs | use site |
+| --- | --- | --- | --- |
+| `FUN_004EFF30` | `0x4EFF30` | `0xDC, 0xDD, 0xDF, 0xE0, 0xE1` | primary builder `FUN_005AD440` occupied-object branch |
+| `FUN_004C0600` + `FUN_004C0630` + `FUN_004C0640` via `FUN_004C11B0` | `0x4C0600`, `0x4C0630`, `0x4C0640`, `0x4C11B0` | `0x1A…0x1C` and `0xC2…0xC7` | primary and fallback object branches |
+| `FUN_00562F70` | `0x562F70` | `0x4C…0x56`, `0x5C`, `0x5D`, `0xFD…0x10C` | primary branch after the secondary-family test |
+
+These sets are now exposed as the read-only
+`OriginalGrandCanalLayoutCatalog.RoutingModelPredicateCatalog` and tested
+without assigning player-facing names. They do **not** close routing by
+themselves: the same branches also read the object's `+0xCC` predicate,
+vtable slots (`+0x68`, `+0x1EC`), model-table phase data, and auxiliary terrain
+layers. Native therefore keeps the live projection fail-closed when those
+inputs are absent. The reusable conclusion is `confirmed` for the ID sets
+and call edges; semantic category names and a complete object-record
+projection remain `unknown`.
+
+### 2026-09-02 building `+0xCC` footprint predicates (confirmed)
+
+The generic occupied-cell branches call the live object's vtable slot `+0xCC`
+before applying the model-ID families above. A direct little-endian read of
+the canonical English PE and the Chinese comparison PE shows that the
+following Qin-relevant classes all carry the same slot value:
+
+| authored building IDs | constructor / class evidence | vtable | `+0xCC` target |
+| --- | --- | --- | --- |
+| `3...17` | `FUN_0042D480` house construction; `HouseBldg` | `0x7ABA38` | `0x00416A50` |
+| `36` | `FUN_00558F50` Stoneworks factory branch | `0x7B75E0` | `0x00416A50` |
+| `54` | Warehouse construction | `0x7BE1BC` | `0x00416A50` |
+| `56` | `FUN_005DDB10` → `FUN_005E1730` (0x16C object) | `0x7BEDC4` | `0x00416A50` |
+| `58` | `FUN_005DDB10` → `FUN_005E1420` (0x164 object) | `0x7BEAB8` | `0x00416A50` |
+| `59/60` | `FUN_00543450` cMarket constructor | `0x7B6F3C` | `0x00416A50` |
+| `71` | `FUN_0048CB10` cEntertainmentSquare constructor | `0x7AD878` | `0x00416A50` |
+| `72/73` | `FUN_0051BEF0` → `FUN_0051C090` Well family | `0x7B5EB4` | `0x00416A50` |
+| `207` | `FUN_0051C0B0` Herbalist constructor | `0x7B6114` | `0x00416A50` |
+| `208` | `FUN_0051C0D0` Acupuncture constructor | `0x7B6374` | `0x00416A50` |
+| `233` | `FUN_0050A570` Laborers' Camp constructor | `0x7B4FF8` | `0x00416A50` |
+
+`FUN_00416A50 @ 0x416A50` is a constant-false two-argument callback: the
+English bytes at the body are `32 C0 C2 08 00` (`xor al, al; ret 8`), and the
+Chinese body is identical. The compare report marks the shared function rows
+identical; the vtable words were read directly from both hash-matched PE
+images rather than inferred from the building names or rendered footprint.
+Therefore these classes take the `+0xCC == false` side of the primary and
+fallback object branches. For ordinary occupied cells that means primary
+class `2` and generic fallback class `4`; the explicit market/entertainment
+fallback branches still apply their own road-dependent outputs after this
+predicate. Canal and Great Wall records retain their separate monument
+handling and are not included in this generic catalog.
+
+Native exposes this exact subset through
+`BuildingFootprintPredicateCatalog.genericFootprintPredicate(forBuildingID:)`.
+`CitySimulation.grandCanalWorkerRoutingGrids()` now supplies a predicate only
+for the listed IDs; an unlisted placed building supplies `nil` and remains
+fail-closed instead of inheriting a guessed `false`. The conclusion is
+`confirmed` for the vtable words, callback body, and listed building classes;
+the complete map-load object projection and all other building classes remain
+`unknown`.
+
 ## Completion and implementation gate
 
 `FUN_0056D690 @ 0x56D690` dispatches individual workers and
@@ -1153,6 +1297,56 @@ therefore requires that independent byte only for road/water cells. It yields
 `0x10000200`. `FUN_004C11B0 @ 0x4C11B0` is also no longer an unknown class:
 its three callees reduce exactly to building IDs `26/27/28/194/195/196/197/
 198/199`, all of which produce fallback class `2` in this builder.
+
+## 2026-09-02 Qin occupancy classes: additional `+0xCC` closures
+
+The Qin3 routing diagnostic reached `grandCanalWorkerRoutingGrids()` with
+live placed buildings, but the previous catalog only covered houses and a
+small set of service classes. I traced the building factory in both
+hash-identified executables before extending the catalog. `FUN_0051C660
+@ 0x51C660` dispatches these authored IDs to the following constructors and
+vtable pointers:
+
+| building IDs | vtable | direct factory path |
+| --- | --- | --- |
+| `31` | `0x007C0448` | `FUN_005F0C80` → `FUN_005F0E20` → `FUN_005F51D0` |
+| `33` | `0x007C09B4` | `FUN_005F0C80` → `FUN_005F0E20` → `FUN_005F5270` |
+| `43` | `0x007BFC2C` | `FUN_005F0C80` → `FUN_005F0E20` → `FUN_005F50C0` |
+| `46` | `0x007C06FC` | `FUN_005F0C80` → `FUN_005F0E20` → `FUN_005F5230` |
+| `116/117/243...248` | `0x007AA83C` | `FUN_004142E0` → `FUN_004143B0` → `FUN_00416C50` |
+| `126` | `0x007B65E4` | `FUN_0051C660` fallthrough → `FUN_0051C9A0` (generic base) |
+| `195...199` | `0x007AEA40` | `FUN_004C0600` → `FUN_004C0660` → `FUN_004C2220` |
+| `194` | `0x007AECC8` | `FUN_004C0630` → `FUN_004C0660` → `FUN_004C25E0` |
+| `26...28` | `0x007AEF50` | `FUN_004C0640` → `FUN_004C0660` → `FUN_004C2710` |
+| `35` | `0x007BCA9C` | `FUN_005AC310` → `FUN_005AC260` → `FUN_005AC3A0` |
+| `37` | `0x007BCD50` | `FUN_005AC310` → `FUN_005AC260` → `FUN_005AC6C0` |
+| `27/28/29` | `0x007B7B64` | `FUN_00557430` → `FUN_00557340` → `FUN_00559040` |
+| `36/48` | `0x007B7E24` | `FUN_00557430` → `FUN_00557340` → `FUN_005590A0` |
+| `53` | `0x007B72C8` | `FUN_005D36E0` → `FUN_005D3580` → `FUN_00554D40` |
+| `124` | `0x007BD274` | `FUN_005B3AF0` → `FUN_005B3B10` → `FUN_005B3FD0` |
+| `125` | `0x007B43AC` | `FUN_00507670` → `FUN_005075A0` → `FUN_00507090` |
+| `211` | `0x007ACEDC` | `FUN_0048A7E0` → `FUN_0048A800` → `FUN_0048A8E0` |
+| `192` | `0x007AF6E0` | `FUN_004C2930` → `FUN_004C2960` → `FUN_004C5CA0` |
+| `193/237/238/239` | `0x007AF95C` | `FUN_004C2930` → `FUN_004C2960` → `FUN_004C5CC0` |
+| `214/215/217` | `0x007BC0B4` | `FUN_005AB030` → `FUN_005AAE70` → `FUN_005AB0D0` |
+| `216/218` | `0x007BC584` | `FUN_005AB030` → `FUN_005AAE70` → `FUN_005ABF40` |
+| `219` | `0x007BC318` | `FUN_005AB030` → `FUN_005AAE70` → `FUN_005AB860` |
+
+For every vtable in this table, file-offset reads at `vtable + 0xCC` are
+`50 6A 41 00` (`0x00416A50`) in both canonical PE images:
+
+```
+8a6d2df1015cb75d797546d117da5f82b86fd08726090c2a13d853b9009d6753  EmperorEN.exe
+dbdeca1ec2720f2387e1673bfbb901e9bad832179355ea897cfa7536e17ac15a  EmperorCH.exe
+```
+
+`FUN_00416A50` is the two-argument constant-false predicate (`xor al,al;
+ret 8`). This is direct live-object vtable evidence, not a visual inference.
+The new IDs are admitted by `BuildingFootprintPredicateCatalog`; roadblock
+all other unlisted classes remain fail-closed because their concrete
+construction/vtable path has not been recovered here. This section is
+`confirmed` static evidence, but it does not establish the predicate's
+higher-level gameplay meaning or the separate market-peddler/provider rules.
 
 The following remains unresolved: the not-yet-taken branches of a complete
 semantic port, chiefly the primary surface-object/image discrimination, the

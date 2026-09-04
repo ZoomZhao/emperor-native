@@ -205,6 +205,126 @@ final class BuildingSpriteCatalogTests: XCTestCase {
         }
     }
 
+    func testQinResidentialBarriersExposeGenericPrimaryTableEntry() {
+        let residentialBarrierIDs = [89, 90, 91, 104, 105, 106, 231, 232]
+        for buildingID in residentialBarrierIDs {
+            // DAT_008235a0 + id * 0x18 is the generic Building primary entry.
+            // Connected cResWall/cResGate rendering is a separate vtable
+            // callback and is intentionally not asserted as #936 here.
+            XCTAssertEqual(
+                OriginalBuildingFootprintCatalog.footprint(
+                    forBuildingID: buildingID
+                ),
+                BuildingFootprint(width: 1, height: 1),
+                "residential barrier #\(buildingID) is painted one cell at a time"
+            )
+            XCTAssertEqual(
+                OriginalBuildingSpriteCatalog.buildingSprite(
+                    forBuildingID: buildingID
+                ),
+                BuildingSpriteReference(
+                    archiveBaseName: OriginalBuildingSpriteCatalog.generalArchiveBaseName,
+                    imageID: 936
+                )
+            )
+            XCTAssertFalse(
+                OriginalBuildingSpriteCatalog.buildingComponents(
+                    forBuildingID: buildingID
+                ).isEmpty
+            )
+            XCTAssertTrue(
+                OriginalBuildingSpriteCatalog.supportedPlacedBuildingIDs.contains(buildingID)
+            )
+        }
+    }
+
+    func testQinResidentialBarriersExposeSpecializedConnectedSpriteFamilies() {
+        let expected: [Int: (key: Int, firstImageID: Int)] = [
+            89: (0x427, 421), 104: (0x427, 421),
+            90: (0x428, 404), 105: (0x428, 404),
+            91: (0x429, 387), 106: (0x429, 387),
+            231: (0x4B5, 370), 232: (0x4B5, 370),
+        ]
+        for (buildingID, values) in expected {
+            guard let family = OriginalBuildingSpriteCatalog.residentialBarrierSpriteFamily(
+                forBuildingID: buildingID
+            ) else {
+                XCTFail("missing specialized family for #\(buildingID)")
+                continue
+            }
+            XCTAssertEqual(family.key, values.key)
+            XCTAssertEqual(family.firstImageID, values.firstImageID)
+            XCTAssertTrue(family.modelIDs.contains(buildingID))
+        }
+        XCTAssertNil(
+            OriginalBuildingSpriteCatalog.residentialBarrierSpriteFamily(forBuildingID: 72)
+        )
+    }
+
+    func testQinResidentialBarrierConnectedFrameOffsetsMatchExecutableTable() {
+        // Wall branch: an empty neighbor mask selects 0x0E, while map rotation
+        // 2 applies the executable's 0x0D/0x0E swap after a 0x0D result.
+        XCTAssertEqual(
+            OriginalBuildingSpriteCatalog.residentialBarrierConnectedFrameOffset(
+                forBuildingID: 90,
+                neighborMask: 0x00,
+                mapRotation: 0
+            ),
+            0x0E
+        )
+        XCTAssertEqual(
+            OriginalBuildingSpriteCatalog.residentialBarrierConnectedFrameOffset(
+                forBuildingID: 90,
+                neighborMask: 0x0A,
+                mapRotation: 2
+            ),
+            0x0E
+        )
+
+        // Gate mask 3 uses the second table offset (6) in map-rotation band 1.
+        XCTAssertEqual(
+            OriginalBuildingSpriteCatalog.residentialBarrierConnectedFrameOffset(
+                forBuildingID: 105,
+                neighborMask: 3,
+                mapRotation: 2
+            ),
+            6
+        )
+        // Gate mask 0 has a two-way variation when its table value is 0.
+        XCTAssertEqual(
+            OriginalBuildingSpriteCatalog.residentialBarrierConnectedFrameOffset(
+                forBuildingID: 105,
+                neighborMask: 0,
+                mapRotation: 0,
+                variation: 1
+            ),
+            1
+        )
+        XCTAssertNil(
+            OriginalBuildingSpriteCatalog.residentialBarrierConnectedFrameOffset(
+                forBuildingID: 105,
+                neighborMask: 16,
+                mapRotation: 0
+            )
+        )
+        XCTAssertEqual(
+            OriginalBuildingSpriteCatalog.residentialBarrierConnectedSprite(
+                forBuildingID: 90,
+                neighborMask: 0,
+                mapRotation: 0
+            )?.imageID,
+            418
+        )
+        XCTAssertEqual(
+            OriginalBuildingSpriteCatalog.residentialBarrierConnectedSprite(
+                forBuildingID: 105,
+                neighborMask: 9,
+                mapRotation: 0
+            )?.imageID,
+            410
+        )
+    }
+
     func testQinFortressesUseVerifiedMilitaryHeadquartersSprite() {
         for buildingID in [220, 221, 223, 224] {
             XCTAssertEqual(
