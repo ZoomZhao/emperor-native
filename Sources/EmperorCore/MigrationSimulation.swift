@@ -85,6 +85,17 @@ public enum OriginalMigrationRequestProducerCatalog {
     public static let assignmentFigureStateOffset = 0x40
     public static let assignmentFigureStateValue = 6
     public static let arrivalFigureHouseIDOffset = 0x64
+    /// `FUN_004ADA10` loads the candidate house object's registry dword at
+    /// `+0xB4` and passes it as the first argument to `FUN_004ADE10`.
+    /// `FUN_004ADC90` does the same for `FUN_004ADED0`.  This is the source
+    /// object-vector identity, not a map-cell index or provider-specific
+    /// semantic; Qin archive rows still need an unresolved projection into
+    /// this live object registry before either writer can be invoked.
+    public static let arrivalHouseArgumentRegistryFieldOffset = 0xB4
+    public static let departureHouseArgumentRegistryFieldOffset = 0xB4
+    public static let arrivalHouseArgumentSourceAddress: UInt32 = 0x004ADA10
+    public static let departureHouseArgumentSourceAddress: UInt32 = 0x004ADC90
+    public static let houseArgumentRegistryLookupAddress: UInt32 = 0x0047F1B0
     public static let arrivalFigurePeopleCountOffset = 0x6E
     public static let departureFigurePeopleCountOffset = 0x6E
     public static let arrivalHouseInFlightFigureOffset = 0x32

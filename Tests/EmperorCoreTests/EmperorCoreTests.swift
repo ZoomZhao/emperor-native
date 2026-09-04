@@ -5576,6 +5576,26 @@ final class EmperorCoreTests: XCTestCase {
             0x64
         )
         XCTAssertEqual(
+            OriginalMigrationRequestProducerCatalog.arrivalHouseArgumentRegistryFieldOffset,
+            0xB4
+        )
+        XCTAssertEqual(
+            OriginalMigrationRequestProducerCatalog.departureHouseArgumentRegistryFieldOffset,
+            0xB4
+        )
+        XCTAssertEqual(
+            OriginalMigrationRequestProducerCatalog.arrivalHouseArgumentSourceAddress,
+            0x004ADA10
+        )
+        XCTAssertEqual(
+            OriginalMigrationRequestProducerCatalog.departureHouseArgumentSourceAddress,
+            0x004ADC90
+        )
+        XCTAssertEqual(
+            OriginalMigrationRequestProducerCatalog.houseArgumentRegistryLookupAddress,
+            0x0047F1B0
+        )
+        XCTAssertEqual(
             OriginalMigrationRequestProducerCatalog.arrivalHouseInFlightFigureOffset,
             0x32
         )

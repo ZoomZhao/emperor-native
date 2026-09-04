@@ -10269,6 +10269,41 @@ reset/seed arithmetic, rebuild loop order, sole direct rebuild callsite, and
 EN/CH parity; **unknown** for allocator state ownership, indirect rebuild
 entries, map-loaded object projection, and arrival settlement.
 
+## 2026-09-04 Arrival and departure writers consume the house object's `+0xB4`
+registry field
+
+The house argument supplied to the final migration writers is now bounded at
+the source field, rather than only by the writer's later lookup.  In
+`FUN_004ADA10 @ 0x4ADA10`, each eligible live object-vector row loads its
+dword at object `+0xB4` and passes that value as the first argument to
+`FUN_004ADE10 @ 0x4ADE10`; the capped, residual, and final assignment passes
+all use the same field.  `FUN_004ADC90 @ 0x4ADC90` likewise loads object
+`+0xB4` for both capped and residual calls to `FUN_004ADED0 @ 0x4ADED0`.
+Inside the arrival writer, `FUN_0047F1B0 @ 0x47F1B0` resolves that value back
+to the house object before writing its in-flight figure link and reading the
+house state/population fields.  The departure writer uses the same resolver
+before mutating the resident word and creating the departing figure.
+
+This is **confirmed** source identity for the writer input: `+0xB4` is the
+live object-vector registry dword consumed by both assignment walks, and
+`0x47F1B0` is the common registry lookup.  It is not evidence that the field
+is a map-cell index, a provider slot, or a stream ordinal.  The Qin generic
+map records still serialize `+0xB4 = -1` and the recovered append/load path
+does not replace it, so the missing archive-to-live-object projection remains
+the blocker; Native records the field/source addresses as metadata only and
+keeps automatic migration fail-closed.
+
+**Sources:** `local/source/split-merged/code/0x040000/`
+`FUN_004ADA10.c`, `FUN_004ADC90.c`, `FUN_004ADE10.c`,
+`FUN_004ADED0.c`, and `FUN_0047F1B0.c`; `local/source/compare-report.tsv`
+rows `0x4ADA10`, `0x4ADC90`, `0x4ADE10`, `0x4ADED0`; and
+`Sources/EmperorCore/MigrationSimulation.swift` with
+`testOriginalMigrationRequestProducerCatalogMatchesSourceHandoff`.
+
+**Evidence class:** **confirmed** for the `+0xB4` load at every direct writer
+call branch, the shared registry lookup, and EN/CH parity; **unknown** for
+archive specialization, provider/object projection, route, and settlement.
+
 ## 2026-09-04 Figure allocator writes the constructed figure into the candidate slot
 
 The successful allocation path closes the figure-side object-vector projection
