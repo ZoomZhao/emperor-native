@@ -7118,3 +7118,56 @@ row `75` and `GameData/Model/EmperorFigureModels.txt` row `37`;
 mapping, EN/CH parity, serializer field spans, figure model request, and
 registry-link write; **unknown** for archive-side class specialization,
 provider registry ownership, route/collision, and venue/house settlement.
+
+## 2026-09-05 Entertainment runtime-class table confirms the concrete hierarchy
+
+The canonical EN and CH `.data` slices at file offset
+`0x42BC58…0x42BD2F` are byte-identical (216 bytes; SHA-256
+`59192981b50808e3295e4e966ce923bb5317adf185df865a23ec5f800885c586`).
+Decoding the MFC-style records as `(name pointer, object size, flags,
+create-object callback, base-class pointer, flags)` yields the complete
+entertainment family present in that table:
+
+| class | runtime record | size | create callback | base record | authored building ID |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `cEntertainmentBldg` | `0x82BC70` | `0x150` | `0x48A750` | `0x854438` (`cIndustrialBldg`) | — |
+| `cMusicSchool` | `0x82BC88` | `0x150` | `0x48AF60` | `0x82BC70` | `211` |
+| `cAcrobatSchool` | `0x82BCA0` | `0x150` | `0x48B110` | `0x82BC70` | `212` |
+| `cDramaSchool` | `0x82BCB8` | `0x150` | `0x48B2C0` | `0x82BC70` | `213` |
+| `cEntertainmentVenue` | `0x82BCD0` | `0x150` | `0x48B4B0` | `0x82BC70` | — |
+| `cTheatre` | `0x82BCE8` | `0x184` | `0x48BA10` | `0x82BCD0` | `75` |
+| `cTheatreSpectator` | `0x82BD00` | `0x10` | `0x48BAF0` | `0x7CD140` | — |
+| `cEntertainmentSquare` | `0x82BD18` | `0x230` | `0x48CA80` | `0x82BCD0` | `71` |
+
+The callback targets are all present in the indexed corpus and are marked
+EN/CH `identical` in `local/source/compare-report.tsv`. Their allocation and
+constructor bodies corroborate the table: the three school callbacks allocate
+`0x150` and call `FUN_0048A8E0/0048A900/0048A920`; `FUN_0048BA10` allocates
+`0x184` and calls `FUN_0048BBA0`; and `FUN_0048CA80` allocates `0x230` and
+calls `FUN_0048CB10`. This is positive evidence that the executable registers
+the venue and school classes and their inheritance, not evidence that a Qin
+generic `Building` archive row reaches any of those runtime records.
+
+Native records the table as
+`OriginalResidentialServiceCatalog.entertainmentRuntimeClassDescriptors` and
+keeps it research-only. The Qin archives still declare only the `Building`
+stream plus their separate authored class runs; no archive declaration names
+`cEntertainmentBldg`, `cEntertainmentVenue`, `cTheatre`,
+`cEntertainmentSquare`, or the school classes. The missing trigger that would
+replace a loaded generic object, assign its provider registry slot, and insert
+it into the live provider graph therefore remains **unknown**; route/collision
+and venue/house settlement remain unknown as well, so Qin entertainment stays
+fail-closed.
+
+**Sources:** canonical EN/CH PE `.data` bytes at file offset
+`0x42BC58…0x42BD2F`; `local/source/split-merged/code/0x040000/`
+`FUN_0048A750.c`, `FUN_0048AF60.c`, `FUN_0048B110.c`, `FUN_0048B2C0.c`,
+`FUN_0048B4B0.c`, `FUN_0048BA10.c`, `FUN_0048BAF0.c`, and `FUN_0048CA80.c`;
+their `compare-report.tsv` rows; `GameData/Model/EmperorBuildingModels.txt`
+rows `71`, `75`, and `211…213`; `Sources/EmperorCore/HousingEvolution.swift`;
+and `testEntertainmentRuntimeClassRecordsKeepVenueSchoolHierarchy`.
+
+**Evidence class:** **confirmed** for the eight runtime records, object sizes,
+create callbacks, base-class pointers, EN/CH byte parity, and authored model
+crosswalk; **unknown** for archive-side specialization, provider registry
+assignment, route/collision, and venue/house settlement.

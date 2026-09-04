@@ -6411,6 +6411,101 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testEntertainmentRuntimeClassRecordsKeepVenueSchoolHierarchy() {
+        XCTAssertEqual(
+            OriginalResidentialServiceCatalog.entertainmentRuntimeClassDescriptors,
+            [
+                .init(
+                    className: "cEntertainmentBldg",
+                    runtimeClassAddress: 0x0082BC70,
+                    objectSize: 0x150,
+                    createObjectAddress: 0x0048A750,
+                    baseClassAddress: 0x00854438,
+                    buildingModelIDs: []
+                ),
+                .init(
+                    className: "cMusicSchool",
+                    runtimeClassAddress: 0x0082BC88,
+                    objectSize: 0x150,
+                    createObjectAddress: 0x0048AF60,
+                    baseClassAddress: 0x0082BC70,
+                    buildingModelIDs: [211]
+                ),
+                .init(
+                    className: "cAcrobatSchool",
+                    runtimeClassAddress: 0x0082BCA0,
+                    objectSize: 0x150,
+                    createObjectAddress: 0x0048B110,
+                    baseClassAddress: 0x0082BC70,
+                    buildingModelIDs: [212]
+                ),
+                .init(
+                    className: "cDramaSchool",
+                    runtimeClassAddress: 0x0082BCB8,
+                    objectSize: 0x150,
+                    createObjectAddress: 0x0048B2C0,
+                    baseClassAddress: 0x0082BC70,
+                    buildingModelIDs: [213]
+                ),
+                .init(
+                    className: "cEntertainmentVenue",
+                    runtimeClassAddress: 0x0082BCD0,
+                    objectSize: 0x150,
+                    createObjectAddress: 0x0048B4B0,
+                    baseClassAddress: 0x0082BC70,
+                    buildingModelIDs: []
+                ),
+                .init(
+                    className: "cTheatre",
+                    runtimeClassAddress: 0x0082BCE8,
+                    objectSize: 0x184,
+                    createObjectAddress: 0x0048BA10,
+                    baseClassAddress: 0x0082BCD0,
+                    buildingModelIDs: [75]
+                ),
+                .init(
+                    className: "cTheatreSpectator",
+                    runtimeClassAddress: 0x0082BD00,
+                    objectSize: 0x10,
+                    createObjectAddress: 0x0048BAF0,
+                    baseClassAddress: 0x007CD140,
+                    buildingModelIDs: []
+                ),
+                .init(
+                    className: "cEntertainmentSquare",
+                    runtimeClassAddress: 0x0082BD18,
+                    objectSize: 0x230,
+                    createObjectAddress: 0x0048CA80,
+                    baseClassAddress: 0x0082BCD0,
+                    buildingModelIDs: [71]
+                ),
+            ]
+        )
+        XCTAssertEqual(
+            OriginalResidentialServiceCatalog.entertainmentRuntimeClassDescriptor(
+                forBuildingModelID: 71
+            )?.className,
+            "cEntertainmentSquare"
+        )
+        XCTAssertEqual(
+            OriginalResidentialServiceCatalog.entertainmentRuntimeClassDescriptor(
+                forBuildingModelID: 75
+            )?.createObjectAddress,
+            0x0048BA10
+        )
+        XCTAssertEqual(
+            OriginalResidentialServiceCatalog.entertainmentRuntimeClassDescriptor(
+                forBuildingModelID: 211
+            )?.baseClassAddress,
+            0x0082BC70
+        )
+        XCTAssertNil(
+            OriginalResidentialServiceCatalog.entertainmentRuntimeClassDescriptor(
+                forBuildingModelID: 72
+            )
+        )
+    }
+
     func testEntertainmentManagerRegistrationDescriptorSeparatesPlacementFromLoad() {
         let descriptor = OriginalResidentialServiceCatalog
             .entertainmentManagerRegistrationDescriptor

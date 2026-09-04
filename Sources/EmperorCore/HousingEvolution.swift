@@ -1592,6 +1592,114 @@ public enum OriginalResidentialServiceCatalog {
         }
     }
 
+    /// MFC runtime-class records for the entertainment family recovered from
+    /// the canonical EN/CH `.data` table at `0x82BC58…0x82BD2F`.  These are
+    /// registration metadata only.  The Qin map archive still declares and
+    /// reads `Building` records, so this table must not specialize an archive
+    /// row, allocate a venue, or assign a provider registry slot.
+    public struct EntertainmentRuntimeClassDescriptor: Sendable, Hashable, Codable {
+        public let className: String
+        public let runtimeClassAddress: UInt32
+        public let objectSize: Int
+        public let createObjectAddress: UInt32
+        public let baseClassAddress: UInt32
+        public let buildingModelIDs: [Int]
+
+        public init(
+            className: String,
+            runtimeClassAddress: UInt32,
+            objectSize: Int,
+            createObjectAddress: UInt32,
+            baseClassAddress: UInt32,
+            buildingModelIDs: [Int]
+        ) {
+            self.className = className
+            self.runtimeClassAddress = runtimeClassAddress
+            self.objectSize = objectSize
+            self.createObjectAddress = createObjectAddress
+            self.baseClassAddress = baseClassAddress
+            self.buildingModelIDs = buildingModelIDs
+        }
+    }
+
+    /// Exact entertainment-family runtime records.  Empty model-ID lists are
+    /// intentional for abstract/base classes and the transient spectator
+    /// record; they do not authorize mapping those records to a building.
+    public static let entertainmentRuntimeClassDescriptors: [EntertainmentRuntimeClassDescriptor] = [
+        .init(
+            className: "cEntertainmentBldg",
+            runtimeClassAddress: 0x0082BC70,
+            objectSize: 0x150,
+            createObjectAddress: 0x0048A750,
+            baseClassAddress: 0x00854438,
+            buildingModelIDs: []
+        ),
+        .init(
+            className: "cMusicSchool",
+            runtimeClassAddress: 0x0082BC88,
+            objectSize: 0x150,
+            createObjectAddress: 0x0048AF60,
+            baseClassAddress: 0x0082BC70,
+            buildingModelIDs: [211]
+        ),
+        .init(
+            className: "cAcrobatSchool",
+            runtimeClassAddress: 0x0082BCA0,
+            objectSize: 0x150,
+            createObjectAddress: 0x0048B110,
+            baseClassAddress: 0x0082BC70,
+            buildingModelIDs: [212]
+        ),
+        .init(
+            className: "cDramaSchool",
+            runtimeClassAddress: 0x0082BCB8,
+            objectSize: 0x150,
+            createObjectAddress: 0x0048B2C0,
+            baseClassAddress: 0x0082BC70,
+            buildingModelIDs: [213]
+        ),
+        .init(
+            className: "cEntertainmentVenue",
+            runtimeClassAddress: 0x0082BCD0,
+            objectSize: 0x150,
+            createObjectAddress: 0x0048B4B0,
+            baseClassAddress: 0x0082BC70,
+            buildingModelIDs: []
+        ),
+        .init(
+            className: "cTheatre",
+            runtimeClassAddress: 0x0082BCE8,
+            objectSize: 0x184,
+            createObjectAddress: 0x0048BA10,
+            baseClassAddress: 0x0082BCD0,
+            buildingModelIDs: [75]
+        ),
+        .init(
+            className: "cTheatreSpectator",
+            runtimeClassAddress: 0x0082BD00,
+            objectSize: 0x10,
+            createObjectAddress: 0x0048BAF0,
+            baseClassAddress: 0x007CD140,
+            buildingModelIDs: []
+        ),
+        .init(
+            className: "cEntertainmentSquare",
+            runtimeClassAddress: 0x0082BD18,
+            objectSize: 0x230,
+            createObjectAddress: 0x0048CA80,
+            baseClassAddress: 0x0082BCD0,
+            buildingModelIDs: [71]
+        ),
+    ]
+
+    public static func entertainmentRuntimeClassDescriptor(
+        forBuildingModelID buildingModelID: Int
+    ) -> EntertainmentRuntimeClassDescriptor? {
+        entertainmentRuntimeClassDescriptors.first {
+            $0.buildingModelIDs.contains(buildingModelID)
+        }
+    }
+
     /// Concrete targets recovered for provider vtable slot `+0x268`.
     ///
     /// The slot is polymorphic in the executable: its callers use the return
