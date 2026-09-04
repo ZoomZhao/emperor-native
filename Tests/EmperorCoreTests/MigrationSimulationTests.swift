@@ -1201,6 +1201,13 @@ final class MigrationSimulationTests: XCTestCase {
             OriginalFigureAllocatorState.liveRegistryRebuildDirectCallSites,
             [0x00534D08]
         )
+        XCTAssertEqual(OriginalFigureAllocatorState.candidateObjectLookupAddress, 0x004E2400)
+        XCTAssertEqual(OriginalFigureAllocatorState.objectVectorSlotAddressHelper, 0x00408200)
+        XCTAssertEqual(OriginalFigureAllocatorState.objectVectorBaseAddress, 0x004F8210)
+        XCTAssertEqual(OriginalFigureAllocatorState.objectVectorSlotStrideBytes, 4)
+        XCTAssertEqual(OriginalFigureAllocatorState.objectVectorSlotStoreAddress, 0x004E18CA)
+        XCTAssertTrue(OriginalFigureAllocatorState.objectVectorSlotStoreUsesCandidateID)
+        XCTAssertTrue(OriginalFigureAllocatorState.objectVectorSlotStoresConstructedFigure)
     }
 
     func testOriginalFigureAllocatorQueueRebuildsFreeIDsDescendingAndReportsSideEffectInputs() {

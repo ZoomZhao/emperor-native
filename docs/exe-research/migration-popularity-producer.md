@@ -10268,3 +10268,38 @@ figure collection from these executable addresses.
 reset/seed arithmetic, rebuild loop order, sole direct rebuild callsite, and
 EN/CH parity; **unknown** for allocator state ownership, indirect rebuild
 entries, map-loaded object projection, and arrival settlement.
+
+## 2026-09-04 Figure allocator writes the constructed figure into the candidate slot
+
+The successful allocation path closes the figure-side object-vector projection
+at the allocator itself.  In `FUN_004E1420 @ 0x4E1420`, the ring result is a
+positive object ID.  The source resolves that ID with
+`FUN_004E2400 @ 0x4E2400`, whose `FUN_004F8210 + ID×4` address is also exposed
+by `FUN_00408200 @ 0x408200`.  After the model constructor returns, the raw EN
+instruction at `0x4E18C5` calls `FUN_00408200`; the following store at
+`0x4E18CA` writes the newly constructed figure pointer into that exact vector
+slot before the figure's `+0xE8`, `+0xEC`, and `+0x18` callbacks run.  The
+canonical CH bytes at the same addresses are identical.
+
+This is a confirmed figure-registry write: candidate ID `n` selects the global
+object-vector slot at `FUN_004F8210 + n×4`, and the allocator replaces that
+slot with the constructed figure.  It does not assign a Building provider
+index (`+0xB4`/`+0x2D`), does not create a HouseBldg, and is not evidence that a
+generic Qin map archive row reaches the allocator.  The Native catalog records
+the lookup helper, vector base, four-byte stride, and store address as
+research-only metadata.  Provider/house projection, figure route creation,
+and arrival settlement therefore remain **unknown** and automatic Qin
+migration stays fail-closed.
+
+**Sources:** canonical EN/CH raw `.text` around `0x4E1451`, `0x4E18C5`, and
+`0x4E18CA`; `local/source/split-merged/code/0x040000/FUN_004E1420.c`,
+`FUN_004E2400.c`, `FUN_00408200.c`, `FUN_004F8210.c`; identical rows for
+`0x4E1420`, `0x4E2400`, `0x408200`, and `0x4F8210` in
+`local/source/compare-report.tsv`; and
+`Sources/EmperorCore/MigrationSimulation.swift` with
+`testOriginalFigureAllocatorStateMatchesCanonicalRingLayout`.
+
+**Evidence class:** **confirmed** for the candidate-ID lookup, vector base and
+stride, pointer store order, and EN/CH parity; **confirmed negative** for this
+edge assigning provider fields or proving Qin archive projection; **unknown**
+for provider registry ownership, route construction, and arrival settlement.

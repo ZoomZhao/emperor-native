@@ -738,6 +738,18 @@ public struct OriginalFigureAllocatorState: Sendable, Hashable, Codable {
     public static let liveRegistryRebuildDirectCallSites: [UInt32] = [
         0x00534D08,
     ]
+    /// `FUN_004E1420` resolves the candidate ID through `FUN_004E2400`, then
+    /// obtains the corresponding global object-vector slot through
+    /// `FUN_00408200` and stores the newly constructed figure pointer there.
+    /// This is the recovered figure-registry projection; it is distinct from
+    /// a Building's provider `+0xB4` field and is not a Qin map-load bridge.
+    public static let candidateObjectLookupAddress: UInt32 = 0x004E2400
+    public static let objectVectorSlotAddressHelper: UInt32 = 0x00408200
+    public static let objectVectorBaseAddress: UInt32 = 0x004F8210
+    public static let objectVectorSlotStrideBytes = 4
+    public static let objectVectorSlotStoreAddress: UInt32 = 0x004E18CA
+    public static let objectVectorSlotStoreUsesCandidateID = true
+    public static let objectVectorSlotStoresConstructedFigure = true
 
     public private(set) var cursor: Int
     public private(set) var writeCursor: Int
