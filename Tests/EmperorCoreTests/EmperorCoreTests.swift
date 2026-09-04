@@ -869,6 +869,39 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testLocalQinCampaignResolvesEveryMissionToKnownOriginalMaps() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let source = try GameDataSource.openDefault()
+        let campaignURL = source.campaignsDirectory.appendingPathComponent("4 Qin Dynasty.pak")
+        let campaign = try CampaignArchive(url: campaignURL)
+        XCTAssertEqual(campaign.missions.count, 5)
+
+        let catalog = try GameDataCatalog.scan(source)
+        let maps = try CampaignMissionMapArchive(
+            campaignURL: campaignURL,
+            missionCount: campaign.missions.count,
+            candidateMapURLs: catalog.maps.map(\.url)
+        )
+
+        XCTAssertEqual(maps.missions.map(\.sourceMissionIndex), [0, 1, 2, 3, 1])
+        XCTAssertEqual(maps.missions.map(\.playerCityID), [13, 0, 1, 2, 0])
+        XCTAssertEqual(
+            maps.missions.map { $0.embeddedMap.mapURL.lastPathComponent },
+            ["Haunxian.map", "Xianyang.map", "Xiangjun.map", "Badaling.map", "Xianyang.map"]
+        )
+        XCTAssertEqual(
+            maps.embeddedMaps.map { $0.mapURL.lastPathComponent },
+            ["Haunxian.map", "Xianyang.map", "Xiangjun.map", "Badaling.map"]
+        )
+        XCTAssertEqual(
+            maps.embeddedMaps.map { $0.campaignChunkRange },
+            [29..<87, 87..<145, 145..<203, 203..<261]
+        )
+        XCTAssertTrue(maps.embeddedMaps.allSatisfy(\.isEmbedded))
+    }
+
     func testLocalShangCampaignContinuationMapLinksAreExact() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")

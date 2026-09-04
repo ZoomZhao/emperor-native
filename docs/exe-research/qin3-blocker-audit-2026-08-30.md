@@ -7593,3 +7593,37 @@ SierraChunkedFile.swift`, `EmperorMap.swift`, and
 bounded class scan, complete forbidden-class absence, and regression result;
 **unknown** for generic-model specialization, indirect runtime hooks,
 provider registry projection, routing, and settlement.
+
+## 2026-09-05 Qin campaign package embeds only the four audited city maps
+
+`GameData/Campaigns/4 Qin Dynasty.pak` decodes as `261` Sierra chunks.  The
+four contiguous 58-chunk ranges `29..<87`, `87..<145`, `145..<203`, and
+`203..<261` are byte-for-byte matches for `Haunxian.map`, `Xianyang.map`,
+`Xiangjun.map`, and `Badaling.map`, respectively, using
+`CampaignEmbeddedMapResolver`'s descriptor and decoded-chunk equality check.
+The campaign metadata at `0x6b1fe` has five mission slots: source mission
+indices `[0, 1, 2, 3, 1]`, player-city IDs `[13, 0, 1, 2, 0]`, and map names
+`Haunxian`, `Xianyang`, `Xiangjun`, `Badaling`, `Xianyang`.  Thus missions 2
+and 5 are continuations of already identified map streams; there is no
+additional Qin map payload outside the four city archives in the package.
+
+`testLocalQinCampaignResolvesEveryMissionToKnownOriginalMaps` locks the
+mission table, the four exact chunk ranges, and the continuation links.  In
+combination with the complete `GameData/Cities` class census above, the Qin
+campaign package supplies no second authored archive where a serialized
+residential, market, or entertainment provider class could be hiding.
+This is evidence about package/map provenance only; it does not recover a
+runtime replacement, provider-vector projection, route/collision pass, or
+house-quality settlement.  Those remain **unknown**, and Native remains
+fail-closed for Qin entertainment and automatic migration.
+
+**Sources:** `GameData/Campaigns/4 Qin Dynasty.pak`,
+`Sources/EmperorCore/CampaignEmbeddedMaps.swift`,
+`Sources/EmperorCore/CampaignMissionMaps.swift`, the four matched
+`GameData/Cities/*.map` files, and
+`testLocalQinCampaignResolvesEveryMissionToKnownOriginalMaps`.
+
+**Evidence class:** **confirmed** for the package chunk count, exact map
+matches, mission source/player-city table, and continuation links;
+**unknown** for any post-load indirect specialization or provider
+registration outside the serialized map streams.
