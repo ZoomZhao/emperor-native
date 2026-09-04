@@ -3346,6 +3346,76 @@ public enum OriginalMarketCatalog {
     }
 }
 
+/// Raw writes performed after the model-23 allocator returns a live object in
+/// `FUN_00543ED0 @ 0x543ED0`.  The source has no successful tail writes when
+/// `FUN_004EA050 @ 0x4EA050` returns zero; this descriptor keeps that boundary
+/// independent from the unresolved provider registry and route projection.
+public struct OriginalMarketPeddlerAllocationTailResult: Sendable, Hashable, Codable {
+    public let allocationSucceeded: Bool
+    public let figureActiveByte: Int?
+    public let figureParentMarketID: Int?
+    public let marketDirectionByte: Int?
+    public let figureDirectionByte: Int?
+    public let entersRoamInitialization: Bool
+
+    public init(
+        allocationSucceeded: Bool,
+        figureActiveByte: Int?,
+        figureParentMarketID: Int?,
+        marketDirectionByte: Int?,
+        figureDirectionByte: Int?,
+        entersRoamInitialization: Bool
+    ) {
+        self.allocationSucceeded = allocationSucceeded
+        self.figureActiveByte = figureActiveByte
+        self.figureParentMarketID = figureParentMarketID
+        self.marketDirectionByte = marketDirectionByte
+        self.figureDirectionByte = figureDirectionByte
+        self.entersRoamInitialization = entersRoamInitialization
+    }
+}
+
+public enum OriginalMarketPeddlerAllocationTail {
+    public static let allocatorAddress: UInt32 = 0x004EA050
+    public static let roamInitializationAddress: UInt32 = 0x004E6A70
+    public static let figureActiveOffset = 0x40
+    public static let figureParentMarketOffset = 0x62
+    public static let figureDirectionOffset = 0x1A
+    public static let marketDirectionOffset = 0x0E
+
+    /// Replays only the post-allocation writes in `FUN_00543ED0`. The market
+    /// direction expression uses the source's signed-byte read before the
+    /// unsigned `+ 4` and `& 7`; this matters for raw values such as `0xFF`.
+    /// A failed allocator result leaves every destination untouched.
+    public static func resolve(
+        allocationSucceeded: Bool,
+        marketRegistryID: Int,
+        oldMarketDirectionByte: Int
+    ) -> OriginalMarketPeddlerAllocationTailResult {
+        guard allocationSucceeded else {
+            return .init(
+                allocationSucceeded: false,
+                figureActiveByte: nil,
+                figureParentMarketID: nil,
+                marketDirectionByte: nil,
+                figureDirectionByte: nil,
+                entersRoamInitialization: false
+            )
+        }
+
+        let signedDirection = Int(Int8(truncatingIfNeeded: oldMarketDirectionByte))
+        let nextDirection = (signedDirection + 4) & 7
+        return .init(
+            allocationSucceeded: true,
+            figureActiveByte: 1,
+            figureParentMarketID: Int(Int16(truncatingIfNeeded: marketRegistryID)),
+            marketDirectionByte: nextDirection,
+            figureDirectionByte: nextDirection,
+            entersRoamInitialization: true
+        )
+    }
+}
+
 /// The peddler-link storage returned by the market's generic `+0x1E8`
 /// accessor.  This is deliberately kept separate from the six contiguous
 /// 16-byte commodity records at `market+0x154`: the accessor body

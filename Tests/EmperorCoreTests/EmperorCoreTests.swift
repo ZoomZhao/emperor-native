@@ -11527,6 +11527,43 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(matcher(0x100, 12, 12, 14, 16), 0x100)
     }
 
+    func testOriginalMarketPeddlerAllocationTailWritesOnlyAfterLiveFigure() {
+        let tail = OriginalMarketPeddlerAllocationTail.self
+        let failed = tail.resolve(
+            allocationSucceeded: false,
+            marketRegistryID: 9,
+            oldMarketDirectionByte: 3
+        )
+        XCTAssertEqual(failed, .init(
+            allocationSucceeded: false,
+            figureActiveByte: nil,
+            figureParentMarketID: nil,
+            marketDirectionByte: nil,
+            figureDirectionByte: nil,
+            entersRoamInitialization: false
+        ))
+
+        let succeeded = tail.resolve(
+            allocationSucceeded: true,
+            marketRegistryID: 9,
+            oldMarketDirectionByte: 3
+        )
+        XCTAssertEqual(succeeded.figureActiveByte, 1)
+        XCTAssertEqual(succeeded.figureParentMarketID, 9)
+        XCTAssertEqual(succeeded.marketDirectionByte, 7)
+        XCTAssertEqual(succeeded.figureDirectionByte, 7)
+        XCTAssertTrue(succeeded.entersRoamInitialization)
+
+        let signedByte = tail.resolve(
+            allocationSucceeded: true,
+            marketRegistryID: 0xFFFF,
+            oldMarketDirectionByte: 0xFF
+        )
+        XCTAssertEqual(signedByte.figureParentMarketID, -1)
+        XCTAssertEqual(signedByte.marketDirectionByte, 3)
+        XCTAssertEqual(signedByte.figureDirectionByte, 3)
+    }
+
     func testOriginalMarketPeddlerWorkerRatioAndStockGateMatchRecoveredArithmetic() {
         XCTAssertEqual(
             OriginalMarketCatalog.peddlerWorkerPercent(

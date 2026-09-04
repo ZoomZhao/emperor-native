@@ -6736,3 +6736,41 @@ fail-closed at those unresolved boundaries.
 **Evidence class:** **confirmed** for slot comparison order, raw unknown-type
 return, and EN/CH parity; **unknown** for provider registry population,
 route/coverage, commodity projection, and household settlement.
+
+## 2026-09-05 cMarket model-23 allocation tail is success-gated
+
+The final branch of `FUN_00543ED0 @ 0x543ED0` is now separated from the
+unresolved route and provider projection. After the wrapper has reset cMarket
+`+0x36` and called `FUN_00544910`, it calls
+`FUN_004EA050(..., model 0x17, ...)`. Only a non-zero allocator handle enters
+the tail: `FUN_0047F1B0` resolves the new figure, figure `+0x40` is set to
+`1`, the market method at `+0x50` receives the handle, figure `+0x62` receives
+the signed-short market registry value from market `+0x2D`, and the market
+direction byte `+0x0E` is advanced by `(signed old byte + 4) & 7`. The same
+direction is copied to figure `+0x1A`, then `FUN_004E6A70` is entered. A zero
+allocator handle performs none of these writes, so threshold crossing alone
+does not rotate the market or initialize a figure.
+
+`OriginalMarketPeddlerAllocationTail.resolve` records the raw success/failure
+boundary, signed-short parent-ID truncation, signed-byte direction arithmetic,
+and the final roam-initialization edge as a pure result. It is intentionally
+not wired to Native peddler allocation: the allocator registry handle, market
+`+0x50` registration side effect, selected endpoint, route buffer, and
+household settlement remain unresolved. The focused regression
+`testOriginalMarketPeddlerAllocationTailWritesOnlyAfterLiveFigure` covers both
+the no-write failure path and the success/write path, including raw `0xFF`
+direction and `0xFFFF` parent values.
+
+**Sources:** canonical English executable SHA-256
+`8a6d2df1015cb75d797546d117da5f82b86fd08726090c2a13d853b9009d6753`, Chinese
+executable SHA-256
+`dbdeca1ec2720f2387e1673bfbb901e9bad832179355ea897cfa7536e17ac15a`,
+`local/source/split-merged/code/0x050000/FUN_00543ed0.c`,
+`FUN_00544910.c`, `FUN_004e6a70.c`, `local/source/compare-report.tsv` rows
+`0x543ED0`, `0x544910`, and `0x4E6A70`, and
+`Sources/EmperorCore/MarketSimulation.swift`.
+
+**Evidence class:** **confirmed** for allocator-success ordering, offsets,
+signed truncation, direction update, and EN/CH parity; **unknown** for
+allocator-handle registry ownership, market registration contents, endpoint /
+route consumption, coverage, and settlement.
