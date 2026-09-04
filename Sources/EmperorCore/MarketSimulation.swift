@@ -1401,6 +1401,11 @@ public enum OriginalMarketCreationBoundaryCatalog {
     public static let initializerAddress: UInt32 = 0x005428B0
     public static let wrapperAddress: UInt32 = 0x00544220
     public static let eventMethodAddress: UInt32 = 0x005451A0
+    /// The canonical cMarket vtable begins at `0x007B6F3C`; its first word
+    /// is the event/creation method above in both EN and CH PEs.
+    public static let marketVTableAddress: UInt32 = 0x007B6F3C
+    public static let eventMethodVTableByteOffset: UInt32 = 0
+    public static let eventMethodPointerFileOffset: UInt32 = 0x003B703C
 
     public static let commonMarketBuildingID = 59
     public static let grandMarketBuildingID = 60

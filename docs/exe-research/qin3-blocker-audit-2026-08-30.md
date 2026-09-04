@@ -2671,18 +2671,26 @@ with registered Empty Shop/provider children from the recovered map-load path.
 Native records this boundary in `OriginalMarketCreationBoundaryCatalog` and
 keeps Qin provider/settlement fail-closed.
 
+As a class-identity cross-check, a raw little-endian pointer scan of both
+hash-matched PE files finds the `FUN_005451A0` pointer exactly once, at file
+offset `0x003B703C`, corresponding to the first word of the cMarket vtable at
+`0x007B6F3C`. EN and CH contain the same word and surrounding vtable row. This
+confirms the method's cMarket vtable placement, but does not recover an
+indirect caller or a map-load promotion edge.
+
 **Sources:** `local/source/split-merged/code/0x050000/FUN_005428B0.c`,
 `FUN_00544220.c`, `FUN_005451A0.c`,
 `local/source/split-merged/code/0x040000/FUN_004AFE60.c`,
 `FUN_0052F030.c`, `FUN_0052F1D0.c`, `FUN_0053D100.c`,
 `GameData/Model/EmperorBuildingModels.txt` rows 59–71, and the identical
-EN/CH rows in `local/source/compare-report.tsv` for `0x5428B0` and `0x5451A0`.
+EN/CH rows in `local/source/compare-report.tsv` for `0x5428B0` and `0x5451A0`,
+plus direct PE `.rdata` pointer reads at `0x007B6F3C`.
 
 **Evidence class:** **confirmed** for the explicit-mode branch, child model
-IDs, offsets, direct caller chain, and absence from the direct map-load
-sequence; **unknown** for indirect vtable dispatch, the exact event that
-supplies the source layout/coordinates, provider registry population after
-creation, route endpoints, and Qin house/market settlement.
+IDs, offsets, direct caller chain, cMarket vtable placement, and absence from
+the direct map-load sequence; **unknown** for indirect vtable dispatch, the
+exact event that supplies the source layout/coordinates, provider registry
+population after creation, route endpoints, and Qin house/market settlement.
 
 ## 2026-09-03 phase-0x21 entertainment decay keeps provider eligibility explicit (confirmed boundary)
 

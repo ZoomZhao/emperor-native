@@ -12191,6 +12191,18 @@ final class EmperorCoreTests: XCTestCase {
             0x005451A0
         )
         XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.marketVTableAddress,
+            0x007B6F3C
+        )
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.eventMethodVTableByteOffset,
+            0
+        )
+        XCTAssertEqual(
+            OriginalMarketCreationBoundaryCatalog.eventMethodPointerFileOffset,
+            0x003B703C
+        )
+        XCTAssertEqual(
             OriginalMarketCreationBoundaryCatalog.initializerDirectCallerAddresses,
             [0x00544220]
         )
