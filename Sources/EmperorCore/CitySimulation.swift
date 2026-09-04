@@ -2141,7 +2141,22 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
             primaryPassability: grids.primaryPassability,
             seed: entry
         )
-        let occupiedPoints = occupiedBuildingPoints
+        var occupiedBuildingIDsByPoint: [GridPoint: Set<Int>] = [:]
+        func recordOccupied(_ buildingID: Int, points: [GridPoint]) {
+            for point in points {
+                occupiedBuildingIDsByPoint[point, default: []].insert(buildingID)
+            }
+        }
+        for house in houses {
+            guard let origin = house.location else { continue }
+            let buildingID = house.houseLevelID + 3
+            let footprint = OriginalBuildingFootprintCatalog.footprint(forBuildingID: 2)
+                ?? BuildingFootprint(width: 2, height: 2)
+            recordOccupied(buildingID, points: footprint.points(at: origin))
+        }
+        for placement in placedBuildings {
+            recordOccupied(placement.buildingID, points: placement.occupiedPoints)
+        }
 
         func inBounds(_ point: GridPoint) -> Bool {
             point.x >= 0 && point.x < width && point.y >= 0 && point.y < height
@@ -2156,8 +2171,9 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
                   footprint.width == footprint.height else { continue }
 
             // A perimeter cell with source bit 0x8 enters the object-vtable
-            // callback path in FUN_004BA6F0. Until that registry/adjustment is
-            // recovered, do not claim a refresh for this house.
+            // callback path in FUN_004BA6F0. Only directly catalogued ordinary
+            // object classes may continue; unresolved registry/Way adjustment
+            // cases remain rejected.
             let perimeter = OriginalMultipartMonumentRoutingCatalog
                 .roadAccessOffsets(footprintSide: footprint.width)
             let perimeterIsResolved = perimeter.allSatisfy { offset in
@@ -2166,7 +2182,14 @@ public struct DeterministicCityState: Sendable, Equatable, Codable {
                     y: location.y + offset.y
                 )
                 guard inBounds(point) else { return false }
-                guard !occupiedPoints.contains(point) else { return false }
+                if let objectIDs = occupiedBuildingIDsByPoint[point] {
+                    guard objectIDs.count == 1,
+                          let objectID = objectIDs.first,
+                          OriginalGrandCanalLayoutCatalog
+                              .HouseAccessPerimeterObjectCatalog
+                              .ordinaryObjectPathDecision(forBuildingID: objectID) == true
+                    else { return false }
+                }
                 let raw = rawTerrain[point.y * width + point.x]
                 return raw & 0x8 == 0
             }

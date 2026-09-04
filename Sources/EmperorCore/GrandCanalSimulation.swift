@@ -1792,6 +1792,36 @@ public enum OriginalGrandCanalLayoutCatalog {
         }
     }
 
+    /// Perimeter-object cases whose `FUN_004BA6F0` virtual callback chain is
+    /// directly recovered. `true` means the ordinary object path may continue
+    /// to the road/terrain admission test; `false` is a confirmed rejection;
+    /// `nil` keeps unresolved registry/model or Way-offset cases fail-closed.
+    public enum HouseAccessPerimeterObjectCatalog {
+        /// Base/HouseBldg, Qin production `39...41`, Warehouse, Well,
+        /// Inspector, and the archived Ruin all share `+0xE4 → 0x416A60`,
+        /// `+0x190 → 0x426D30`, and `+0x194 → 0x426D50`; their ordinary
+        /// object path has no Way adjustment and is admitted when the
+        /// subsequent terrain bits pass.
+        public static let ordinaryNoAdjustmentBuildingIDs: Set<Int> =
+            Set(3...17).union([39, 40, 41, 54, 72, 124, 161])
+
+        public static func ordinaryObjectPathDecision(forBuildingID buildingID: Int)
+            -> Bool?
+        {
+            if ordinaryNoAdjustmentBuildingIDs.contains(buildingID) {
+                return true
+            }
+            if buildingID == 126 ||
+                OriginalGrandCanalLayoutCatalog.RoutingModelPredicateCatalog
+                    .isPostSecondaryModel(buildingID) {
+                return false
+            }
+            // Grand/Imperial Way (111/113) enters the unresolved auxiliary
+            // direction-byte adjustment and must not be treated as ordinary.
+            return nil
+        }
+    }
+
     /// Exact output domain and authored building-ID branches recovered from
     /// `FUN_005223B0`. Names remain structural where the original vtable
     /// predicate has not yet been given a player-facing semantic meaning.

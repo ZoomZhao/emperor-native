@@ -26,6 +26,20 @@ final class GrandCanalSimulationTests: XCTestCase {
         XCTAssertEqual(Catalog.genericFootprintPredicate(forBuildingID: 126), false)
     }
 
+    func testRecoveredHousePerimeterObjectCasesRemainNarrow() {
+        typealias Catalog = OriginalGrandCanalLayoutCatalog.HouseAccessPerimeterObjectCatalog
+        for buildingID in [3, 40, 54, 72, 124, 161] {
+            XCTAssertEqual(
+                Catalog.ordinaryObjectPathDecision(forBuildingID: buildingID),
+                true,
+                "ordinary callback chain should continue for \(buildingID)"
+            )
+        }
+        XCTAssertEqual(Catalog.ordinaryObjectPathDecision(forBuildingID: 126), false)
+        XCTAssertNil(Catalog.ordinaryObjectPathDecision(forBuildingID: 111))
+        XCTAssertNil(Catalog.ordinaryObjectPathDecision(forBuildingID: 130))
+    }
+
     func testRoutingBuildersUseRecoveredFootprintCatalogWhenCellOmitsPredicate() throws {
         // Warehouse 54 is one of the classes whose live-object `+0xCC`
         // callback is directly recovered as constant false.  A caller that

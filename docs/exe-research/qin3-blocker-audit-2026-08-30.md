@@ -6164,3 +6164,29 @@ object no-adjustment behavior, Way adjustment formula, and EN/CH parity;
 **diagnostic/inferred** for the Native probe result; **unknown** for object
 registry ownership, per-cell object projection, and the remaining migration
 writer/arrival semantics.
+
+## 2026-09-04 Narrow Native perimeter projection for confirmed ordinary objects
+
+The callback closure above permits a limited Native improvement without
+pretending that `DAT_00FC3750` has been recovered. `CitySimulation` now keeps a
+per-cell set of authored building IDs while refreshing house access. A
+perimeter cell occupied by exactly one directly catalogued ordinary class
+(`3...17`, `39...41`, `54`, `72`, `124`, or `161`) is allowed to continue to
+the source terrain-bit test, matching the confirmed `+0xE4`/`+0x190` ordinary
+callback path. Overlaps, unknown classes, Road Block `126`, post-secondary
+classes, and Grand/Imperial Way `111/113` remain rejected. The old blanket
+`occupiedBuildingPoints` rejection is therefore removed only for this explicit
+set; no global `0x8` admission or inferred model registry is introduced.
+
+The pure `HouseAccessPerimeterObjectCatalog` regression asserts the positive
+set, Road Block rejection, and unresolved Way/City Gate nil cases. With the
+temporary supported-producer switch, the same Qin1 replay still completes; the
+switch and all diagnostics were removed afterward. This verifies that the
+narrow projection does not regress the fixture, but it remains Native-only
+diagnostic evidence and does not authorize enabling the original automatic
+migration producer.
+
+**Evidence class:** **confirmed** for the selected building-ID callback cases
+and fail-closed decisions; **diagnostic** for replay completion; **unknown** for
+the runtime object-registry owner, unlisted class/model mapping, Way auxiliary
+layer, and arrival writer.
