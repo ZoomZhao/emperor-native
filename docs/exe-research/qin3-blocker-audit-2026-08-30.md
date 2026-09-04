@@ -7360,3 +7360,49 @@ row `0x48CE90`; `FUN_0048DF30.c`, `FUN_0048F420.c`, `FUN_004EA050.c`,
 manager status branches, return byte, wrapped progress arithmetic, and EN/CH
 parity; **unknown** for allocator ownership, selector semantics, archive-side
 specialization, provider registry timing, route/collision, and settlement.
+
+## 2026-09-05 Entertainment schools enter the shared phase-0x24 provider update
+
+The three entertainment-school vtables use the same provider update callback
+as the recovered Well-family provider. Direct little-endian reads from both
+canonical PE images resolve the following words:
+
+| school | vtable | `+0x218` | `+0x21C` | `+0x220` | `+0x228` |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Music School (211) | `0x007ACEDC` | `0x0051CEC0` | `0x004E1C20` | `0x004E1C20` | `0x0051CE70` |
+| Acrobat School (212) | `0x007AD140` | `0x0051CEC0` | `0x004E1C20` | `0x004E1C20` | `0x0051CE70` |
+| Drama School (213) | `0x007AD3A4` | `0x0051CEC0` | `0x004E1C20` | `0x004E1C20` | `0x0051CE70` |
+
+`FUN_00517AD0 @ 0x517AD0` is entered by calendar phase `0x24` and calls
+virtual `+0x218` after the shared global gate and object `+0xB8` eligibility
+check. Therefore an already-instantiated school object reaches
+`FUN_0051CEC0 @ 0x51CEC0` in stored provider-vector order. That callback
+looks up a threshold with `FUN_0044CC50(modelID, 10)`, compares the provider's
+appeal-buffer value through `+0x1F8`, and uses `+0x228` (`FUN_0051CE70`) to
+guard the mode-0/mode-1 transition before invoking the class-specific
+`+0x21C`/`+0x220` action slot. For all three schools those action slots point
+to the shared no-op body `FUN_004E1C20`; the callback still ends in the common
+`+0x100` update call. The `0x51CEC0` body is 0xD0 bytes with SHA-256
+`d96fe497e542f227e032cf3a86b3c5239437ff9c44e19ca9fa6fc676774167a7` in both
+EN and CH images, and the compare report marks `0x517AD0`, `0x51CE70`, and
+`0x51CEC0` `identical`.
+
+`EntertainmentSchoolStateDescriptor` now records these phase-0x24 callback
+addresses and threshold lookup fields, with a focused regression preserving
+the exact slot words. This closes the school scheduler dispatch boundary but
+does not establish the serialized provider vector, archive-side class
+specialization, appeal-buffer writer, or school-to-house settlement. Qin
+music remains fail-closed until those projection edges are recovered.
+
+**Sources:** direct EN/CH PE vtable words at `0x007ACEDC`, `0x007AD140`, and
+`0x007AD3A4` (offsets `+0x218`, `+0x21C`, `+0x220`, `+0x228`);
+`local/source/split-merged/code/0x040000/FUN_004AC2B0.c`,
+`local/source/split-merged/code/0x050000/FUN_00517AD0.c`,
+`FUN_0051CEC0.c`, `FUN_0051CE70.c`, `FUN_004E1C20.c`,
+`local/source/compare-report.tsv`; `Sources/EmperorCore/HousingEvolution.swift`;
+and `testEntertainmentSchoolsSharePhase24ProviderUpdateCallback`.
+
+**Evidence class:** **confirmed** for school vtable slot targets, phase-0x24
+dispatch order, threshold lookup call, shared guard/no-op bodies, and EN/CH
+parity; **unknown** for provider-vector ownership, appeal-buffer production,
+archive specialization, registry projection, route/collision, and settlement.

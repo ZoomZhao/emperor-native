@@ -2552,6 +2552,11 @@ public enum OriginalResidentialServiceCatalog {
         public let resetByteOffsets: [Int]
         public let totalByteOffset: Int
         public let globalUpdateAddress: UInt32
+        public let phase24UpdateCallbackAddress: UInt32
+        public let phase24GuardCallbackAddress: UInt32
+        public let phase24ActionCallbackAddresses: [UInt32]
+        public let phase24ThresholdLookupAddress: UInt32
+        public let phase24ThresholdFieldIndex: Int
 
         public init(
             schoolModelIDs: [Int],
@@ -2562,7 +2567,12 @@ public enum OriginalResidentialServiceCatalog {
             resetWordOffsets: [Int],
             resetByteOffsets: [Int],
             totalByteOffset: Int,
-            globalUpdateAddress: UInt32
+            globalUpdateAddress: UInt32,
+            phase24UpdateCallbackAddress: UInt32,
+            phase24GuardCallbackAddress: UInt32,
+            phase24ActionCallbackAddresses: [UInt32],
+            phase24ThresholdLookupAddress: UInt32,
+            phase24ThresholdFieldIndex: Int
         ) {
             self.schoolModelIDs = schoolModelIDs
             self.vtableAddresses = vtableAddresses
@@ -2573,6 +2583,11 @@ public enum OriginalResidentialServiceCatalog {
             self.resetByteOffsets = resetByteOffsets
             self.totalByteOffset = totalByteOffset
             self.globalUpdateAddress = globalUpdateAddress
+            self.phase24UpdateCallbackAddress = phase24UpdateCallbackAddress
+            self.phase24GuardCallbackAddress = phase24GuardCallbackAddress
+            self.phase24ActionCallbackAddresses = phase24ActionCallbackAddresses
+            self.phase24ThresholdLookupAddress = phase24ThresholdLookupAddress
+            self.phase24ThresholdFieldIndex = phase24ThresholdFieldIndex
         }
     }
 
@@ -2585,7 +2600,12 @@ public enum OriginalResidentialServiceCatalog {
         resetWordOffsets: [0x4E, 0x50, 0x52, 0x54],
         resetByteOffsets: [0x5D, 0x5E, 0x5F],
         totalByteOffset: 0x5C,
-        globalUpdateAddress: 0x0051CCA0
+        globalUpdateAddress: 0x0051CCA0,
+        phase24UpdateCallbackAddress: 0x0051CEC0,
+        phase24GuardCallbackAddress: 0x0051CE70,
+        phase24ActionCallbackAddresses: [0x004E1C20, 0x004E1C20],
+        phase24ThresholdLookupAddress: 0x0044CC50,
+        phase24ThresholdFieldIndex: 10
     )
 
     public static func entertainmentVenueLifecycleDescriptor(

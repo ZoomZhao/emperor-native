@@ -6758,6 +6758,23 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(descriptor.globalUpdateAddress, 0x0051CCA0)
     }
 
+    func testEntertainmentSchoolsSharePhase24ProviderUpdateCallback() {
+        let descriptor = OriginalResidentialServiceCatalog
+            .entertainmentSchoolStateDescriptor
+
+        // Direct EN/CH vtable reads show the same +0x218 update callback and
+        // +0x228 guard for all three school classes. Their +0x21C/+0x220
+        // action slots both point at the executable no-op body.
+        XCTAssertEqual(descriptor.phase24UpdateCallbackAddress, 0x0051CEC0)
+        XCTAssertEqual(descriptor.phase24GuardCallbackAddress, 0x0051CE70)
+        XCTAssertEqual(
+            descriptor.phase24ActionCallbackAddresses,
+            [0x004E1C20, 0x004E1C20]
+        )
+        XCTAssertEqual(descriptor.phase24ThresholdLookupAddress, 0x0044CC50)
+        XCTAssertEqual(descriptor.phase24ThresholdFieldIndex, 10)
+    }
+
     func testEntertainmentAreaSelectionPreservesRotatingVectorOrderAndGates() {
         let providers = [
             OriginalResidentialServiceCatalog.EntertainmentAreaSelectionInput(
