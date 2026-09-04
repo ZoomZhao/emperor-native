@@ -6862,3 +6862,40 @@ executable SHA-256
 signed truncation, direction update, and EN/CH parity; **unknown** for
 allocator-handle registry ownership and resolved object, live registry
 population, endpoint / route consumption, coverage, and settlement.
+
+## 2026-09-05 cMarket shop removal is gated before quantity mutation
+
+`FUN_00544B30 @ 0x544B30` is the source boundary for removing a selected
+market shop. Its first three checks are strict early returns: market status
+byte `+0x01` equal to `2` or `6`, a null child link at `child+0x158`, or a
+negative child bay ordinal at `child+0x150`. Only after those checks does the
+function call the market ordinal callback and subtract the selected provider
+row's capacity (`800` when the row flag at `+0x18` is zero, otherwise `400`),
+clamping the raw quantity to zero. It then clears the child state byte and
+creates an Empty Shop model `0x3E` (GameData building ID `62`) at the former
+coordinates, preserving the market registry ID and bay ordinal in the new
+child. The later object-vector/provider callbacks are not a recovered Native
+provider projection.
+
+Native now records the admission and known quantity result in
+`OriginalMarketShopRemovalBoundary.remove(...)`. Invalid raw quantities or
+the Empty Shop model return `nil`; source early returns return an explicit
+non-admitted result without synthesizing mutation. The helper is research-only
+and is not wired to the live Qin market path because object-vector removal,
+provider record ownership, route/coverage, and household settlement remain
+unresolved.
+
+**Sources:** canonical English executable SHA-256
+`8a6d2df1015cb75d797546d117da5f82b86fd08726090c2a13d853b9009d6753`, Chinese
+executable SHA-256
+`dbdeca1ec2720f2387e1673bfbb901e9bad832179355ea897cfa7536e17ac15a`,
+`local/source/split-merged/code/0x050000/FUN_00544b30.c`,
+`FUN_00540f80.c`, `FUN_005428b0.c`, `local/source/compare-report.tsv` row
+`0x544B30`, `GameData/Model/EmperorBuildingModels.txt` (building IDs 59–62),
+and `Sources/EmperorCore/MarketSimulation.swift` with
+`testOriginalMarketShopRemovalBoundaryPreservesSourceEarlyReturns`.
+
+**Evidence class:** **confirmed** for the early-return order, status values,
+link/ordinal offsets, 400/800 subtraction and clamp, Empty Shop model ID, and
+replacement-field writes; **unknown** for indirect callback effects, provider
+registry ownership, route/coverage, and household settlement.

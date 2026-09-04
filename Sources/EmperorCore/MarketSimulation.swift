@@ -1388,6 +1388,73 @@ public enum OriginalMarketRuntimeShopBinding {
     }
 }
 
+/// Raw admission and quantity result for the cMarket shop-removal path
+/// (`FUN_00544B30 @ 0x544B30`).  The source returns before touching the
+/// provider record when the market status byte is `2` or `6`, when the child
+/// has no parent-link object, or when its bay ordinal is negative.  A
+/// successful path subtracts the selected row's 400/800 capacity and clamps
+/// the raw quantity at zero.  The subsequent object-vector removal and
+/// Empty-Shop recreation are intentionally represented as flags only: their
+/// registry callbacks are not a Native provider projection.
+public struct OriginalMarketShopRemovalResult: Sendable, Hashable, Codable {
+    public let admitted: Bool
+    public let rawQuantityAfterRemoval: Int?
+    public let recreatesEmptyShop: Bool
+
+    public init(
+        admitted: Bool,
+        rawQuantityAfterRemoval: Int?,
+        recreatesEmptyShop: Bool
+    ) {
+        self.admitted = admitted
+        self.rawQuantityAfterRemoval = rawQuantityAfterRemoval
+        self.recreatesEmptyShop = recreatesEmptyShop
+    }
+}
+
+public enum OriginalMarketShopRemovalBoundary {
+    public static let sourceAddress: UInt32 = 0x00544B30
+    public static let blockedMarketStatusBytes: Set<Int> = [2, 6]
+    public static let parentLinkOffset: UInt32 = 0x158
+    public static let childBayOrdinalOffset: UInt32 = 0x150
+    public static let emptyShopBuildingID = 62
+
+    /// Replays the source's early-return order and its known raw quantity
+    /// write. `nil` is returned for malformed raw quantities or shop IDs; no
+    /// provider meaning is inferred from those words.
+    public static func remove(
+        marketStatusByte: Int,
+        parentLinkPresent: Bool,
+        childBayOrdinal: Int,
+        currentRawQuantity: Int,
+        shopBuildingID: Int
+    ) -> OriginalMarketShopRemovalResult? {
+        guard (0...255).contains(marketStatusByte),
+              currentRawQuantity >= 0,
+              let delta = OriginalMarketRuntimeShopBinding.rawCapacityDelta(
+                forShopBuildingID: shopBuildingID
+              ) else {
+            return nil
+        }
+
+        guard !blockedMarketStatusBytes.contains(marketStatusByte),
+              parentLinkPresent,
+              childBayOrdinal >= 0 else {
+            return .init(
+                admitted: false,
+                rawQuantityAfterRemoval: nil,
+                recreatesEmptyShop: false
+            )
+        }
+
+        return .init(
+            admitted: true,
+            rawQuantityAfterRemoval: max(0, currentRawQuantity - delta),
+            recreatesEmptyShop: true
+        )
+    }
+}
+
 /// The explicit cMarket creation boundary recovered from
 /// `FUN_005428B0 @ 0x5428B0` and its wrapper
 /// `FUN_00544220 @ 0x544220`.

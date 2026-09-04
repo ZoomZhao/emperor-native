@@ -12177,6 +12177,68 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testOriginalMarketShopRemovalBoundaryPreservesSourceEarlyReturns() throws {
+        let admitted = try XCTUnwrap(
+            OriginalMarketShopRemovalBoundary.remove(
+                marketStatusByte: 0,
+                parentLinkPresent: true,
+                childBayOrdinal: 2,
+                currentRawQuantity: 450,
+                shopBuildingID: 66
+            )
+        )
+        XCTAssertTrue(admitted.admitted)
+        XCTAssertEqual(admitted.rawQuantityAfterRemoval, 0)
+        XCTAssertTrue(admitted.recreatesEmptyShop)
+
+        for status in [2, 6] {
+            let result = try XCTUnwrap(
+                OriginalMarketShopRemovalBoundary.remove(
+                    marketStatusByte: status,
+                    parentLinkPresent: true,
+                    childBayOrdinal: 0,
+                    currentRawQuantity: 450,
+                    shopBuildingID: 66
+                )
+            )
+            XCTAssertFalse(result.admitted)
+            XCTAssertNil(result.rawQuantityAfterRemoval)
+            XCTAssertFalse(result.recreatesEmptyShop)
+        }
+
+        let missingParent = try XCTUnwrap(
+            OriginalMarketShopRemovalBoundary.remove(
+                marketStatusByte: 0,
+                parentLinkPresent: false,
+                childBayOrdinal: 0,
+                currentRawQuantity: 900,
+                shopBuildingID: 67
+            )
+        )
+        XCTAssertFalse(missingParent.admitted)
+
+        let negativeOrdinal = try XCTUnwrap(
+            OriginalMarketShopRemovalBoundary.remove(
+                marketStatusByte: 0,
+                parentLinkPresent: true,
+                childBayOrdinal: -1,
+                currentRawQuantity: 900,
+                shopBuildingID: 67
+            )
+        )
+        XCTAssertFalse(negativeOrdinal.admitted)
+
+        XCTAssertNil(
+            OriginalMarketShopRemovalBoundary.remove(
+                marketStatusByte: 0,
+                parentLinkPresent: true,
+                childBayOrdinal: 0,
+                currentRawQuantity: 900,
+                shopBuildingID: 62
+            )
+        )
+    }
+
     func testOriginalMarketCreationBoundaryKeepsMapLoadFailClosed() {
         XCTAssertEqual(
             OriginalMarketCreationBoundaryCatalog.creatingAddress,
