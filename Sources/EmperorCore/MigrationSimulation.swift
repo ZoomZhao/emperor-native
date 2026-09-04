@@ -58,6 +58,16 @@ public enum OriginalMigrationRequestProducerCatalog {
     /// lifecycle remain unresolved, so Qin does not invoke these addresses.
     public static let arrivalFigureWriterAddress: UInt32 = 0x004ADE10
     public static let departureFigureWriterAddress: UInt32 = 0x004ADED0
+    /// Complete direct relative-call sites to the figure/house assignment
+    /// helpers in both canonical PE `.text` sections.  These are metadata
+    /// only; constructor inputs and arrival settlement remain unresolved.
+    public static let arrivalFigureWriterDirectCallSites: [UInt32] = [
+        0x004ADB04, 0x004ADB18, 0x004ADB92,
+        0x004ADBA6, 0x004ADC1C, 0x004ADC2F,
+    ]
+    public static let departureFigureWriterDirectCallSites: [UInt32] = [
+        0x004ADD04, 0x004ADD12,
+    ]
     public static let arrivalFigureTypeID = 0x0B
     public static let departureFigureTypeID = 0x0C
     public static let assignmentFigureStateOffset = 0x40

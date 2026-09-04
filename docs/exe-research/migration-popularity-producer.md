@@ -10153,3 +10153,46 @@ source-address/base/stride; **confirmed negative** for another direct `E8`
 caller and for direct monthly-popularity/migration-handoff callers;
 **unknown** for indirect/table dispatch, object-vtable predicates, Native
 layer projection, and any provider/house/arrival settlement semantics.
+
+## 2026-09-04 Arrival/departure figure-writer direct edges are fully censused
+
+To tighten the final migration handoff boundary, both canonical PE `.text`
+sections were scanned for every relative `E8` whose target is the already
+identified arrival writer `FUN_004ADE10 @ 0x4ADE10` or departure writer
+`FUN_004ADED0 @ 0x4ADED0` (image base `0x00400000`).  EN and CH have identical
+callsite bytes and sets:
+
+| target | direct callsites | indexed caller |
+| --- | --- | --- |
+| `FUN_004ADE10 @ 0x4ADE10` | `0x004ADB04`, `0x004ADB18`, `0x004ADB92`, `0x004ADBA6`, `0x004ADC1C`, `0x004ADC2F` | `FUN_004ADA10 @ 0x4ADA10` |
+| `FUN_004ADED0 @ 0x4ADED0` | `0x004ADD04`, `0x004ADD12` | `FUN_004ADC90 @ 0x4ADC90` |
+
+The six arrival calls are the four source-house passes in
+`FUN_004ADA10`: a capped six-person batch, then a residual batch, with the
+same `house+0xB4` registry value and request context passed to the writer.
+The two departure calls are the corresponding capped/residual branches in
+`FUN_004ADC90`.  This census does not add a second producer: both writer
+families are reached only after the known daily assignment branches, and the
+writer bodies still depend on the unresolved live provider/house registry.
+
+No additional direct writer callsite exists in either canonical `.text`
+section.  This is a direct-call negative only; indirect/table dispatch is not
+ruled out.  Native records the callsite sets in
+`OriginalMigrationRequestProducerCatalog` but does not invoke the writers or
+project Qin archive rows into their inputs.  Automatic Qin migration remains
+fail-closed pending the object-vector/HouseBldg projection, provider/figure
+route, and arrival settlement.
+
+**Sources:** canonical `Exe/ghidra/input/EmperorEN.exe` and
+`EmperorCH.exe` complete relative-`E8` scans; indexed
+`local/source/split-merged/code/0x040000/FUN_004ADA10.c` and
+`FUN_004ADC90.c`, plus `FUN_004ADE10.c` and `FUN_004ADED0.c`;
+`compare-report.tsv` rows `0x4ADA10`, `0x4ADC90`, `0x4ADE10`, and
+`0x4ADED0`; and `Sources/EmperorCore/MigrationSimulation.swift` with
+`testOriginalMigrationRequestProducerCatalogMatchesSourceHandoff`.
+
+**Evidence class:** **confirmed** for the complete direct writer callsite
+sets, caller identity, branch batching visible in indexed source, and EN/CH
+parity; **confirmed negative** for another direct writer edge;
+**unknown** for indirect dispatch, registry projection, route construction,
+and arrival/departure settlement.
