@@ -2049,6 +2049,20 @@ public enum OriginalMarketResourceGroupCommodityMap {
     }
 }
 
+/// The final resource-group priority scan in `FUN_00544390 @ 0x544390`.
+/// Counts are visited from index zero through the executable's 27-entry
+/// scratch table; the first non-zero count wins and an all-zero table yields
+/// no selection. This is a raw priority index, not a commodity ordering.
+public enum OriginalMarketResourceGroupPriority {
+    public static let sourceAddress: UInt32 = 0x00544390
+    public static let groupCount = 0x1B
+
+    public static func firstNonZeroIndex(counts: [Int]) -> Int? {
+        guard counts.count <= groupCount else { return nil }
+        return counts.firstIndex(where: { $0 != 0 })
+    }
+}
+
 /// The cMarket `+0x25C` readiness predicate (`FUN_005D4900`). The caller
 /// supplies values read from the selected provider container: the slot count,
 /// the number of records for which `FUN_004B04F0` returned false, the matching

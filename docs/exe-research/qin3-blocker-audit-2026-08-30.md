@@ -7018,3 +7018,26 @@ settlement path.
 **Evidence class:** **confirmed** for all seven literal cases, the default
 sentinel, and EN/CH parity; **unknown** for the caller's provider-record
 population, storage semantics, cache projection, routing, and settlement.
+
+## 2026-09-05 cMarket final resource-group priority is first non-zero count
+
+`FUN_00544390 @ 0x544390` performs the final resource-group index lookup after
+candidate reduction. It scans the 27-entry scratch count table from index `0`
+upward and writes the first index whose count is non-zero. If all 27 counts are
+zero, it leaves the output unchanged, which is equivalent to no selected
+resource group. The routine has no commodity sort or distance comparison.
+
+`OriginalMarketResourceGroupPriority.firstNonZeroIndex(...)` preserves this
+ordered scan and rejects a synthetic table larger than the source's 27-entry
+domain. It is a raw priority primitive only; provider identity, route/cache
+projection, and settlement remain unresolved and Qin campaign behavior stays
+fail-closed.
+
+**Sources:** `local/source/split-merged/code/0x050000/FUN_00544390.c`,
+`local/source/compare-report.tsv` row `0x544390`, and
+`Sources/EmperorCore/MarketSimulation.swift` with
+`testOriginalMarketResourceGroupPriorityUsesFirstNonZeroAndTwentySevenSlotBound`.
+
+**Evidence class:** **confirmed** for the 27-slot scan, first-nonzero rule,
+and all-zero no-write behavior; **unknown** for the output consumer's provider
+registry, route construction, and household settlement.

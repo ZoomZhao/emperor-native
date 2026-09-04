@@ -11011,6 +11011,26 @@ final class EmperorCoreTests: XCTestCase {
         )
     }
 
+    func testOriginalMarketResourceGroupPriorityUsesFirstNonZeroAndTwentySevenSlotBound() {
+        XCTAssertEqual(
+            OriginalMarketResourceGroupPriority.firstNonZeroIndex(
+                counts: [0, 0, 4, 1]
+            ),
+            2
+        )
+        XCTAssertEqual(
+            OriginalMarketResourceGroupPriority.firstNonZeroIndex(
+                counts: Array(repeating: 0, count: 27)
+            ),
+            nil
+        )
+        XCTAssertNil(
+            OriginalMarketResourceGroupPriority.firstNonZeroIndex(
+                counts: Array(repeating: 1, count: 28)
+            )
+        )
+    }
+
     func testOriginalMarketProviderKeyAvailabilityPreservesDivisibilityAndCapacityGates() {
         XCTAssertFalse(
             OriginalMarketProviderKeyAvailability.isAvailable(
