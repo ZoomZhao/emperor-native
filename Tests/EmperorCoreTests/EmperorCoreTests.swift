@@ -6405,6 +6405,29 @@ final class EmperorCoreTests: XCTestCase {
         XCTAssertEqual(counts.theatrePavilion, 0)
     }
 
+    func testEntertainmentVenueSelectorPreservesRecoveredCandidateBoundary() {
+        let selector = OriginalResidentialServiceCatalog
+            .entertainmentVenueSelectorDescriptor
+        XCTAssertEqual(selector.selectorAddress, 0x0048A520)
+        XCTAssertEqual(selector.managerVectorAddress, 0x004F8210)
+        XCTAssertEqual(selector.managerCandidateBucketStart, 0x20)
+        XCTAssertEqual(selector.managerCandidateBucketEndExclusive, 0x60)
+        XCTAssertEqual(selector.managerCandidateBucketStride, 0x20)
+        XCTAssertEqual(selector.acceptedFigureStateRange, 0x20...0x22)
+        XCTAssertEqual(selector.globalGateAddress, 0x00426D10)
+        XCTAssertEqual(selector.admissionVTableOffset, 0x264)
+        XCTAssertEqual(selector.activeVTableOffset, 0x78)
+        XCTAssertEqual(selector.staffingVTableOffset, 0x1B4)
+        XCTAssertEqual(selector.capacityVTableOffset, 0x25C)
+        XCTAssertEqual(selector.targetVTableOffset, 0x1A4)
+        XCTAssertEqual(selector.registryIDObjectOffset, 0x2D)
+        XCTAssertEqual(selector.candidateWeightMultiplier, 2)
+        XCTAssertEqual(selector.chooserVTableOffset, 0xF0)
+        XCTAssertEqual(selector.weightedChooserAddress, 0x004E7FD0)
+        XCTAssertEqual(selector.registryLookupAddress, 0x0047F1B0)
+        XCTAssertEqual(selector.zeroResult, 0)
+    }
+
     func testOriginalEntertainmentProviderFactoryCatalogMatchesExecutableDispatch() {
         let expected: [(Int, OriginalResidentialServiceCatalog.EntertainmentProviderFactoryDescriptor.Family, UInt32, UInt32)] = [
             (211, .music, 0x0048A8E0, 0x007ACEDC),

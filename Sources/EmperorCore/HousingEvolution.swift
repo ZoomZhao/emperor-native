@@ -2459,6 +2459,97 @@ public enum OriginalResidentialServiceCatalog {
             providerLoadCallbackAddress: 0x0051CB80
         )
 
+    /// Input and candidate-table boundary of the entertainment venue selector
+    /// `FUN_0048A520`.  The selector is reached by an already-created venue
+    /// figure, not by generic map archive loading.  It scans the manager's
+    /// object vector in three 0x20-sized buckets, admits only figure state
+    /// bytes 0x20…0x22, and writes registry IDs/targets/weights into the
+    /// manager scratch arrays before invoking the caller's `+0xF0` chooser.
+    /// This is research metadata only: the provider registry object, its
+    /// candidate virtual methods, and the map/archive edge remain unresolved.
+    public struct EntertainmentVenueSelectorDescriptor: Sendable, Hashable, Codable {
+        public let selectorAddress: UInt32
+        public let managerVectorAddress: UInt32
+        public let managerCandidateBucketStart: Int
+        public let managerCandidateBucketEndExclusive: Int
+        public let managerCandidateBucketStride: Int
+        public let acceptedFigureStateRange: ClosedRange<Int>
+        public let globalGateAddress: UInt32
+        public let admissionVTableOffset: UInt32
+        public let activeVTableOffset: UInt32
+        public let staffingVTableOffset: UInt32
+        public let capacityVTableOffset: UInt32
+        public let targetVTableOffset: UInt32
+        public let registryIDObjectOffset: Int
+        public let candidateWeightMultiplier: Int
+        public let chooserVTableOffset: UInt32
+        public let weightedChooserAddress: UInt32
+        public let registryLookupAddress: UInt32
+        public let zeroResult: Int
+
+        public init(
+            selectorAddress: UInt32,
+            managerVectorAddress: UInt32,
+            managerCandidateBucketStart: Int,
+            managerCandidateBucketEndExclusive: Int,
+            managerCandidateBucketStride: Int,
+            acceptedFigureStateRange: ClosedRange<Int>,
+            globalGateAddress: UInt32,
+            admissionVTableOffset: UInt32,
+            activeVTableOffset: UInt32,
+            staffingVTableOffset: UInt32,
+            capacityVTableOffset: UInt32,
+            targetVTableOffset: UInt32,
+            registryIDObjectOffset: Int,
+            candidateWeightMultiplier: Int,
+            chooserVTableOffset: UInt32,
+            weightedChooserAddress: UInt32,
+            registryLookupAddress: UInt32,
+            zeroResult: Int
+        ) {
+            self.selectorAddress = selectorAddress
+            self.managerVectorAddress = managerVectorAddress
+            self.managerCandidateBucketStart = managerCandidateBucketStart
+            self.managerCandidateBucketEndExclusive = managerCandidateBucketEndExclusive
+            self.managerCandidateBucketStride = managerCandidateBucketStride
+            self.acceptedFigureStateRange = acceptedFigureStateRange
+            self.globalGateAddress = globalGateAddress
+            self.admissionVTableOffset = admissionVTableOffset
+            self.activeVTableOffset = activeVTableOffset
+            self.staffingVTableOffset = staffingVTableOffset
+            self.capacityVTableOffset = capacityVTableOffset
+            self.targetVTableOffset = targetVTableOffset
+            self.registryIDObjectOffset = registryIDObjectOffset
+            self.candidateWeightMultiplier = candidateWeightMultiplier
+            self.chooserVTableOffset = chooserVTableOffset
+            self.weightedChooserAddress = weightedChooserAddress
+            self.registryLookupAddress = registryLookupAddress
+            self.zeroResult = zeroResult
+        }
+    }
+
+    public static let entertainmentVenueSelectorDescriptor =
+        EntertainmentVenueSelectorDescriptor(
+            selectorAddress: 0x0048A520,
+            managerVectorAddress: 0x004F8210,
+            managerCandidateBucketStart: 0x20,
+            managerCandidateBucketEndExclusive: 0x60,
+            managerCandidateBucketStride: 0x20,
+            acceptedFigureStateRange: 0x20...0x22,
+            globalGateAddress: 0x00426D10,
+            admissionVTableOffset: 0x264,
+            activeVTableOffset: 0x78,
+            staffingVTableOffset: 0x1B4,
+            capacityVTableOffset: 0x25C,
+            targetVTableOffset: 0x1A4,
+            registryIDObjectOffset: 0x2D,
+            candidateWeightMultiplier: 2,
+            chooserVTableOffset: 0xF0,
+            weightedChooserAddress: 0x004E7FD0,
+            registryLookupAddress: 0x0047F1B0,
+            zeroResult: 0
+        )
+
     /// Venue object storage and post-load refresh shape recovered from the
     /// venue load/placement callbacks.  The offsets are raw object offsets;
     /// the auxiliary objects' semantic fields are not named here.  This is

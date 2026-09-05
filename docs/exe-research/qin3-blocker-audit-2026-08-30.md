@@ -7916,3 +7916,45 @@ chain; **unknown** for non-virtual/table-driven dispatch, the archive's
 provider identity/slot source, the specialization trigger, route/collision,
 coverage, and settlement.  Native remains fail-closed for Qin provider and
 entertainment projection.
+
+## 2026-09-05 `FUN_0048A520` is a post-creation venue selector, not an archive bridge
+
+The remaining entertainment hypothesis was narrowed to the selector used by
+the venue figure FSM.  The indexed body `FUN_0048A520 @ 0x48A520` first rejects
+figure state bytes outside the closed interval `0x20…0x22`.  It then scans the
+manager vector returned by `FUN_004F8210`, with bucket values `0x20`, `0x40`,
+and `0x60` (the loop uses `0x20` as the first value and stops before `0x60`).
+For each candidate, the global gate `FUN_00426D10(0)` must be open and the
+candidate's virtual methods at `+0x264`, `+0x78`, and `+0x1B4` must all pass;
+its `+0x1B4` result must be positive.  The candidate then supplies a capacity
+or weight through `+0x25C`, a target through `+0x1A4`, and a registry ID from
+raw object offset `+0x2D`.  The selector stores weight `n * 2`, calls the
+figure's `+0xF0` chooser, invokes `FUN_004E7FD0` for weighted selection, and
+resolves the chosen registry entry through `FUN_0047F1B0`.  Any failed gate,
+empty candidate table, or unsuccessful chooser returns zero.
+
+The canonical EN and CH PE images both contain the same direct call to this
+selector at `0x48AB0C` inside the raw entertainment figure FSM region
+`0x48A9A0…0x48AD1F`.  The generic map-loader chain has no direct call to
+`FUN_0048A520`; its `FUN_0052FDA0 → FUN_0042D790` path only constructs a base
+`Building` archive object and invokes the generic `+0xC0` callback.  The
+selector therefore proves the required *shape* of an already-populated venue
+manager, but it does not recover the archive provider identity, registry-slot
+assignment, route/collision admission, or house-settlement projection.
+
+Native records this boundary in
+`OriginalResidentialServiceCatalog.entertainmentVenueSelectorDescriptor` and
+tests every recovered offset and address.  The descriptor is metadata only;
+Qin music/acrobat/drama placement remains fail-closed until the missing
+provider-object and registry bridge is recovered.
+
+**Sources:** `local/source/split-merged/code/0x040000/FUN_0048a520.c`,
+canonical EN/CH PE bytes and call target at `0x48AB0C`, the raw FSM slice
+`0x48A9A0…0x48AD1F`, `FUN_00426D10.c`, `FUN_004E7FD0.c`,
+`FUN_0047F1B0.c`, and the focused regression in
+`Tests/EmperorCoreTests/EmperorCoreTests.swift`.
+
+**Evidence class:** **confirmed** for selector inputs, candidate offsets,
+bucket loop, weighted selection and EN/CH parity; **confirmed negative** for a
+generic map-loader call edge; **unknown** for archive-to-provider projection,
+registry population, route/collision, coverage, and settlement.
