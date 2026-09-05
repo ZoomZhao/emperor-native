@@ -4,7 +4,8 @@ set -eu
 PROJECT_ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 XCODE_DEVELOPER_DIR=${DEVELOPER_DIR:-/Applications/Xcode.app/Contents/Developer}
 DATA_ROOT="$PROJECT_ROOT/GameData"
-PLAYTHROUGH="$PROJECT_ROOT/Tests/EmperorGameplayTests/Xia1PlayerPlaythroughTests.swift"
+XIA1_PLAYTHROUGH="$PROJECT_ROOT/Tests/EmperorGameplayTests/Xia1PlayerPlaythroughTests.swift"
+XIA2_PLAYTHROUGH="$PROJECT_ROOT/Tests/EmperorGameplayTests/Xia2PlayerPlaythroughTests.swift"
 UI_HARNESS="$PROJECT_ROOT/Sources/EmperorNativeUISmoke/main.swift"
 DIRECTED_LOG=$(mktemp "${TMPDIR:-/tmp}/emperor-release-gate.XXXXXX")
 
@@ -19,7 +20,7 @@ if [ ! -d "$DATA_ROOT/DATA" ] || [ ! -d "$DATA_ROOT/Cities" ] || [ ! -d "$DATA_R
 fi
 
 BANNED_PATTERN='admitResidents|addHouse|receiveCampaignCommodityGift|CampaignGoalProgressSnapshot|assignedWorkers[[:space:]]*:[[:space:]]*[1-9]|houseLevelID[[:space:]]*=[^=]|serviceCoverage[[:space:]]*=[^=]|housingEvolutionEnabled|publicSafetyEnabled|\.outcome[[:space:]]*=[^=]'
-if rg -n "$BANNED_PATTERN" "$PLAYTHROUGH" "$UI_HARNESS"; then
+if grep -En "$BANNED_PATTERN" "$XIA1_PLAYTHROUGH" "$XIA2_PLAYTHROUGH" "$UI_HARNESS"; then
     echo 'release-gate: forbidden state injection found in player replay' >&2
     exit 65
 fi
@@ -35,8 +36,13 @@ if ! DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" swift test \
     cat "$DIRECTED_LOG"
     exit 1
 fi
+if ! DEVELOPER_DIR="$XCODE_DEVELOPER_DIR" swift test \
+    --filter Xia2PlayerPlaythroughTests >>"$DIRECTED_LOG" 2>&1; then
+    cat "$DIRECTED_LOG"
+    exit 1
+fi
 cat "$DIRECTED_LOG"
-if rg -i 'skipped|XCTSkip' "$DIRECTED_LOG"; then
+if grep -Ei 'skipped|XCTSkip' "$DIRECTED_LOG"; then
     echo 'release-gate: directed gameplay gate contained a skipped test' >&2
     exit 65
 fi

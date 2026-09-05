@@ -30,6 +30,16 @@ enum NativeBuildingSettingChange {
         commodityID: Int,
         policy: WarehouseCommodityPolicy
     )
+    case millPolicy(
+        millID: Int,
+        commodityID: Int,
+        policy: WarehouseCommodityPolicy
+    )
+    case millStorageLimit(
+        millID: Int,
+        commodityID: Int,
+        amount: Int
+    )
     case tradeEnabled(tradingBuildingID: Int, enabled: Bool)
 }
 
@@ -44,6 +54,10 @@ let mapSpriteArchiveDescriptors: [MapSpriteArchiveDescriptor] = [
     .init(baseName: "China_Elevation_dirt", globalImageBase: EmperorMap.chinaElevationDirtGlobalImageBase),
     .init(baseName: "China_Mon_GreatWall_1", globalImageBase: EmperorMap.chinaGreatWall1GlobalImageBase),
     .init(baseName: "China_Mon_Grand_Canal", globalImageBase: EmperorMap.chinaGrandCanalGlobalImageBase),
+    .init(
+        baseName: "China_Mon_Earthen_Greatwall_1",
+        globalImageBase: EmperorMap.chinaEarthenGreatWall1GlobalImageBase
+    ),
 ]
 
 struct DecodedMapSpriteArchive: Sendable {
@@ -170,6 +184,12 @@ struct RenderedMap {
         }?.vegetationSprites[localID]
     }
 
+    func terrainSprite(localImageID: Int) -> RenderedTerrainSprite? {
+        spriteArchives.first {
+            $0.globalImageBase == EmperorMap.chinaTerrainGlobalImageBase
+        }?.sprites[localImageID]
+    }
+
     func treeSprite(x: Int, y: Int) -> RenderedTerrainSprite? {
         let localID = 927 + abs(x &* 13 &+ y &* 29) % 18
         return spriteArchives.first {
@@ -223,6 +243,27 @@ enum LibrarySection: String, CaseIterable, Identifiable {
     var id: Self { self }
 }
 
+private enum ClassicPlayerAccountStore {
+    static let accountsKey = "EmperorNative.playerAccounts"
+    static let selectedKey = "EmperorNative.selectedPlayerAccount"
+
+    static func loadAccounts() -> [String] {
+        UserDefaults.standard.stringArray(forKey: accountsKey) ?? []
+    }
+
+    static func saveAccounts(_ accounts: [String]) {
+        UserDefaults.standard.set(accounts, forKey: accountsKey)
+    }
+
+    static func loadSelected() -> String? {
+        UserDefaults.standard.string(forKey: selectedKey)
+    }
+
+    static func saveSelected(_ name: String?) {
+        UserDefaults.standard.set(name, forKey: selectedKey)
+    }
+}
+
 @MainActor
 final class LibraryModel: ObservableObject {
     private struct AutosaveFingerprint: Equatable {
@@ -238,6 +279,12 @@ final class LibraryModel: ObservableObject {
     }
 
     @Published var state: State = .loading
+    // Classic FE entry precedes the campaign browser unless a UI-smoke harness
+    // asks to jump straight into the playable shell.
+    @Published var frontEndStage: ClassicFrontEndStage = LibraryModel.initialFrontEndStage
+    @Published var playerAccounts: [String] = ClassicPlayerAccountStore.loadAccounts()
+    @Published var selectedPlayerAccount: String? = ClassicPlayerAccountStore.loadSelected()
+    @Published var selectedDifficulty: GameDifficulty = .normal
     // Launch into the playable campaign browser. Map/model diagnostics remain
     // available, but are no longer the first thing a player sees.
     @Published var section: LibrarySection = .campaigns
@@ -256,6 +303,7 @@ final class LibraryModel: ObservableObject {
     @Published var campaignEmpireMap: CampaignEmpireMap?
     @Published var isResolvingCampaignEmpire = false
     @Published var cityNames: OriginalCityNameCatalog?
+    @Published var eventMessages: OriginalEventMessageCatalog?
     @Published var selectedMissionID: Int?
     @Published var activeMissionWorld: CampaignMissionWorldState?
     @Published var cityState: DeterministicCityState?
@@ -272,6 +320,7 @@ final class LibraryModel: ObservableObject {
     @Published var constructionTool: NativeConstructionTool = .inspect
     @Published var constructionOrientation: IsometricBuildingOrientation = .northSouth
     @Published var selectedAgriculturalCrop: AgriculturalCrop = .wheat
+    @Published private(set) var selectedTradePartnerID: Int?
     /// Empty means all surviving formations. Non-empty sets are controlled by
     /// clicking formation markers while the rally tool is active.
     @Published var selectedMilitaryUnitIDs: Set<Int> = []
@@ -282,7 +331,8 @@ final class LibraryModel: ObservableObject {
     /// Drives the auto-advance loop while `gameSpeed > 0`.
     private var speedTimerCancellable: AnyCancellable?
     @Published var renderedMap: RenderedMap?
-    @Published var buildingSprites: [Int: RenderedTerrainSprite] = [:]
+    @Published private(set) var isRenderingMap = false
+    @Published var buildingSprites: [BuildingSpriteReference: RenderedTerrainSprite] = [:]
     @Published var figureSprites: [FigureSpriteReference: RenderedTerrainSprite] = [:]
     @Published var interfaceSprites: [Int: RenderedTerrainSprite] = [:]
     /// Resource deposit overlays currently highlighted on the city canvas.
@@ -300,6 +350,60 @@ final class LibraryModel: ObservableObject {
     private var lastAutosaveFingerprint: AutosaveFingerprint?
     private var gameplayController: GameSessionController?
 
+    var dataSourceRoot: URL? {
+        if case let .loaded(source, _, _, _, _, _) = state {
+            return source.root
+        }
+        return nil
+    }
+
+    private static var initialFrontEndStage: ClassicFrontEndStage {
+        ProcessInfo.processInfo.arguments.contains(where: { $0.hasPrefix("--ui-smoke") })
+            ? .play
+            : .mainMenu
+    }
+
+    func createPlayerAccount(_ rawName: String) {
+        let name = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
+        if !playerAccounts.contains(name) {
+            playerAccounts.append(name)
+            ClassicPlayerAccountStore.saveAccounts(playerAccounts)
+        }
+        selectedPlayerAccount = name
+        ClassicPlayerAccountStore.saveSelected(name)
+        saveStatus = "已创建玩家帐号：\(name)"
+    }
+
+    func deleteSelectedPlayerAccount() {
+        guard let selected = selectedPlayerAccount else { return }
+        playerAccounts.removeAll { $0 == selected }
+        ClassicPlayerAccountStore.saveAccounts(playerAccounts)
+        selectedPlayerAccount = playerAccounts.first
+        ClassicPlayerAccountStore.saveSelected(selectedPlayerAccount)
+        saveStatus = "已删除玩家帐号：\(selected)"
+    }
+
+    func confirmSelectedPlayerAccount() {
+        guard let selected = selectedPlayerAccount else { return }
+        ClassicPlayerAccountStore.saveSelected(selected)
+        frontEndStage = .accountHome
+        saveStatus = "当前统治者：\(selected)"
+    }
+
+    func enterPlaySection(_ section: LibrarySection) {
+        self.section = section
+        frontEndStage = .play
+    }
+
+    func returnToClassicFrontEnd() {
+        frontEndStage = .accountHome
+        section = .campaigns
+        cityState = nil
+        selectedMissionID = nil
+        campaignRuntimeState = nil
+    }
+
     func load() {
         state = .loading
         Task.detached(priority: .userInitiated) {
@@ -312,9 +416,20 @@ final class LibraryModel: ObservableObject {
                 let cityNames = try OriginalCityNameCatalog(
                     contentsOf: source.root.appendingPathComponent("EmperorText.eng")
                 )
+                let eventMessages = try OriginalEventMessageCatalog(
+                    contentsOf: source.modelDirectory.appendingPathComponent("EmperorEventmsg.txt")
+                )
                 let campaigns = try CampaignCatalog.load(source)
+                let startsQinCampaign = ProcessInfo.processInfo.arguments.contains(
+                    "--ui-smoke-auto-start-qin"
+                ) || ProcessInfo.processInfo.arguments.contains(
+                    "--ui-smoke-auto-start-qin4"
+                )
+                let requestedCampaignFileName = startsQinCampaign
+                    ? "4 Qin Dynasty.pak"
+                    : "1 Xia Dynasty - Tutorials.pak"
                 let defaultCampaign = campaigns.first {
-                    $0.url.lastPathComponent == "1 Xia Dynasty - Tutorials.pak"
+                    $0.url.lastPathComponent == requestedCampaignFileName
                 } ?? campaigns.first
                 let gameplayController = try GameSessionController(source: source)
                 let probes = try catalog.maps.prefix(24).map { try MapProbe(url: $0.url) }
@@ -325,6 +440,7 @@ final class LibraryModel: ObservableObject {
                     self.cityState = Self.makeSampleCity(models: economy)
                     self.audioCatalog = audio
                     self.cityNames = cityNames
+                    self.eventMessages = eventMessages
                     self.gameplayController = gameplayController
                     self.state = .loaded(source, catalog, probes, models, economy, campaigns)
                     self.loadBuildingSprites(dataDirectory: source.dataDirectory)
@@ -339,9 +455,20 @@ final class LibraryModel: ObservableObject {
                         self.loadCampaignGoals(defaultCampaign)
                         self.loadCampaignEvents(defaultCampaign)
                         self.loadCampaignEmpire(defaultCampaign)
-                        if ProcessInfo.processInfo.arguments.contains("--ui-smoke-auto-start-xia"),
-                           let firstMission = defaultCampaign.missions.first {
-                            self.startMission(firstMission)
+                        if (
+                            ProcessInfo.processInfo.arguments.contains("--ui-smoke-auto-start-xia")
+                                || startsQinCampaign
+                        ) {
+                            // Test-only navigation still enters through the real campaign command;
+                            // it never patches the map or monument state used by the snapshot.
+                            let smokeMission = ProcessInfo.processInfo.arguments.contains(
+                                "--ui-smoke-auto-start-qin4"
+                            )
+                                ? defaultCampaign.missions.dropFirst(3).first
+                                : defaultCampaign.missions.first
+                            if let smokeMission {
+                                self.startMission(smokeMission)
+                            }
                         }
                     }
                     self.refreshSaveHistory()
@@ -361,7 +488,34 @@ final class LibraryModel: ObservableObject {
         }
     }
 
+    func beginMapMonument(buildingID: Int) {
+        if let controller = gameplayController,
+           controller.selectedCampaignID != nil,
+           controller.selectedMissionID == selectedMissionID {
+            let result = controller.perform(.beginMapMonument(buildingID: buildingID))
+            syncFromGameplayController()
+            saveStatus = result.message
+            return
+        }
+        guard var city = cityState,
+              city.beginMapMonument(buildingID: buildingID) != nil else {
+            saveStatus = "地图纪念碑不可用或已经开工"
+            return
+        }
+        cityState = city
+        saveStatus = "地图纪念碑 #\(buildingID) 已开工"
+    }
+
     func selectConstructionTool(_ tool: NativeConstructionTool) {
+        if tool != .tradingStation && tool != .tradingQuay {
+            selectedTradePartnerID = nil
+        }
+        if (tool == .tradingStation || tool == .tradingQuay),
+           selectedTradePartnerID == nil {
+            constructionTool = .inspect
+            saveStatus = "请先从商业菜单选择贸易城市"
+            return
+        }
         if let buildingID = tool.buildingID,
            let restriction = cityState?.campaignConstructionRestriction(
                forBuildingID: buildingID
@@ -372,7 +526,7 @@ final class LibraryModel: ObservableObject {
         }
         constructionTool = tool
         if let playerTool = playerConstructionTool(for: tool) {
-            if tool == .farmland {
+            if tool == .farmland || tool == .cropFarm {
                 _ = gameplayController?.perform(
                     .selectAgriculturalCrop(selectedAgriculturalCrop)
                 )
@@ -387,12 +541,21 @@ final class LibraryModel: ObservableObject {
             saveStatus = "清理树木：点击或拖动一片区域清除树木与灌木；右键取消"
         } else if tool == .road {
             saveStatus = "道路工具：在清地上点击或拖动铺路，每格使用原版造价；右键取消"
+        } else if tool == .roadblock {
+            saveStatus = "路障工具：放在既有道路上；阻止漫游人员，放行采购、运输和移民；右键取消"
+        } else if tool.marketShopBuildingID != nil {
+            // Market shops have no standalone footprint: they are installed
+            // inside an existing market square, so the generic
+            // "占地 X×Y，必须邻接道路" hint must not be shown.
+            saveStatus = "\(tool.title)：点击仍有空铺位的市场内部；同类商铺可以重复建造；右键取消"
         } else if tool == .rally {
             saveStatus = "部队集结：点击军队标记选择编队，再点击可通行地面下令；右键取消"
         } else if tool == .house {
             saveStatus = "住宅工具：点击建造 2×2 住宅，或拖动区域连续建造；右键取消"
+        } else if tool == .cropFarm {
+            saveStatus = "\(selectedAgriculturalCrop.localizedTitle)农场：在临路清地放置农场主体；建成后再选择农田"
         } else if tool == .farmland {
-            saveStatus = "\(selectedAgriculturalCrop.fieldTitle)：点击清地种植 1 格，须邻接道路；右键取消"
+            saveStatus = "\(selectedAgriculturalCrop.fieldTitle)：在同类农场耕作范围内点击或拖动种植；右键取消"
         } else if tool == .cityWall {
             saveStatus = "城墙：逐格建造；可跨过既有道路以便改建城门；右键取消"
         } else if tool == .gatehouse {
@@ -414,16 +577,43 @@ final class LibraryModel: ObservableObject {
             return
         }
         selectedAgriculturalCrop = crop
+        constructionTool = .cropFarm
+        _ = gameplayController?.perform(.selectAgriculturalCrop(crop))
+        _ = gameplayController?.perform(.selectConstruction(.cropFarm))
+        saveStatus = "\(crop.localizedTitle)农场：先在临路清地放置农场主体，再选择农田铺设田块"
+    }
+
+    func selectAgriculturalPlot(_ crop: AgriculturalCrop) {
+        guard cityState?.isAgriculturalCropAvailable(crop) ?? true else {
+            saveStatus = "\(crop.fieldTitle)：本关暂未开放"
+            return
+        }
+        selectedAgriculturalCrop = crop
         constructionTool = .farmland
         _ = gameplayController?.perform(.selectAgriculturalCrop(crop))
         _ = gameplayController?.perform(.selectConstruction(.farmland))
-        saveStatus = "\(crop.fieldTitle)：点击清地种植 1 格，须邻接道路；右键取消"
+        saveStatus = "\(crop.fieldTitle)：在同类农场耕作范围内点击或拖动种植；右键取消"
+    }
+
+    func selectTradePartner(_ partnerID: Int) {
+        guard let partner = cityState?.trade.partner(id: partnerID), partner.isOpen,
+              !((cityState?.trade.buildings.contains { $0.partnerID == partnerID }) ?? true),
+              cityState?.isBuildingAvailableInCampaign(partner.routeKind.buildingID) == true else {
+            selectedTradePartnerID = nil
+            constructionTool = .inspect
+            saveStatus = "该贸易城市当前不能修建新的贸易设施"
+            return
+        }
+        selectedTradePartnerID = partnerID
+        constructionTool = partner.routeKind == .land ? .tradingStation : .tradingQuay
+        saveStatus = "\(partner.name)：放置\(constructionTool.title)；右键取消"
     }
 
     func cancelCurrentInteraction() {
         let previousTool = constructionTool
         let hadMilitarySelection = !selectedMilitaryUnitIDs.isEmpty
         selectedMilitaryUnitIDs.removeAll()
+        selectedTradePartnerID = nil
 
         guard previousTool != .inspect else {
             if hadMilitarySelection {
@@ -460,11 +650,88 @@ final class LibraryModel: ObservableObject {
         guard case let .loaded(_, _, _, _, models, _) = state,
               var city = cityState else { return }
         let rules = EconomyRulesEngine(models: models)
+        if constructionTool == .tradingStation || constructionTool == .tradingQuay {
+            guard let partnerID = selectedTradePartnerID,
+                  let partner = city.trade.partner(id: partnerID),
+                  partner.routeKind.buildingID == constructionTool.buildingID else {
+                saveStatus = "请先从商业菜单选择贸易城市"
+                return
+            }
+            if let controller = gameplayController,
+               controller.selectedCampaignID != nil,
+               controller.selectedMissionID == selectedMissionID {
+                let result = controller.perform(.constructTradingBuilding(
+                    partnerID: partnerID,
+                    at: point,
+                    orientation: constructionOrientation
+                ))
+                syncFromGameplayController()
+                saveStatus = result.wasApplied
+                    ? "已为\(partner.name)建成\(constructionTool.title)"
+                    : "无法在此为\(partner.name)修建\(constructionTool.title)"
+                if result.wasApplied {
+                    selectedTradePartnerID = nil
+                    playOriginalBuildingSound(partner.routeKind.buildingID)
+                }
+                return
+            }
+            guard city.constructTradingBuilding(
+                partnerID: partnerID,
+                at: point,
+                orientation: constructionOrientation,
+                rules: rules
+            ) != nil else {
+                saveStatus = "无法在此为\(partner.name)修建\(constructionTool.title)"
+                return
+            }
+            cityState = city
+            selectedTradePartnerID = nil
+            saveStatus = "已为\(partner.name)建成\(constructionTool.title)"
+            playOriginalBuildingSound(partner.routeKind.buildingID)
+            return
+        }
+        if constructionTool == .rally,
+           let controller = gameplayController,
+           controller.selectedCampaignID != nil,
+           controller.selectedMissionID == selectedMissionID {
+            if let unit = controller.city?.military.units
+                .filter({ $0.status != .destroyed && $0.currentPoint == point })
+                .sorted(by: { $0.id < $1.id })
+                .first {
+                if selectedMilitaryUnitIDs.contains(unit.id) {
+                    selectedMilitaryUnitIDs.remove(unit.id)
+                } else {
+                    selectedMilitaryUnitIDs.insert(unit.id)
+                }
+                let count = selectedMilitaryUnitIDs.count
+                saveStatus = count == 0
+                    ? "已清除编队选择；下一道命令将调动全部存活部队"
+                    : "已选择 \(count) 支编队"
+                return
+            }
+            let liveIDs = Set(
+                controller.city?.military.units
+                    .filter { $0.hitPoints > 0 }
+                    .map(\.id) ?? []
+            )
+            selectedMilitaryUnitIDs.formIntersection(liveIDs)
+            let result = controller.perform(
+                .issueMilitaryOrder(unitIDs: selectedMilitaryUnitIDs, to: point)
+            )
+            syncFromGameplayController()
+            switch result {
+            case let .applied(message):
+                saveStatus = message
+            case .rejected:
+                saveStatus = "无法集结：目标不可通行或没有存活部队"
+            }
+            return
+        }
         if let controller = gameplayController,
            controller.selectedCampaignID != nil,
            controller.selectedMissionID == selectedMissionID,
            let playerTool = playerConstructionTool(for: constructionTool) {
-            if playerTool == .farmland {
+            if playerTool == .farmland || playerTool == .cropFarm {
                 _ = controller.perform(
                     .selectAgriculturalCrop(selectedAgriculturalCrop)
                 )
@@ -482,13 +749,18 @@ final class LibraryModel: ObservableObject {
                 tool: constructionTool,
                 at: point
             )
-            if result.wasApplied, let buildingID = playerTool.buildingID {
-                playOriginalBuildingSound(buildingID)
+            if result.wasApplied {
+                let soundBuildingID = playerTool == .cropFarm
+                    ? selectedAgriculturalCrop.producerBuildingID
+                    : playerTool.buildingID
+                if let soundBuildingID { playOriginalBuildingSound(soundBuildingID) }
             }
             return
         }
         switch constructionTool {
         case .inspect:
+            return
+        case .tradingStation, .tradingQuay:
             return
         case .demolish:
             let outcome = city.demolish(at: point, rules: rules)
@@ -562,6 +834,18 @@ final class LibraryModel: ObservableObject {
                 return
             }
             saveStatus = "已在 \(point.x), \(point.y) 建造住宅 · 国库 \(city.economy.treasury)"
+        case .eliteHouse:
+            guard city.constructHouse(
+                levelID: 8,
+                constructionBuildingID: 11,
+                location: point,
+                orientation: constructionOrientation,
+                rules: rules
+            ) != nil else {
+                saveStatus = constructionFailure(at: point, city: city, tool: constructionTool)
+                return
+            }
+            saveStatus = "已在 \(point.x), \(point.y) 建造贵族住宅 · 国库 \(city.economy.treasury)"
         case .warehouse, .granary:
             guard city.constructWarehouse(
                 at: point,
@@ -586,15 +870,40 @@ final class LibraryModel: ObservableObject {
             guard city.constructMarket(
                 at: point,
                 orientation: constructionOrientation,
-                shopBuildingIDs: [OriginalFoodCatalog.foodShopBuildingID],
+                shopBuildingIDs: [],
                 rules: rules
             ) != nil else {
                 saveStatus = constructionFailure(at: point, city: city, tool: constructionTool)
                 return
             }
             saveStatus = constructionSuccess(at: point, city: city, tool: constructionTool)
+        case .grandMarket:
+            guard city.constructMarket(
+                at: point,
+                orientation: constructionOrientation,
+                marketBuildingID: OriginalMarketCatalog.grandMarketBuildingID,
+                shopBuildingIDs: [],
+                rules: rules
+            ) != nil else {
+                saveStatus = constructionFailure(at: point, city: city, tool: constructionTool)
+                return
+            }
+            saveStatus = constructionSuccess(at: point, city: city, tool: constructionTool)
+        case .foodShop, .hempShop, .ceramicsShop, .teaShop, .silkShop,
+             .lacquerwareShop, .bronzewareShop:
+            guard let shopBuildingID = constructionTool.marketShopBuildingID,
+                  city.constructMarketShop(
+                    shopBuildingID: shopBuildingID,
+                    at: point,
+                    rules: rules
+                  ) != nil else {
+                saveStatus = constructionFailure(at: point, city: city, tool: constructionTool)
+                return
+            }
+            saveStatus = "已在市场内建造\(constructionTool.title) · 国库 \(city.economy.treasury)"
         case .clayPit, .kiln, .fishingWharf, .huntingCamp, .quarry, .lumberMill,
-             .ironMine, .bronzeWorks, .jadeWorkshop, .lacquerGuild, .silkWeaver, .teaHouse:
+             .ironMine, .bronzeWorks, .jadeWorkshop, .lacquerGuild, .silkWeaver, .teaHouse,
+             .lacquerwareWorkshop, .weaver:
             guard let buildingID = constructionTool.buildingID,
                   models.buildings[buildingID: buildingID] != nil,
                   city.constructProductionBuilding(
@@ -625,6 +934,17 @@ final class LibraryModel: ObservableObject {
                 return
             }
             saveStatus = constructionSuccess(at: point, city: city, tool: constructionTool)
+        case .cropFarm:
+            guard city.constructAgriculturalProducer(
+                crop: selectedAgriculturalCrop,
+                at: point,
+                orientation: constructionOrientation,
+                rules: rules
+            ) != nil else {
+                saveStatus = constructionFailure(at: point, city: city, tool: constructionTool)
+                return
+            }
+            saveStatus = "已在 \(point.x),\(point.y) 建造\(selectedAgriculturalCrop.localizedTitle)农场"
         case .farmland:
             guard city.constructAgriculturalPlot(
                 crop: selectedAgriculturalCrop,
@@ -635,6 +955,28 @@ final class LibraryModel: ObservableObject {
                 return
             }
             saveStatus = "已在 \(point.x),\(point.y) 种植\(selectedAgriculturalCrop.fieldTitle)"
+        case .irrigationPump:
+            guard city.constructIrrigationPump(
+                at: point,
+                orientation: constructionOrientation,
+                rules: rules
+            ) != nil else {
+                saveStatus = constructionFailure(at: point, city: city, tool: constructionTool)
+                return
+            }
+            saveStatus = constructionSuccess(at: point, city: city, tool: constructionTool)
+        case .largePalacePhase:
+            guard let phase = city.advanceLargePalacePhase(at: point) else {
+                saveStatus = "大宫殿下一相位尚不能推进：请先交付材料并完成相应工期"
+                return
+            }
+            saveStatus = "大宫殿施工已推进至第 \(phase)/\(LargePalaceProjectRuntime.phaseCount) 相位"
+        case .phasedMonumentPhase:
+            guard let phase = city.advancePhasedMonument(at: point) else {
+                saveStatus = "陵墓下一相位尚不能推进：请先交付材料并完成相应工期"
+                return
+            }
+            saveStatus = "陵墓施工已推进至第 \(phase) 相位"
         case .barracks, .fort, .catapultFort, .cavalryFort, .chariotFort:
             guard let buildingID = constructionTool.buildingID,
                   city.constructMilitaryFort(
@@ -663,7 +1005,8 @@ final class LibraryModel: ObservableObject {
              .waysidePavilion, .pond, .taiChiPark, .privateGarden,
              .administrativeCity, .palace,
              .laborersCamp, .carpentersGuild, .masonsGuild, .ceramistsGuild,
-             .tumulus, .grandTumulus, .greatTemple, .splendidTemple, .grandPagoda:
+             .tumulus, .grandTumulus, .undergroundVault, .greatTemple,
+             .splendidTemple, .grandPagoda, .largePalace:
             guard let buildingID = constructionTool.buildingID,
                   city.constructAestheticBuilding(
                     buildingID: buildingID,
@@ -739,6 +1082,18 @@ final class LibraryModel: ObservableObject {
                 commodityID: commodityID,
                 policy: policy
             )
+        case let .millPolicy(millID, commodityID, policy):
+            command = .setMillPolicy(
+                millID: millID,
+                commodityID: commodityID,
+                policy: policy
+            )
+        case let .millStorageLimit(millID, commodityID, amount):
+            command = .setMillStorageLimit(
+                millID: millID,
+                commodityID: commodityID,
+                amount: amount
+            )
         case let .tradeEnabled(tradingBuildingID, enabled):
             command = .setTradeEnabled(
                 tradingBuildingID: tradingBuildingID,
@@ -784,6 +1139,20 @@ final class LibraryModel: ObservableObject {
                 .map { ClassicTextLocalization.commodityName($0.name) }
                 ?? "商品 #\(commodityID)"
             saveStatus = "\(commodity)已设为\(warehousePolicyTitle(policy))"
+        case let .millPolicy(millID, commodityID, policy):
+            applied = city.setMillPolicy(
+                policy,
+                millID: millID,
+                commodityID: commodityID
+            )
+            saveStatus = "磨坊订单已更新"
+        case let .millStorageLimit(millID, commodityID, amount):
+            applied = city.setMillStorageLimit(
+                amount,
+                millID: millID,
+                commodityID: commodityID
+            )
+            saveStatus = "磨坊存储限制已设为\(amount / 100) 担"
         case let .tradeEnabled(tradingBuildingID, enabled):
             applied = city.setTradeEnabled(
                 enabled,
@@ -802,6 +1171,7 @@ final class LibraryModel: ObservableObject {
         switch policy {
         case .doNotAccept: "拒收"
         case .accept: "接收"
+        case .empty: "清空"
         case .get: "主动调取"
         }
     }
@@ -837,6 +1207,19 @@ final class LibraryModel: ObservableObject {
         tool: NativeConstructionTool
     ) -> String {
         guard city.roadNetwork.isInside(point) else { return "目标格超出可玩地图" }
+        if tool == .cropFarm {
+            guard city.isAgriculturalCropAvailable(selectedAgriculturalCrop) else {
+                return "\(selectedAgriculturalCrop.localizedTitle)农场在本关暂未开放"
+            }
+            if city.canConstructAgriculturalProducer(
+                crop: selectedAgriculturalCrop,
+                at: point,
+                orientation: constructionOrientation
+            ) {
+                return "无法建造\(selectedAgriculturalCrop.localizedTitle)农场：国库不足或农业模型不可用"
+            }
+            return "无法建造\(selectedAgriculturalCrop.localizedTitle)农场：完整占地须为临路清地"
+        }
         if tool == .farmland {
             guard city.isAgriculturalCropAvailable(selectedAgriculturalCrop) else {
                 return "\(selectedAgriculturalCrop.fieldTitle)在本关暂未开放"
@@ -847,7 +1230,16 @@ final class LibraryModel: ObservableObject {
             ) {
                 return "无法种植\(selectedAgriculturalCrop.fieldTitle)：国库不足或农业模型不可用"
             }
-            return "无法种植\(selectedAgriculturalCrop.fieldTitle)：目标格须为邻接道路的无碰撞清地"
+            return "无法种植\(selectedAgriculturalCrop.fieldTitle)：须为同类农场耕作范围内的无碰撞清地，且农场仍有余量"
+        }
+        if tool == .irrigationPump {
+            if city.canConstructIrrigationPump(
+                at: point,
+                orientation: constructionOrientation
+            ) {
+                return "无法建造灌溉水车：国库不足或建筑模型配置不可用"
+            }
+            return "灌溉水车必须放在同时邻接水面与道路的河岸清地"
         }
         if let buildingID = tool.buildingID,
            let restriction = city.campaignConstructionRestriction(
@@ -863,6 +1255,23 @@ final class LibraryModel: ObservableObject {
                 return "路障必须直接放在既有道路上"
             }
             return "无法建造路障：道路格已被其他建筑占用"
+        }
+        if tool == .road {
+            if city.roadNetwork.contains(point) { return "目标格已经是道路" }
+            if city.occupiedBuildingPoints.contains(point) { return "目标格已有建筑" }
+            if city.terrain?.isClearLand(point) == false {
+                return "原版地形（含运河预留格）阻挡了铺路"
+            }
+            if city.canConstructRoad(at: point) {
+                return "无法铺路：国库不足"
+            }
+            return "该格无法铺路"
+        }
+        if let shopBuildingID = tool.marketShopBuildingID {
+            if city.canConstructMarketShop(shopBuildingID: shopBuildingID, at: point) {
+                return "无法建造\(tool.title)：国库不足或建筑模型配置不可用"
+            }
+            return "请点击仍有空铺位的普通市场或大市场"
         }
         if let buildingID = tool.buildingID,
            OriginalMilitaryDefenseConfiguration.configuration(buildingID: buildingID) != nil {
@@ -922,6 +1331,8 @@ final class LibraryModel: ObservableObject {
                 "已清理 \(point.x), \(point.y) 的树木与灌木"
             case .road:
                 "已在 \(point.x), \(point.y) 铺设道路"
+            case .cropFarm:
+                "已在 \(point.x), \(point.y) 建造\(selectedAgriculturalCrop.localizedTitle)农场"
             case .farmland:
                 "已在 \(point.x), \(point.y) 种植\(selectedAgriculturalCrop.fieldTitle)"
             default:
@@ -1030,7 +1441,9 @@ final class LibraryModel: ObservableObject {
                 month: settlement.month,
                 city: &city,
                 rules: rules,
-                goalSet: goalSet
+                goalSet: goalSet,
+                completedMonumentBuildingIDsAtBoundary:
+                    settlement.completedMonumentBuildingIDsAtBoundary
             )
             campaignRuntimeState = runtime
             latestCampaignAdvance = result
@@ -1187,11 +1600,7 @@ final class LibraryModel: ObservableObject {
             let result = controller.perform(.replayMission)
             syncFromGameplayController()
             if result.wasApplied, let world = controller.activeWorld {
-                selectedMap = try? MapProbe(url: world.mapAssignment.embeddedMap.mapURL)
-                if case let .loaded(source, _, _, _, _, _) = state,
-                   let selectedMap {
-                    loadRenderedMap(selectedMap, dataDirectory: source.dataDirectory)
-                }
+                bindRenderedMap(to: world)
                 saveStatus = "已重玩当前任务"
             } else {
                 saveStatus = ClassicTextLocalization.statusMessage(result.message)
@@ -1210,6 +1619,7 @@ final class LibraryModel: ObservableObject {
     func returnToCampaignList() {
         autosaveIfNeeded(force: true)
         setGameSpeed(0)
+        frontEndStage = .play
         section = .campaigns
     }
 
@@ -1347,6 +1757,7 @@ final class LibraryModel: ObservableObject {
             let save = try NativeSaveGameStore.load(from: url)
             cityState = save.city
             constructionTool = .inspect
+            selectedTradePartnerID = nil
             constructionOrientation = .northSouth
             latestTick = nil
             latestSettlement = nil
@@ -1361,7 +1772,12 @@ final class LibraryModel: ObservableObject {
             campaignRuntimeState = save.campaignRuntime
             if let controller = gameplayController {
                 let result = controller.restorePersistedSession(save)
-                if result.wasApplied { syncFromGameplayController() }
+                if result.wasApplied {
+                    syncFromGameplayController()
+                    if let world = controller.activeWorld {
+                        bindRenderedMap(to: world)
+                    }
+                }
             }
             lastSaveURL = url
             lastAutosaveFingerprint = AutosaveFingerprint(
@@ -1452,27 +1868,29 @@ final class LibraryModel: ObservableObject {
     }
 
     func startMission(_ mission: CampaignMission) {
+        if let controller = gameplayController {
+            _ = controller.perform(.selectDifficulty(selectedDifficulty))
+        }
         if let controller = gameplayController,
            let campaign = selectedCampaign,
            let campaignID = controller.campaignID(fileName: campaign.url.lastPathComponent) {
             let result = controller.perform(
                 .startCampaignMission(campaignID: campaignID, missionID: mission.id)
             )
-            if result.wasApplied, let world = controller.activeWorld,
-               case let .loaded(source, _, _, _, _, _) = state {
+            if result.wasApplied, let world = controller.activeWorld {
                 selectedMissionID = mission.id
                 activeMissionWorld = world
                 syncFromGameplayController()
                 constructionTool = .inspect
+                selectedTradePartnerID = nil
                 constructionOrientation = .northSouth
-                if let probe = try? MapProbe(url: world.mapAssignment.embeddedMap.mapURL) {
-                    selectedMap = probe
-                    loadRenderedMap(probe, dataDirectory: source.dataDirectory)
-                }
+                bindRenderedMap(to: world)
                 saveStatus = "已开始："
                     + "\(ClassicTextLocalization.missionTitle(mission.title))"
+                    + " · \(ClassicTextLocalization.difficultyTitle(selectedDifficulty))"
                     + " · 国库 \(controller.city?.economy.treasury ?? 0)"
                     + " · \(ClassicTextLocalization.cityName(world.playerCityName))"
+                frontEndStage = .play
                 section = .city
                 autosaveIfNeeded(force: true)
             } else {
@@ -1480,7 +1898,7 @@ final class LibraryModel: ObservableObject {
             }
             return
         }
-        guard case let .loaded(source, _, _, _, models, _) = state,
+        guard case let .loaded(_, _, _, _, models, _) = state,
               let missionMaps = campaignMissionMaps,
               let missionSettings = campaignMissionSettings,
               let eventSet = campaignEventArchive?.missions.first(where: { $0.id == mission.id }),
@@ -1499,6 +1917,9 @@ final class LibraryModel: ObservableObject {
                 && activeMissionWorld?.mapAssignment.embeddedMap.mapURL
                     == world.mapAssignment.embeddedMap.mapURL
                 && cityState != nil
+            let inheritedMenagerie = canContinueExistingCity
+                ? campaignRuntimeState?.menagerieAnimalCountsByProductID
+                : nil
             var city: DeterministicCityState
             if canContinueExistingCity, var inherited = cityState {
                 inherited.continueCampaignMission(with: world.startSettings)
@@ -1506,7 +1927,7 @@ final class LibraryModel: ObservableObject {
             } else {
                 city = DeterministicCityState(
                     missionSettings: world.startSettings,
-                    difficulty: .normal,
+                    difficulty: selectedDifficulty,
                     map: originalMap
                 )
             }
@@ -1519,10 +1940,11 @@ final class LibraryModel: ObservableObject {
             activeMissionWorld = world
             cityState = city
             constructionTool = .inspect
+            selectedTradePartnerID = nil
             constructionOrientation = .northSouth
             latestTick = nil
             latestSettlement = nil
-            campaignRuntimeState = CampaignMissionRuntimeState(
+            var newRuntime = CampaignMissionRuntimeState(
                 missionID: mission.id,
                 startYear: world.startSettings.startYear,
                 startMonth: world.startSettings.startMonth,
@@ -1532,10 +1954,15 @@ final class LibraryModel: ObservableObject {
                 playerCityID: world.playerCity?.id,
                 cityNames: cityNames
             )
+            if let inheritedMenagerie {
+                newRuntime.inheritMenagerie(
+                    animalCountsByProductID: inheritedMenagerie
+                )
+            }
+            campaignRuntimeState = newRuntime
             latestCampaignAdvance = nil
             setGameSpeed(0)
-            selectedMap = probe
-            loadRenderedMap(probe, dataDirectory: source.dataDirectory)
+            bindRenderedMap(to: world, probe: probe)
             let yearLabel = world.startSettings.startYear < 0
                 ? "公元前 \(-world.startSettings.startYear) 年"
                 : "公元 \(world.startSettings.startYear) 年"
@@ -1543,9 +1970,11 @@ final class LibraryModel: ObservableObject {
                 ? (canContinueExistingCity ? " · 已继承前关整座城市" : " · 未找到可继承的前关城市")
                 : ""
             saveStatus = "已开始：\(ClassicTextLocalization.missionTitle(mission.title))"
+                + " · \(ClassicTextLocalization.difficultyTitle(selectedDifficulty))"
                 + " · \(yearLabel) · 国库 \(city.economy.treasury)"
                 + " · \(ClassicTextLocalization.cityName(world.playerCityName))"
                 + " · \(world.tradePartners.count) 条原版贸易路线\(inheritanceLabel)"
+            frontEndStage = .play
             section = .city
             autosaveIfNeeded(force: true)
         } catch {
@@ -1652,6 +2081,7 @@ final class LibraryModel: ObservableObject {
         mapLoadGeneration += 1
         let generation = mapLoadGeneration
         renderedMap = nil
+        isRenderingMap = true
         Task.detached(priority: .userInitiated) {
             do {
                 let map = try EmperorMap(url: probe.url)
@@ -1700,8 +2130,26 @@ final class LibraryModel: ObservableObject {
                        }) {
                         localIDs.formUnion(927..<945)
                     }
+                    // Rock cells are rebuilt from the original 0x606 family
+                    // rather than their per-cell image IDs. Keep all 14
+                    // frames resident or an unresolved rock becomes the
+                    // plain grey diamond bed drawn by drawGround().
+                    if descriptor.baseName == "China_Terrain" {
+                        localIDs.formUnion(458..<472)
+                    }
                     // Toolbar / player-built roads reuse the dirt-road family.
                     if descriptor.baseName == "China_Terrain" {
+                        // SB_CANAL phase zero normally restores logical
+                        // terrain group 3 (#247). Road-crossing parts use the
+                        // complete nine-frame variation family (#247...255)
+                        // before overwriting their road centre line.
+                        let canalTerrainBase = OriginalBuildingSpriteCatalog
+                            .grandCanalPhaseZeroTerrainBaseImageID
+                        localIDs.formUnion(canalTerrainBase...(canalTerrainBase + 8))
+                        localIDs.insert(
+                            OriginalBuildingSpriteCatalog
+                                .grandCanalPhaseZeroRoadImageID
+                        )
                         localIDs.formUnion(
                             OriginalInterfaceUtilitySpriteCatalog.roadTerrainLocalIDs
                         )
@@ -1712,7 +2160,8 @@ final class LibraryModel: ObservableObject {
                         guard metadata.width > 0, metadata.height > 0,
                               let sprite = try? SpriteDecoder.decode(
                                 image: metadata,
-                                pixelData: pixels
+                                pixelData: pixels,
+                                images: archive.images
                               ) else { continue }
                         decoded[id] = sprite
                     }
@@ -1722,7 +2171,8 @@ final class LibraryModel: ObservableObject {
                             let metadata = archive.images[id]
                             guard let sprite = try? SpriteDecoder.decode(
                                 image: metadata,
-                                pixelData: pixels
+                                pixelData: pixels,
+                                images: archive.images
                             ) else { continue }
                             vegetationSprites[id] = sprite.greenVegetationOnly()
                         }
@@ -1764,44 +2214,85 @@ final class LibraryModel: ObservableObject {
                         map: map,
                         spriteArchives: renderedArchives
                     )
+                    self.isRenderingMap = false
                 }
             } catch {
                 NativeDiagnostics.record("Map rendering failed", error: error)
                 await MainActor.run {
                     guard generation == self.mapLoadGeneration else { return }
                     self.renderedMap = nil
+                    self.isRenderingMap = false
                 }
             }
         }
     }
 
+    /// Reconnects a live or restored city to the exact authored mission map.
+    /// Save files intentionally store deterministic city state rather than
+    /// decoded pixels, so every entry path must rebuild this presentation
+    /// dependency before the classic city canvas becomes visible.
+    private func bindRenderedMap(
+        to world: CampaignMissionWorldState,
+        probe suppliedProbe: MapProbe? = nil
+    ) {
+        guard case let .loaded(source, _, _, _, _, _) = state else { return }
+        let mapURL = world.mapAssignment.embeddedMap.mapURL
+        guard let probe = suppliedProbe ?? (try? MapProbe(url: mapURL)) else {
+            renderedMap = nil
+            isRenderingMap = false
+            NativeDiagnostics.record("Mission map probe failed: \(mapURL.lastPathComponent)")
+            return
+        }
+        selectedMap = probe
+        selectedMapURL = probe.url
+        loadRenderedMap(probe, dataDirectory: source.dataDirectory)
+    }
+
     private func loadBuildingSprites(dataDirectory: URL) {
         Task.detached(priority: .utility) {
             do {
-                let baseName = OriginalBuildingSpriteCatalog.generalArchiveBaseName
-                let archive = try SG3Archive(contentsOf: dataDirectory.appendingPathComponent("\(baseName).sg3"))
-                let pixels = try Data(
-                    contentsOf: dataDirectory.appendingPathComponent("\(baseName).555"),
-                    options: [.mappedIfSafe]
-                )
-                let imageIDs = OriginalBuildingSpriteCatalog.requiredImageIDs
-                var decoded: [Int: DecodedSprite] = [:]
-                for imageID in imageIDs.sorted() where archive.images.indices.contains(imageID) {
-                    decoded[imageID] = try SpriteDecoder.decode(
-                        image: archive.images[imageID],
-                        pixelData: pixels
-                    )
+                struct DecodedBuilding: Sendable {
+                    let reference: BuildingSpriteReference
+                    let sprite: DecodedSprite
+                    let offsetX: Int
+                    let offsetY: Int
                 }
-                let decodedSprites = decoded
+                var decodedSprites: [DecodedBuilding] = []
+                for (baseName, imageIDs) in
+                    OriginalBuildingSpriteCatalog.requiredImageIDsByArchive {
+                    let archive = try SG3Archive(
+                        contentsOf: dataDirectory.appendingPathComponent("\(baseName).sg3")
+                    )
+                    let pixels = try Data(
+                        contentsOf: dataDirectory.appendingPathComponent("\(baseName).555"),
+                        options: [.mappedIfSafe]
+                    )
+                    for imageID in imageIDs.sorted() where archive.images.indices.contains(imageID) {
+                        decodedSprites.append(DecodedBuilding(
+                            reference: BuildingSpriteReference(
+                                archiveBaseName: baseName,
+                                imageID: imageID
+                            ),
+                            sprite: try SpriteDecoder.decode(
+                                image: archive.images[imageID],
+                                pixelData: pixels,
+                                images: archive.images
+                            ),
+                            offsetX: archive.images[imageID].spriteOffsetX,
+                            offsetY: archive.images[imageID].spriteOffsetY
+                        ))
+                    }
+                }
+                let loadedSprites = decodedSprites
                 await MainActor.run {
-                    self.buildingSprites = decodedSprites.reduce(into: [:]) { result, item in
-                        guard let image = item.value.makeCGImage() else { return }
-                        result[item.key] = RenderedTerrainSprite(
+                    self.buildingSprites = loadedSprites.reduce(into: [:]) { result, item in
+                        guard let image = item.sprite.makeCGImage() else { return }
+                        result[item.reference] = RenderedTerrainSprite(
                             image: image,
-                            width: item.value.width,
-                            height: item.value.height,
-                            offsetX: archive.images[item.key].spriteOffsetX,
-                            offsetY: archive.images[item.key].spriteOffsetY
+                            width: item.sprite.width,
+                            height: item.sprite.height,
+                            offsetX: item.offsetX,
+                            offsetY: item.offsetY
                         )
                     }
                 }
@@ -1839,7 +2330,8 @@ final class LibraryModel: ObservableObject {
                             ),
                             sprite: try SpriteDecoder.decode(
                                 image: record,
-                                pixelData: pixels
+                                pixelData: pixels,
+                                images: archive.images
                             ).correctingFigureShadow(),
                             offsetX: record.spriteOffsetX,
                             offsetY: record.spriteOffsetY
@@ -1880,6 +2372,8 @@ final class LibraryModel: ObservableObject {
                 var decoded: [Int: DecodedSprite] = [:]
                 let requiredImageIDs = OriginalInterfaceSpriteCatalog.requiredImageIDs
                     .union(OriginalInterfaceUtilitySpriteCatalog.requiredImageIDs)
+                    .union(OriginalInterfaceChromeSpriteCatalog.requiredImageIDs)
+                    .union(OriginalConstructionButtonSpriteCatalog.requiredImageIDs)
                 for imageID in requiredImageIDs.sorted()
                     where archive.images.indices.contains(imageID) {
                     let record = archive.images[imageID]
@@ -1888,7 +2382,8 @@ final class LibraryModel: ObservableObject {
                     }
                     decoded[imageID] = try SpriteDecoder.decode(
                         image: record,
-                        pixelData: pixels
+                        pixelData: pixels,
+                        images: archive.images
                     )
                 }
                 let decodedSprites = decoded
@@ -1933,10 +2428,19 @@ final class LibraryModel: ObservableObject {
         case .clearLand: .clearLand
         case .road: .road
         case .house: .house
+        case .eliteHouse: .eliteHouse
         case .warehouse: .warehouse
         case .huntingCamp: .huntingCamp
         case .mill: .mill
         case .market: .market
+        case .grandMarket: .grandMarket
+        case .foodShop: .foodShop
+        case .hempShop: .hempShop
+        case .ceramicsShop: .ceramicsShop
+        case .teaShop: .teaShop
+        case .silkShop: .silkShop
+        case .lacquerwareShop: .lacquerwareShop
+        case .bronzewareShop: .bronzewareShop
         case .clayPit: .clayPit
         case .kiln: .kiln
         case .well: .well
@@ -1951,6 +2455,12 @@ final class LibraryModel: ObservableObject {
         case .acrobatSchool: .acrobatSchool
         case .dramaSchool: .dramaSchool
         case .farmland: .farmland
+        case .cropFarm: .cropFarm
+        case .tradingStation, .tradingQuay: nil
+        case .irrigationPump: .irrigationPump
+        case .largePalace: .largePalace
+        case .largePalacePhase: .largePalacePhase
+        case .phasedMonumentPhase: .phasedMonumentPhase
         case .lumberMill: .lumberMill
         case .quarry: .quarry
         case .granary: .granary
@@ -1969,8 +2479,10 @@ final class LibraryModel: ObservableObject {
         case .ironMine: .ironMine
         case .bronzeWorks: .bronzeWorks
         case .lacquerGuild: .lacquerGuild
+        case .lacquerwareWorkshop: .lacquerwareWorkshop
         case .jadeWorkshop: .jadeWorkshop
         case .silkWeaver: .silkWeaver
+        case .weaver: .weaver
         case .teaHouse: .teaHouse
         case .bathhouse: .bathhouse
         case .magistrate: .magistrate
@@ -1989,6 +2501,7 @@ final class LibraryModel: ObservableObject {
         case .ceramistsGuild: .ceramistsGuild
         case .tumulus: .tumulus
         case .grandTumulus: .grandTumulus
+        case .undergroundVault: .undergroundVault
         case .greatTemple: .greatTemple
         case .splendidTemple: .splendidTemple
         case .grandPagoda: .grandPagoda

@@ -25,12 +25,41 @@ final class GameSessionControllerTests: XCTestCase {
         )
     }
 
+    func testLegacyMapMonumentCommandsStayDecodableAndFailClosed() throws {
+        let legacyCommands: [PlayerCommand] = [
+            .selectConstruction(.grandCanalSegment),
+            .selectConstruction(.earthenGreatWallSegment),
+            .beginMapMonument(buildingID: 83),
+            .advanceEarthenGreatWallSegment(index: 0),
+        ]
+        for command in legacyCommands {
+            let encoded = try JSONEncoder().encode(command)
+            XCTAssertEqual(
+                try JSONDecoder().decode(PlayerCommand.self, from: encoded),
+                command
+            )
+        }
+
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let controller = try GameSessionController()
+        for command in legacyCommands {
+            XCTAssertFalse(controller.perform(command).wasApplied)
+        }
+        XCTAssertEqual(controller.selectedConstruction, .inspect)
+    }
+
     func testMissionStartPauseAndInvalidConstructionCommands() throws {
         let controller = try controllerWithXiaOne()
         let snapshot = try XCTUnwrap(controller.snapshot.city)
         XCTAssertEqual(snapshot.calendar.year, -2038)
         XCTAssertEqual(snapshot.calendar.month, 6)
         XCTAssertEqual(snapshot.economy.treasury, 2_000)
+        XCTAssertEqual(
+            snapshot.migration.automaticMigrationAvailability,
+            .unsupportedOriginalProducer
+        )
         XCTAssertEqual(controller.snapshot.campaignRuntime?.outcome, .running)
         XCTAssertFalse(controller.perform(.advanceOneTick).wasApplied)
 
@@ -102,6 +131,96 @@ final class GameSessionControllerTests: XCTestCase {
             1
         )
         XCTAssertEqual(controller.city?.roadNetwork.contains(roadPoint), true)
+    }
+
+    func testMarketShopCommandTargetsAnExistingMarket() throws {
+        let controller = try controllerWithXiaOne()
+        let city = try XCTUnwrap(controller.city)
+        let origin = try XCTUnwrap(
+            city.nextBuildingConstructionLocation(
+                buildingID: OriginalMarketCatalog.commonMarketBuildingID
+            )
+        )
+
+        XCTAssertTrue(controller.perform(.selectConstruction(.market)).wasApplied)
+        XCTAssertTrue(controller.perform(
+            .placeSelectedConstruction(at: origin, orientation: .northSouth)
+        ).wasApplied)
+        XCTAssertEqual(controller.city?.markets.markets.first?.shopBuildingIDs, [])
+
+        XCTAssertTrue(controller.perform(.selectConstruction(.foodShop)).wasApplied)
+        XCTAssertTrue(controller.constructionPreview(at: origin).isValid)
+        XCTAssertTrue(controller.perform(
+            .placeSelectedConstruction(at: origin, orientation: .northSouth)
+        ).wasApplied)
+        XCTAssertEqual(controller.city?.markets.markets.first?.shopBuildingIDs, [66])
+    }
+
+    func testRoadblockToolSelectPreviewAndPlaceOnXiaOneMap() throws {
+        let controller = try controllerWithXiaOne()
+        let city = try XCTUnwrap(controller.city)
+        XCTAssertTrue(city.isBuildingAvailableInCampaign(126))
+
+        let validPoints = city.roadNetwork.points
+            .sorted { ($0.y, $0.x) < ($1.y, $1.x) }
+            .filter { city.canConstructRoadBlock(at: $0) }
+        XCTAssertGreaterThan(validPoints.count, 0, "Xia Banpo map must contain placeable road tiles")
+        let roadPoint = validPoints[0]
+
+        XCTAssertTrue(controller.perform(.selectConstruction(.roadblock)).wasApplied)
+        XCTAssertEqual(controller.selectedConstruction, .roadblock)
+        XCTAssertTrue(controller.constructionPreview(at: roadPoint).isValid)
+        let placed = controller.perform(
+            .placeSelectedConstruction(at: roadPoint, orientation: .northSouth)
+        )
+        XCTAssertTrue(placed.wasApplied, placed.message)
+        let placedCity = try XCTUnwrap(controller.city)
+        XCTAssertTrue(placedCity.placedBuildings.contains { $0.buildingID == 126 })
+        XCTAssertTrue(placedCity.roadblockPoints.contains(roadPoint))
+        // The road stays in the network and the tile remains road-passable.
+        XCTAssertTrue(placedCity.roadNetwork.contains(roadPoint))
+    }
+
+    func testCropFarmProducerPlacementUsesRecoveredFootprintAndSprites() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let controller = try GameSessionController()
+        let campaignID = try XCTUnwrap(
+            controller.campaignID(fileName: "1 Xia Dynasty - Tutorials.pak")
+        )
+        // Xia 2 "Seeds of Civilization" allows millet (resource 5), so the
+        // farmhouse producer #193 is placeable; the two-stage farm-then-fields
+        // flow must work now that the producer footprint and sprite were
+        // recovered from the exe table.
+        let start = controller.perform(
+            .startCampaignMission(campaignID: campaignID, missionID: 1)
+        )
+        XCTAssertTrue(start.wasApplied, start.message)
+        XCTAssertTrue(controller.perform(.selectAgriculturalCrop(.millet)).wasApplied)
+        XCTAssertTrue(controller.perform(.selectConstruction(.cropFarm)).wasApplied)
+        let city = try XCTUnwrap(controller.city)
+        let roads = city.roadNetwork.points.sorted { ($0.y, $0.x) < ($1.y, $1.x) }
+        XCTAssertGreaterThan(roads.count, 0)
+        var placed = false
+        for road in roads {
+            let neighbours = [
+                GridPoint(x: road.x, y: road.y - 1),
+                GridPoint(x: road.x + 1, y: road.y),
+                GridPoint(x: road.x, y: road.y + 1),
+                GridPoint(x: road.x - 1, y: road.y),
+            ]
+            for origin in neighbours {
+                if controller.constructionPreview(at: origin, orientation: .northSouth).isValid {
+                    let result = controller.perform(
+                        .placeSelectedConstruction(at: origin, orientation: .northSouth)
+                    )
+                    if result.wasApplied { placed = true; break }
+                }
+            }
+            if placed { break }
+        }
+        XCTAssertTrue(placed, "crop farm must be placeable on the Xia map")
     }
 
     private func controllerWithXiaOne() throws -> GameSessionController {

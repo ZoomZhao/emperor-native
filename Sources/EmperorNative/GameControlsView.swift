@@ -20,13 +20,19 @@ enum ResourceOverlayKind: String, CaseIterable, Identifiable {
     case entertainment = "娱乐"
     case religion = "宗教"
     case tax = "税务"
+    case housingSupply = "住房供给"
+    case walkers = "城市行人"
+    case fengShui = "风水"
 
     var id: Self { self }
 
     static let terrainCases: [Self] = [.food, .wood, .stone, .clay]
     static let serviceCases: [Self] = [
         .water, .inspection, .medical, .entertainment, .religion, .tax,
+        .housingSupply,
     ]
+    static let peopleCases: [Self] = [.walkers]
+    static let buildingCases: [Self] = [.fengShui]
 
     var symbol: String {
         switch self {
@@ -40,6 +46,9 @@ enum ResourceOverlayKind: String, CaseIterable, Identifiable {
         case .entertainment: "music.note"
         case .religion: "sparkles"
         case .tax: "banknote.fill"
+        case .housingSupply: "house.and.flag.fill"
+        case .walkers: "figure.walk"
+        case .fengShui: "yinyang"
         }
     }
 
@@ -56,6 +65,9 @@ enum ResourceOverlayKind: String, CaseIterable, Identifiable {
         case .entertainment: .pink
         case .religion: .purple
         case .tax: .green
+        case .housingSupply: .cyan
+        case .walkers: .yellow
+        case .fengShui: .red
         }
     }
 
@@ -68,12 +80,13 @@ enum ResourceOverlayKind: String, CaseIterable, Identifiable {
         case .wood: flags.contains(.tree)
         case .stone: flags.contains(.rock)
         case .clay: flags.contains(.scrub)
-        case .water, .inspection, .medical, .entertainment, .religion, .tax:
+        case .water, .inspection, .medical, .entertainment, .religion, .tax,
+             .housingSupply, .walkers, .fengShui:
             false
         }
     }
 
-    func covers(_ house: ResidentialUnit) -> Bool {
+    func covers(_ house: ResidentialUnit, models: BuildingModelTable) -> Bool {
         switch self {
         case .water:
             house.serviceCoverage.contains(.water)
@@ -92,7 +105,9 @@ enum ResourceOverlayKind: String, CaseIterable, Identifiable {
                 || house.serviceCoverage.contains(.daoistOrBuddhist)
         case .tax:
             house.hasTaxCoverage
-        case .food, .wood, .stone, .clay:
+        case .housingSupply:
+            house.residents < house.capacity(using: models)
+        case .food, .wood, .stone, .clay, .walkers, .fengShui:
             false
         }
     }

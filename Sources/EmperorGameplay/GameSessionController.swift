@@ -19,6 +19,7 @@ public final class GameSessionController: @unchecked Sendable {
     public private(set) var speed = 0
     public private(set) var selectedConstruction: PlayerConstructionTool = .inspect
     public private(set) var selectedAgriculturalCrop: AgriculturalCrop = .wheat
+    public private(set) var selectedDifficulty: GameDifficulty = .normal
     public private(set) var lastBlockReason: String?
     public private(set) var evidence = GameSessionEvidence()
     public private(set) var latestTick: CityTickResult?
@@ -85,6 +86,13 @@ public final class GameSessionController: @unchecked Sendable {
         case let .startCampaignMission(campaignID, missionID):
             result = startCampaignMission(campaignID: campaignID, missionID: missionID)
         case let .selectConstruction(tool):
+            guard tool != .grandCanalSegment,
+                  tool != .earthenGreatWallSegment else {
+                result = .rejected(
+                    "Map monument construction is awaiting source-verified rules"
+                )
+                break
+            }
             selectedConstruction = tool
             result = .applied("selected \(tool.rawValue)")
         case let .selectAgriculturalCrop(crop):
@@ -94,6 +102,9 @@ public final class GameSessionController: @unchecked Sendable {
             }
             selectedAgriculturalCrop = crop
             result = .applied("selected \(crop.rawValue)")
+        case let .selectDifficulty(difficulty):
+            selectedDifficulty = difficulty
+            result = .applied("difficulty \(difficulty.rawValue)")
         case let .placeSelectedConstruction(point, orientation):
             result = placeSelectedConstruction(at: point, orientation: orientation)
         case let .demolish(point):
@@ -123,6 +134,7 @@ public final class GameSessionController: @unchecked Sendable {
             let title = switch policy {
             case .doNotAccept: "拒收"
             case .accept: "接收"
+            case .empty: "清空"
             case .get: "主动调取"
             }
             result = .applied("仓库模式已设为\(title)")
@@ -142,9 +154,34 @@ public final class GameSessionController: @unchecked Sendable {
             let title = switch policy {
             case .doNotAccept: "拒收"
             case .accept: "接收"
+            case .empty: "清空"
             case .get: "主动调取"
             }
             result = .applied("\(commodity)已设为\(title)")
+        case let .setMillPolicy(millID, commodityID, policy):
+            guard var updated = city,
+                  updated.setMillPolicy(
+                      policy,
+                      millID: millID,
+                      commodityID: commodityID
+                  ) else {
+                result = .rejected("mill does not exist")
+                break
+            }
+            city = updated
+            result = .applied("磨坊订单已更新")
+        case let .setMillStorageLimit(millID, commodityID, amount):
+            guard var updated = city,
+                  updated.setMillStorageLimit(
+                      amount,
+                      millID: millID,
+                      commodityID: commodityID
+                  ) else {
+                result = .rejected("mill does not exist")
+                break
+            }
+            city = updated
+            result = .applied("磨坊存储限制已更新")
         case let .setTradeEnabled(tradingBuildingID, enabled):
             guard var updated = city,
                   updated.setTradeEnabled(
@@ -156,6 +193,75 @@ public final class GameSessionController: @unchecked Sendable {
             }
             city = updated
             result = .applied(enabled ? "贸易设施已恢复进出口" : "贸易设施已暂停进出口")
+        case let .setTradeImporting(tradingBuildingID, commodityID, enabled):
+            guard var updated = city,
+                  updated.trade.buildings.contains(where: {
+                      $0.id == tradingBuildingID
+                  }) else {
+                result = .rejected("trading building does not exist")
+                break
+            }
+            updated.setTradeImporting(
+                enabled,
+                commodityID: commodityID,
+                tradingBuildingID: tradingBuildingID
+            )
+            city = updated
+            result = .applied(enabled ? "商品已设为进口" : "商品进口已停止")
+        case let .constructTradingBuilding(partnerID, point, orientation):
+            guard var updated = city,
+                  let tradingBuildingID = updated.constructTradingBuilding(
+                    partnerID: partnerID,
+                    at: point,
+                    orientation: orientation,
+                    rules: EconomyRulesEngine(models: models)
+                  ) else {
+                result = .rejected("贸易设施无法在此建造")
+                break
+            }
+            _ = updated.setTradeEnabled(
+                true,
+                tradingBuildingID: tradingBuildingID
+            )
+            city = updated
+            result = .applied("贸易设施已建成并启用")
+        case let .setTaxBand(bandID):
+            guard models.taxSentiment.bands.contains(where: { $0.id == bandID }),
+                  var updated = city else {
+                result = .rejected("税率档位无效")
+                break
+            }
+            updated.taxBandID = bandID
+            city = updated
+            result = .applied("税率已调整为第 \(bandID) 档")
+        case let .beginMapMonument(buildingID):
+            guard var updated = city,
+                  updated.beginMapMonument(buildingID: buildingID) != nil else {
+                result = .rejected("地图纪念碑不可用或已经开工")
+                break
+            }
+            city = updated
+            result = .applied("地图纪念碑 #\(buildingID) 已开工")
+        case let .advanceEarthenGreatWallSegment(index):
+            _ = index
+            result = .rejected("Great Wall construction is awaiting source-verified rules")
+        case let .issueMilitaryOrder(unitIDs, point):
+            guard campaignRuntime?.outcome == .running,
+                  var updated = city else {
+                result = .rejected("mission has reached a terminal outcome")
+                break
+            }
+            let ordered = updated.issueMilitaryOrder(
+                unitIDs: unitIDs,
+                to: point,
+                models: models.figures
+            )
+            guard ordered > 0 else {
+                result = .rejected("目标不可通行或没有存活部队")
+                break
+            }
+            city = updated
+            result = .applied("已命令 \(ordered) 支部队向 \(point.x), \(point.y) 集结")
         case let .setSpeed(requested):
             if campaignRuntime?.outcome != .running, requested > 0 {
                 result = .rejected("mission has reached a terminal outcome")
@@ -190,6 +296,7 @@ public final class GameSessionController: @unchecked Sendable {
         let result = Self.applyConstruction(
             selectedConstruction,
             agriculturalCrop: selectedAgriculturalCrop,
+            agriculturalClimate: activeWorld?.agriculturalClimate ?? .temperate,
             at: point,
             orientation: orientation,
             city: &previewCity,
@@ -238,17 +345,36 @@ public final class GameSessionController: @unchecked Sendable {
                 tradeRules: models.trade
             )
             let map = try EmperorMap(url: world.mapAssignment.embeddedMap.mapURL)
-            var newCity = DeterministicCityState(
-                missionSettings: world.startSettings,
-                difficulty: .normal,
-                map: map
-            )
+            let canContinueExistingCity = world.mapAssignment.isContinuation
+                && selectedCampaignID == campaignID
+                && selectedMissionID == world.mapAssignment.sourceMissionIndex
+                && activeWorld?.mapAssignment.embeddedMap.mapURL
+                    == world.mapAssignment.embeddedMap.mapURL
+                && campaignRuntime.map {
+                    if case .victory = $0.outcome { return true }
+                    return false
+                } == true
+            let inheritedMenagerie = canContinueExistingCity
+                ? campaignRuntime?.menagerieAnimalCountsByProductID
+                : nil
+            var newCity: DeterministicCityState
+            if canContinueExistingCity, var inherited = city {
+                inherited.continueCampaignMission(with: world.startSettings)
+                newCity = inherited
+            } else {
+                newCity = DeterministicCityState(
+                    missionSettings: world.startSettings,
+                    difficulty: selectedDifficulty,
+                    map: map
+                )
+            }
             _ = world.installTradePartners(
                 in: &newCity,
                 rules: EconomyRulesEngine(models: models)
             )
+            newCity.setCampaignEnemySetIndex(world.playerCity?.serializedEnemySetIndex)
             city = newCity
-            campaignRuntime = CampaignMissionRuntimeState(
+            var newRuntime = CampaignMissionRuntimeState(
                 missionID: missionID,
                 startYear: world.startSettings.startYear,
                 startMonth: world.startSettings.startMonth,
@@ -258,8 +384,34 @@ public final class GameSessionController: @unchecked Sendable {
                 playerCityID: world.playerCity?.id,
                 cityNames: cityNames
             )
+            if let inheritedMenagerie {
+                newRuntime.inheritMenagerie(
+                    animalCountsByProductID: inheritedMenagerie
+                )
+            }
+            campaignRuntime = newRuntime
             activeWorld = world
             activeGoalSet = goals.missions[missionID]
+            let monumentGoalIDs = goals.missions[missionID].goals.compactMap { goal in
+                if case let .monument(buildingID) = goal.requirement {
+                    return buildingID
+                }
+                return nil
+            }
+            var migrationCity = city ?? newCity
+            migrationCity.setMigrationContext(CampaignMigrationContext(
+                monumentGoalBuildingIDs: monumentGoalIDs,
+                normalAnnualWage: newRuntime.normalAnnualWage,
+                consecutiveDebtMonths: newRuntime.consecutiveDebtMonths
+            ))
+            // The producer's map/object inputs and complete writer chain are
+            // still unresolved (see docs/exe-research/migration-popularity-
+            // producer.md). Keep mission starts fail-closed; the supported
+            // mode remains an explicit fixture/research switch.
+            migrationCity.setAutomaticMigrationAvailability(
+                .unsupportedOriginalProducer
+            )
+            city = migrationCity
             selectedCampaignID = campaignID
             selectedMissionID = missionID
             selectedConstruction = .inspect
@@ -289,6 +441,7 @@ public final class GameSessionController: @unchecked Sendable {
         guard Self.applyConstruction(
             selectedConstruction,
             agriculturalCrop: selectedAgriculturalCrop,
+            agriculturalClimate: activeWorld?.agriculturalClimate ?? .temperate,
             at: point,
             orientation: orientation,
             city: &updated,
@@ -333,10 +486,24 @@ public final class GameSessionController: @unchecked Sendable {
                 month: settlement.month,
                 city: &updatedCity,
                 rules: rules,
-                goalSet: activeGoalSet
+                goalSet: activeGoalSet,
+                completedMonumentBuildingIDsAtBoundary:
+                    settlement.completedMonumentBuildingIDsAtBoundary
             )
             latestCampaignAdvance = advance
             if advance.outcomeChangedNow != nil { evidence.outcomeChangeCount += 1 }
+            // Refresh wage / debt-months / goal inputs for the migration
+            // producer after the monthly advance.
+            updatedCity.setMigrationContext(CampaignMigrationContext(
+                monumentGoalBuildingIDs: activeGoalSet?.goals.compactMap { goal in
+                    if case let .monument(buildingID) = goal.requirement {
+                        return buildingID
+                    }
+                    return nil
+                } ?? [],
+                normalAnnualWage: runtime.normalAnnualWage,
+                consecutiveDebtMonths: runtime.consecutiveDebtMonths
+            ))
         }
         updateEvidence(city: updatedCity)
         city = updatedCity
@@ -363,8 +530,18 @@ public final class GameSessionController: @unchecked Sendable {
             || city.markets.buyers.contains {
                 $0.millID != nil && $0.cargoes.contains { $0.commodityID == 4 && $0.amount > 0 }
             }
-        evidence.sawBuyer = evidence.sawBuyer || !city.markets.buyers.isEmpty
-        evidence.sawPeddler = evidence.sawPeddler || !city.markets.peddlers.isEmpty
+            // A settlement's purchased meat loads are durable proof the mill
+            // stocked meat and a buyer collected it, even when both the mill
+            // and the buyer are empty again at this end-of-tick snapshot.
+            || (city.markets.lastSettlement?.purchasedLoads.contains {
+                $0.commodityID == 4 && $0.amount > 0
+            } ?? false)
+        evidence.sawBuyer = evidence.sawBuyer
+            || !city.markets.buyers.isEmpty
+            || !(city.markets.lastSettlement?.purchasedLoads.isEmpty ?? true)
+        evidence.sawPeddler = evidence.sawPeddler
+            || !city.markets.peddlers.isEmpty
+            || !(city.markets.lastSettlement?.householdDeliveries.isEmpty ?? true)
         evidence.sawHouseFood = evidence.sawHouseFood || city.houses.contains { $0.foodSupplyAmount > 0 }
         evidence.sawWaterService = evidence.sawWaterService || city.houses.contains {
             $0.serviceCoverage.contains(.water)
@@ -380,6 +557,7 @@ public final class GameSessionController: @unchecked Sendable {
     private static func applyConstruction(
         _ tool: PlayerConstructionTool,
         agriculturalCrop: AgriculturalCrop,
+        agriculturalClimate: AgriculturalClimate,
         at point: GridPoint,
         orientation: IsometricBuildingOrientation,
         city: inout DeterministicCityState,
@@ -396,6 +574,14 @@ public final class GameSessionController: @unchecked Sendable {
                 orientation: orientation,
                 rules: rules
             ) != nil
+        case .eliteHouse:
+            city.constructHouse(
+                levelID: 8,
+                constructionBuildingID: 11,
+                location: point,
+                orientation: orientation,
+                rules: rules
+            ) != nil
         case .warehouse, .granary:
             city.constructWarehouse(
                 at: point,
@@ -404,7 +590,7 @@ public final class GameSessionController: @unchecked Sendable {
             ) != nil
         case .clayPit, .kiln, .fishingWharf, .huntingCamp, .quarry, .lumberMill,
              .ironMine, .bronzeWorks, .jadeWorkshop, .lacquerGuild, .silkWeaver,
-             .teaHouse:
+             .teaHouse, .lacquerwareWorkshop, .weaver:
             city.constructProductionBuilding(
                 buildingID: tool.buildingID ?? 0,
                 at: point,
@@ -417,7 +603,22 @@ public final class GameSessionController: @unchecked Sendable {
             city.constructMarket(
                 at: point,
                 orientation: orientation,
-                shopBuildingIDs: [OriginalFoodCatalog.foodShopBuildingID],
+                shopBuildingIDs: [],
+                rules: rules
+            ) != nil
+        case .grandMarket:
+            city.constructMarket(
+                at: point,
+                orientation: orientation,
+                marketBuildingID: OriginalMarketCatalog.grandMarketBuildingID,
+                shopBuildingIDs: [],
+                rules: rules
+            ) != nil
+        case .foodShop, .hempShop, .ceramicsShop, .teaShop, .silkShop,
+             .lacquerwareShop, .bronzewareShop:
+            city.constructMarketShop(
+                shopBuildingID: tool.buildingID ?? 0,
+                at: point,
                 rules: rules
             ) != nil
         case .taxOffice:
@@ -439,12 +640,33 @@ public final class GameSessionController: @unchecked Sendable {
             ) != nil
         case .roadblock:
             city.constructRoadBlock(at: point, rules: rules) != nil
+        case .cropFarm:
+            city.constructAgriculturalProducer(
+                crop: agriculturalCrop,
+                at: point,
+                orientation: orientation,
+                climate: agriculturalClimate,
+                rules: rules
+            ) != nil
         case .farmland:
             city.constructAgriculturalPlot(
                 crop: agriculturalCrop,
                 at: point,
+                climate: agriculturalClimate,
                 rules: rules
             ) != nil
+        case .irrigationPump:
+            city.constructIrrigationPump(
+                at: point,
+                orientation: orientation,
+                rules: rules
+            ) != nil
+        case .grandCanalSegment, .earthenGreatWallSegment:
+            false
+        case .largePalacePhase:
+            city.advanceLargePalacePhase(at: point) != nil
+        case .phasedMonumentPhase:
+            city.advancePhasedMonument(at: point) != nil
         case .barracks, .fort, .catapultFort, .cavalryFort, .chariotFort:
             city.constructMilitaryFort(
                 buildingID: tool.buildingID ?? 0,
@@ -463,7 +685,8 @@ public final class GameSessionController: @unchecked Sendable {
              .waysidePavilion, .pond, .taiChiPark, .privateGarden,
              .administrativeCity, .palace, .laborersCamp, .carpentersGuild,
              .masonsGuild, .ceramistsGuild, .tumulus, .grandTumulus,
-             .greatTemple, .splendidTemple, .grandPagoda:
+             .undergroundVault, .greatTemple, .splendidTemple, .grandPagoda,
+             .largePalace:
             city.constructAestheticBuilding(
                 buildingID: tool.buildingID ?? 0,
                 at: point,
@@ -485,7 +708,30 @@ public final class GameSessionController: @unchecked Sendable {
             guard city.isAgriculturalCropAvailable(selectedAgriculturalCrop) else {
                 return "crop is unavailable in this mission"
             }
-            return "crop plot needs clear land beside a road, sufficient funds, and valid models"
+            return "crop plot needs clear land within an available matching farm's tending range"
+        }
+        if selectedConstruction == .cropFarm {
+            guard city.isAgriculturalCropAvailable(selectedAgriculturalCrop) else {
+                return "crop is unavailable in this mission"
+            }
+            return "farm needs a clear authored footprint beside a road and sufficient funds"
+        }
+        if selectedConstruction == .road {
+            if city.roadNetwork.contains(point) { return "tile already contains a road" }
+            if city.occupiedBuildingPoints.contains(point) { return "tile is occupied" }
+            if city.terrain?.isClearLand(point) == false {
+                return "original terrain, including canal reserve tiles, blocks road construction"
+            }
+            if city.canConstructRoad(at: point) {
+                return "treasury blocks road construction"
+            }
+            return "tile cannot accept a road"
+        }
+        if let shopBuildingID = selectedConstruction.marketShopBuildingID {
+            if city.canConstructMarketShop(shopBuildingID: shopBuildingID, at: point) {
+                return "treasury or building model blocks market shop construction"
+            }
+            return "select a market square with an empty shop bay"
         }
         if let buildingID = selectedConstruction.buildingID,
            let restriction = city.campaignConstructionRestriction(forBuildingID: buildingID) {
@@ -514,5 +760,17 @@ public final class GameSessionController: @unchecked Sendable {
             mix(UInt64(point.y))
         }
         return hash
+    }
+}
+
+private extension PlayerConstructionTool {
+    var marketShopBuildingID: Int? {
+        switch self {
+        case .foodShop, .hempShop, .ceramicsShop, .teaShop, .silkShop,
+             .lacquerwareShop, .bronzewareShop:
+            buildingID
+        default:
+            nil
+        }
     }
 }

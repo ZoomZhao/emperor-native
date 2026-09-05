@@ -3,6 +3,7 @@ import Foundation
 public enum WarehouseCommodityPolicy: String, Sendable, Hashable, Codable {
     case doNotAccept
     case accept
+    case empty
     case get
 }
 
@@ -89,6 +90,8 @@ public struct DeliveryWalker: Identifiable, Sendable, Hashable, Codable {
     public let destinationRouteIndex: Int
     public private(set) var routeIndex: Int
     public private(set) var hasDelivered: Bool
+    private var originalSubstepProgressState: Int?
+    private var movedOnLastSimulationStepState: Bool?
 
     public var currentPoint: GridPoint? {
         route.indices.contains(routeIndex) ? route[routeIndex] : nil
@@ -96,6 +99,10 @@ public struct DeliveryWalker: Identifiable, Sendable, Hashable, Codable {
 
     public var hasReturned: Bool {
         hasDelivered && routeIndex == route.count - 1
+    }
+
+    public var movedOnLastSimulationStep: Bool {
+        movedOnLastSimulationStepState ?? false
     }
 
     init(
@@ -115,12 +122,34 @@ public struct DeliveryWalker: Identifiable, Sendable, Hashable, Codable {
         route = outboundPath + Array(outboundPath.dropLast().reversed())
         routeIndex = 0
         hasDelivered = false
+        originalSubstepProgressState = 20
+        movedOnLastSimulationStepState = false
     }
 
     mutating func advanceOneRoadStep() -> Bool {
         guard routeIndex + 1 < route.count else { return false }
         routeIndex += 1
+        movedOnLastSimulationStepState = true
         return true
+    }
+
+    mutating func beginSimulationStep() {
+        movedOnLastSimulationStepState = false
+    }
+
+    /// Delivery figure #22 uses the original generic movement code 6: one
+    /// microstep per original update and one visible route-cell transition
+    /// after twenty microsteps. The saved progress starts at the original
+    /// boundary value, matching the existing figure bridge's first-update
+    /// handling.
+    mutating func advanceOriginalSimulationStep() -> Bool {
+        var progress = originalSubstepProgressState ?? 20
+        if progress >= 20 { progress = 0 }
+        progress += 1
+        originalSubstepProgressState = progress
+        guard progress >= 20 else { return false }
+        originalSubstepProgressState = 20
+        return advanceOneRoadStep()
     }
 
     mutating func markDelivered() {
@@ -301,6 +330,30 @@ public struct DeterministicLogisticsState: Sendable, Hashable, Codable {
         warehouses[index].storageLimitByCommodityID[commodityID] = clamped / 400 * 400
     }
 
+    public mutating func setMillPolicy(
+        _ policy: WarehouseCommodityPolicy,
+        commodityID: Int,
+        millID: Int
+    ) {
+        guard var mills = foodMillStorage,
+              let index = mills.firstIndex(where: { $0.id == millID }) else { return }
+        mills[index].policyByCommodityID[commodityID] = policy
+        foodMillStorage = mills
+    }
+
+    public mutating func setMillStorageLimit(
+        _ amount: Int,
+        commodityID: Int,
+        millID: Int
+    ) {
+        guard var mills = foodMillStorage,
+              let index = mills.firstIndex(where: { $0.id == millID }) else { return }
+        let clamped = min(mills[index].capacity, max(0, amount))
+        // The Windows dialog changes one four-load bay at a time.
+        mills[index].storageLimitByCommodityID[commodityID] = clamped / 400 * 400
+        foodMillStorage = mills
+    }
+
     /// Accepts as much of a scripted campaign gift as the city's physical
     /// warehouses can hold. The original event waits when storage is missing;
     /// callers retain the unaccepted remainder and retry it on later months.
@@ -374,6 +427,28 @@ public struct DeterministicLogisticsState: Sendable, Hashable, Codable {
         warehouses[index].inventoryByCommodityID[commodityID] = available - taken
         production.addInventory(commodityID: commodityID, amount: -taken)
         return taken
+    }
+
+    /// Returns phase-two carrier cargo to its exact physical warehouse using
+    /// that warehouse's live bay/policy capacity. The aggregate production
+    /// inventory mirrors every accepted unit just as ordinary warehouse
+    /// delivery does.
+    @discardableResult
+    public mutating func returnStoredGoods(
+        warehouseID: Int,
+        commodityID: Int,
+        amount: Int,
+        production: inout DeterministicProductionState
+    ) -> Int {
+        guard amount > 0,
+              let index = warehouses.firstIndex(where: { $0.id == warehouseID }) else {
+            return 0
+        }
+        let accepted = min(amount, warehouses[index].availableCapacity(for: commodityID))
+        guard accepted > 0 else { return 0 }
+        warehouses[index].inventoryByCommodityID[commodityID, default: 0] += accepted
+        production.addInventory(commodityID: commodityID, amount: accepted)
+        return accepted
     }
 
     @discardableResult
@@ -749,6 +824,7 @@ public struct DeterministicLogisticsState: Sendable, Hashable, Codable {
         var completedIDs: [Int] = []
 
         for index in deliveryWalkers.indices.sorted(by: { deliveryWalkers[$0].id < deliveryWalkers[$1].id }) {
+            deliveryWalkers[index].beginSimulationStep()
             deliverIfNeeded(at: index, production: &production, delivered: &delivered)
             for _ in 0..<steps {
                 if deliveryWalkers[index].advanceOneRoadStep() {
@@ -792,6 +868,7 @@ public struct DeterministicLogisticsState: Sendable, Hashable, Codable {
         var completedIDs: [Int] = []
 
         for index in deliveryWalkers.indices.sorted(by: { deliveryWalkers[$0].id < deliveryWalkers[$1].id }) {
+            deliveryWalkers[index].beginSimulationStep()
             guard activeDeliveryWalkerIDs?.contains(deliveryWalkers[index].id) ?? true else { continue }
             deliverTradeIfNeeded(
                 at: index,
@@ -801,6 +878,68 @@ public struct DeterministicLogisticsState: Sendable, Hashable, Codable {
             )
             for _ in 0..<steps {
                 if deliveryWalkers[index].advanceOneRoadStep() { moved += 1 }
+                deliverTradeIfNeeded(
+                    at: index,
+                    production: &production,
+                    trade: &trade,
+                    delivered: &delivered
+                )
+                if deliveryWalkers[index].hasReturned { break }
+            }
+            if deliveryWalkers[index].hasReturned {
+                completedIDs.append(deliveryWalkers[index].id)
+            }
+        }
+        for index in deliveryWalkers.indices.reversed()
+        where completedIDs.contains(deliveryWalkers[index].id) {
+            releaseTradeSource(
+                for: deliveryWalkers[index],
+                production: &production,
+                trade: &trade
+            )
+            deliveryWalkers.remove(at: index)
+        }
+        let result = DeliveryMovementSummary(
+            requestedRoadSteps: requested,
+            movedRoadSteps: moved,
+            deliveredLoads: delivered,
+            completedWalkerIDs: completedIDs.sorted()
+        )
+        lastMovement = result
+        return result
+    }
+
+    /// Advances delivery figure #22 in original simulation microsteps. The
+    /// legacy road-step API above remains for direct callers and old fixtures;
+    /// the native city clock uses this recovered path.
+    @discardableResult
+    public mutating func advanceOriginalDeliveries(
+        originalStepsPerWalker: Int,
+        production: inout DeterministicProductionState,
+        trade: inout DeterministicTradeState,
+        activeDeliveryWalkerIDs: Set<Int>? = nil
+    ) -> DeliveryMovementSummary {
+        let steps = max(0, originalStepsPerWalker)
+        let requested = steps * deliveryWalkers.count
+        var moved = 0
+        var delivered: [DeliveryCargo] = []
+        var completedIDs: [Int] = []
+
+        for index in deliveryWalkers.indices.sorted(by: { deliveryWalkers[$0].id < deliveryWalkers[$1].id }) {
+            deliveryWalkers[index].beginSimulationStep()
+            guard activeDeliveryWalkerIDs?.contains(deliveryWalkers[index].id) ?? true else {
+                continue
+            }
+            deliverTradeIfNeeded(
+                at: index,
+                production: &production,
+                trade: &trade,
+                delivered: &delivered
+            )
+            for _ in 0..<steps {
+                if deliveryWalkers[index].advanceOriginalSimulationStep() {
+                    moved += 1
+                }
                 deliverTradeIfNeeded(
                     at: index,
                     production: &production,
@@ -1074,6 +1213,7 @@ public struct DeterministicLogisticsState: Sendable, Hashable, Codable {
     ) -> (buildingID: Int, demand: Int, path: [GridPoint])? {
         production.buildings.compactMap { building -> (Int, Int, [GridPoint])? in
             guard building.id != sourceBuildingID,
+                  building.isEnabled,
                   let destinationRoad = building.roadAccessPoint,
                   !hasIncomingDelivery(
                     destination: .productionBuilding(building.id),

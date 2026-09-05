@@ -33,6 +33,51 @@ public struct EmperorMapAuthoredPoints: Sendable, Hashable, Codable {
     }
 }
 
+/// One row from the original runtime map-descriptor table at
+/// `DAT_00856C64`. The executable stores `(width, height, base,
+/// rowAdvance)` in 16-byte rows; the last two fields describe the canonical
+/// 228-cell backing grid rather than a compact Native rectangle.
+public struct OriginalMapRuntimeDescriptor: Sendable, Hashable, Codable {
+    public let width: Int
+    public let height: Int
+    public let baseLinearOffset: Int
+    public let rowAdvance: Int
+
+    public init(
+        width: Int,
+        height: Int,
+        baseLinearOffset: Int,
+        rowAdvance: Int
+    ) {
+        self.width = width
+        self.height = height
+        self.baseLinearOffset = baseLinearOffset
+        self.rowAdvance = rowAdvance
+    }
+
+    /// Effective row stride used by the original full-map loops.
+    public var effectiveRowStride: Int { width + rowAdvance }
+}
+
+/// Source-backed rows recovered from the canonical EN/CH executables. The
+/// selector table is keyed by the map width/height pair; Native must not
+/// synthesize rows for dimensions outside this set.
+public enum OriginalMapRuntimeDescriptorCatalog {
+    public static let rows: [OriginalMapRuntimeDescriptor] = [
+        .init(width: 56, height: 56, baseLinearOffset: 19_694, rowAdvance: 172),
+        .init(width: 84, height: 84, baseLinearOffset: 16_488, rowAdvance: 144),
+        .init(width: 112, height: 112, baseLinearOffset: 13_282, rowAdvance: 116),
+        .init(width: 140, height: 140, baseLinearOffset: 10_076, rowAdvance: 88),
+        .init(width: 170, height: 170, baseLinearOffset: 6_641, rowAdvance: 58),
+        .init(width: 226, height: 226, baseLinearOffset: 229, rowAdvance: 2),
+    ]
+
+    public static func descriptor(width: Int, height: Int)
+        -> OriginalMapRuntimeDescriptor? {
+        rows.first { $0.width == width && $0.height == height }
+    }
+}
+
 public struct EmperorMap: Sendable {
     public static let gridSide = 228
     public static let gridCellCount = gridSide * gridSide
@@ -44,7 +89,50 @@ public struct EmperorMap: Sendable {
     public static let imageGridOffset = headerByteCount
     public static let edgeGridOffset = imageGridOffset + gridCellCount * 4
     public static let terrainGridOffset = edgeGridOffset + gridCellCount
+    /// `DAT_00F37DA0` in the original runtime. This is a serialized
+    /// UInt32-per-cell auxiliary grid immediately after terrain. Its bit 0x04
+    /// participates in negative desirability propagation; keep the original
+    /// words instead of relying on the anonymous byte-grid compatibility view.
+    public static let appealFlagsGridOffset = terrainGridOffset + gridCellCount * 4
+    /// Compatibility base for the legacy apparent byte-grid view. It is the
+    /// same physical offset as `appealFlagsGridOffset` (the serialized
+    /// `DAT_00F37DA0` UInt32 layer); `legacyByteGrids` intentionally exposes
+    /// the historical byte slices from this boundary for older callers.
     public static let firstByteGridOffset = terrainGridOffset + gridCellCount * 4
+    /// `DAT_00F1E780` in the original runtime. The serializer writes one
+    /// intervening UInt32 grid (four byte-grid widths) and then
+    /// `DAT_00F9D620` before this byte grid, so it is the sixth apparent
+    /// byte-sized slice after terrain. `SB_CANAL` uses only its low bit when
+    /// selecting two of the phase-1/2 body variants.
+    public static let terrainVisualVariationGridOffset = firstByteGridOffset
+        + gridCellCount * 5
+    /// `DAT_00E92DD0` in the original serializer. The apparent byte-grid
+    /// sequence after terrain contains an intervening UInt32 grid and two
+    /// scalar UInt32 values, so this offset must not be inferred from
+    /// `legacyByteGrids` indices.
+    public static let primaryElevationClassGridOffset = firstByteGridOffset
+        + gridCellCount * 8 + 8
+    /// Fixed-layer/archive-transition expression for canonical format-v5
+    /// maps. The value is the start of the variable-size `FUN_0042D790`
+    /// Building archive, not the later `DAT_00F2B290` auxiliary grid.
+    public static let buildingArchiveTransitionOffset = firstByteGridOffset
+        + gridCellCount * 12 + 408
+
+    /// Legacy name retained for source compatibility. Parsing
+    /// `DAT_00F2B290` must use the decoded-length boundary returned by
+    /// `roadWaterAuxiliaryGridOffset(decodedByteCount:)`.
+    @available(*, deprecated, message: "Use roadWaterAuxiliaryGridOffset(decodedByteCount:) for format-v5 maps")
+    public static let roadWaterAuxiliaryGridOffset = buildingArchiveTransitionOffset
+
+    /// Decoded start of format-v5 `DAT_00F2B290`.
+    ///
+    /// `FUN_0052E7C0 @ 0x52E7C0` writes this grid immediately after the
+    /// variable-size Building archive and performs no later writes. The final
+    /// 228×228 decoded bytes are therefore the stable auxiliary-grid boundary.
+    public static func roadWaterAuxiliaryGridOffset(decodedByteCount: Int) -> Int? {
+        guard decodedByteCount >= gridCellCount else { return nil }
+        return decodedByteCount - gridCellCount
+    }
     // Original Campaign Creator scenario-point fields in the decoded header.
     // The invasion and disaster collections are stored as parallel X/Y arrays;
     // entry/exit fields are stored as consecutive coordinate pairs.
@@ -79,6 +167,7 @@ public struct EmperorMap: Sendable {
     public static let chinaElevationDirtGlobalImageBase: UInt32 = 34_203
     public static let chinaGreatWall1GlobalImageBase: UInt32 = 82_032
     public static let chinaGrandCanalGlobalImageBase: UInt32 = 98_117
+    public static let chinaEarthenGreatWall1GlobalImageBase: UInt32 = 130_874
 
     public let url: URL
     public let formatVersion: UInt16
@@ -90,10 +179,55 @@ public struct EmperorMap: Sendable {
     public let imageIDs: [UInt32]
     public let edgeValues: [UInt8]
     public let terrainFlags: [UInt32]
+    /// Exact map words for the serialized `DAT_00F37DA0` layer. This is
+    /// intentionally data-only: the runtime's dynamic `+0x268` writer and
+    /// callback lifecycle remain unresolved and are not inferred here.
+    public let appealFlags: [UInt32]
+    public let terrainVisualVariationValues: [UInt8]
+    public let primaryElevationClassValues: [UInt8]
+    public let roadWaterAuxiliaryValues: [UInt8]?
     public let authoredPoints: EmperorMapAuthoredPoints
+    public let grandCanalPartStates: [GrandCanalMapPartState]
+    public let greatWallPartStates: [GreatWallMapPartState]
+    /// Specialized residential wall/gate records are exposed as read-only
+    /// archive evidence. They are not inserted into the live object registry
+    /// until the original post-load registration path is recovered.
+    public let residentialBarrierStates: [OriginalResidentialBarrierMapState]
+    /// Generic `Building` records from the variable-size map archive. These
+    /// are retained as read-only source evidence so a future Qin object
+    /// projection can consume the exact serialized rows without reparsing the
+    /// map file. They are intentionally not inserted into the live Native
+    /// city state: the executable's provider specialization/registry bridge
+    /// remains unresolved.
+    public let genericBuildingArchiveRecords: [OriginalGenericBuildingArchiveRecord]
+    /// MFC class declarations recovered from the same variable-size archive.
+    /// This is archive evidence only: a declaration identifies the serializer
+    /// schema and first raw type word, but does not construct or register a
+    /// live object.
+    public let archiveClassDeclarations: [OriginalMapArchiveClassDeclaration]
+    /// Fixed schema/slot-count preamble immediately before the variable-size
+    /// object stream. This is archive evidence only and never constructs or
+    /// registers the declared objects.
+    public let archivePreamble: OriginalMapArchivePreamble?
+    /// `cIndustrialBldg` records whose authored model is
+    /// `BUILD_MAP_INVASION_POINT` (173). These are retained as archive
+    /// evidence only; event/formation creation and runtime object-registry
+    /// ownership remain unresolved and are not inferred here.
+    public let archivedMapInvasionPointStates: [OriginalMapInvasionPointArchiveState]
+    /// Header coordinates retained in the original eight runtime slot order.
+    /// This is data-only evidence; it is not projected into live formations or
+    /// the object registry.
+    public let authoredLandInvasionPointSlots: [OriginalMapInvasionPointSlotState]
     /// Byte grids that immediately follow the terrain flags. Their stable
     /// positions are preserved while individual semantics are being verified.
     public let legacyByteGrids: [[UInt8]]
+
+    /// The exact descriptor row selected by the original map loader for this
+    /// authored rectangle. Parsing validates the same centered origin and
+    /// therefore returns a descriptor for every supported GameData map.
+    public var originalRuntimeDescriptor: OriginalMapRuntimeDescriptor? {
+        OriginalMapRuntimeDescriptorCatalog.descriptor(width: width, height: height)
+    }
 
     public init(url: URL) throws {
         let decoded = try SierraChunkedFile(contentsOf: url).decodedData
@@ -134,9 +268,46 @@ public struct EmperorMap: Sendable {
         for _ in 0..<Self.gridCellCount {
             parsedTerrain.append(try reader.readUInt32LE())
         }
+        guard decoded.count >= Self.appealFlagsGridOffset + Self.gridCellCount * 4 else {
+            throw GameDataError.malformedFile("truncated Emperor appeal-flags grid")
+        }
+        var parsedAppealFlags: [UInt32] = []
+        parsedAppealFlags.reserveCapacity(Self.gridCellCount)
+        try reader.seek(to: Self.appealFlagsGridOffset)
+        for _ in 0..<Self.gridCellCount {
+            parsedAppealFlags.append(try reader.readUInt32LE())
+        }
+        try reader.seek(to: Self.firstByteGridOffset)
         var parsedByteGrids: [[UInt8]] = []
         for _ in 0..<13 where reader.remainingCount >= Self.gridCellCount {
             parsedByteGrids.append(Array(try reader.readData(count: Self.gridCellCount)))
+        }
+        guard decoded.count >= Self.primaryElevationClassGridOffset + Self.gridCellCount else {
+            throw GameDataError.malformedFile("truncated Emperor elevation-class grid")
+        }
+        guard decoded.count >= Self.terrainVisualVariationGridOffset + Self.gridCellCount else {
+            throw GameDataError.malformedFile("truncated Emperor terrain-variation grid")
+        }
+        let parsedTerrainVisualVariations = Array(decoded[
+            Self.terrainVisualVariationGridOffset
+                ..< Self.terrainVisualVariationGridOffset + Self.gridCellCount
+        ])
+        let parsedElevationClasses = Array(decoded[
+            Self.primaryElevationClassGridOffset
+                ..< Self.primaryElevationClassGridOffset + Self.gridCellCount
+        ])
+        let parsedRoadWaterAuxiliary: [UInt8]?
+        if UInt16(signature & 0xFFFF) > 4,
+           let auxiliaryOffset = Self.roadWaterAuxiliaryGridOffset(
+               decodedByteCount: decoded.count
+           ),
+           decoded.count >= auxiliaryOffset + Self.gridCellCount {
+            parsedRoadWaterAuxiliary = Array(decoded[
+                auxiliaryOffset
+                    ..< auxiliaryOffset + Self.gridCellCount
+            ])
+        } else {
+            parsedRoadWaterAuxiliary = nil
         }
 
         func decodedUInt16(at offset: Int) -> Int {
@@ -153,6 +324,16 @@ public struct EmperorMap: Sendable {
             (0..<count).compactMap { index in
                 point(xOffset: xOffset + index * 2, yOffset: yOffset + index * 2)
             }
+        }
+        let parsedLandInvasionXCoordinates = (0..<OriginalMapInvasionPointSlotCatalog.slotCount).map {
+            point(xOffset: Self.landInvasionXOffset + $0 * 2,
+                  yOffset: Self.landInvasionYOffset + $0 * 2)
+                .map(\.x)
+        }
+        let parsedLandInvasionYCoordinates = (0..<OriginalMapInvasionPointSlotCatalog.slotCount).map {
+            point(xOffset: Self.landInvasionXOffset + $0 * 2,
+                  yOffset: Self.landInvasionYOffset + $0 * 2)
+                .map(\.y)
         }
         let parsedAuthoredPoints = EmperorMapAuthoredPoints(
             landEntry: point(xOffset: Self.landEntryOffset, yOffset: Self.landEntryOffset + 2),
@@ -181,6 +362,31 @@ public struct EmperorMap: Sendable {
             )
         )
 
+        let parsedArchiveClassDeclarations: [OriginalMapArchiveClassDeclaration]
+        let parsedGenericBuildingArchiveRecords: [OriginalGenericBuildingArchiveRecord]
+        let parsedArchivePreamble: OriginalMapArchivePreamble?
+        if UInt16(signature & 0xFFFF) > 3,
+           let archiveEnd = Self.roadWaterAuxiliaryGridOffset(decodedByteCount: decoded.count),
+           archiveEnd > Self.buildingArchiveTransitionOffset {
+            let archiveRange = Self.buildingArchiveTransitionOffset..<archiveEnd
+            parsedArchivePreamble = OriginalMapArchivePreambleCatalog.parse(
+                in: decoded,
+                archiveOffset: archiveRange.lowerBound
+            )
+            parsedArchiveClassDeclarations = OriginalMapArchiveClassCatalog.declarations(
+                in: decoded,
+                archiveRange: archiveRange
+            )
+            parsedGenericBuildingArchiveRecords = OriginalGenericBuildingArchiveCatalog.records(
+                in: decoded,
+                archiveRange: archiveRange
+            )
+        } else {
+            parsedArchivePreamble = nil
+            parsedArchiveClassDeclarations = []
+            parsedGenericBuildingArchiveRecords = []
+        }
+
         self.url = url
         formatVersion = UInt16(signature & 0xFFFF)
         width = parsedWidth
@@ -191,8 +397,35 @@ public struct EmperorMap: Sendable {
         imageIDs = parsedImages
         edgeValues = parsedEdges
         terrainFlags = parsedTerrain
+        appealFlags = parsedAppealFlags
+        terrainVisualVariationValues = parsedTerrainVisualVariations
+        primaryElevationClassValues = parsedElevationClasses
+        roadWaterAuxiliaryValues = parsedRoadWaterAuxiliary
         legacyByteGrids = parsedByteGrids
         authoredPoints = parsedAuthoredPoints
+        grandCanalPartStates = try OriginalGrandCanalLayoutCatalog.archivedPartStates(
+            in: decoded
+        )
+        greatWallPartStates = try OriginalGreatWallLayoutCatalog.archivedPartStates(
+            in: decoded
+        )
+        archivePreamble = parsedArchivePreamble
+        archiveClassDeclarations = parsedArchiveClassDeclarations
+        genericBuildingArchiveRecords = parsedGenericBuildingArchiveRecords
+        residentialBarrierStates = OriginalResidentialBarrierArchiveCatalog.archivedStates(
+            in: decoded,
+            mapWidth: parsedWidth,
+            mapHeight: parsedHeight
+        )
+        archivedMapInvasionPointStates = OriginalMapInvasionPointArchiveCatalog.archivedStates(
+            in: decoded,
+            mapWidth: parsedWidth,
+            mapHeight: parsedHeight
+        )
+        authoredLandInvasionPointSlots = OriginalMapInvasionPointSlotCatalog.slotStates(
+            xCoordinates: parsedLandInvasionXCoordinates,
+            yCoordinates: parsedLandInvasionYCoordinates
+        )
     }
 
     public func imageID(x: Int, y: Int) -> UInt32? {
@@ -343,6 +576,15 @@ public struct EmperorMap: Sendable {
         )
     }
 
+    public func chinaEarthenGreatWall1SpriteID(x: Int, y: Int, imageCount: Int) -> Int? {
+        localSpriteID(
+            x: x,
+            y: y,
+            globalImageBase: Self.chinaEarthenGreatWall1GlobalImageBase,
+            imageCount: imageCount
+        )
+    }
+
     public func localSpriteID(
         x: Int,
         y: Int,
@@ -368,5 +610,26 @@ public struct EmperorMap: Sendable {
     public func legacyByteValue(grid: Int, x: Int, y: Int) -> UInt8? {
         guard legacyByteGrids.indices.contains(grid), x >= 0, x < width, y >= 0, y < height else { return nil }
         return legacyByteGrids[grid][startOffset + y * Self.gridSide + x]
+    }
+
+    public func terrainVisualVariationValue(x: Int, y: Int) -> UInt8? {
+        guard x >= 0, x < width, y >= 0, y < height else { return nil }
+        return terrainVisualVariationValues[startOffset + y * Self.gridSide + x]
+    }
+
+    public func appealFlagsValue(x: Int, y: Int) -> UInt32? {
+        guard x >= 0, x < width, y >= 0, y < height else { return nil }
+        return appealFlags[startOffset + y * Self.gridSide + x]
+    }
+
+    public func primaryElevationClassValue(x: Int, y: Int) -> Int8? {
+        guard x >= 0, x < width, y >= 0, y < height else { return nil }
+        return Int8(bitPattern: primaryElevationClassValues[startOffset + y * Self.gridSide + x])
+    }
+
+    public func roadWaterAuxiliaryValue(x: Int, y: Int) -> UInt8? {
+        guard let roadWaterAuxiliaryValues,
+              x >= 0, x < width, y >= 0, y < height else { return nil }
+        return roadWaterAuxiliaryValues[startOffset + y * Self.gridSide + x]
     }
 }

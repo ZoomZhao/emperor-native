@@ -6,32 +6,179 @@ struct ClassicCampaignLobbyView: View {
     let campaigns: [CampaignArchive]
     let economy: OriginalEconomyModels
     @State private var previewMissionID: Int?
+    @State private var briefingMissionID: Int?
 
     var body: some View {
-        VStack(spacing: 0) {
-            ClassicLobbyHeader(library: library, activeSection: .campaigns)
-
-            HStack(spacing: 0) {
-                campaignPage
-                    .frame(width: 330)
-                Rectangle()
-                    .fill(EmperorTheme.secondary.opacity(0.82))
-                    .frame(width: 3)
-                    .overlay(Color.black.opacity(0.28).frame(width: 1))
-                missionPage
+        Group {
+            if let mission = briefingMission {
+                missionIntroduction(mission)
+            } else {
+                campaignSelection
             }
-            .overlay(Rectangle().strokeBorder(EmperorTheme.border, lineWidth: 1))
-            .padding(16)
-
-            ClassicLobbyFooter(library: library)
         }
-        .background(ClassicLobbyBackground())
         .onAppear(perform: normalizePreviewMission)
         .onChange(of: library.selectedCampaign?.url) { _ in
             normalizePreviewMission()
+            briefingMissionID = nil
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("classic-campaign-lobby")
+    }
+
+    private var campaignSelection: some View {
+        ClassicFrontEndCanvas(
+            screen: .campaignSelection,
+            sourceRoot: library.dataSourceRoot
+        ) { layout in
+            VStack(spacing: 10) {
+                Text("历史战役")
+                    .font(EmperorTheme.display)
+                    .foregroundStyle(EmperorTheme.primary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 38)
+                    .background(EmperorTheme.surfaceDeep.opacity(0.92))
+                    .overlay(Rectangle().strokeBorder(EmperorTheme.border))
+
+                HStack(spacing: 0) {
+                    campaignPage
+                        .frame(width: 300)
+                    Rectangle()
+                        .fill(EmperorTheme.secondary.opacity(0.82))
+                        .frame(width: 2)
+                    missionPage
+                }
+                .overlay(Rectangle().strokeBorder(EmperorTheme.border, lineWidth: 2))
+
+                HStack {
+                    Button("返回") {
+                        library.frontEndStage = .accountHome
+                    }
+                    .buttonStyle(EmperorClassicButtonStyle())
+                    .accessibilityIdentifier("campaign-lobby-back")
+                    Spacer()
+                    Button("读取存档") {
+                        library.enterPlaySection(.saves)
+                    }
+                    .buttonStyle(EmperorClassicButtonStyle())
+                }
+            }
+            .padding(12)
+            .frame(width: 870, height: 664)
+            .background(EmperorTheme.surface.opacity(0.94))
+            .overlay(Rectangle().strokeBorder(EmperorTheme.border, lineWidth: 2))
+            .position(layout.point(for: CGPoint(x: 512, y: 384)))
+        }
+    }
+
+    private var briefingMission: CampaignMission? {
+        guard let id = briefingMissionID else { return nil }
+        return library.selectedCampaign?.missions.first { $0.id == id }
+    }
+
+    private func missionIntroduction(_ mission: CampaignMission) -> some View {
+        let isTutorial = library.selectedCampaign?.url.lastPathComponent
+            .localizedCaseInsensitiveContains("xia") == true
+        return ClassicFrontEndCanvas(
+            screen: isTutorial ? .tutorials : .missionIntroduction,
+            sourceRoot: library.dataSourceRoot
+        ) { layout in
+            VStack(spacing: 0) {
+                Text(ClassicTextLocalization.missionTitle(mission.title))
+                    .font(EmperorTheme.display)
+                    .foregroundStyle(EmperorTheme.primary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 54)
+                    .background(EmperorTheme.surfaceDeep.opacity(0.96))
+                    .overlay(alignment: .bottom) {
+                        Rectangle().fill(EmperorTheme.border).frame(height: 1)
+                    }
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text("第 \(mission.sequenceNumber) 关 · \(missionCityName(mission))")
+                            .font(EmperorTheme.headlineMedium)
+                            .foregroundStyle(EmperorTheme.onSurface)
+
+                        Text(ClassicTextLocalization.missionBriefing(mission.title))
+                            .font(EmperorTheme.bodyMedium)
+                            .foregroundStyle(EmperorTheme.onSurface)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        VStack(alignment: .leading, spacing: 7) {
+                            Text("任务目标")
+                                .font(EmperorTheme.headlineSmall)
+                                .foregroundStyle(EmperorTheme.primary)
+                            if let goalSet = library.campaignGoalArchive?.missions.first(
+                                where: { $0.id == mission.id }
+                            ) {
+                                if goalSet.goals.isEmpty {
+                                    Text("自由建造任务，没有强制胜利目标")
+                                        .font(EmperorTheme.bodySmall)
+                                } else {
+                                    ForEach(goalSet.goals) { goal in
+                                        CampaignGoalRow(goal: goal, economy: economy, progress: nil)
+                                    }
+                                }
+                            } else {
+                                ProgressView("正在读取原版任务目标…")
+                                    .controlSize(.small)
+                            }
+                        }
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(EmperorTheme.surfaceDeep.opacity(0.72))
+                        .overlay(Rectangle().strokeBorder(EmperorTheme.border))
+                    }
+                    .padding(18)
+                }
+
+                HStack(spacing: 12) {
+                    Button("返回") {
+                        briefingMissionID = nil
+                    }
+                    .buttonStyle(EmperorClassicButtonStyle())
+                    .accessibilityIdentifier("mission-briefing-back")
+
+                    Spacer()
+
+                    Text("难度")
+                        .font(EmperorTheme.labelMedium)
+                        .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                    Picker(
+                        "难度等级",
+                        selection: Binding(
+                            get: { library.selectedDifficulty },
+                            set: { library.selectedDifficulty = $0 }
+                        )
+                    ) {
+                        ForEach(GameDifficulty.allCases, id: \.self) { difficulty in
+                            Text(ClassicTextLocalization.difficultyTitle(difficulty))
+                                .tag(difficulty)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .accessibilityIdentifier("mission-difficulty-picker")
+
+                    Button("到城市去") {
+                        library.startMission(mission)
+                    }
+                    .buttonStyle(EmperorClassicButtonStyle(.primary))
+                    .keyboardShortcut(.return, modifiers: [])
+                    .disabled(!canStart(mission))
+                    .accessibilityIdentifier("mission-start-\(mission.id)")
+                }
+                .padding(14)
+                .background(EmperorTheme.surfaceDeep.opacity(0.94))
+                .overlay(alignment: .top) {
+                    Rectangle().fill(EmperorTheme.border).frame(height: 1)
+                }
+            }
+            .frame(width: 650, height: 520)
+            .background(EmperorTheme.surface.opacity(0.95))
+            .overlay(Rectangle().strokeBorder(EmperorTheme.border, lineWidth: 2))
+            .position(layout.point(for: CGPoint(x: 512, y: 390)))
+        }
     }
 
     private var campaignPage: some View {
@@ -138,6 +285,34 @@ struct ClassicCampaignLobbyView: View {
                     title: ClassicTextLocalization.campaignTitle(campaign.title),
                     symbol: "map.fill"
                 )
+
+                if let art = ClassicFrontEndArt.campaignIllustration(
+                    for: campaign,
+                    sourceRoot: library.dataSourceRoot
+                ) {
+                    Image(nsImage: art)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 168)
+                        .clipped()
+                        .overlay(alignment: .bottomLeading) {
+                            Text(ClassicTextLocalization.campaignSummary(campaign.title))
+                                .font(EmperorTheme.bodySmall)
+                                .foregroundStyle(EmperorTheme.onSurface)
+                                .padding(10)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(EmperorTheme.surfaceDeep.opacity(0.82))
+                        }
+                        .overlay(Rectangle().strokeBorder(EmperorTheme.border))
+                } else {
+                    Text(ClassicTextLocalization.campaignSummary(campaign.title))
+                        .font(EmperorTheme.bodySmall)
+                        .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(EmperorTheme.surfaceDeep.opacity(0.72))
+                }
 
                 missionTimeline(campaign)
 
@@ -252,7 +427,7 @@ struct ClassicCampaignLobbyView: View {
                 .overlay(Rectangle().strokeBorder(EmperorTheme.border))
 
                 VStack(alignment: .leading, spacing: 9) {
-                    Label("任务目标", systemImage: "flag.fill")
+                    Label("目标", systemImage: "flag.fill")
                         .font(EmperorTheme.headlineMedium)
                         .foregroundStyle(EmperorTheme.primary)
 
@@ -272,6 +447,12 @@ struct ClassicCampaignLobbyView: View {
                             .controlSize(.small)
                             .foregroundStyle(EmperorTheme.onSurfaceMuted)
                     }
+
+                    Text(ClassicTextLocalization.missionBriefing(mission.title))
+                        .font(EmperorTheme.bodyMedium)
+                        .foregroundStyle(EmperorTheme.primary.opacity(0.92))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 4)
                 }
                 .padding(14)
                 .background(EmperorTheme.surfaceDeep.opacity(0.68))
@@ -286,34 +467,61 @@ struct ClassicCampaignLobbyView: View {
                     .foregroundStyle(EmperorTheme.warning)
                 }
 
-                HStack {
-                    if let status = library.saveStatus {
-                        Text(status)
-                            .font(EmperorTheme.bodySmall)
-                            .foregroundStyle(EmperorTheme.onSurfaceMuted)
-                            .lineLimit(2)
-                    }
-                    Spacer()
-                    Button {
-                        library.startMission(mission)
-                    } label: {
-                        Label(
-                            library.selectedMissionID == mission.id ? "重新开始本关" : "进入本关",
-                            systemImage: "play.fill"
-                        )
-                        .frame(minWidth: 120)
-                    }
-                    .buttonStyle(EmperorClassicButtonStyle(.primary))
-                    .keyboardShortcut(.return, modifiers: [])
-                    .disabled(!canStart(mission))
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(
-                        library.selectedMissionID == mission.id ? "重新开始本关" : "进入本关"
-                    )
-                    .accessibilityIdentifier("mission-start-\(mission.id)")
-                }
             }
             .padding(18)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            missionDetailFooter(mission)
+        }
+    }
+
+    private func missionDetailFooter(_ mission: CampaignMission) -> some View {
+        HStack(alignment: .center, spacing: 12) {
+            Text("难度等级")
+                .font(EmperorTheme.labelMedium)
+                .foregroundStyle(EmperorTheme.onSurfaceMuted)
+            Picker(
+                "难度等级",
+                selection: Binding(
+                    get: { library.selectedDifficulty },
+                    set: { library.selectedDifficulty = $0 }
+                )
+            ) {
+                ForEach(GameDifficulty.allCases, id: \.self) { difficulty in
+                    Text(ClassicTextLocalization.difficultyTitle(difficulty))
+                        .tag(difficulty)
+                }
+            }
+            .labelsHidden()
+            .pickerStyle(.menu)
+            .accessibilityIdentifier("mission-difficulty-picker")
+
+            Spacer()
+
+            if let status = library.saveStatus {
+                Text(status)
+                    .font(EmperorTheme.bodySmall)
+                    .foregroundStyle(EmperorTheme.onSurfaceMuted)
+                    .lineLimit(1)
+            }
+
+            Button {
+                briefingMissionID = mission.id
+            } label: {
+                Text("任务说明")
+                    .frame(minWidth: 96)
+            }
+            .buttonStyle(EmperorClassicButtonStyle(.primary))
+            .disabled(!canStart(mission))
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("打开任务说明")
+            .accessibilityIdentifier("mission-briefing-\(mission.id)")
+        }
+        .padding(.horizontal, 14)
+        .frame(height: 50)
+        .background(EmperorTheme.surfaceDeep.opacity(0.96))
+        .overlay(alignment: .top) {
+            Rectangle().fill(EmperorTheme.border).frame(height: 1)
         }
     }
 
@@ -537,7 +745,7 @@ struct ClassicLobbyHeader: View {
             }
             .frame(width: 250, alignment: .leading)
 
-            navButton("继续游戏", symbol: "play.fill", section: nil) {
+            navButton("继续游戏", symbol: "play.fill", section: nil, identifier: "library-continue-game") {
                 library.loadMostRecentSave()
             }
             .disabled(!library.saveHistory.contains(where: \.isReadable))
@@ -549,6 +757,14 @@ struct ClassicLobbyHeader: View {
             }
             navButton("资料库", symbol: "books.vertical.fill", section: .maps) {
                 library.section = .maps
+            }
+            navButton(
+                "返回帐号",
+                symbol: "person.crop.circle",
+                section: nil,
+                identifier: "library-return-account"
+            ) {
+                library.returnToClassicFrontEnd()
             }
 
             Spacer()
@@ -572,6 +788,7 @@ struct ClassicLobbyHeader: View {
         _ title: String,
         symbol: String,
         section: LibrarySection?,
+        identifier: String? = nil,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -590,7 +807,8 @@ struct ClassicLobbyHeader: View {
         .buttonStyle(.plain)
         .accessibilityLabel(title)
         .accessibilityIdentifier(
-            section.map { "library-section-\($0.accessibilitySlug)" }
+            identifier
+                ?? section.map { "library-section-\($0.accessibilitySlug)" }
                 ?? "library-continue-game"
         )
     }

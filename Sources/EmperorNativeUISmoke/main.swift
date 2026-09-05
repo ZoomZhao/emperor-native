@@ -17,6 +17,7 @@ private struct Arguments {
     let logDirectory: URL
     let timeout: TimeInterval
     let snapshotLibrary: Bool
+    let snapshotQin: Bool
 
     init() throws {
         let values = Array(CommandLine.arguments.dropFirst())
@@ -29,7 +30,8 @@ private struct Arguments {
         guard let appPath = value(after: "--app") else {
             throw SmokeFailure(
                 "usage: emperor-ui-smoke --app /path/EmperorNative.app "
-                    + "[--log-dir path] [--timeout seconds] [--snapshot-library]",
+                    + "[--log-dir path] [--timeout seconds] "
+                    + "[--snapshot-library | --snapshot-qin]",
                 code: SmokeExit.usage
             )
         }
@@ -38,6 +40,7 @@ private struct Arguments {
             .standardizedFileURL
         timeout = value(after: "--timeout").flatMap(TimeInterval.init) ?? 480
         snapshotLibrary = values.contains("--snapshot-library")
+        snapshotQin = values.contains("--snapshot-qin")
     }
 }
 
@@ -120,6 +123,33 @@ private func children(of element: AXUIElement) -> [AXUIElement] {
     copyAttribute(element, kAXChildrenAttribute as CFString) as? [AXUIElement] ?? []
 }
 
+/// Bounded BFS over an element's descendants collecting every non-empty string
+/// `AXValue`/`AXDescription`/`AXTitle`, then normalizes all interior whitespace
+/// (including U+3000) to single ASCII spaces. Used to assert the residential
+/// advisor's authored text without depending on its exact view structure.
+private func normalizedDescendantText(of element: AXUIElement) -> String {
+    var queue = children(of: element)
+    var chunks: [String] = []
+    var visited: Set<CFHashCode> = [CFHash(element)]
+    var index = 0
+    while index < queue.count, index < 8_000 {
+        let current = queue[index]
+        index += 1
+        guard visited.insert(CFHash(current)).inserted else { continue }
+        for attribute in [kAXValueAttribute, kAXDescriptionAttribute, kAXTitleAttribute] {
+            if let text = stringAttribute(current, attribute as CFString),
+               !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                chunks.append(text)
+            }
+        }
+        queue.append(contentsOf: children(of: current))
+    }
+    return chunks
+        .joined(separator: " ")
+        .split(whereSeparator: { $0.isWhitespace })
+        .joined(separator: " ")
+}
+
 private func findElement(in application: AXUIElement, identifier: String) -> AXUIElement? {
     let windows = copyAttribute(
         application,
@@ -134,11 +164,37 @@ private func findElement(in application: AXUIElement, identifier: String) -> AXU
     if queue.isEmpty { queue = [application] }
     var index = 0
     var visited: Set<CFHashCode> = []
-    while index < queue.count, index < 12_000 {
+    while index < queue.count, index < 30_000 {
         let element = queue[index]
         index += 1
         guard visited.insert(CFHash(element)).inserted else { continue }
         if stringAttribute(element, kAXIdentifierAttribute as CFString) == identifier {
+            return element
+        }
+        queue.append(contentsOf: children(of: element))
+    }
+    return nil
+}
+
+private func findElement(
+    in application: AXUIElement,
+    role: String,
+    title: String
+) -> AXUIElement? {
+    let windows = copyAttribute(
+        application,
+        kAXWindowsAttribute as CFString
+    ) as? [AXUIElement] ?? []
+    var queue = windows + children(of: application)
+    var index = 0
+    var visited: Set<CFHashCode> = []
+    while index < queue.count, index < 30_000 {
+        let element = queue[index]
+        index += 1
+        guard visited.insert(CFHash(element)).inserted else { continue }
+        if stringAttribute(element, kAXRoleAttribute as CFString) == role,
+           (stringAttribute(element, kAXTitleAttribute as CFString)
+                ?? stringAttribute(element, kAXDescriptionAttribute as CFString)) == title {
             return element
         }
         queue.append(contentsOf: children(of: element))
@@ -157,7 +213,7 @@ private func accessibilityIdentifierSnapshot(in application: AXUIElement) -> Str
     var index = 0
     var values: [String] = []
     var visited: Set<CFHashCode> = []
-    while index < queue.count, index < 12_000, values.count < 120 {
+    while index < queue.count, index < 30_000, values.count < 120 {
         let element = queue[index]
         index += 1
         guard visited.insert(CFHash(element)).inserted else { continue }
@@ -171,6 +227,46 @@ private func accessibilityIdentifierSnapshot(in application: AXUIElement) -> Str
                 values.append("\(role):\(identifier):\(title)")
             }
         }
+        queue.append(contentsOf: children(of: element))
+    }
+    return values.joined(separator: " | ")
+}
+
+/// Captures a bounded role/title/value tree when identifier lookup fails.
+/// SwiftUI's accessibility bridge can expose a valid window while omitting
+/// `kAXIdentifierAttribute`; the diagnostic keeps that distinction visible
+/// without changing the player-facing accessibility surface.
+private func accessibilityTreeSnapshot(in application: AXUIElement) -> String {
+    let windows = copyAttribute(
+        application,
+        kAXWindowsAttribute as CFString
+    ) as? [AXUIElement] ?? []
+    let focusedWindow = elementAttribute(application, kAXFocusedWindowAttribute as CFString)
+    let mainWindow = elementAttribute(application, kAXMainWindowAttribute as CFString)
+    var queue = [focusedWindow, mainWindow].compactMap { $0 }
+        + windows + children(of: application)
+    var index = 0
+    var values: [String] = []
+    var visited: Set<CFHashCode> = []
+    while index < queue.count, index < 30_000, values.count < 160 {
+        let element = queue[index]
+        index += 1
+        guard visited.insert(CFHash(element)).inserted else { continue }
+        let role = stringAttribute(element, kAXRoleAttribute as CFString) ?? "?"
+        let identifier = stringAttribute(element, kAXIdentifierAttribute as CFString) ?? "-"
+        let title = stringAttribute(element, kAXTitleAttribute as CFString)
+            ?? stringAttribute(element, kAXDescriptionAttribute as CFString)
+            ?? ""
+        let value = stringAttribute(element, kAXValueAttribute as CFString) ?? ""
+        let compactTitle = title.replacingOccurrences(of: "|", with: " ")
+        let compactValue = value.replacingOccurrences(of: "|", with: " ")
+        let summary = [compactTitle, compactValue]
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+        let clipped = String(summary.prefix(120))
+        values.append(
+            "\(role):\(identifier):children=\(children(of: element).count):\(clipped)"
+        )
         queue.append(contentsOf: children(of: element))
     }
     return values.joined(separator: " | ")
@@ -208,6 +304,21 @@ private func press(_ identifiedElement: AXUIElement, identifier: String) throws 
         candidate = parent(of: element)
     }
     throw SmokeFailure("accessibility element \(identifier) does not support AXPress")
+}
+
+private func revealAdvancedCityControls(in application: AXUIElement) throws {
+    if findElement(in: application, identifier: "game-speed-3") != nil { return }
+    let toggle = try waitForElement(
+        in: application,
+        identifier: "city-advanced-controls-toggle",
+        timeout: 15
+    )
+    try press(toggle, identifier: "city-advanced-controls-toggle")
+    _ = try waitForElement(
+        in: application,
+        identifier: "game-speed-3",
+        timeout: 15
+    )
 }
 
 private func axFrame(of element: AXUIElement) -> AXFrame? {
@@ -565,7 +676,7 @@ private func captureFailure(application: AXUIElement, log: EvidenceLog) {
 private func launch(
     _ appURL: URL,
     logDirectory: URL,
-    autoStartXia: Bool
+    autoStartCampaign: String?
 ) throws -> NSRunningApplication {
     guard FileManager.default.fileExists(atPath: appURL.path) else {
         throw SmokeFailure("app bundle does not exist: \(appURL.path)", code: SmokeExit.data)
@@ -579,8 +690,10 @@ private func launch(
         "--ui-smoke-log-dir", logDirectory.path,
         "--save-directory", logDirectory.appendingPathComponent("saves").path,
     ]
-    if autoStartXia {
+    if autoStartCampaign == "xia" {
         configuration.arguments.append("--ui-smoke-auto-start-xia")
+    } else if autoStartCampaign == "qin" {
+        configuration.arguments.append("--ui-smoke-auto-start-qin")
     }
     let semaphore = DispatchSemaphore(value: 0)
     var launched: NSRunningApplication?
@@ -595,7 +708,12 @@ private func launch(
     }
     if let launchError { throw SmokeFailure("app launch failed: \(launchError.localizedDescription)") }
     guard let launched else { throw SmokeFailure("workspace returned no running application") }
+    launched.unhide()
     launched.activate(options: [.activateAllWindows, .activateIgnoringOtherApps])
+    // Fresh SwiftUI instances can register with LaunchServices before their
+    // initial WindowGroup scene is opened on macOS 15. A normal reopen event
+    // creates that first window while preserving the launch arguments above.
+    _ = NSWorkspace.shared.open(appURL)
     return launched
 }
 
@@ -620,11 +738,22 @@ private func commandTable() throws -> [MapClick] {
             guard let city = controller.city else {
                 throw SmokeFailure("shadow city disappeared while planning \(tool.rawValue)")
             }
-            let point = tool == .house
-                ? city.nextHouseConstructionLocation()
-                : tool.buildingID.flatMap {
+            let point: GridPoint?
+            if tool == .house {
+                point = city.nextHouseConstructionLocation()
+            } else if OriginalMarketCatalog.supports(shopBuildingID: tool.buildingID ?? -1) {
+                point = city.placedBuildings.first(where: {
+                    $0.category == .market
+                        && city.canConstructMarketShop(
+                            shopBuildingID: tool.buildingID ?? -1,
+                            at: $0.origin
+                        )
+                })?.origin
+            } else {
+                point = tool.buildingID.flatMap {
                     city.nextBuildingConstructionLocation(buildingID: $0)
                 }
+            }
             guard let point else {
                 throw SmokeFailure("no valid UI smoke site for \(tool.rawValue)")
             }
@@ -647,6 +776,7 @@ private func commandTable() throws -> [MapClick] {
     try place(.huntingCamp)
     try place(.mill)
     try place(.market)
+    try place(.foodShop)
     try place(.well, count: 8)
     try place(.inspectorTower)
     try place(.ancestralShrine, count: 6)
@@ -656,16 +786,34 @@ private func commandTable() throws -> [MapClick] {
 
 private func constructionCategoryIdentifier(for toolIdentifier: String) -> String {
     switch toolIdentifier {
-    case "house", "well":
+    case "house":
         "residential"
-    case "huntingCamp", "mill", "market":
-        "production"
-    case "inspectorTower":
-        "civic"
+    case "huntingCamp", "lacquerGuild", "silkWeaver", "teaHouse":
+        "agriculture"
+    case "mill", "market", "foodShop", "hempShop", "ceramicsShop", "teaShop",
+         "silkShop", "lacquerwareShop", "bronzewareShop":
+        "commerce"
+    case "well", "inspectorTower":
+        "safety"
     case "ancestralShrine":
         "religious"
     default:
-        "infrastructure"
+        "monuments"
+    }
+}
+
+private func constructionSelectorID(for toolIdentifier: String) -> Int? {
+    switch toolIdentifier {
+    case "house": 2
+    case "huntingCamp": 30
+    case "mill": 53
+    case "market": 63
+    case "foodShop", "hempShop", "ceramicsShop", "teaShop", "silkShop",
+         "lacquerwareShop", "bronzewareShop": 206
+    case "well": 72
+    case "inspectorTower": 124
+    case "ancestralShrine": 214
+    default: nil
     }
 }
 
@@ -683,7 +831,9 @@ private func runSmoke(arguments: Arguments) throws {
     let app = try launch(
         arguments.appURL,
         logDirectory: arguments.logDirectory,
-        autoStartXia: !arguments.snapshotLibrary
+        autoStartCampaign: arguments.snapshotLibrary
+            ? nil
+            : arguments.snapshotQin ? "qin" : "xia"
     )
     let application = AXUIElementCreateApplication(app.processIdentifier)
     log.record("launched pid=\(app.processIdentifier) app=\(arguments.appURL.path)")
@@ -717,6 +867,229 @@ private func runSmoke(arguments: Arguments) throws {
                 throw SmokeFailure("could not capture the classic library window")
             }
             log.record("library screenshot=\(screenshotURL.path)")
+            return
+        }
+
+        if arguments.snapshotQin {
+            _ = try waitForElement(
+                in: application,
+                identifier: "city-canvas",
+                timeout: 45
+            )
+            let treasury = try waitForElement(
+                in: application,
+                identifier: "hud-treasury-metric",
+                timeout: 15,
+                requireEnabled: false
+            )
+            let treasuryValue = stringAttribute(
+                treasury,
+                kAXValueAttribute as CFString
+            ) ?? stringAttribute(treasury, kAXDescriptionAttribute as CFString) ?? ""
+            guard treasuryValue.contains("15000") || treasuryValue.contains("15,000") else {
+                throw SmokeFailure(
+                    "Qin M1 HUD did not expose the authored treasury: \(treasuryValue)"
+                )
+            }
+            _ = try waitForElement(
+                in: application,
+                identifier: "hud-zodiac-metric",
+                timeout: 15,
+                requireEnabled: false
+            )
+            let originalCategoryOrder = [
+                "residential", "agriculture", "industry", "commerce",
+                "safety", "government", "entertainment", "religious",
+                "military", "aesthetics", "monuments",
+            ]
+            for category in originalCategoryOrder {
+                _ = try waitForElement(
+                    in: application,
+                    identifier: "construction-category-\(category)",
+                    timeout: 15,
+                    requireEnabled: false
+                )
+            }
+
+            let agricultureCategory = try waitForElement(
+                in: application,
+                identifier: "construction-category-agriculture",
+                timeout: 15
+            )
+            try press(
+                agricultureCategory,
+                identifier: "construction-category-agriculture"
+            )
+            let agricultureSelectorIDs = [24, 200, 201, 29, 25, 30]
+            let constructionSlots = try agricultureSelectorIDs.map { selectorID in
+                try waitForElement(
+                    in: application,
+                    identifier: "construction-slot-\(selectorID)",
+                    timeout: 15,
+                    requireEnabled: false
+                )
+            }
+            let slotFrames = constructionSlots.compactMap { axFrame(of: $0)?.rect }
+            guard slotFrames.count == 6,
+                  Set(slotFrames.map { Int($0.minX.rounded()) }).count == 3,
+                  Set(slotFrames.map { Int($0.minY.rounded()) }).count == 2,
+                  slotFrames.allSatisfy({
+                      abs($0.width - 54) <= 1 && abs($0.height - 53) <= 1
+                  }) else {
+                throw SmokeFailure(
+                    "construction catalog did not preserve the original fixed 3×2 slots"
+                )
+            }
+            Thread.sleep(forTimeInterval: 0.3)
+            let catalogScreenshotURL = arguments.logDirectory
+                .appendingPathComponent("qin-m1-construction-catalog-fixed.png")
+            guard captureWindow(
+                application: application,
+                to: catalogScreenshotURL
+            ) else {
+                throw SmokeFailure("could not capture the fixed construction catalog")
+            }
+            log.record("fixed construction catalog=\(catalogScreenshotURL.path)")
+
+            let commerceCategory = try waitForElement(
+                in: application,
+                identifier: "construction-category-commerce",
+                timeout: 15
+            )
+            try press(commerceCategory, identifier: "construction-category-commerce")
+            let landTradeSelector = try waitForElement(
+                in: application,
+                identifier: "construction-slot-88",
+                timeout: 15
+            )
+            let seaTradeSelector = try waitForElement(
+                in: application,
+                identifier: "construction-slot-87",
+                timeout: 15,
+                requireEnabled: false
+            )
+            guard boolAttribute(seaTradeSelector, kAXEnabledAttribute as CFString) == false else {
+                throw SmokeFailure("Qin M1 unexpectedly enabled the sea-city selector")
+            }
+            try press(landTradeSelector, identifier: "construction-slot-88")
+            let xianyangTradeChoice = try waitForElement(
+                in: application,
+                identifier: "construction-submenu-trade-partner-0",
+                timeout: 15
+            )
+            Thread.sleep(forTimeInterval: 2)
+            let tradeMenuScreenshotURL = arguments.logDirectory
+                .appendingPathComponent("qin-m1-land-trade-city-menu.png")
+            guard captureWindow(
+                application: application,
+                to: tradeMenuScreenshotURL
+            ) else {
+                throw SmokeFailure("could not capture the land trade-city menu")
+            }
+            try press(
+                xianyangTradeChoice,
+                identifier: "construction-submenu-trade-partner-0"
+            )
+            log.record("land trade-city menu=\(tradeMenuScreenshotURL.path)")
+
+            let residentialCategory = try waitForElement(
+                in: application,
+                identifier: "construction-category-residential",
+                timeout: 15
+            )
+            try press(
+                residentialCategory,
+                identifier: "construction-category-residential"
+            )
+            let advancedControlsToggle = try waitForElement(
+                in: application,
+                identifier: "city-advanced-controls-toggle",
+                timeout: 15
+            )
+            guard findElement(in: application, identifier: "tax-rate-menu") == nil,
+                  findElement(in: application, identifier: "game-speed-3") == nil else {
+                throw SmokeFailure("advanced city controls should be hidden by default")
+            }
+            let populationPanel = try waitForElement(
+                in: application,
+                identifier: "advisor-population-panel",
+                timeout: 15,
+                requireEnabled: false
+            )
+            let populationText = normalizedDescendantText(of: populationPanel)
+            let requiredPopulationTokens = [
+                "目前住宅还可容纳", "0", "人居住",
+                "人们希望迁居你的城市", "移民受到限制.原因是:", "缺乏住房",
+            ]
+            for token in requiredPopulationTokens {
+                guard populationText.contains(token) else {
+                    throw SmokeFailure(
+                        "population advisor missing required token \(token); text=\(populationText)"
+                    )
+                }
+            }
+            // The baseline is taken at zero free capacity, so the only
+            // selected migration branch is the screenshot-confirmed
+            // wish + row-12/13 restriction block. The row-10 newcomer suffix is
+            // research-confirmed (group-55 alignment and `FUN_0053b850`
+            // renderer use) yet intentionally unselected until the original
+            // `DAT_01311FCC` newcomer producer is implemented; it must stay
+            // absent here so leaked or wrong state cannot silently replace the
+            // restriction block.
+            let unsupportedPopulationTokens = [
+                "等待下一个模拟日评估迁入条件", "缺乏临路住房", "国库为负", "失业率过高",
+                "个新移民本月到达",
+            ]
+            for token in unsupportedPopulationTokens {
+                guard !populationText.contains(token) else {
+                    throw SmokeFailure(
+                        "population advisor rendered unsupported token \(token); text=\(populationText)"
+                    )
+                }
+            }
+            if let panelFrame = axFrame(of: populationPanel)?.rect {
+                guard panelFrame.width <= 224 else {
+                    throw SmokeFailure(
+                        "population advisor panel exceeds 224px: \(panelFrame.width)"
+                    )
+                }
+            }
+            log.record("population advisor tokens=\(populationText)")
+            Thread.sleep(forTimeInterval: 2)
+            let screenshotURL = arguments.logDirectory
+                .appendingPathComponent("qin-m1-native-city-baseline.png")
+            guard captureWindow(application: application, to: screenshotURL) else {
+                throw SmokeFailure("could not capture the Qin M1 city baseline")
+            }
+            log.record("Qin M1 city baseline=\(screenshotURL.path)")
+
+            try press(
+                advancedControlsToggle,
+                identifier: "city-advanced-controls-toggle"
+            )
+            let taxRateMenu = try waitForElement(
+                in: application,
+                identifier: "tax-rate-menu",
+                timeout: 15
+            )
+            let fastestSpeed = try waitForElement(
+                in: application,
+                identifier: "game-speed-3",
+                timeout: 15
+            )
+            guard let taxRateFrame = axFrame(of: taxRateMenu)?.rect,
+                  let fastestSpeedFrame = axFrame(of: fastestSpeed)?.rect else {
+                throw SmokeFailure("could not measure the compact command dock")
+            }
+            let commandDockSpan = fastestSpeedFrame.maxX - taxRateFrame.minX
+            guard taxRateFrame.maxX <= fastestSpeedFrame.minX,
+                  commandDockSpan <= 216 else {
+                throw SmokeFailure(
+                    "tax and speed controls overflow the 224px panel: "
+                        + "span=\(commandDockSpan), tax=\(taxRateFrame), "
+                        + "speed3=\(fastestSpeedFrame)"
+                )
+            }
             return
         }
 
@@ -763,6 +1136,112 @@ private func runSmoke(arguments: Arguments) throws {
         }
         log.record("started original Xia tutorial mission 0")
 
+        _ = try waitForElement(
+            in: application,
+            identifier: "advisor-population-panel",
+            timeout: 15,
+            requireEnabled: false
+        )
+        let housingSupply = try waitForElement(
+            in: application,
+            identifier: "advisor-housing-supply",
+            timeout: 15
+        )
+        try press(housingSupply, identifier: "advisor-housing-supply")
+        try press(
+            try waitForElement(
+                in: application,
+                identifier: "advisor-housing-supply",
+                timeout: 15
+            ),
+            identifier: "advisor-housing-supply"
+        )
+        let cityWalkers = try waitForElement(
+            in: application,
+            identifier: "advisor-city-walkers",
+            timeout: 15
+        )
+        try press(cityWalkers, identifier: "advisor-city-walkers")
+        try press(
+            try waitForElement(
+                in: application,
+                identifier: "advisor-city-walkers",
+                timeout: 15
+            ),
+            identifier: "advisor-city-walkers"
+        )
+
+        let objectives = try waitForElement(
+            in: application,
+            identifier: "city-button-objectives",
+            timeout: 15
+        )
+        try press(objectives, identifier: "city-button-objectives")
+        _ = try waitForElement(
+            in: application,
+            identifier: "city-objectives-dialog",
+            timeout: 15,
+            requireEnabled: false
+        )
+        let closeObjectives = findElement(
+            in: application,
+            identifier: "city-objectives-close"
+        ) ?? findElement(in: application, role: kAXButtonRole as String, title: "关闭")
+        guard let closeObjectives else {
+            throw SmokeFailure("could not find the objectives close button")
+        }
+        try press(closeObjectives, identifier: "city-objectives-close")
+
+        let messages = try waitForElement(
+            in: application,
+            identifier: "city-button-messages",
+            timeout: 15
+        )
+        try press(messages, identifier: "city-button-messages")
+        _ = try waitForElement(
+            in: application,
+            identifier: "city-message-panel",
+            timeout: 15,
+            requireEnabled: false
+        )
+        let messageScreenshot = arguments.logDirectory
+            .appendingPathComponent("xia1-city-message-panel.png")
+        guard captureWindow(application: application, to: messageScreenshot) else {
+            throw SmokeFailure("could not capture the classic city message panel")
+        }
+        let confirmMessage = try waitForElement(
+            in: application,
+            identifier: "city-message-panel-confirm",
+            timeout: 15
+        )
+        try press(confirmMessage, identifier: "city-message-panel-confirm")
+        log.record("verified classic bottom city-message panel=\(messageScreenshot.path)")
+
+        let worldMap = try waitForElement(
+            in: application,
+            identifier: "city-button-world-map",
+            timeout: 15,
+            requireEnabled: false
+        )
+        if boolAttribute(worldMap, kAXEnabledAttribute as CFString) != false {
+            try press(worldMap, identifier: "city-button-world-map")
+            _ = try waitForElement(
+                in: application,
+                identifier: "city-world-map-dialog",
+                timeout: 15,
+                requireEnabled: false
+            )
+            let closeWorldMap = findElement(
+                in: application,
+                identifier: "city-world-map-close"
+            ) ?? findElement(in: application, role: kAXButtonRole as String, title: "关闭")
+            guard let closeWorldMap else {
+                throw SmokeFailure("could not find the world-map close button")
+            }
+            try press(closeWorldMap, identifier: "city-world-map-close")
+        }
+        log.record("verified classic population advisor and city navigation")
+
         let savesDirectory = arguments.logDirectory.appendingPathComponent("saves")
         let autosaveDeadline = Date().addingTimeInterval(10)
         var autosaveFiles: [URL] = []
@@ -785,6 +1264,7 @@ private func runSmoke(arguments: Arguments) throws {
         log.record("planned \(commands.count) legal construction commands from current mission state")
         var selectedCategory = ""
         var selectedTool = ""
+        var capturedConstructionSubmenu = false
         for (index, command) in commands.enumerated() {
             let category = constructionCategoryIdentifier(for: command.toolIdentifier)
             if selectedCategory != category {
@@ -801,8 +1281,44 @@ private func runSmoke(arguments: Arguments) throws {
             }
             if selectedTool != command.toolIdentifier {
                 let identifier = "construction-tool-\(command.toolIdentifier)"
-                let tool = try waitForElement(in: application, identifier: identifier, timeout: 15)
-                try press(tool, identifier: identifier)
+                if let tool = findElement(in: application, identifier: identifier) {
+                    try press(tool, identifier: identifier)
+                } else {
+                    guard let selectorID = constructionSelectorID(
+                        for: command.toolIdentifier
+                    ) else {
+                        throw SmokeFailure(
+                            "no original construction selector for \(command.toolIdentifier)"
+                        )
+                    }
+                    let slotIdentifier = "construction-slot-\(selectorID)"
+                    let slot = try waitForElement(
+                        in: application,
+                        identifier: slotIdentifier,
+                        timeout: 15
+                    )
+                    try press(slot, identifier: slotIdentifier)
+                    let memberIdentifier =
+                        "construction-submenu-tool-\(command.toolIdentifier)"
+                    let member = try waitForElement(
+                        in: application,
+                        identifier: memberIdentifier,
+                        timeout: 15
+                    )
+                    if !capturedConstructionSubmenu {
+                        let screenshotURL = arguments.logDirectory
+                            .appendingPathComponent("xia1-construction-submenu.png")
+                        guard captureWindow(
+                            application: application,
+                            to: screenshotURL
+                        ) else {
+                            throw SmokeFailure("could not capture construction submenu")
+                        }
+                        log.record("construction submenu=\(screenshotURL.path)")
+                        capturedConstructionSubmenu = true
+                    }
+                    try press(member, identifier: memberIdentifier)
+                }
                 selectedTool = command.toolIdentifier
                 log.record("selected \(identifier)")
             }
@@ -870,6 +1386,7 @@ private func runSmoke(arguments: Arguments) throws {
         if let canvas = findElement(in: application, identifier: "city-canvas") {
             _ = setVerticalScroll(containing: canvas, value: 1)
         }
+        try revealAdvancedCityControls(in: application)
         let speed = try waitForElement(in: application, identifier: "game-speed-3", timeout: 15)
         try press(speed, identifier: "game-speed-3")
         log.record("pressed game-speed-3")
@@ -913,6 +1430,7 @@ private func runSmoke(arguments: Arguments) throws {
         throw SmokeFailure("victory UI did not appear within \(Int(arguments.timeout)) seconds", code: SmokeExit.timeout)
     } catch {
         log.record("AX identifiers=\(accessibilityIdentifierSnapshot(in: application))")
+        log.record("AX tree=\(accessibilityTreeSnapshot(in: application))")
         captureFailure(application: application, log: log)
         throw error
     }

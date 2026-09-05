@@ -1,0 +1,606 @@
+{
+  "generatedAt": "2026-08-11T02:58:34.009465+00:00",
+  "purpose": "Construction right-panel mapping research evidence (asset-side). Runtime fields remain unknown until Wine/LLDB capture.",
+  "chinaInterfaceBitmapsFocus": [
+    {
+      "bitmapId": 1,
+      "name": "China_Paneling.BMP",
+      "comment": "A new bitmap.",
+      "width": 1000,
+      "height": 1000,
+      "imageCount": 436,
+      "startImageId": 201,
+      "endImageId": 636
+    },
+    {
+      "bitmapId": 5,
+      "name": "China_WorldInterface.BMP",
+      "comment": "A new bitmap.",
+      "width": 1000,
+      "height": 1000,
+      "imageCount": 16,
+      "startImageId": 1140,
+      "endImageId": 1155
+    },
+    {
+      "bitmapId": 6,
+      "name": "China_interfaceParts.BMP",
+      "comment": "A new bitmap.",
+      "width": 1500,
+      "height": 1500,
+      "imageCount": 65,
+      "startImageId": 1156,
+      "endImageId": 1220
+    },
+    {
+      "bitmapId": 7,
+      "name": "China_Interface_New_parts.BMP",
+      "comment": "A new bitmap.",
+      "width": 1800,
+      "height": 1000,
+      "imageCount": 267,
+      "startImageId": 1221,
+      "endImageId": 1487
+    },
+    {
+      "bitmapId": 8,
+      "name": "China_Interface_New_Bbuttons.BMP",
+      "comment": "A new bitmap.",
+      "width": 640,
+      "height": 1760,
+      "imageCount": 168,
+      "startImageId": 1488,
+      "endImageId": 1655
+    }
+  ],
+  "mapPanels": {
+    "file": "GameData/DATA/map_panels.555",
+    "size": 248832,
+    "sg3Host": "GameData/DATA/China_Unloaded.sg3",
+    "bitmaps": [
+      {
+        "bitmapId": 1,
+        "name": "map_panels.BMP",
+        "comment": "NB NOT YET DONE  - PANELS FOR MAP EDITOR",
+        "width": 1000,
+        "height": 1000,
+        "imageCount": 1,
+        "startImageId": 201,
+        "endImageId": 201
+      }
+    ],
+    "note": "No standalone map_panels.sg3 in GameData/DATA; pixels live in map_panels.555 referenced from China_Unloaded.sg3",
+    "evidenceType": "confirmed"
+  },
+  "bbuttonFamilyCount": 45,
+  "bbuttonLeadIn": [
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1488,
+      "stateImageIds": [
+        1488
+      ],
+      "width": 58,
+      "height": 42,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001488_58x42.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1489,
+      "stateImageIds": [
+        1489
+      ],
+      "width": 58,
+      "height": 42,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001489_58x42.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1490,
+      "stateImageIds": [
+        1490
+      ],
+      "width": 58,
+      "height": 42,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001490_58x42.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1533,
+      "stateImageIds": [
+        1533
+      ],
+      "width": 54,
+      "height": 53,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001533_54x53.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1534,
+      "stateImageIds": [
+        1534
+      ],
+      "width": 54,
+      "height": 53,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001534_54x53.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1535,
+      "stateImageIds": [
+        1535
+      ],
+      "width": 54,
+      "height": 52,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001535_54x52.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1587,
+      "stateImageIds": [
+        1587
+      ],
+      "width": 54,
+      "height": 53,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001587_54x53.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1588,
+      "stateImageIds": [
+        1588
+      ],
+      "width": 54,
+      "height": 53,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001588_54x53.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1589,
+      "stateImageIds": [
+        1589
+      ],
+      "width": 54,
+      "height": 52,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001589_54x52.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1590,
+      "stateImageIds": [
+        1590
+      ],
+      "width": 54,
+      "height": 53,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001590_54x53.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1591,
+      "stateImageIds": [
+        1591
+      ],
+      "width": 54,
+      "height": 53,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001591_54x53.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1592,
+      "stateImageIds": [
+        1592
+      ],
+      "width": 54,
+      "height": 52,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001592_54x52.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1593,
+      "stateImageIds": [
+        1593
+      ],
+      "width": 54,
+      "height": 53,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001593_54x53.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1594,
+      "stateImageIds": [
+        1594
+      ],
+      "width": 54,
+      "height": 53,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001594_54x53.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1595,
+      "stateImageIds": [
+        1595
+      ],
+      "width": 54,
+      "height": 52,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001595_54x52.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1617,
+      "stateImageIds": [
+        1617
+      ],
+      "width": 54,
+      "height": 53,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001617_54x53.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1618,
+      "stateImageIds": [
+        1618
+      ],
+      "width": 54,
+      "height": 53,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001618_54x53.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1619,
+      "stateImageIds": [
+        1619
+      ],
+      "width": 54,
+      "height": 52,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001619_54x52.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1620,
+      "stateImageIds": [
+        1620
+      ],
+      "width": 54,
+      "height": 53,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001620_54x53.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1621,
+      "stateImageIds": [
+        1621
+      ],
+      "width": 54,
+      "height": 53,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001621_54x53.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1622,
+      "stateImageIds": [
+        1622
+      ],
+      "width": 54,
+      "height": 52,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001622_54x52.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1632,
+      "stateImageIds": [
+        1632
+      ],
+      "width": 54,
+      "height": 53,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001632_54x53.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1633,
+      "stateImageIds": [
+        1633
+      ],
+      "width": 54,
+      "height": 53,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001633_54x53.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1634,
+      "stateImageIds": [
+        1634
+      ],
+      "width": 54,
+      "height": 52,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001634_54x52.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1635,
+      "stateImageIds": [
+        1635
+      ],
+      "width": 54,
+      "height": 53,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001635_54x53.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1636,
+      "stateImageIds": [
+        1636
+      ],
+      "width": 54,
+      "height": 53,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001636_54x53.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1637,
+      "stateImageIds": [
+        1637
+      ],
+      "width": 54,
+      "height": 52,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001637_54x52.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1647,
+      "stateImageIds": [
+        1647
+      ],
+      "width": 54,
+      "height": 53,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001647_54x53.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1648,
+      "stateImageIds": [
+        1648
+      ],
+      "width": 54,
+      "height": 53,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001648_54x53.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1649,
+      "stateImageIds": [
+        1649
+      ],
+      "width": 54,
+      "height": 52,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001649_54x52.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1650,
+      "stateImageIds": [
+        1650
+      ],
+      "width": 54,
+      "height": 53,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001650_54x53.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1651,
+      "stateImageIds": [
+        1651
+      ],
+      "width": 54,
+      "height": 53,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001651_54x53.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    },
+    {
+      "sheetFamilyIndex": null,
+      "baseImageId": 1652,
+      "stateImageIds": [
+        1652
+      ],
+      "width": 54,
+      "height": 52,
+      "bitmapCategory": "China_Interface_New_Bbuttons.BMP",
+      "paths": [
+        "China_Interface/008_China_Interface_New_Bbuttons/001652_54x52.png"
+      ],
+      "evidenceType": "confirmed",
+      "source": "GameData/DATA_IMAGES/China_Interface/INDEX.csv",
+      "note": "Non-54x53 or incomplete triple at sheet edge"
+    }
+  ]
+}

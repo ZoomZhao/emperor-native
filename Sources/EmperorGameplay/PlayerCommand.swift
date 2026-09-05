@@ -7,10 +7,19 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
     case clearLand
     case road
     case house
+    case eliteHouse
     case warehouse
     case huntingCamp
     case mill
     case market
+    case grandMarket
+    case foodShop
+    case hempShop
+    case ceramicsShop
+    case teaShop
+    case silkShop
+    case lacquerwareShop
+    case bronzewareShop
     case clayPit
     case kiln
     case well
@@ -24,6 +33,13 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
     case musicSchool
     case acrobatSchool
     case dramaSchool
+    case irrigationPump
+    case grandCanalSegment
+    case earthenGreatWallSegment
+    case largePalace
+    case largePalacePhase
+    case phasedMonumentPhase
+    case cropFarm
     case farmland
     case lumberMill
     case quarry
@@ -43,8 +59,10 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
     case ironMine
     case bronzeWorks
     case lacquerGuild
+    case lacquerwareWorkshop
     case jadeWorkshop
     case silkWeaver
+    case weaver
     case teaHouse
     case bathhouse
     case magistrate
@@ -63,15 +81,19 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
     case ceramistsGuild
     case tumulus
     case grandTumulus
+    case undergroundVault
     case greatTemple
     case splendidTemple
     case grandPagoda
 
     public var buildingID: Int? {
         switch self {
-        case .inspect, .demolish, .clearLand: nil
+        case .inspect, .demolish, .clearLand, .cropFarm, .grandCanalSegment,
+             .earthenGreatWallSegment, .largePalacePhase,
+             .phasedMonumentPhase: nil
         case .road: 1
         case .house: 2
+        case .eliteHouse: 11
         case .fishingWharf: 31
         case .huntingCamp: 33
         case .clayPit: 35
@@ -79,18 +101,30 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
         case .lumberMill: 38
         case .bronzeWorks: 39
         case .ironMine: 40
-        case .jadeWorkshop: 42
+        case .jadeWorkshop: 46
+        case .weaver: 47
         case .kiln: 43
+        case .lacquerwareWorkshop: 44
         case .carpentersGuild: 52
         case .mill: 53
         case .warehouse, .granary: 54
         case .market: 59
+        case .grandMarket: 60
+        case .bronzewareShop: 64
+        case .ceramicsShop: 65
+        case .foodShop: 66
+        case .hempShop: 67
+        case .lacquerwareShop: 68
+        case .silkShop: 69
+        case .teaShop: 70
         case .well: 72
         case .tumulus: 76
         case .grandTumulus: 77
+        case .undergroundVault: 84
         case .greatTemple: 78
         case .splendidTemple: 79
         case .grandPagoda: 93
+        case .largePalace: 82
         case .palace: 110
         case .inspectorTower: 124
         case .taxOffice: 125
@@ -108,6 +142,7 @@ public enum PlayerConstructionTool: String, CaseIterable, Sendable, Hashable, Co
         case .taiChiPark: 121
         case .privateGarden: 122
         case .farmland: 193
+        case .irrigationPump: 203
         case .herbalist: 207
         case .acupuncture: 208
         case .administrativeCity: 209
@@ -138,6 +173,7 @@ public enum PlayerCommand: Sendable, Hashable, Codable {
     case startCampaignMission(campaignID: Int, missionID: Int)
     case selectConstruction(PlayerConstructionTool)
     case selectAgriculturalCrop(AgriculturalCrop)
+    case selectDifficulty(GameDifficulty)
     case placeSelectedConstruction(at: GridPoint, orientation: IsometricBuildingOrientation)
     case demolish(at: GridPoint)
     case setProductionEnabled(buildingInstanceID: Int, enabled: Bool)
@@ -147,7 +183,31 @@ public enum PlayerCommand: Sendable, Hashable, Codable {
         commodityID: Int,
         policy: WarehouseCommodityPolicy
     )
+    case setMillPolicy(
+        millID: Int,
+        commodityID: Int,
+        policy: WarehouseCommodityPolicy
+    )
+    case setMillStorageLimit(
+        millID: Int,
+        commodityID: Int,
+        amount: Int
+    )
     case setTradeEnabled(tradingBuildingID: Int, enabled: Bool)
+    case setTradeImporting(
+        tradingBuildingID: Int,
+        commodityID: Int,
+        enabled: Bool
+    )
+    case constructTradingBuilding(
+        partnerID: Int,
+        at: GridPoint,
+        orientation: IsometricBuildingOrientation
+    )
+    case setTaxBand(Int)
+    case beginMapMonument(buildingID: Int)
+    case advanceEarthenGreatWallSegment(index: Int)
+    case issueMilitaryOrder(unitIDs: Set<Int>, to: GridPoint)
     case setSpeed(Int)
     case advanceOneTick
     case replayMission

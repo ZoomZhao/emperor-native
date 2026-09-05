@@ -1,0 +1,50 @@
+category,slot,buildingId,imageId,frame,screenRect,evidenceType,source,comment
+,,2,1491,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),common housing
+,,11,1494,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),elite housing
+,,31,1512,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),fishing wharf
+,,33,1506,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),hunting camp
+,,35,1515,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),clay pit
+,,36,1518,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),quarry / stoneworks
+,,43,1521,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),kiln
+,,39,1524,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),bronze smelter
+,,40,1524,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),iron smelter shares the furnace button
+,,38,1527,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),lumber mill
+,,54,1528,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),warehouse
+,,66,1531,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),food shop
+,,59,1546,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),common market
+,,60,1546,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),grand market shares the market pavilion family
+,,72,1551,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),well
+,,207,1554,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),herbalist
+,,208,1557,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),acupuncture clinic
+,,124,1560,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),inspector tower
+,,127,1563,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),watchtower
+,,209,1566,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),administrative city
+,,110,1569,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),palace
+,,125,1572,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),tax office
+,,203,1575,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),irrigation pump
+,,211,1584,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),music school
+,,212,1587,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),acrobat school
+,,213,1590,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),drama school
+,,214,1596,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),ancestral shrine
+,,215,1599,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),Daoist shrine
+,,216,1599,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),large Daoist temple shares the Daoist button family
+,,218,1602,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),Buddhist pagoda
+,,219,1605,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),Confucian academy
+,,220,1608,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),crossbow fort
+,,221,1611,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),infantry fort
+,,224,1614,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),cavalry fort
+,,225,1617,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),chariot fort
+,,223,1620,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),catapult fort
+,,116,1623,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),decorative sculpture
+,,115,1626,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),garden
+,,117,1629,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),ornate sculpture
+,,120,1632,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),pond
+,,121,1635,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),tai chi park
+,,119,1638,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),wayside pavilion
+,,118,1641,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),flowering tree
+,,122,1644,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),private garden
+,,233,1647,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),laborers camp
+,,52,1650,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),carpenters guild
+,,235,1650,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),masons guild shares the guild button family
+,,236,1650,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),ceramists guild shares the guild button family
+,,93,1653,0,,inferred,Sources/EmperorCore/InterfaceSpriteCatalog.swift OriginalConstructionButtonSpriteCatalog (sheet-order / frame look; not exe-linked),grand pagoda

@@ -42,9 +42,36 @@ public struct CampaignInvasionAlert: Identifiable, Sendable, Hashable, Codable {
     public let id: String
     public let occurrenceID: String
     public let sourceCityID: Int?
+    public let secondarySelectionID: Int?
     public let strength: Int
     public let entryPoint: GridPoint?
+    /// Source-side five-category formation plan when the campaign city
+    /// selector and authored enemy table were available at event dispatch.
+    /// `nil` preserves hand-authored/legacy callers that lack that context.
+    public let sourceFormationPlan: OriginalInvasionFormationPlan?
     public private(set) var status: CampaignInvasionStatus
+
+    public var sourceFigureCount: Int? { sourceFormationPlan?.sourceFigureCount }
+
+    public init(
+        id: String,
+        occurrenceID: String,
+        sourceCityID: Int?,
+        secondarySelectionID: Int? = nil,
+        strength: Int,
+        entryPoint: GridPoint?,
+        sourceFormationPlan: OriginalInvasionFormationPlan? = nil,
+        status: CampaignInvasionStatus
+    ) {
+        self.id = id
+        self.occurrenceID = occurrenceID
+        self.sourceCityID = sourceCityID
+        self.secondarySelectionID = secondarySelectionID
+        self.strength = strength
+        self.entryPoint = entryPoint
+        self.sourceFormationPlan = sourceFormationPlan
+        self.status = status
+    }
 
     public mutating func resolve(_ status: CampaignInvasionStatus) {
         guard self.status == .awaitingDefense else { return }
@@ -114,7 +141,8 @@ public struct CampaignCityEventState: Sendable, Hashable, Codable {
 public extension DeterministicCityState {
     @discardableResult
     mutating func applyCampaignCityEvent(
-        _ occurrence: CampaignEventOccurrence
+        _ occurrence: CampaignEventOccurrence,
+        sourceFormationPlan: OriginalInvasionFormationPlan? = nil
     ) -> CampaignCityEventApplication {
         var eventState = campaignEventState ?? CampaignCityEventState()
         var destroyed: [OperationalBuildingKey] = []
@@ -133,8 +161,10 @@ public extension DeterministicCityState {
                 id: occurrence.id,
                 occurrenceID: occurrence.id,
                 sourceCityID: occurrence.cityFromID,
+                secondarySelectionID: occurrence.secondarySelectionID,
                 strength: max(1, occurrence.amount ?? 1),
                 entryPoint: entry,
+                sourceFormationPlan: sourceFormationPlan,
                 status: .awaitingDefense
             )
             eventState.appendInvasion(alert)
@@ -146,19 +176,44 @@ public extension DeterministicCityState {
                 ? GridPoint(x: roadNetwork.width / 2, y: roadNetwork.height / 2)
                 : authoredPoints[abs(occurrence.eventID) % authoredPoints.count]
             let requested = min(8, max(1, occurrence.amount ?? 1))
-            let ordered = placedBuildings.sorted { lhs, rhs in
+            let ordered = buildingFailureCandidatePlacements.filter {
+                $0.buildingID != OriginalBuildingSpriteCatalog.ruinBuildingID
+            }.sorted { lhs, rhs in
                 let left = abs(lhs.markerPoint.x - epicenter.x) + abs(lhs.markerPoint.y - epicenter.y)
                 let right = abs(rhs.markerPoint.x - epicenter.x) + abs(rhs.markerPoint.y - epicenter.y)
                 if left != right { return left < right }
                 return lhs.id < rhs.id
             }
+            var failures: [BuildingFailure] = []
             for placement in ordered.prefix(requested) {
                 let key = OperationalBuildingKey(
                     category: placement.category,
                     instanceID: placement.instanceID
                 )
-                if destroyPlacedBuildingWithoutRefund(key) { destroyed.append(key) }
+                let failureKind: BuildingFailureKind
+                if occurrence.kind == .earthquake {
+                    // The manual confirms that earthquake damage can produce
+                    // either collapse or fire. The native replay chooses the
+                    // branch from authored event/building coordinates until
+                    // the original executable's probability is recovered.
+                    let selector = occurrence.eventID
+                        &+ placement.instanceID
+                        &+ placement.markerPoint.x
+                        &+ placement.markerPoint.y
+                    failureKind = selector.isMultiple(of: 4) ? .fire : .collapse
+                } else {
+                    failureKind = .collapse
+                }
+                failures.append(BuildingFailure(
+                    key: key,
+                    buildingID: placement.buildingID,
+                    location: placement.markerPoint,
+                    kind: failureKind,
+                    cause: .disaster
+                ))
+                destroyed.append(key)
             }
+            applyExternalBuildingFailures(failures)
             if occurrence.kind == .flood {
                 eventState.conditions.apply(.flood, months: Self.eventDuration(occurrence.amount))
                 condition = .flood

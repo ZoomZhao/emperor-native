@@ -105,7 +105,7 @@ final class SimulationClockTests: XCTestCase {
         XCTAssertEqual(threeAtATime, oneAtATime)
     }
 
-    func testServiceWalkerMovesAtMostOneAdjacentRoadStepPerTick() throws {
+    func testServiceWalkerWaitsForRecoveredSpawnSliceThenUsesOriginalUpdates() throws {
         let original = try installedModels()
         let rules = EconomyRulesEngine(models: original)
         var city = DeterministicCityState(
@@ -114,7 +114,8 @@ final class SimulationClockTests: XCTestCase {
             mapWidth: 8,
             mapHeight: 5
         )
-        _ = city.buildRoad((0..<8).map { GridPoint(x: $0, y: 2) }, rules: rules)
+        let roads = (0..<8).map { GridPoint(x: $0, y: 2) }
+        _ = city.buildRoad(roads, rules: rules)
         _ = city.addHouse(
             levelID: 0,
             residents: 7,
@@ -127,14 +128,28 @@ final class SimulationClockTests: XCTestCase {
             replaySeed: 0x5449_434B,
             rules: rules
         ))
-        let before = try XCTUnwrap(city.walkers.walkers.first?.currentPoint)
+        let route = try XCTUnwrap(city.walkers.walkers.first?.route)
+        XCTAssertTrue(zip(route, route.dropFirst()).allSatisfy { current, next in
+            abs(next.x - current.x) + abs(next.y - current.y) == 1
+        })
 
-        let result = city.advanceTick(rules: rules)
+        let first = city.advanceTick(rules: rules)
+        XCTAssertEqual(first.movement.walkers.requestedRoadSteps, 27)
+        XCTAssertEqual(first.movement.walkers.movedRoadSteps, 0)
+        XCTAssertNil(first.movement.walkers.visitedRoadPointsByService[.water])
+
+        _ = city.advanceTick(rules: rules)
+        _ = city.advanceTick(rules: rules)
+        let fourth = city.advanceTick(rules: rules)
         let after = try XCTUnwrap(city.walkers.walkers.first?.currentPoint)
-
-        XCTAssertEqual(result.movement.walkers.movedRoadSteps, 1)
-        XCTAssertEqual(abs(after.x - before.x) + abs(after.y - before.y), 1)
-        XCTAssertNil(result.monthlySettlement)
+        XCTAssertEqual(fourth.movement.walkers.requestedRoadSteps, 27)
+        XCTAssertTrue(city.roadNetwork.contains(after))
+        XCTAssertEqual(
+            fourth.movement.walkers.visitedRoadPointsByService[.water],
+            [roads[0], roads[1]]
+        )
+        XCTAssertNil(fourth.movement.walkers.visitedRoadPointsByService[.inspection])
+        XCTAssertNil(fourth.monthlySettlement)
     }
 
     func testLegacyCityWithoutContinuousClockFieldsStartsAtDayOne() throws {

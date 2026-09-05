@@ -43,8 +43,29 @@ final class SG3FigureSpriteTests: XCTestCase {
     }
 
     func testTutorialFigureCatalogIsDeterministicAndEightDirectional() throws {
-        XCTAssertEqual(Set(OriginalFigureSpriteCatalog.animations.map(\.role)), Set(TutorialFigureRole.allCases))
-        XCTAssertEqual(Set(OriginalFigureSpriteCatalog.animations.map(\.figureID)), [11, 22, 23, 24, 28, 35, 39])
+        XCTAssertEqual(
+            Set(OriginalFigureSpriteCatalog.animations.map(\.role)),
+            Set(TutorialFigureRole.allCases).subtracting([
+                .xiongnuInfantry,
+                .enemyInfantry,
+                .enemyCrossbow,
+                .enemyCavalry,
+                .enemyChariot,
+                .enemyCatapult,
+                .grandCanalLaborerTraveling,
+                .grandCanalLaborerWorking,
+                .grandCanalLaborerReturning,
+                .grandCanalStoneCarrier,
+                .grandCanalStoneFirstFollower,
+                .grandCanalStoneSecondFollower,
+            ])
+        )
+        XCTAssertEqual(
+            Set(OriginalFigureSpriteCatalog.animations.map(\.figureID)),
+            [11, 22, 23, 24, 27, 28, 29, 30, 31, 32, 33, 34, 35, 39, 64, 65, 66, 68, 76]
+        )
+        XCTAssertNil(OriginalFigureSpriteCatalog.animation(forFigureID: 19))
+        XCTAssertNil(OriginalFigureSpriteCatalog.animation(forFigureID: 20))
         for animation in OriginalFigureSpriteCatalog.animations {
             XCTAssertEqual(animation.framesByDirection.count, 8, animation.role.rawValue)
             XCTAssertTrue(animation.framesByDirection.allSatisfy { !$0.isEmpty })
@@ -62,12 +83,151 @@ final class SG3FigureSpriteTests: XCTestCase {
         }
     }
 
+    func testGrandCanalStoneConvoyUsesExecutableSelectedSpriteGroups() throws {
+        let expected: [(FigureSpriteAnimation, String, String, Int, Int)] = [
+            (
+                OriginalFigureSpriteCatalog.grandCanalStoneCarrierAnimation,
+                "SprMain", "TeamLeader", 165, 9_743
+            ),
+            (
+                OriginalFigureSpriteCatalog.grandCanalStoneFirstFollowerAnimation,
+                "SprMain2", "WaterBuffaloSolo", 55, 2_234
+            ),
+            (
+                OriginalFigureSpriteCatalog.grandCanalStoneSecondFollowerAnimation,
+                "SprMain2", "WaterBuffaloCart", 135, 7_033
+            ),
+        ]
+        let source = try GameDataSource.openDefault()
+        for (animation, archiveName, bitmapName, logicalGroup, firstImageID) in expected {
+            let archive = try SG3Archive(
+                contentsOf: source.dataDirectory.appendingPathComponent("\(archiveName).sg3")
+            )
+            XCTAssertEqual(animation.archiveBaseName, archiveName)
+            XCTAssertEqual(animation.sourceBitmapName, bitmapName)
+            XCTAssertEqual(animation.logicalGroupID, logicalGroup)
+            XCTAssertEqual(animation.framesByDirection.first?.first, firstImageID + 7)
+            XCTAssertEqual(Int(archive.groupImageIDs[logicalGroup]), firstImageID)
+            XCTAssertEqual(archive.images[firstImageID].spriteCount, 12)
+            XCTAssertTrue(animation.framesByDirection.allSatisfy { $0.count == 12 })
+        }
+    }
+
+    func testGrandCanalLaborerUsesExecutableSelectedStateGroups() throws {
+        let source = try GameDataSource.openDefault()
+        let archive = try SG3Archive(
+            contentsOf: source.dataDirectory.appendingPathComponent("SprMain.sg3")
+        )
+        let cases: [(Int, FigureSpriteAnimation, Int, Int, Int)] = [
+            (12, OriginalFigureSpriteCatalog.grandCanalLaborerTravelingAnimation, 87, 5_786, 12),
+            (14, OriginalFigureSpriteCatalog.grandCanalLaborerWorkingAnimation, 90, 6_074, 19),
+            (16, OriginalFigureSpriteCatalog.grandCanalLaborerReturningAnimation, 88, 5_882, 12),
+        ]
+        for (rawState, animation, logicalGroup, firstImageID, frameCount) in cases {
+            XCTAssertEqual(
+                OriginalFigureSpriteCatalog.grandCanalLaborerAnimation(
+                    forRawState: rawState
+                ),
+                animation
+            )
+            XCTAssertEqual(animation.sourceBitmapName, "Laborer")
+            XCTAssertEqual(animation.logicalGroupID, logicalGroup)
+            XCTAssertEqual(animation.framesByDirection.first?.first, firstImageID + 7)
+            XCTAssertEqual(Int(archive.groupImageIDs[logicalGroup]), firstImageID)
+            XCTAssertEqual(archive.images[firstImageID].spriteCount, frameCount)
+            XCTAssertTrue(animation.framesByDirection.allSatisfy {
+                $0.count == frameCount
+            })
+        }
+        XCTAssertNil(
+            OriginalFigureSpriteCatalog.grandCanalLaborerAnimation(forRawState: 11)
+        )
+    }
+
+    func testQinFriendlyUnitsUseVerifiedSprMain2Families() throws {
+        let expected: [Int: (logicalGroup: Int, firstImageID: Int)] = [
+            64: (169, 9_990),
+            65: (165, 9_606),
+            66: (159, 8_970),
+            68: (154, 8_558),
+        ]
+        for (figureID, group) in expected {
+            let animation = try XCTUnwrap(
+                OriginalFigureSpriteCatalog.animation(forFigureID: figureID)
+            )
+            XCTAssertEqual(animation.archiveBaseName, "SprMain2")
+            XCTAssertEqual(animation.logicalGroupID, group.logicalGroup)
+            XCTAssertEqual(animation.framesByDirection.first?.first, group.firstImageID + 7)
+            XCTAssertTrue(animation.framesByDirection.allSatisfy { $0.count == 12 })
+        }
+    }
+
+    func testAmbientPheasantUsesVerifiedSprMainFamily() throws {
+        let animation = try XCTUnwrap(
+            OriginalFigureSpriteCatalog.animation(forFigureID: 76)
+        )
+        XCTAssertEqual(animation.archiveBaseName, "SprMain")
+        XCTAssertEqual(animation.sourceBitmapName, "pheasant")
+        XCTAssertEqual(animation.logicalGroupID, 42)
+        XCTAssertEqual(animation.framesByDirection.first?.first, 2_657 + 7)
+        XCTAssertEqual(animation.framesByDirection.count, 8)
+        XCTAssertTrue(animation.framesByDirection.allSatisfy { $0.count == 12 })
+        XCTAssertTrue(
+            OriginalFigureSpriteCatalog.requiredImageIDsByArchive["SprMain", default: []]
+                .isSuperset(of: animation.imageIDs)
+        )
+    }
+
+    func testXiongnuInfantryUsesVerifiedEnemyArchive() throws {
+        let animation = try XCTUnwrap(
+            OriginalFigureSpriteCatalog.animation(forEnemyTypeID: 6)
+        )
+        XCTAssertEqual(animation.archiveBaseName, "China_Xiongnu")
+        XCTAssertEqual(animation.sourceBitmapName, "Xiongnu_Infantry")
+        XCTAssertEqual(animation.logicalGroupID, 0)
+        XCTAssertEqual(animation.framesByDirection.first?.first, 1 + 7)
+        XCTAssertTrue(animation.framesByDirection.allSatisfy { $0.count == 12 })
+        XCTAssertNil(OriginalFigureSpriteCatalog.animation(forEnemyTypeID: 0))
+    }
+
+    func testGeneratedServiceWalkersUseOriginalEightDirectionGroups() throws {
+        let expected: [Int: (logicalGroup: Int, firstImageID: Int)] = [
+            27: (64, 4_425),
+            29: (26, 1_521),
+            30: (29, 1_813),
+            31: (2, 109),
+            32: (147, 8_541),
+            33: (106, 7_205),
+            34: (102, 7_076),
+        ]
+        for (figureID, group) in expected {
+            let animation = try XCTUnwrap(
+                OriginalFigureSpriteCatalog.animation(forFigureID: figureID)
+            )
+            XCTAssertEqual(animation.logicalGroupID, group.logicalGroup)
+            // Sheets are frame-major with the direction byte rotated one step:
+            // direction 0 (north) starts at the sheet's last position.
+            XCTAssertEqual(
+                animation.framesByDirection.first?.first,
+                group.firstImageID + 7
+            )
+            XCTAssertEqual(animation.framesByDirection.count, 8)
+            XCTAssertTrue(animation.framesByDirection.allSatisfy { $0.count == 12 })
+            // Image sets remain exactly the group's authored range.
+            XCTAssertEqual(
+                animation.imageIDs,
+                Set(group.firstImageID..<(group.firstImageID + 12 * 8))
+            )
+        }
+    }
+
     func testMeatDeliveryUsesTheVerifiedMeatCartFamily() throws {
         let animation = try XCTUnwrap(
             OriginalFigureSpriteCatalog.deliveryAnimation(forCommodityID: 4)
         )
-        XCTAssertEqual(animation.logicalGroupID, 130)
-        XCTAssertEqual(animation.imageIDs, Set(7_908..<7_924))
+        XCTAssertEqual(animation.logicalGroupID, 116)
+        XCTAssertEqual(animation.sourceBitmapName, "Cart")
+        XCTAssertEqual(animation.imageIDs, Set(7_684..<7_700))
         XCTAssertTrue(
             OriginalFigureSpriteCatalog.requiredImageIDsByArchive[
                 OriginalFigureSpriteCatalog.mainArchiveBaseName,
@@ -75,14 +235,49 @@ final class SG3FigureSpriteTests: XCTestCase {
             ].isSuperset(of: animation.imageIDs)
         )
 
-        let generic = try XCTUnwrap(
+        let clay = try XCTUnwrap(
             OriginalFigureSpriteCatalog.deliveryAnimation(forCommodityID: 18)
         )
-        XCTAssertEqual(generic.logicalGroupID, 127)
-        XCTAssertEqual(generic.imageIDs, Set(7_860..<7_876))
+        XCTAssertEqual(clay.logicalGroupID, 130)
+        XCTAssertEqual(clay.imageIDs, Set(7_908..<7_924))
+        XCTAssertNotEqual(animation.imageIDs, clay.imageIDs)
+
+        let unknown = try XCTUnwrap(
+            OriginalFigureSpriteCatalog.deliveryAnimation(forCommodityID: 0)
+        )
+        XCTAssertEqual(unknown.logicalGroupID, 122)
+        XCTAssertEqual(unknown.imageIDs, Set(7_780..<7_796))
+        XCTAssertEqual(
+            Set(OriginalFigureSpriteCatalog.deliveryAnimationsByCommodityID.keys),
+            Set(1...28)
+        )
+        let verified: [Int: (group: Int, first: Int)] = [
+            4: (116, 7_684),
+            10: (122, 7_780),
+            18: (130, 7_908),
+            22: (134, 7_980),
+            23: (135, 7_996),
+            24: (136, 8_012),
+            25: (137, 8_028),
+            27: (139, 8_060),
+        ]
+        for (commodityID, expected) in verified {
+            let cargo = try XCTUnwrap(
+                OriginalFigureSpriteCatalog.deliveryAnimation(forCommodityID: commodityID)
+            )
+            XCTAssertEqual(cargo.logicalGroupID, expected.group, "commodity \(commodityID)")
+            // Frame-major sheet: north (direction 0) starts at base + 7.
+            XCTAssertEqual(
+                cargo.framesByDirection.first?.first,
+                expected.first + 7,
+                "commodity \(commodityID)"
+            )
+            // South (direction 4) uses the full-pusher frames base+3, base+11.
+            XCTAssertEqual(cargo.framesByDirection[4], [expected.first + 3, expected.first + 11])
+        }
     }
 
-    func testLocalTutorialFigureSequencesMatchLogicalGroupsAndDecode() throws {
+    func testMirroredFigureFramesDecodeByFlippingTheirSource() throws {
         guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
             throw XCTSkip("Original Emperor assets are not installed")
         }
@@ -94,21 +289,92 @@ final class SG3FigureSpriteTests: XCTestCase {
             contentsOf: source.dataDirectory.appendingPathComponent("SprMain.555"),
             options: [.mappedIfSafe]
         )
+        // Timber/iron cart SE (#7864) is a horizontal mirror of NE (#7862).
+        let mirrored = archive.images[7_864]
+        XCTAssertEqual(mirrored.mirrorOffset, -2)
+        XCTAssertEqual(mirrored.dataLength, 0)
+        let decoded = try SpriteDecoder.decode(
+            image: mirrored,
+            pixelData: pixels,
+            images: archive.images
+        )
+        let opaque = decoded.rgba.enumerated().filter { $0.offset % 4 == 3 && $0.element > 0 }.count
+        XCTAssertGreaterThan(opaque, 100)
+        XCTAssertEqual(decoded.width, mirrored.width)
+        XCTAssertEqual(decoded.height, mirrored.height)
+
+        let sourceFrame = try SpriteDecoder.decode(
+            image: archive.images[7_862],
+            pixelData: pixels,
+            images: archive.images
+        )
+        XCTAssertEqual(decoded.rgba, sourceFrame.flippedHorizontally().rgba)
+    }
+
+    func testLocalTutorialFigureSequencesMatchLogicalGroupsAndDecode() throws {
+        guard FileManager.default.fileExists(atPath: GameDataSource.defaultRoot.path) else {
+            throw XCTSkip("Original Emperor assets are not installed")
+        }
+        let source = try GameDataSource.openDefault()
+        let archiveNames = Set(OriginalFigureSpriteCatalog.animations.map(\.archiveBaseName))
+        var archives: [String: SG3Archive] = [:]
+        var pixelData: [String: Data] = [:]
+        for archiveName in archiveNames {
+            archives[archiveName] = try SG3Archive(
+                contentsOf: source.dataDirectory.appendingPathComponent("\(archiveName).sg3")
+            )
+            pixelData[archiveName] = try Data(
+                contentsOf: source.dataDirectory.appendingPathComponent("\(archiveName).555"),
+                options: [.mappedIfSafe]
+            )
+        }
+        let mainArchive = try XCTUnwrap(archives[OriginalFigureSpriteCatalog.mainArchiveBaseName])
         let requiredDistinctNames: Set<String> = ["Peddler", "Immigrant", "Inspector", "WaterBearer"]
-        XCTAssertTrue(requiredDistinctNames.isSubset(of: Set(archive.bitmapNames)))
+        XCTAssertTrue(requiredDistinctNames.isSubset(of: Set(mainArchive.bitmapNames)))
 
         for animation in OriginalFigureSpriteCatalog.animations {
-            let firstImageID = try XCTUnwrap(animation.framesByDirection.first?.first)
-            XCTAssertEqual(Int(archive.groupImageIDs[animation.logicalGroupID]), firstImageID)
-            XCTAssertEqual(archive.images[firstImageID].spriteCount, animation.framesByDirection[0].count)
+            let archive = try XCTUnwrap(archives[animation.archiveBaseName])
+            let pixels = try XCTUnwrap(pixelData[animation.archiveBaseName])
+            // Frame-major sheets are rotated one step from the movement byte:
+            // the group's first authored record is the NE (direction 1) frame.
+            let groupFirstImageID = Int(archive.groupImageIDs[animation.logicalGroupID])
+            XCTAssertEqual(groupFirstImageID, animation.framesByDirection[1].first)
+            XCTAssertEqual(
+                archive.images[groupFirstImageID].spriteCount,
+                animation.framesByDirection[0].count
+            )
             XCTAssertTrue(archive.bitmapNames.contains(animation.sourceBitmapName))
             for imageID in animation.imageIDs.sorted() {
                 XCTAssertTrue(archive.images.indices.contains(imageID), "\(animation.role) #\(imageID)")
-                let decoded = try SpriteDecoder.decode(image: archive.images[imageID], pixelData: pixels)
+                let decoded = try SpriteDecoder.decode(
+                    image: archive.images[imageID],
+                    pixelData: pixels,
+                    images: archive.images
+                )
                 XCTAssertGreaterThan(decoded.width, 0)
                 XCTAssertGreaterThan(decoded.height, 0)
                 XCTAssertNotNil(decoded.makeCGImage())
             }
+        }
+    }
+
+    func testGenericEnemyInvasionFamiliesUseChinaChineseSheets() throws {
+        let expected: [(Int, String, Int, Int)] = [
+            (58, "NonPlayer_InfantryMan", 12, 1_289),
+            (59, "NonPlayer_CrossbowMan", 6, 629),
+            (60, "NonPlayer_Cavalry", 0, 1),
+            (61, "NonPlayer_Chariot", 21, 2_209),
+            (62, "NonPlayer_Catapult", 16, 1_793),
+        ]
+        for (figureID, bitmap, logical, firstImageID) in expected {
+            let animation = try XCTUnwrap(
+                OriginalFigureSpriteCatalog.animation(forEnemyTypeID: figureID)
+            )
+            XCTAssertEqual(animation.archiveBaseName, "China_Chinese")
+            XCTAssertEqual(animation.sourceBitmapName, bitmap)
+            XCTAssertEqual(animation.logicalGroupID, logical)
+            XCTAssertEqual(animation.framesByDirection[1].first, firstImageID)
+            XCTAssertEqual(animation.framesByDirection[0].count, 12)
         }
     }
 }

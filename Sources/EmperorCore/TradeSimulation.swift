@@ -424,6 +424,20 @@ public struct DeterministicTradeState: Sendable, Hashable, Codable {
     public func partner(id: Int) -> TradePartner? { partners.first { $0.id == id } }
     public func building(id: Int) -> TradingBuilding? { buildings.first { $0.id == id } }
 
+    /// Original selectors 88 (land) and 87 (sea) enumerate empire-city slots
+    /// in ascending ID order, retain only open partners of the matching route,
+    /// and omit partners that already own a physical trade building.
+    public func availableConstructionPartners(
+        for routeKind: TradeRouteKind
+    ) -> [TradePartner] {
+        let established = Set(buildings.map(\.partnerID))
+        return partners
+            .filter {
+                $0.isOpen && $0.routeKind == routeKind && !established.contains($0.id)
+            }
+            .sorted { $0.id < $1.id }
+    }
+
     /// Removes a station or quay while leaving its world-map route open. The
     /// player may therefore rebuild the facility for that same partner later.
     @discardableResult

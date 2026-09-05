@@ -48,10 +48,11 @@ public struct DecodedSprite: @unchecked Sendable {
         return DecodedSprite(width: width, height: height, rgba: Data(pixels))
     }
 
-    /// Original figure sheets encode their projected ground shadow with the
-    /// RGB555 pure-red marker (0x7C00). The Windows renderer treated that
-    /// marker as a translucent shadow; drawing it literally produces the
-    /// bright red puddle visible under the water bearer.
+    /// Figure sheets contain an unresolved RGB555 pure-red marker (0x7C00) in
+    /// the projected ground area. The exact original shadow compositor is not
+    /// recovered; retaining the marker or converting it to black creates a
+    /// visible red/grey block on native terrain. Keep the marker transparent
+    /// until the original shadow path is closed instead of inventing a shape.
     public func correctingFigureShadow() -> DecodedSprite {
         var pixels = [UInt8](rgba)
         for offset in stride(from: 0, to: pixels.count, by: 4)
@@ -62,7 +63,32 @@ public struct DecodedSprite: @unchecked Sendable {
             pixels[offset] = 0
             pixels[offset + 1] = 0
             pixels[offset + 2] = 0
-            pixels[offset + 3] = 72
+            pixels[offset + 3] = 0
+        }
+        return DecodedSprite(width: width, height: height, rgba: Data(pixels))
+    }
+
+    /// SG3 figure archives store opposite walk directions (and some gait frames)
+    /// as horizontal mirrors of another image ID. The mirrored record keeps the
+    /// adjusted hotspot offsets but leaves `dataLength` at zero.
+    public func flippedHorizontally() -> DecodedSprite {
+        guard width > 0, height > 0, rgba.count == width * height * 4 else {
+            return self
+        }
+        var pixels = [UInt8](repeating: 0, count: rgba.count)
+        rgba.withUnsafeBytes { source in
+            guard let base = source.bindMemory(to: UInt8.self).baseAddress else { return }
+            for y in 0..<height {
+                let row = y * width * 4
+                for x in 0..<width {
+                    let from = row + x * 4
+                    let to = row + (width - 1 - x) * 4
+                    pixels[to] = base[from]
+                    pixels[to + 1] = base[from + 1]
+                    pixels[to + 2] = base[from + 2]
+                    pixels[to + 3] = base[from + 3]
+                }
+            }
         }
         return DecodedSprite(width: width, height: height, rgba: Data(pixels))
     }
@@ -75,7 +101,50 @@ public enum SpriteDecoder {
     private static let footprintWidth = 78
     private static let halfTileHeight = 20
 
-    public static func decode(image: SG3Archive.Image, pixelData: Data) throws -> DecodedSprite {
+    /// Decodes one SG3 image. When `images` is provided, records with a non-zero
+    /// `mirrorOffset` resolve to `id + mirrorOffset` and are flipped horizontally,
+    /// matching the original Windows renderer.
+    public static func decode(
+        image: SG3Archive.Image,
+        pixelData: Data,
+        images: [SG3Archive.Image] = []
+    ) throws -> DecodedSprite {
+        var current = image
+        var flipCount = 0
+        var guardCount = 0
+        while current.mirrorOffset != 0 {
+            guard guardCount < 8 else {
+                throw GameDataError.malformedFile(
+                    "sprite #\(image.id) mirror chain exceeded 8 hops"
+                )
+            }
+            guard !images.isEmpty else {
+                throw GameDataError.malformedFile(
+                    "sprite #\(current.id) is mirrored but no archive images were provided"
+                )
+            }
+            let sourceID = current.id + current.mirrorOffset
+            guard images.indices.contains(sourceID) else {
+                throw GameDataError.malformedFile(
+                    "sprite #\(current.id) mirror source #\(sourceID) is out of range"
+                )
+            }
+            current = images[sourceID]
+            flipCount += 1
+            guardCount += 1
+        }
+
+        var sprite = try decodePixelData(image: current, pixelData: pixelData)
+        if flipCount % 2 == 1 {
+            sprite = sprite.flippedHorizontally()
+        }
+        return sprite
+    }
+
+    private static func decodePixelData(
+        image: SG3Archive.Image,
+        pixelData: Data
+    ) throws -> DecodedSprite {
         guard image.width > 0, image.height > 0 else {
             throw GameDataError.malformedFile("sprite #\(image.id) has empty dimensions")
         }

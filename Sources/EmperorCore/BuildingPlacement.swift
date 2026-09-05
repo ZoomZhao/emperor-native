@@ -28,9 +28,100 @@ public struct BuildingFootprint: Sendable, Hashable, Codable {
     }
 }
 
+/// Deterministic construction-drag geometry shared by the player canvas and
+/// interaction tests. Paths preserve the tiles actually crossed by the
+/// pointer, while grid placement advances by the authored footprint size.
+public enum ConstructionDragPlanner {
+    public static func orthogonalSegment(
+        from start: GridPoint,
+        to end: GridPoint
+    ) -> [GridPoint] {
+        let horizontal = inclusiveValues(from: start.x, to: end.x).map {
+            GridPoint(x: $0, y: start.y)
+        }
+        let vertical = inclusiveValues(from: start.y, to: end.y).dropFirst().map {
+            GridPoint(x: end.x, y: $0)
+        }
+        return horizontal + vertical
+    }
+
+    public static func appendingOrthogonalSegment(
+        to existing: [GridPoint],
+        endingAt end: GridPoint
+    ) -> [GridPoint] {
+        guard let start = existing.last else { return [end] }
+        var result = existing
+        var visited = Set(existing)
+        for point in orthogonalSegment(from: start, to: end).dropFirst()
+            where visited.insert(point).inserted {
+            result.append(point)
+        }
+        return result
+    }
+
+    public static func rectangularPoints(
+        from start: GridPoint,
+        to end: GridPoint
+    ) -> [GridPoint] {
+        let minimumX = min(start.x, end.x)
+        let maximumX = max(start.x, end.x)
+        let minimumY = min(start.y, end.y)
+        let maximumY = max(start.y, end.y)
+        return (minimumY...maximumY).flatMap { y in
+            (minimumX...maximumX).map { GridPoint(x: $0, y: y) }
+        }
+    }
+
+    public static func tiledOrigins(
+        from start: GridPoint,
+        to end: GridPoint,
+        footprint: BuildingFootprint
+    ) -> [GridPoint] {
+        inclusiveValues(from: start.y, to: end.y, step: footprint.height).flatMap { y in
+            inclusiveValues(from: start.x, to: end.x, step: footprint.width).map { x in
+                GridPoint(x: x, y: y)
+            }
+        }
+    }
+
+    private static func inclusiveValues(
+        from start: Int,
+        to end: Int,
+        step: Int = 1
+    ) -> [Int] {
+        let signedStep = start <= end ? max(1, step) : -max(1, step)
+        var result: [Int] = []
+        var value = start
+        while signedStep > 0 ? value <= end : value >= end {
+            result.append(value)
+            value += signedStep
+        }
+        return result
+    }
+}
+
 /// Original non-monument footprints used by the native construction layer.
 /// Rectangular buildings can be rotated by swapping these authored dimensions.
 public enum OriginalBuildingFootprintCatalog {
+    /// Object-side footprint used by the original multi-cell service/appeal
+    /// callbacks for residential map objects. This is deliberately separate
+    /// from `footprint(forBuildingID:)`: the latter is the Native construction
+    /// occupancy projection, while the executable's `object +0x07` side byte
+    /// is independently confirmed as 2×2 for common houses and 4×4 for elite
+    /// houses. The map-slot/arbitration projection is still unresolved.
+    public static func residentialObjectFootprint(
+        forBuildingID buildingID: Int
+    ) -> BuildingFootprint? {
+        switch buildingID {
+        case 2...10:
+            BuildingFootprint(width: 2, height: 2)
+        case 11...17:
+            BuildingFootprint(width: 4, height: 4)
+        default:
+            nil
+        }
+    }
+
     public static func footprint(forBuildingID buildingID: Int) -> BuildingFootprint? {
         switch buildingID {
         // Every residential plot in the original game occupies a 2×2 block.
@@ -42,11 +133,19 @@ public enum OriginalBuildingFootprintCatalog {
         // Individually placed crop plots and orchards. The producer buildings
         // use their own larger footprints, but every tended plot occupies one
         // original map tile.
-        case 26...28, 194...199:
+        case 26...28, 194...199, 203:
             BuildingFootprint(width: 1, height: 1)
 
+        // Farmstead producers: hemp farm #192 is 2×2, farmhouse #193 is 3×3
+        // (footprint dwords from the executable building table
+        // DAT_008235a0; docs/exe-research/building-sprite-key-table.md).
+        case 192:
+            BuildingFootprint(width: 2, height: 2)
+        case 193:
+            BuildingFootprint(width: 3, height: 3)
+
         // Extraction and light industry.
-        case 31, 33, 35, 36, 38, 42...47, 192, 226, 237...239:
+        case 31, 33, 35, 36, 38, 42...47, 226, 237...239:
             BuildingFootprint(width: 2, height: 2)
         case 37, 39...41:
             BuildingFootprint(width: 3, height: 3)
@@ -84,6 +183,11 @@ public enum OriginalBuildingFootprintCatalog {
         // City walls are painted one tile at a time. The original executable
         // reserves a 5x3 rectangle for a gatehouse and a 2x2 square for a
         // staffed tower; rotation swaps the gatehouse axes.
+        // Residential walls and gates are also painted one cell at a time.
+        // Their model-table footprint dword is 1 for every authored variant
+        // (89/90/91, 104/105/106, 231, and 232).
+        case 89...91, 104...106, 231, 232:
+            BuildingFootprint(width: 1, height: 1)
         case 129:
             BuildingFootprint(width: 1, height: 1)
         case 130:
@@ -135,7 +239,9 @@ public enum OriginalBuildingFootprintCatalog {
 }
 
 public enum PlacedBuildingCategory: String, Sendable, Hashable, Codable {
+    case residential
     case production
+    case agriculturalPlot
     case warehouse
     case mill
     case market
@@ -157,7 +263,11 @@ public struct PlacedBuilding: Identifiable, Sendable, Hashable, Codable {
     public let footprint: BuildingFootprint
     public let roadAccessPoint: GridPoint
 
-    public var id: String { "\(category.rawValue)-\(instanceID)" }
+    public var id: String {
+        category == .agriculturalPlot
+            ? "\(category.rawValue)-\(instanceID)-\(origin.x)-\(origin.y)"
+            : "\(category.rawValue)-\(instanceID)"
+    }
 
     public var occupiedPoints: [GridPoint] { footprint.points(at: origin) }
 
