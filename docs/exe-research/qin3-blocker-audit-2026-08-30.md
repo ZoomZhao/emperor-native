@@ -7958,3 +7958,41 @@ canonical EN/CH PE bytes and call target at `0x48AB0C`, the raw FSM slice
 bucket loop, weighted selection and EN/CH parity; **confirmed negative** for a
 generic map-loader call edge; **unknown** for archive-to-provider projection,
 registry population, route/collision, coverage, and settlement.
+
+## 2026-09-05 Model-23 bootstrap only produces a cache-selected target
+
+The next peddler boundary is the post-allocation bootstrap, not a hidden
+household-route constructor.  `FUN_004E6A70 @ 0x4E6A70` resolves the new figure
+and its linked object, seeds figure bytes `+0x41 = 0x14`, `+0x4E = 0`,
+`+0x51 = 0xFF`, and `+0x50 = 2`, then copies the initial point from
+`figure+0x1C/+0x1E` into `figure+0x15C/+0x15E`.  It calls
+`FUN_004E6690` at most four times.  On success, a linked Common/Grand Market
+(`+0x14` in `0x3B…0x3C`) refreshes the market helper through
+`FUN_00544910`; the selected heading is copied to market `+0x38`, the target
+coordinates are clamped to map bounds, and the figure receives target
+`+0x2C/+0x2E` with `+0x4E = 1`.  After four failures the bootstrap only marks
+`+0x4E = 1`; it does not synthesize a target.
+
+`FUN_004E6690 @ 0x4E6690` supplies only the first cardinal exit from the
+per-cell cache words (`0x440` mask, optional `+0xE8` adjacent-object veto,
+heading order `0/2/4/6`).  Its multi-way branch depends on the saved map byte,
+figure turn counter, fallback counter, and `FUN_004E71D0`; those inputs are
+not present in Qin's serialized generic `Building` rows.  The subsequent
+`FUN_004E83E0 @ 0x4E83E0` route dispatcher clears figure route slots
+`+0x42/+0x44/+0x46` before consuming its mode-specific map search.  Therefore
+the recovered bootstrap closes the cache/target handoff but still does not
+provide a Native route buffer, collision retry, provider-record source, or
+house settlement writer.
+
+This is a **confirmed** post-allocation state boundary from the indexed
+`local/source` functions and the EN/CH-identical rows for `0x4E6690`,
+`0x4E6A70`, and `0x4E83E0`; it is a **confirmed negative** for a constructor-
+level household route.  The map-cache producer, multi-way fallback state,
+route/collision consumer, archive provider identity, and coverage/settlement
+projection remain **unknown**, so Qin market peddlers stay fail-closed.
+
+**Sources:**
+`local/source/split-merged/code/0x040000/FUN_004e6690.c`,
+`FUN_004e6a70.c`, `FUN_004e83e0.c`, `FUN_004e71d0.c`,
+`local/source/compare-report.tsv`, and the canonical EN/CH executable hashes
+recorded in `DESIGN.md`.
