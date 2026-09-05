@@ -7856,3 +7856,63 @@ regression in `Tests/EmperorCoreTests/EmperorCoreTests.swift`.
 provider/archive projection edge and for EN/CH parity; **unknown** for
 unlisted classes, non-virtual/table-driven consumers, archive construction,
 route/collision, coverage, and settlement.
+
+## 2026-09-05 Complete EN/CH virtual-slot `+0x18` census does not expose the Qin projection edge
+
+The next static search targeted the remaining hypothesis that generic archive
+loading reaches a specialized `House`/`Well`/provider object through an
+indirect vtable call at slot `+0x18`, rather than through the already recovered
+direct `FUN_00427150 @ 0x427150` wrapper.  The raw `.text` sections of both
+canonical PE images were scanned byte-for-byte for the eight x86 forms
+`FF 50 18` through `FF 57 18`, then each hit was mapped back to the indexed
+function owner.  EN and CH each contain exactly **84** call instructions; the
+84-address lists and surrounding bytes are identical between the two hashes.
+The full address list is preserved in
+`OriginalMapArchiveRepairCatalog.canonicalIndirectVTableSlot18CallSiteAddresses`
+and the focused regression asserts its count and uniqueness.
+
+The scan contains no hit inside the generic archive path
+`FUN_0052FDA0 → FUN_0042D790 → FUN_0042D0E0 → FUN_005F01F0 → FUN_005C1670`,
+nor inside the direct map-load tail functions already recorded above.  The
+map-loader subset is therefore an empty set in the catalog.  This is a
+**confirmed negative for a direct slot-`+0x18` call instruction in the
+recovered map-loader path**, not proof that a table-driven or register-
+propagated dispatch cannot exist elsewhere.
+
+The potentially map-adjacent owners were checked rather than inferred from
+the slot number:
+
+| owner / call-site family | recovered operation | classification |
+| --- | --- | --- |
+| `FUN_00541130 @ 0x541137` | invokes `FUN_00427150`, then copies the returned object's `+0x158`; its containing class accepts transient IDs `-2`, `-1`, `0x3E…0x46` | existing-object/transient path; not Qin provider specialization |
+| `China_Mon_Greatwall_10 @ 0x57BC3F` | refreshes Great Wall sprite state when the global tick changes | monument rendering callback |
+| `FUN_00589480 @ 0x5894DD` | checks object type bytes `0x13`, `0x15`, `0x16` and a class predicate | figure/formation eligibility callback |
+| `FUN_005C0490 @ 0x5C04B6` | scans an existing global object vector and compares each callback result with a requested value | generic lookup helper, not archive construction |
+| `FUN_00563FA0 @ 0x563FCA` | resolves the weather segment table (`FUN_005635A0`) and invokes its slot `+0x18` callback | weather segment lifecycle |
+| `FUN_004F3300`, `FUN_0055B6A0`, `FUN_005B4BD0`, `FUN_005C6DA0` | state-transition, monument matching, migration/popularity, and figure/event loops respectively | non-loader object families |
+
+The remaining hits are in debug/UI, figure, event, resource, or aggregate
+helpers; none is owned by the generic map archive loader and none supplies a
+provider model ID, archive row, provider slot, or registry insertion edge.
+The direct `FUN_00427150` caller set remains the single transient/cart-state
+caller already documented; the explicit `Creating(...)` factory path remains
+the only direct factory construction edge recovered from the corpus and PE
+scan.
+
+**Sources:** canonical EN/CH PE `.text` scans for hashes
+`8a6d2df1015cb75d797546d117da5f82b86fd08726090c2a13d853b9009d6753` and
+`dbdeca1ec2720f2387e1673bfbb901e9bad832179355ea897cfa7536e17ac15a`;
+`functions-index.csv`; `FUN_00427150.c`, `FUN_00541130.c`,
+`FUN_0052FDA0.c`, `FUN_0042D790.c`, `FUN_0042D0E0.c`, `FUN_005F01F0.c`,
+`FUN_005C1670.c`, `FUN_00563FA0.c`, `FUN_005635A0.c`,
+`FUN_0057BBA0.c`, `FUN_00589480.c`, `FUN_005C0490.c`,
+`FUN_005C6DA0.c`, and the focused regression in
+`Tests/EmperorCoreTests/EmperorCoreTests.swift`.
+
+**Evidence class:** **confirmed** for the complete 84-site EN/CH census,
+byte-for-byte parity, and the owner classifications above; **confirmed
+negative** for a direct slot-`+0x18` call in the recovered generic map-loader
+chain; **unknown** for non-virtual/table-driven dispatch, the archive's
+provider identity/slot source, the specialization trigger, route/collision,
+coverage, and settlement.  Native remains fail-closed for Qin provider and
+entertainment projection.

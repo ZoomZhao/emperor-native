@@ -7171,6 +7171,21 @@ final class EmperorCoreTests: XCTestCase {
             0x00541110
         )
         XCTAssertEqual(
+            OriginalMapArchiveRepairCatalog.canonicalIndirectVTableSlot18CallSiteAddresses.count,
+            84
+        )
+        XCTAssertEqual(
+            Set(OriginalMapArchiveRepairCatalog.canonicalIndirectVTableSlot18CallSiteAddresses).count,
+            84
+        )
+        XCTAssertTrue(
+            OriginalMapArchiveRepairCatalog.canonicalIndirectVTableSlot18CallSiteAddresses.contains(0x00541137)
+        )
+        XCTAssertEqual(
+            OriginalMapArchiveRepairCatalog.mapLoadIndirectVTableSlot18CallSiteAddresses,
+            []
+        )
+        XCTAssertEqual(
             OriginalMapArchiveRepairCatalog.mapLoaderAddress,
             0x0042D790
         )

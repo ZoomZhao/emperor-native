@@ -4162,6 +4162,38 @@ public enum OriginalMapArchiveRepairCatalog {
     public static let dynamicFactoryGenericCallerAddress: UInt32 = 0x00427150
     public static let dynamicFactoryGenericCallerOnlyCallerAddress: UInt32 = 0x00541110
 
+    /// Complete raw `.text` census of indirect calls through vtable slot
+    /// `+0x18` in both canonical EN/CH PEs.  This slot is overloaded across
+    /// weather, figures, UI, event, monument, and other object families; it
+    /// must not be treated as a generic Building-specialization signal.
+    /// The list is research metadata only and is intentionally not consumed
+    /// by map loading or simulation.
+    public static let canonicalIndirectVTableSlot18CallSiteAddresses: [UInt32] = [
+        0x0042F1ED, 0x00435ED1, 0x0044ADD2, 0x0044D799, 0x0044D8C0,
+        0x0044DD07, 0x004669A2, 0x0046B913, 0x00477E76, 0x004E18F9,
+        0x004E6349, 0x004EC4AC, 0x004F3A89, 0x004F3C21, 0x004F3E0E,
+        0x004F43F1, 0x004F49F3, 0x004F7B7B, 0x0050373D, 0x005126D6,
+        0x005126F4, 0x00512B50, 0x00512E16, 0x00514872, 0x00515AA5,
+        0x0052325C, 0x005234E7, 0x0053B05C, 0x0053B124, 0x00541137,
+        0x0054FCE2, 0x0054FEF9, 0x0055AE04, 0x0055B757, 0x0055B789,
+        0x0055B7AA, 0x0055DCFC, 0x00563FCA, 0x00578775, 0x0057BC3F,
+        0x0057D35D, 0x005894DD, 0x005B4C90, 0x005B4E26, 0x005C04B6,
+        0x005C766C, 0x005C76E9, 0x005C7726, 0x005C7775, 0x005D0D5A,
+        0x005FCC8C, 0x00602B50, 0x006143AC, 0x006163E6, 0x006163FA,
+        0x00616508, 0x00616843, 0x00616928, 0x00617A5F, 0x00617FD3,
+        0x0062DA25, 0x00640CEC, 0x00644C87, 0x00646B40, 0x00646D2C,
+        0x0064D03F, 0x0065405A, 0x0065B4AD, 0x0065D94B, 0x0065F0F4,
+        0x006C4477, 0x006C62CB, 0x006C6FD1, 0x006CDAB6, 0x006E522A,
+        0x006E5E32, 0x006E5F04, 0x00735E74, 0x0073EB9F, 0x007403A6,
+        0x007456B8, 0x00747929, 0x00756DBE, 0x007803DF,
+    ]
+
+    /// No slot-`+0x18` call instruction occurs inside the recovered generic
+    /// archive loader or its direct map-load tail.  This is a confirmed
+    /// negative for that direct virtual-call edge only; table-driven and
+    /// register-propagated dispatch remain outside the census contract.
+    public static let mapLoadIndirectVTableSlot18CallSiteAddresses: [UInt32] = []
+
     /// Static loader boundary recovered from the canonical executable. The
     /// archive path first constructs a generic `Building` descriptor, inserts
     /// it into the object list, and then invokes the object's `+0xC0` load
